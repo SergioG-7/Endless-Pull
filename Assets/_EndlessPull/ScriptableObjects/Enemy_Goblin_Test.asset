@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyData
   enemyName: Goblin
   maxHealth: 50
-  baseAttack: 8
+  baseAttack: 12
   baseDefense: 2
   moveSpeed: 1.5
+  attackCooldown: 1

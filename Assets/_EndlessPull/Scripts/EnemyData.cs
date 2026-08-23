@@ -17,4 +17,7 @@ public class EnemyData : ScriptableObject
 
     [Tooltip("Velocidad de movimiento en unidades por segundo.")]
     public float moveSpeed = 1.5f;
+
+    [Tooltip("Segundos entre golpe y golpe.")]
+    public float attackCooldown = 1f;
 }
