@@ -1,0 +1,90 @@
+# ---------------------------------------------------------------
+# Unity
+# ---------------------------------------------------------------
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+
+# Asset Store Tools
+/[Aa]ssets/AssetStoreTools*
+
+# Autogenerado por Unity al abrir el proyecto
+/[Aa]ssets/Plugins/Editor/JetBrains*
+
+# ---------------------------------------------------------------
+# Unity Version Control (Plastic SCM)
+# ---------------------------------------------------------------
+.plastic/
+.plastic4/
+ignore.conf
+/[Aa]ssets/Plugins/PlasticSCM*
+
+# ---------------------------------------------------------------
+# IDEs y proyectos generados
+# ---------------------------------------------------------------
+.vs/
+.vscode/
+.idea/
+.consulo/
+.gradle/
+ExportedObj/
+*.csproj
+*.unityproj
+*.sln
+*.slnx
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# Los .meta de los anteriores nunca deben versionarse
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+
+# ---------------------------------------------------------------
+# Builds y artefactos
+# ---------------------------------------------------------------
+*.apk
+*.aab
+*.app
+*.unitypackage
+*.unitypackage.meta
+crashlytics-build.properties
+sysinfo.txt
+
+# ---------------------------------------------------------------
+# Addressables (contenido generado)
+# ---------------------------------------------------------------
+/[Aa]ssets/AddressableAssetsData/*/*.bin*
+/[Aa]ssets/[Ss]treamingAssets/aa.meta
+/[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# ---------------------------------------------------------------
+# Sistema operativo
+# ---------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+Desktop.ini
+
+# ---------------------------------------------------------------
+# Ficheros temporales de sincronización de Unity
+# ---------------------------------------------------------------
+~UnityDirMonSyncFile~*
+*.private
+*.private.meta
