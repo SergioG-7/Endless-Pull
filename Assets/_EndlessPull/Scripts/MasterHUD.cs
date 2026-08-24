@@ -29,14 +29,29 @@ public class MasterHUD : MonoBehaviour
     [Tooltip("Botón de invocación, se deshabilita si no hay gemas.")]
     [SerializeField] private Button pullButton;
 
+    [Tooltip("Escuadra de la que se leen los intentos de torre.")]
+    [SerializeField] private PartyManager party;
+
+    [Tooltip("Texto con los intentos de torre restantes.")]
+    [SerializeField] private TextMeshProUGUI energyLabel;
+
+    [Tooltip("Botón táctil que recarga los intentos pagando gemas.")]
+    [SerializeField] private Button energyRefillButton;
+
     void OnEnable()
     {
         if (economy != null)
         {
             economy.GemsChanged += OnGemsChanged;
             economy.MaterialsChanged += OnMaterialsChanged;
+            economy.FoodChanged += OnFoodChanged;
         }
-        if (waves != null) waves.ExpeditionChanged += OnExpeditionChanged;
+        if (waves != null)
+        {
+            waves.ExpeditionChanged += OnExpeditionChanged;
+            waves.FloorChanged += OnFloorChanged;
+        }
+        if (party != null) party.PartyChanged += RefreshEnergy;
     }
 
     void OnDisable()
@@ -45,8 +60,14 @@ public class MasterHUD : MonoBehaviour
         {
             economy.GemsChanged -= OnGemsChanged;
             economy.MaterialsChanged -= OnMaterialsChanged;
+            economy.FoodChanged -= OnFoodChanged;
         }
-        if (waves != null) waves.ExpeditionChanged -= OnExpeditionChanged;
+        if (waves != null)
+        {
+            waves.ExpeditionChanged -= OnExpeditionChanged;
+            waves.FloorChanged -= OnFloorChanged;
+        }
+        if (party != null) party.PartyChanged -= RefreshEnergy;
     }
 
     void Start()
@@ -56,25 +77,56 @@ public class MasterHUD : MonoBehaviour
         if (economy != null)
         {
             OnGemsChanged(economy.Gems);
-            OnMaterialsChanged(economy.Wood, economy.Iron);
+            RefreshMaterials();
         }
 
         RefreshFloor();
+        RefreshEnergy();
     }
 
-    private void OnMaterialsChanged(int wood, int iron)
+    // Enganchado al botón "+" de la barra de intentos.
+    public void OnRefillEnergyPressed()
     {
-        if (materialsLabel != null) materialsLabel.text = $"Madera: {wood} | Hierro: {iron}";
+        if (party != null) party.TryRefillEnergyWithGems();
+        RefreshEnergy();
+    }
+
+    private void RefreshEnergy()
+    {
+        if (party == null) return;
+
+        if (energyLabel != null) energyLabel.text = $"Intentos: {party.Energy}/{party.MaxEnergy}";
+
+        // El "+" solo se enciende si falta algún intento y hay gemas para pagarlo.
+        if (energyRefillButton != null)
+            energyRefillButton.interactable = party.Energy < party.MaxEnergy
+                && economy != null && economy.CanAfford(party.EnergyRefillCost);
+    }
+
+    // Madera, hierro y comida comparten etiqueta; se repinta con lo que haya en economía.
+    private void OnMaterialsChanged(int wood, int iron) => RefreshMaterials();
+    private void OnFoodChanged(int food) => RefreshMaterials();
+
+    private void RefreshMaterials()
+    {
+        if (materialsLabel == null || economy == null) return;
+
+        materialsLabel.text = $"Madera: {economy.Wood} | Hierro: {economy.Iron} | Comida: {economy.Food}";
     }
 
     private void OnGemsChanged(int gems)
     {
         if (gemsLabel != null) gemsLabel.text = $"Gemas: {gems}";
 
+        // Con las gemas cambia si se puede pagar la recarga.
+        RefreshEnergy();
+
         // El botón de tirada se apaga solo cuando no llega el saldo.
         if (pullButton != null && gacha != null)
             pullButton.interactable = gems >= gacha.PullCost;
     }
+
+    private void OnFloorChanged(int floor) => RefreshFloor();
 
     private void OnExpeditionChanged(ExpeditionState state, string message)
     {

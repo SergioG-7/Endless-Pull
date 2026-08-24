@@ -21,6 +21,36 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Economía a la que se abona la recompensa del piso.")]
     [SerializeField] private EconomyManager economy;
 
+    [Tooltip("Escuadra que sube a la torre; solo estos héroes combaten.")]
+    [SerializeField] private PartyManager party;
+
+    [Tooltip("Datos del jefe que aparece en los pisos marcados.")]
+    [SerializeField] private EnemyData bossData;
+
+    [Tooltip("Cada cuántos pisos toca jefe.")]
+    [SerializeField] private int bossEveryFloors = 5;
+
+    [Tooltip("Escala visual del jefe frente a un enemigo normal.")]
+    [SerializeField] private float bossScale = 1.8f;
+
+    [Tooltip("Multiplicador sobre las stats del asset del jefe; a 1 manda el asset tal cual.")]
+    [SerializeField] private float bossStatMultiplier = 1f;
+
+    [Tooltip("Comida que consume cada expedición.")]
+    [SerializeField] private int foodPerExpedition = 10;
+
+    [Tooltip("Moral que pierden los héroes al volver sin haber comido.")]
+    [SerializeField] private float malnutritionMoraleLoss = 15f;
+
+    [Tooltip("Gemas extra del cofre que suelta el jefe.")]
+    [SerializeField] private int bossChestGems = 300;
+
+    [Tooltip("Madera y hierro extra del cofre que suelta el jefe.")]
+    [SerializeField] private int bossChestMaterials = 60;
+
+    [Tooltip("Punto al que se despliega la escuadra al empezar la expedición.")]
+    [SerializeField] private Vector2 deployPoint = new Vector2(3f, 0f);
+
     [Tooltip("Piso en el que está la expedición ahora mismo.")]
     [SerializeField] private int currentFloor = 1;
 
@@ -32,6 +62,9 @@ public class WaveManager : MonoBehaviour
 
     [Tooltip("Gemas que da superar un piso.")]
     [SerializeField] private int floorReward = 100;
+
+    [Tooltip("Moral que gana cada héroe vivo al superar un piso.")]
+    [SerializeField] private float moraleRewardOnWin = 10f;
 
     [Tooltip("Madera que da superar el piso 1; escala con el piso.")]
     [SerializeField] private int woodReward = 20;
@@ -46,11 +79,17 @@ public class WaveManager : MonoBehaviour
     [SerializeField] private Vector2 spawnAreaSize = new Vector2(2f, 3f);
 
     private readonly List<EnemyController> wave = new List<EnemyController>();
+    private readonly List<HeroController> deployed = new List<HeroController>();
     private ExpeditionState state = ExpeditionState.Idle;
+
+    // Se apunta al salir: si no hubo comida, la moral lo paga al volver.
+    private bool underfed;
+    private bool bossFloor;
 
     public int CurrentFloor => currentFloor;
     public ExpeditionState State => state;
     public int EnemyCountForFloor => baseEnemyCount + (currentFloor - 1);
+    public bool IsBossFloor => bossEveryFloors > 0 && currentFloor % bossEveryFloors == 0;
     public float StatMultiplierForFloor => 1f + statGrowthPerFloor * (currentFloor - 1);
 
     public int AliveEnemies
@@ -61,9 +100,20 @@ public class WaveManager : MonoBehaviour
     // Se dispara con (estado, mensaje) para que la UI muestre el feedback.
     public event System.Action<ExpeditionState, string> ExpeditionChanged;
 
+    // Se dispara con el piso nuevo; evita que la UI dependa del orden de los Start.
+    public event System.Action<int> FloorChanged;
+
+    // La usa el SaveManager al cargar una partida.
+    public void LoadFloor(int savedFloor)
+    {
+        currentFloor = Mathf.Max(1, savedFloor);
+        FloorChanged?.Invoke(currentFloor);
+    }
+
     void Awake()
     {
         if (economy == null) economy = UnityEngine.Object.FindFirstObjectByType<EconomyManager>();
+        if (party == null) party = UnityEngine.Object.FindFirstObjectByType<PartyManager>();
     }
 
     public void StartFloorExpedition()
@@ -80,13 +130,24 @@ public class WaveManager : MonoBehaviour
             return;
         }
 
-        if (CountAliveHeroes() == 0)
+        if (party == null || party.Party.Count == 0)
         {
-            Report(ExpeditionState.Idle, "Necesitas al menos un héroe");
+            Report(ExpeditionState.Idle, "Asigna héroes a la escuadra");
             return;
         }
 
+        if (!party.TryConsumeEnergy())
+        {
+            Report(ExpeditionState.Idle, $"Sin intentos de torre ({party.Energy}/{party.MaxEnergy})");
+            return;
+        }
+
+        // La comida se cobra al salir; sin despensa la expedición sale igual, pero pasa factura.
+        underfed = economy == null || !economy.TrySpendFood(foodPerExpedition);
+        if (underfed) Debug.LogWarning("[Expedición] Sin comida: la escuadra volverá desnutrida.", this);
+
         DespawnWave();
+        DeployParty();
 
         int count = EnemyCountForFloor;
         float mult = StatMultiplierForFloor;
@@ -106,8 +167,77 @@ public class WaveManager : MonoBehaviour
             wave.Add(enemy);
         }
 
+        // El jefe se suma a la oleada normal del piso.
+        bossFloor = IsBossFloor && bossData != null;
+        if (bossFloor) SpawnBoss();
+
+        string extra = bossFloor ? " + JEFE" : string.Empty;
         Report(ExpeditionState.InProgress,
-            $"Piso {currentFloor}: {count} enemigos (x{mult:0.00})");
+            $"Piso {currentFloor}: {count} enemigos{extra} (x{mult:0.00})  " +
+            $"Intentos {party.Energy}/{party.MaxEnergy}");
+    }
+
+    // Solo la escuadra viaja a la torre; el resto se queda en la base.
+    private void DeployParty()
+    {
+        deployed.Clear();
+
+        int slot = 0;
+        foreach (var hero in party.Party)
+        {
+            if (hero == null) continue;
+
+            // Cada puesto tiene su sitio: apilados, el golpe circular del jefe se los lleva a todos.
+            hero.transform.position = party.FormationSlot(slot);
+            hero.SetDeployed(true);
+            deployed.Add(hero);
+            slot++;
+        }
+
+        Debug.Log($"[Expedición] Escuadra desplegada: {deployed.Count} héroe(s).", this);
+    }
+
+    // Los devuelve a la base y les quita el estado de combate.
+    private void RecallParty()
+    {
+        foreach (var hero in deployed)
+        {
+            if (hero == null) continue;
+
+            hero.SetDeployed(false);
+            if (underfed) hero.LoseMorale(malnutritionMoraleLoss);
+        }
+
+        if (underfed && deployed.Count > 0)
+            Debug.LogWarning($"[Expedición] Desnutrición: -{malnutritionMoraleLoss} moral a la escuadra.", this);
+
+        deployed.Clear();
+        underfed = false;
+    }
+
+    // El jefe no escala con el piso: sus números son los del asset, para poder ajustarlo a mano.
+    private void SpawnBoss()
+    {
+        var go = Instantiate(enemyPrefab, spawnAreaCenter + new Vector2(1.5f, 0f), Quaternion.identity);
+        go.name = $"Enemy_Boss_F{currentFloor}";
+
+        var boss = go.GetComponent<EnemyController>();
+        boss.Initialize(bossData, bossStatMultiplier);
+        boss.MakeBoss(bossScale);
+        wave.Add(boss);
+
+        Debug.Log($"[Jefe] {bossData.enemyName} aparece en el piso {currentFloor} " +
+                  $"con {boss.MaxHealth} PV.", this);
+    }
+
+    // Botín garantizado por tumbar al jefe.
+    private void GrantBossChest()
+    {
+        economy?.Add(bossChestGems);
+        economy?.AddMaterials(bossChestMaterials, bossChestMaterials);
+
+        Debug.Log($"[Cofre] Botín del jefe: +{bossChestGems} gemas, " +
+                  $"+{bossChestMaterials} madera y +{bossChestMaterials} hierro.", this);
     }
 
     void Update()
@@ -123,17 +253,39 @@ public class WaveManager : MonoBehaviour
             economy?.Add(floorReward);
             economy?.AddMaterials(woodGain, ironGain);
 
+            if (bossFloor) GrantBossChest();
+            bossFloor = false;
+
+            // Ganar sube la moral de todo el que siga en pie.
+            foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None))
+                hero.AddMorale(moraleRewardOnWin);
+
+            RecallParty();
+
             currentFloor++;
+            FloorChanged?.Invoke(currentFloor);
             Report(ExpeditionState.Won,
                 $"Piso {cleared} superado  +{floorReward} gemas, +{woodGain} madera, +{ironGain} hierro");
             return;
         }
 
-        if (CountAliveHeroes() == 0)
+        // Se pierde cuando cae toda la escuadra, no cuando cae todo el roster.
+        if (CountAliveDeployed() == 0)
         {
             DespawnWave();
+            RecallParty();
+            bossFloor = false;
             Report(ExpeditionState.Lost, $"Expedición fallida en el piso {currentFloor}");
         }
+    }
+
+    private int CountAliveDeployed()
+    {
+        int alive = 0;
+        foreach (var hero in deployed)
+            if (hero != null) alive++;
+
+        return alive;
     }
 
     private int CountAliveHeroes()

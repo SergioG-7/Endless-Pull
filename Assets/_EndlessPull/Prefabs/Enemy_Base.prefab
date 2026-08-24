@@ -185,8 +185,10 @@ MonoBehaviour:
   data: {fileID: 11400000, guid: 4c385b8c16dd6234d95548445e94fc5f, type: 2}
   detectionRange: 5
   attackRange: 1.1
-  attackCooldown: 1.2
   scanInterval: 0.25
+  bossSlamRadius: 3
+  bossSlamInterval: 5
+  bossSlamDamageFactor: 0.8
 --- !u!114 &3456401659717892001
 MonoBehaviour:
   m_ObjectHideFlags: 0

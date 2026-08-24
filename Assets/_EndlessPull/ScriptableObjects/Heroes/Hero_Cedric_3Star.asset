@@ -10,11 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
-  m_Name: Hero_Velvet_3Star
+  m_Name: Hero_Cedric_3Star
   m_EditorClassIdentifier: Assembly-CSharp::HeroData
-  heroName: Velvet
+  heroName: Cedric
   starRank: 3
-  maxHealth: 240
-  baseAttack: 38
-  baseDefense: 12
-  moveSpeed: 2.8
+  maxHealth: 310
+  maxMP: 50
+  baseAttack: 28
+  baseDefense: 18
+  moveSpeed: 2.2

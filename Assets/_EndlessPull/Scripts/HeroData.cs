@@ -6,12 +6,25 @@ public class HeroData : ScriptableObject
     [Tooltip("Nombre visible del héroe.")]
     public string heroName = "Loki";
 
+    [Tooltip("Título con el que se le conoce.")]
+    public string title = "Novato de la Vanguardia";
+
+    [Tooltip("Lugar del que viene.")]
+    public string origin = "Reino Fronterizo";
+
+    [Tooltip("Trasfondo breve del héroe.")]
+    [TextArea(2, 4)]
+    public string bio = string.Empty;
+
     [Tooltip("Rareza del héroe, de 1 a 5 estrellas.")]
     [Range(1, 5)]
     public int starRank = 1;
 
     [Tooltip("Vida máxima con la que arranca el héroe.")]
     public int maxHealth = 100;
+
+    [Tooltip("Maná máximo; alimenta las habilidades activas.")]
+    public int maxMP = 50;
 
     [Tooltip("Daño base antes de aplicar la defensa rival.")]
     public int baseAttack = 15;

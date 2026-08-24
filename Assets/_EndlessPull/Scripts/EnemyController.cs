@@ -23,6 +23,15 @@ public class EnemyController : MonoBehaviour, IHealthOwner
     [Tooltip("Cada cuántos segundos vuelve a buscar héroes cercanos.")]
     [SerializeField] private float scanInterval = 0.25f;
 
+    [Tooltip("Radio del golpe circular del jefe.")]
+    [SerializeField] private float bossSlamRadius = 3f;
+
+    [Tooltip("Segundos entre golpes circulares del jefe.")]
+    [SerializeField] private float bossSlamInterval = 5f;
+
+    [Tooltip("Daño del golpe circular en tanto por uno sobre el ataque normal.")]
+    [SerializeField] private float bossSlamDamageFactor = 0.8f;
+
     private EnemyState state = EnemyState.Idle;
     private int currentHealth;
     private float attackTimer;
@@ -32,8 +41,13 @@ public class EnemyController : MonoBehaviour, IHealthOwner
     // Multiplicador de piso: escala vida y ataque sin tocar el EnemyData compartido.
     private float statMultiplier = 1f;
 
+    // Los jefes pegan además un golpe en área cada pocos segundos.
+    private bool isBoss;
+    private float slamTimer;
+
     public EnemyData Data => data;
     public EnemyState State => state;
+    public bool IsBoss => isBoss;
     public float StatMultiplier => statMultiplier;
 
     public int CurrentHealth => currentHealth;
@@ -56,6 +70,14 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         HealthChanged?.Invoke(currentHealth, MaxHealth);
     }
 
+    // La usa el WaveManager en los pisos de jefe: escala el cuerpo y activa el golpe en área.
+    public void MakeBoss(float visualScale)
+    {
+        isBoss = true;
+        slamTimer = bossSlamInterval;
+        transform.localScale *= visualScale;
+    }
+
     void Start()
     {
         if (data == null)
@@ -67,12 +89,41 @@ public class EnemyController : MonoBehaviour, IHealthOwner
 
     void Update()
     {
+        if (isBoss) TickBossSlam();
+
         ScanForHeroes();
 
         switch (state)
         {
             case EnemyState.Approach: TickApproach(); break;
             case EnemyState.Attack: TickAttack(); break;
+        }
+    }
+
+    // Golpe circular: alcanza a todo héroe dentro del radio, esté o no en contacto.
+    private void TickBossSlam()
+    {
+        slamTimer -= Time.deltaTime;
+        if (slamTimer > 0f) return;
+
+        slamTimer = bossSlamInterval;
+
+        int damage = Mathf.Max(1, Mathf.RoundToInt(Attack * bossSlamDamageFactor));
+        float radiusSqr = bossSlamRadius * bossSlamRadius;
+        int hits = 0;
+
+        foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None))
+        {
+            if (((Vector2)(hero.transform.position - transform.position)).sqrMagnitude > radiusSqr) continue;
+
+            hero.TakeDamage(damage);
+            hits++;
+        }
+
+        if (hits > 0)
+        {
+            DamageTextManager.Show(transform.position, "¡GOLPE!", new Color(1f, 0.4f, 0.3f));
+            Debug.Log($"[Jefe] {data.enemyName} sacude a {hits} héroe(s) por {damage}.", this);
         }
     }
 
@@ -162,6 +213,7 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         currentHealth = Mathf.Max(0, currentHealth - finalDamage);
         HealthChanged?.Invoke(currentHealth, MaxHealth);
 
+        DamageTextManager.ShowDamage(transform.position, finalDamage);
         Debug.Log($"[Enemy] {data.enemyName} recibe {finalDamage} ({currentHealth}/{MaxHealth})", this);
 
         if (currentHealth <= 0)

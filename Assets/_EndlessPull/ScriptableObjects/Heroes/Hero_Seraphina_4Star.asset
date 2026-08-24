@@ -10,11 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
-  m_Name: Hero_Loki_1Star
+  m_Name: Hero_Seraphina_4Star
   m_EditorClassIdentifier: Assembly-CSharp::HeroData
-  heroName: Loki
-  starRank: 1
-  maxHealth: 100
-  baseAttack: 15
-  baseDefense: 5
-  moveSpeed: 2.5
+  heroName: Seraphina
+  starRank: 4
+  maxHealth: 395
+  maxMP: 50
+  baseAttack: 57
+  baseDefense: 19
+  moveSpeed: 2.95

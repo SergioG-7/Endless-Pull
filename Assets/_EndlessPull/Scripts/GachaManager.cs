@@ -34,7 +34,63 @@ public class GachaManager : MonoBehaviour
         if (economy == null) economy = UnityEngine.Object.FindFirstObjectByType<EconomyManager>();
     }
 
-    // Tirada ponderada: primero la rareza, luego un héroe cualquiera de esa rareza.
+    // Busca en el catálogo por nombre de asset; la usa el SaveManager al restaurar el roster.
+    public HeroData FindByAssetName(string assetName)
+    {
+        if (string.IsNullOrEmpty(assetName)) return null;
+
+        foreach (var hero in catalog)
+            if (hero != null && hero.name == assetName) return hero;
+
+        return null;
+    }
+
+    // Punto de aparición con dispersión, para que no salgan todos en el mismo pixel.
+    public Vector2 RandomSpawnPosition()
+        => spawnCenter + new Vector2(
+            UnityEngine.Random.Range(-spawnJitter.x, spawnJitter.x),
+            UnityEngine.Random.Range(-spawnJitter.y, spawnJitter.y));
+
+    // Instancia un héroe ya elegido; la usan tanto la tirada como la carga de partida.
+    public HeroController SpawnHero(HeroData heroData, HeroTrait heroTrait, Vector2 position)
+    {
+        if (heroData == null || heroPrefab == null) return null;
+
+        var go = Instantiate(heroPrefab, position, Quaternion.identity);
+        go.name = $"Hero_{heroData.heroName}_{heroData.starRank}Star";
+
+        // Initialize corre tras Awake y antes del primer Start, así la barra ya lee bien.
+        var hero = go.GetComponent<HeroController>();
+        hero.Initialize(heroData, heroTrait, spawnCenter, wanderSize);
+        return hero;
+    }
+
+    // Nombres de los héroes que ya están en la base; el catálogo no puede repetirlos.
+    public HashSet<string> LivingHeroNames()
+    {
+        var names = new HashSet<string>();
+
+        foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None))
+            if (hero.Data != null) names.Add(hero.Data.heroName);
+
+        return names;
+    }
+
+    // El catálogo menos los héroes que ya se tienen: de aquí sale toda tirada.
+    public List<HeroData> AvailableHeroes()
+    {
+        var owned = LivingHeroNames();
+        var available = new List<HeroData>();
+
+        foreach (var hero in catalog)
+            if (hero != null && !owned.Contains(hero.heroName)) available.Add(hero);
+
+        return available;
+    }
+
+    public bool HasAvailableHeroes() => AvailableHeroes().Count > 0;
+
+    // Tirada ponderada sobre lo que queda por conseguir: primero la rareza, luego el héroe.
     public HeroData PerformPull()
     {
         if (catalog == null || catalog.Count == 0)
@@ -43,15 +99,18 @@ public class GachaManager : MonoBehaviour
             return null;
         }
 
-        int rank = RollRarity();
-        HeroData pick = PickFromRank(rank);
-
-        // Si esa rareza no tiene héroes registrados, se cae al catálogo entero.
-        if (pick == null)
+        var available = AvailableHeroes();
+        if (available.Count == 0)
         {
-            pick = catalog[UnityEngine.Random.Range(0, catalog.Count)];
-            Debug.LogWarning($"[Gacha] Sin héroes de {rank}★, se usa {pick.heroName} ({pick.starRank}★).", this);
+            Debug.LogWarning($"[Gacha] Ya tienes los {catalog.Count} héroes del catálogo.", this);
+            return null;
         }
+
+        int rank = RollRarity(available);
+        HeroData pick = PickFromRank(available, rank);
+
+        // Si esa rareza se agotó se cae a lo que quede libre, nunca al catálogo entero.
+        if (pick == null) pick = available[UnityEngine.Random.Range(0, available.Count)];
 
         return pick;
     }
@@ -61,6 +120,13 @@ public class GachaManager : MonoBehaviour
         if (heroPrefab == null)
         {
             Debug.LogError("[Gacha] Falta el prefab del héroe.", this);
+            return;
+        }
+
+        // Si ya están todos, la tirada se bloquea antes de cobrar nada.
+        if (!HasAvailableHeroes())
+        {
+            Debug.LogWarning("[Gacha] Tirada bloqueada: el catálogo está completo.", this);
             return;
         }
 
@@ -81,49 +147,66 @@ public class GachaManager : MonoBehaviour
             return;
         }
 
-        Vector2 pos = spawnCenter + new Vector2(
-            UnityEngine.Random.Range(-spawnJitter.x, spawnJitter.x),
-            UnityEngine.Random.Range(-spawnJitter.y, spawnJitter.y));
-
-        var go = Instantiate(heroPrefab, pos, Quaternion.identity);
-        go.name = $"Hero_{pulled.heroName}_{pulled.starRank}Star";
-
         // El rasgo sale aleatorio en cada invocación, no viene del HeroData.
         HeroTrait trait = HeroTraits.Random();
 
-        // Initialize corre tras Awake y antes del primer Start, así la barra ya lee bien.
-        var hero = go.GetComponent<HeroController>();
-        hero.Initialize(pulled, trait, spawnCenter, wanderSize);
+        var hero = SpawnHero(pulled, trait, RandomSpawnPosition());
+        if (hero == null)
+        {
+            economy.Add(pullCost);
+            return;
+        }
 
+        // Una o dos pasivas al azar; son innatas y ya no cambian.
+        var passives = PassiveSkills.RandomSet();
+        hero.SetPassives(passives);
+
+        Debug.Log($"[Gacha] Pasivas de {pulled.heroName}: {PassiveSkills.Describe(passives)}.", hero.gameObject);
         Debug.Log($"[Gacha] Invocado {pulled.heroName} ({pulled.starRank}★) " +
-                  $"[{HeroTraits.DisplayName(trait)}] con {hero.MaxHealth} PV y {hero.Attack} ATK.", go);
+                  $"[{HeroTraits.DisplayName(trait)}] con {hero.MaxHealth} PV, " +
+                  $"{hero.MaxMP} MP y {hero.Attack} ATK.", hero.gameObject);
+
+        SaveManager.RequestSave();
     }
 
-    // Devuelve el starRank sorteado según los pesos configurados.
-    private int RollRarity()
+    // Solo pesan las rarezas que aún tienen algún héroe libre.
+    private int RollRarity(List<HeroData> available)
     {
+        var weights = new float[rarityWeights.Length];
         float total = 0f;
-        foreach (float w in rarityWeights) total += Mathf.Max(0f, w);
 
-        if (total <= 0f) return 1;
+        foreach (var hero in available)
+        {
+            int index = hero.starRank - 1;
+            if (index < 0 || index >= weights.Length) continue;
+
+            // Cada rareza suma su peso una sola vez, no una por héroe.
+            if (weights[index] > 0f) continue;
+
+            weights[index] = Mathf.Max(0f, rarityWeights[index]);
+            total += weights[index];
+        }
+
+        // Si lo que queda solo tiene rarezas con peso 0, se sortea sin ponderar.
+        if (total <= 0f) return available[UnityEngine.Random.Range(0, available.Count)].starRank;
 
         float roll = UnityEngine.Random.Range(0f, total);
         float acc = 0f;
 
-        for (int i = 0; i < rarityWeights.Length; i++)
+        for (int i = 0; i < weights.Length; i++)
         {
-            acc += Mathf.Max(0f, rarityWeights[i]);
+            acc += weights[i];
             if (roll < acc) return i + 1;
         }
 
-        return rarityWeights.Length;
+        return weights.Length;
     }
 
-    private HeroData PickFromRank(int rank)
+    private HeroData PickFromRank(List<HeroData> available, int rank)
     {
         var matches = new List<HeroData>();
-        foreach (var hero in catalog)
-            if (hero != null && hero.starRank == rank) matches.Add(hero);
+        foreach (var hero in available)
+            if (hero.starRank == rank) matches.Add(hero);
 
         if (matches.Count == 0) return null;
         return matches[UnityEngine.Random.Range(0, matches.Count)];
