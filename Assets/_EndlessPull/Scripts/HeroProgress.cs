@@ -162,8 +162,17 @@ public class HeroProgress : MonoBehaviour
         Debug.Log($"[Nivel] ¡Subida de Nivel! {who} -> Nv. {level} (+{healthGain} PV máx, +{attackGrowthPerLevel} ATK)", this);
     }
 
+    // El rótulo flotante identifica a la unidad de un vistazo en la base.
     private void RefreshLabel()
     {
-        if (levelLabel != null) levelLabel.text = $"Nv. {level}";
+        if (levelLabel == null) return;
+
+        if (hero == null || hero.Data == null)
+        {
+            levelLabel.text = $"Nv. {level}";
+            return;
+        }
+
+        levelLabel.text = $"{hero.Data.heroName} [{hero.StarRank}*] Nv.{level}";
     }
 }

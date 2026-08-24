@@ -45,11 +45,15 @@ public class GachaManager : MonoBehaviour
         return null;
     }
 
-    // Punto de aparición con dispersión, para que no salgan todos en el mismo pixel.
+    // Los invocados aterrizan en el Altar; si no hay altar, en el centro de la base de siempre.
     public Vector2 RandomSpawnPosition()
-        => spawnCenter + new Vector2(
+    {
+        if (SummonAltar.TryGetSpawnPoint(out Vector2 altar)) return altar;
+
+        return spawnCenter + new Vector2(
             UnityEngine.Random.Range(-spawnJitter.x, spawnJitter.x),
             UnityEngine.Random.Range(-spawnJitter.y, spawnJitter.y));
+    }
 
     // Instancia un héroe ya elegido; la usan tanto la tirada como la carga de partida.
     public HeroController SpawnHero(HeroData heroData, HeroTrait heroTrait, Vector2 position)
@@ -160,6 +164,9 @@ public class GachaManager : MonoBehaviour
         // Una o dos pasivas al azar; son innatas y ya no cambian.
         var passives = PassiveSkills.RandomSet();
         hero.SetPassives(passives);
+
+        DamageTextManager.Show(hero.transform.position, "¡Nuevo Héroe Invocado!",
+            new Color(1f, 0.9f, 0.4f));
 
         Debug.Log($"[Gacha] Pasivas de {pulled.heroName}: {PassiveSkills.Describe(passives)}.", hero.gameObject);
         Debug.Log($"[Gacha] Invocado {pulled.heroName} ({pulled.starRank}★) " +

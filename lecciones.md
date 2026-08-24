@@ -39,6 +39,10 @@ grep -n "activeInputHandler" ProjectSettings/ProjectSettings.asset
 
 **Un campo nuevo en un ScriptableObject ya existente coge el inicializador.** Al añadir `public int maxMP = 50;` a `HeroData`, los tres `.asset` que ya estaban en disco salieron con 50 sin tocarlos: su YAML no tiene entrada para ese campo, así que Unity deja el valor del inicializador. Lo mismo vale para un `[SerializeField]` de una clase `[System.Serializable]` en un prefab ya guardado (`HeroSkill` en el prefab del héroe).
 
+**Insertar un valor en medio de un enum reinterpreta los assets ya guardados.** Al añadir `Shield` a `EquipmentSlot`, meterlo entre `Weapon` y `Armor` habría convertido la Armadura de Cuero en escudo, porque el YAML guarda el número, no el nombre. La solución fue fijar los valores a mano (`Weapon = 0, Armor = 1, Accessory = 2, Shield = 3`) y repuntar solo el asset que tocaba.
+
+**Un valor ya serializado en escena o prefab gana siempre al inicializador de C#.** Tropezamos dos veces con esto: `bossStatMultiplier` seguía a 3 en la escena y `bossSlamInterval` a 4 en `Enemy_Base.prefab`, así que el jefe salía a 1350 PV con el asset puesto a 450. Cambiar el default en el código **no** basta: hay que escribirlo con `SerializedObject` sobre la instancia concreta. Solo los campos que nunca se han serializado cogen el inicializador.
+
 **Nunca mutar el ScriptableObject compartido.** Subir de nivel un Loki no puede tocar `Hero_Loki_1Star.asset`: afectaría a todos los Loki y el cambio persistiría al salir de Play. Los bonus van **por instancia** (`bonusMaxHealth`, `bonusAttack` en `HeroController`; `statMultiplier` en `EnemyController`) y las propiedades públicas los suman sobre el dato base.
 
 **Patrón para asignar datos tras `Instantiate`.** `Awake` ya corrió cuando puedes tocar el objeto, así que:
@@ -138,6 +142,22 @@ Se borra el `.meta`, se hace `touch` al `.cs` y se refresca. Unity lo regenera. 
 **Un `Debug.Log` por acción vale como prueba del disparador.** Filtrando la consola por el prefijo se ve el *stack trace* completo, y ahí queda claro desde dónde se llamó: `GachaManager.SummonAndSpawnHero`, `BaseBuilding.TryUpgrade` o `WaveManager.Report`. Mucho más convincente que comprobar que el fichero cambió de fecha.
 
 **Medir el ancho de un texto con `TMP_Text.preferredWidth`.** Comparado contra `RectTransform.rect.width` del contenedor dice si una fila se va a salir, sin mirar la Game View. Se prueba con la fila más larga que pueda darse, no con la que hay en pantalla.
+
+**La consola MCP no devuelve los errores de compilación.** `Unity_ReadConsole` con filtro de errores dio 0 entradas mientras el proyecto no compilaba. La fuente fiable es `Logs/Editor.log`:
+```bash
+tail -c 300000 Logs/Editor.log | grep "error CS" | sort -u | tail -20
+```
+
+**El DLL se queda viejo si la compilación no llega a lanzarse.** `isCompiling=False` y cero errores no significan "compila": puede que Unity ni lo haya intentado. Antes de fiarse de un `MonoScript.GetClass()`, comparar fechas:
+```bash
+NEWEST=$(ls -t Assets/**/Scripts/*.cs | head -1)
+[ Library/ScriptAssemblies/Assembly-CSharp.dll -nt "$NEWEST" ] || echo "DLL VIEJO"
+```
+Un `MonoScript.GetClass()` que resuelve puede estar leyendo el assembly anterior. Y `GetClass()` devuelve `null` legítimamente en ficheros sin MonoBehaviour ni ScriptableObject (enums, clases `[System.Serializable]`, estáticas): ahí no prueba nada.
+
+**Los heredocs grandes de Bash se rompen.** Con contenido de más de ~150 líneas, `python - <<'PY'` falla con `unexpected EOF while looking for matching '`. La vía fiable para parches largos es escribir el script `.py` al scratchpad con la herramienta Write y ejecutarlo por ruta. Para ficheros C# nuevos, la herramienta Write directamente.
+
+**Una pasiva puede hacer que una prueba falle sin que haya bug.** Bajar a un héroe a vida crítica no le quitó nada: tenía **Evasión** y esquivó. Antes de dar por roto un sistema, mirar qué pasivas lleva la unidad de prueba y neutralizarlas (`SetPassives(new List<PassiveSkill>())`).
 
 **Leer la consola con `IncludeStacktrace: false`.** Con trazas, 14 entradas pasan de 50 000 caracteres. Y ojo: buscar "Exception" da falsos positivos porque aparece en la firma de `ConsoleSink.LogToConsole`. Mejor contar por el campo `Type`.
 

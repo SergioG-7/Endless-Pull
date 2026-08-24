@@ -2,7 +2,7 @@
 
 Gacha autobattler con permadeath. Unity 6000.5.8f1, 2D. Arquitectura híbrida: C# + FSM para base y macro-lógica, ML-Agents/Sentis previsto para el micro-combate.
 
-Última sesión: **24 ago 2026** (Fases 5, 6 y 7 cerradas y verificadas).
+Última sesión: **24 ago 2026** (Fases 5 a 11 cerradas y verificadas; Fase 12 a medias).
 
 ---
 
@@ -15,6 +15,10 @@ Assets/_EndlessPull/
     EnemyData.cs  EnemyController.cs
     IHealthOwner.cs  FloatingHealthBar.cs
     HeroSkill.cs  SaveManager.cs  SynthesisManager.cs
+    EquipmentData.cs  PassiveSkill.cs  WeaponMastery.cs  ShopManager.cs
+    PartyManager.cs  CraftingManager.cs  DamageTextManager.cs
+    UIManager.cs  ShopUI.cs  CraftingUI.cs  MasterActionBar.cs
+    SummonAltar.cs  CameraDirector.cs  ResourceExpeditionManager.cs   (Fase 12, sin cablear)
     MasterCommander.cs  GachaManager.cs  EconomyManager.cs  WaveManager.cs
     MasterHUD.cs  RosterUI.cs  BuildingUpgradeUI.cs  BaseBuilding.cs
   Prefabs/    Hero_Base  Enemy_Base  Building_TrainingArea  Building_Canteen
@@ -41,6 +45,14 @@ Assets/_EndlessPull/
 **Fase 6 — Recursos de combate, habilidad activa y persistencia.** Maná y fatiga por instancia en `HeroController`, `HeroSkill` como habilidad activa con coste y enfriamiento, y `SaveManager` con guardado JSON en `Application.persistentDataPath/savegame.json`.
 
 **Fase 7 — Catálogo, moral y síntesis.** Doce héroes en el catálogo, tirada sin duplicados, moral con efectos de combate y sacrificio de unidades para dar EXP.
+
+**Fase 8 — Roster masivo, equipo, maestrías, pasivas y ascensión.** 39 héroes en el catálogo. `EquipmentData` con huecos y tipos de arma, tienda que suelta piezas, `WeaponMastery` por tipo de arma, pasivas innatas y ascensión de estrella.
+
+**Fase 9 — Escuadras, decretos, crafteo y expansión de base.** `PartyManager` con escuadra de 4 e intentos de torre, recurso Comida y granja, `CraftingManager` con Piedras de Ascensión, decretos tácticos, textos flotantes y jefe de piso.
+
+**Fase 10 — Identidad, formaciones, UI táctil y balance.** `heroInstanceId` por GUID, formación escalonada de despliegue, barra de decretos y taller manejables con el dedo, y Rey Goblin ajustado a 450/40.
+
+**Fase 11 — Combate justo, variedad y pulido de UI.** Aviso de 1,2 s antes del golpe circular, decreto de Retirada, Goblin Tirador a distancia, `UIManager` con paneles excluyentes y alerta de salud crítica.
 
 ### Catálogo
 
@@ -154,6 +166,35 @@ Cambios de apoyo: el `RosterPanel` pasó a 1560 px para la columna de moral más
 
 ---
 
+## Verificación de las Fases 8 a 11 (24 ago 2026)
+
+**Fase 8.** 20 tiradas seguidas dejaron los 39 héroes sin un solo duplicado. Síntesis: Karon Nv.2 + Han Ysl 5★ → Nv.5. Aguante bajó la fatiga por golpe de 5,0 a 2,5; Ojo de Águila subió el rango de 6,0 a 9,0. Espada equipada: ATK 16 → 27, y 10 golpes la llevaron a Nv.2 (×1,10). El nivel se detuvo en 10/10 con EXP masiva y la ascensión pasó 1★→2★ con ×1,40 en las bases.
+
+**Fase 9.** Escuadra de 3 desplegada mientras los otros dos seguían en la base; comida 40 → 30 e intentos 5 → 4. Taller: 5 intentos, 4 éxitos, materiales cobrados siempre. Retirada devolvió a los 4 héroes vivos sin avanzar de piso. Reagruparse movió a la escuadra −2 unidades y dio +5 DEF durante 4 s.
+
+**Fase 10.** 4 GUID distintos y ninguno vacío; la escuadra volvió intacta tras recargar sobre un roster de 7. Formación exacta en los cuatro puestos. Taller desde el panel: 0 → 1 piedras y −40 madera. Los tres decretos quedaron en enfriamiento al pulsarlos. **El piso 5 se superó con la escuadra 4/4 viva**, cuando antes moría entera.
+
+**Fase 11.** Roster → Taller → Tienda: solo uno abierto cada vez. Tirador con alcance 4,5 y velocidad 1,0, uno de cada tres enemigos. Retirada dejó el piso sin avanzar y a los 4 héroes vivos con −10 de moral. El jefe registró `carga el golpe: 1,2s para reaccionar` y 1,2 s después el impacto; pulsar Reagruparse bajó de **3 a 1** los héroes dentro del radio. A 19 % de vida el botón de curar pasó a rojo.
+
+---
+
+## Fase 12 — EN CURSO, sin compilar ni verificar
+
+Escrito en disco pero **todavía sin cablear en escena, sin compilar y sin probar**. Son solo adiciones, así que no rompen nada, pero hoy no hacen nada en Play.
+
+Hecho:
+- `SummonAltar.cs`, `CameraDirector.cs`, `ResourceExpeditionManager.cs` — ficheros nuevos completos.
+- `UIManager.cs` — fondo opaco a pantalla completa, `SetAsLastSibling` al abrir y ocultado de la barra de decretos.
+- `HeroProgress.cs` — rótulo flotante con `{heroName} [{starRank}*] Nv.{level}`.
+- `GachaManager.cs` — los invocados salen del Altar, con texto "¡Nuevo Héroe Invocado!".
+
+Pendiente, por orden de impacto:
+1. **Separar la arena en x=40 en `WaveManager`** y teletransportar a la escuadra de vuelta a la base al recogerla. Sin esto, `CameraDirector` viaja a una arena vacía y los héroes cruzan 40 unidades andando. Bloquea los puntos 4 y 6 de la fase.
+2. **Montar en escena**: `ModalBackdrop`, prefab `Building_SummonAltar`, los tres managers nuevos y `Main Camera` a `orthographicSize = 8.5`. Después compilar y verificar.
+3. **Torre por pisos y expediciones de granjeo**: `TowerPanelUI.cs` y registro de pisos superados en `WaveManager`/`SaveManager` para distinguir primera victoria (gemas + materiales completos) de repetición (0 gemas). Es el punto 5 entero, sin empezar.
+
+---
+
 ## Deuda conocida
 
 - [ ] **La tecla Espacio nunca se ha verificado.** El Input System descarta teclado sin foco en la Game View. Solo está probada la ruta `HealAllHeroes`. Requiere prueba manual.
@@ -165,6 +206,12 @@ Cambios de apoyo: el `RosterPanel` pasó a 1560 px para la columna de moral más
 - [ ] **La síntesis no pide confirmación.** Dos clics destruyen un héroe para siempre, sin deshacer. Con un 5★ eso duele.
 - [ ] **Nada repuebla el catálogo.** Con 12 héroes y sin duplicados, el gacha se agota y las gemas dejan de tener uso. Hace falta más catálogo, o duplicados que sirvan de fodder.
 - [ ] **La habilidad se lanza sola en cuanto hay maná.** No hay criterio táctico: gasta los 20 MP en el primer golpe disponible aunque el enemigo esté a punto de morir. Es justo la decisión que se quiere delegar en ML-Agents.
+- [ ] **El escudo compite con la armadura por el hueco `Armor`** hasta la Fase 9, donde ganó hueco propio; la maestría de Escudo sigue sin poder entrenarse porque solo cuenta el arma del hueco `Weapon`.
+- [ ] **La síntesis no pide confirmación.** Dos clics destruyen un héroe para siempre, sin deshacer.
+- [ ] **El botón "Equipar" coge la primera pieza que encaje**, sin dejar elegir.
+- [ ] **`interactable` se refresca en `Update`**, así que en el frame en que se despliega la escuadra el botón de Retirada aún se ve apagado. Invisible al jugar, visible al medir.
+- [ ] **La barra de decretos no reserva margen para el *notch***. En un móvil con recorte lateral los botones pueden quedar debajo.
+- [ ] **No hay UI para la recarga de intentos con gemas más allá del botón "+"**, ni para elegir puesto en la formación.
 - [ ] **`ignore.conf` no se versiona en Git** (decisión explícita). Quien clone por GitHub no lo recibe.
 
 ---
