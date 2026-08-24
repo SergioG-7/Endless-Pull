@@ -7,7 +7,25 @@ public enum BuildingType
     TrainingDummy,
     Canteen,
     RestArea,
-    Farm
+    Farm,
+    Workshop
+}
+
+// Nombres visibles de los tipos de edificio.
+public static class BuildingTypes
+{
+    public static string DisplayName(BuildingType type)
+    {
+        switch (type)
+        {
+            case BuildingType.TrainingDummy: return "Campo de Entrenamiento";
+            case BuildingType.Canteen: return "Cantina";
+            case BuildingType.RestArea: return "Zona de Descanso";
+            case BuildingType.Farm: return "Granja";
+            case BuildingType.Workshop: return "Taller";
+        }
+        return type.ToString();
+    }
 }
 
 public class BaseBuilding : MonoBehaviour
@@ -54,8 +72,20 @@ public class BaseBuilding : MonoBehaviour
     [Tooltip("Segundos entre cosechas de la granja.")]
     [SerializeField] private float harvestInterval = 10f;
 
+    [Tooltip("Piso de torre a partir del cual existe este edificio; 0 = desde el principio.")]
+    [SerializeField] private int requiredFloor;
+
+    [Tooltip("Producción extra por nivel, en tanto por uno acumulativo.")]
+    [SerializeField] private float extraPerLevel = 0.15f;
+
+    [Tooltip("Tope de ocupantes por edificio, por muy alto que sea el nivel.")]
+    [SerializeField] private int capacityCap = 4;
+
     private float harvestTimer;
     private EconomyManager economy;
+
+    // Trabajadores fijos asignados a mano desde la ficha del edificio.
+    private readonly List<HeroController> workers = new List<HeroController>();
 
     // Registro estático: evita que cada héroe escanee la escena entera.
     private static readonly List<BaseBuilding> all = new List<BaseBuilding>();
@@ -67,12 +97,144 @@ public class BaseBuilding : MonoBehaviour
     public float TickInterval => tickInterval;
     public int Level => level;
 
-    public int ExpPerTick => expPerTick * level;
-    public int FoodPerHarvest => foodPerHarvest * level;
+    // El nivel no suma lineal: cada nivel rinde algo más que el anterior.
+    public float LevelFactor => level * (1f + extraPerLevel * (level - 1));
+
+    public int ExpPerTick => Mathf.RoundToInt(expPerTick * LevelFactor);
+    public int FoodPerHarvest => Mathf.RoundToInt(foodPerHarvest * LevelFactor);
     public float HarvestInterval => harvestInterval;
-    public int HealPerTick => healPerTick * level;
+    public int HealPerTick => Mathf.RoundToInt(healPerTick * LevelFactor);
+    public float MoralePerTick => moralePerTick;
     public int NextWoodCost => woodCostPerLevel * level;
     public int NextIronCost => ironCostPerLevel * level;
+
+    public int RequiredFloor => requiredFloor;
+    public bool IsUnlocked => TowerFloor >= requiredFloor;
+
+    // Piso actual de la torre; lo publica el WaveManager para no consultarlo por edificio.
+    public static int TowerFloor { get; private set; } = 1;
+
+    public static void SetTowerFloor(int floor)
+    {
+        TowerFloor = Mathf.Max(1, floor);
+
+        // Los edificios que aún no tocan se apagan; los que ya tocan aparecen.
+        foreach (var b in all)
+            if (b != null) b.RefreshUnlock();
+    }
+
+    // A partir del piso 5 cada instalación admite el doble de gente.
+    public static int FloorCapacity => TowerFloor >= 5 ? 2 : 1;
+
+    public int Capacity => Mathf.Min(capacityCap, FloorCapacity + (level - 1));
+
+    public IReadOnlyList<HeroController> Workers => workers;
+
+    // Ocupación real: los asignados más quien esté de visita ahora mismo.
+    public int CurrentOccupants
+    {
+        get
+        {
+            PruneWorkers();
+            int count = workers.Count;
+
+            foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None))
+                if (hero != null && hero.CurrentBuilding == this && !workers.Contains(hero)) count++;
+
+            return count;
+        }
+    }
+
+    public bool IsWorker(HeroController hero) => hero != null && workers.Contains(hero);
+    public bool HasRoom => CurrentOccupants < Capacity;
+
+    // Asignar y desasignar desde la ficha del edificio.
+    public bool ToggleWorker(HeroController hero)
+    {
+        if (hero == null) return false;
+
+        if (workers.Remove(hero))
+        {
+            hero.SetAssignedBuilding(null);
+            LevelChanged?.Invoke(level);
+            SaveManager.RequestSave();
+            return false;
+        }
+
+        if (workers.Count >= Capacity)
+        {
+            Debug.LogWarning($"[Edificio] {buildingName} está al completo ({workers.Count}/{Capacity}).", this);
+            return false;
+        }
+
+        workers.Add(hero);
+        hero.SetAssignedBuilding(this);
+        LevelChanged?.Invoke(level);
+        SaveManager.RequestSave();
+        return true;
+    }
+
+    // La usa el SaveManager al restaurar la partida.
+    public void LoadWorker(HeroController hero)
+    {
+        if (hero == null || workers.Contains(hero)) return;
+
+        workers.Add(hero);
+        hero.SetAssignedBuilding(this);
+    }
+
+    private void PruneWorkers()
+    {
+        for (int i = workers.Count - 1; i >= 0; i--)
+            if (workers[i] == null) workers.RemoveAt(i);
+    }
+
+    // Jerarquía: escuadra primero, luego estrellas y luego nivel.
+    public static int Rank(HeroController hero)
+    {
+        if (hero == null) return -1;
+
+        var party = UnityEngine.Object.FindFirstObjectByType<PartyManager>();
+        int enEscuadra = party != null && party.IsInParty(hero) ? 1000 : 0;
+
+        var progress = hero.GetComponent<HeroProgress>();
+        return enEscuadra + hero.StarRank * 100 + (progress != null ? progress.Level : 1);
+    }
+
+    // Deja entrar si hay hueco; si no, echa al de menor rango cuando el que llega manda más.
+    public bool TryAdmit(HeroController hero)
+    {
+        if (hero == null || !IsUnlocked) return false;
+        if (IsWorker(hero) || HasRoom) return true;
+
+        HeroController peor = null;
+        int peorRango = int.MaxValue;
+
+        foreach (var other in UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None))
+        {
+            if (other == null || other == hero || other.CurrentBuilding != this) continue;
+            if (IsWorker(other)) continue;
+
+            int rango = Rank(other);
+            if (rango >= peorRango) continue;
+
+            peorRango = rango;
+            peor = other;
+        }
+
+        if (peor == null || Rank(hero) <= peorRango) return false;
+
+        peor.EvictFromBuilding();
+        Debug.Log($"[Jerarquía] {hero.Data.heroName} desplaza a {peor.Data.heroName} de {buildingName}.", this);
+        return true;
+    }
+
+    private void RefreshUnlock()
+    {
+        // Se apaga el renderer y el rótulo, pero el componente sigue vivo para el guardado.
+        foreach (var sr in GetComponentsInChildren<SpriteRenderer>(true)) sr.enabled = IsUnlocked;
+        foreach (var t in GetComponentsInChildren<TMPro.TextMeshPro>(true)) t.enabled = IsUnlocked;
+    }
 
     // Identificador estable para el guardado: el nombre del objeto en la escena.
     public string SaveId => name;
@@ -88,6 +250,8 @@ public class BaseBuilding : MonoBehaviour
 
     void Start()
     {
+        RefreshUnlock();
+
         if (type == BuildingType.Farm)
         {
             economy = UnityEngine.Object.FindFirstObjectByType<EconomyManager>();
@@ -98,13 +262,17 @@ public class BaseBuilding : MonoBehaviour
     // La granja produce sola, sin que nadie la visite.
     void Update()
     {
-        if (type != BuildingType.Farm || economy == null) return;
+        if (type != BuildingType.Farm || economy == null || !IsUnlocked) return;
 
         harvestTimer -= Time.deltaTime;
         if (harvestTimer > 0f) return;
 
         harvestTimer = harvestInterval;
-        economy.AddFood(FoodPerHarvest);
+
+        // Cada trabajador asignado suma media cosecha extra.
+        PruneWorkers();
+        float factor = 1f + workers.Count * 0.5f;
+        economy.AddFood(Mathf.RoundToInt(FoodPerHarvest * factor));
     }
 
     void OnEnable() => all.Add(this);

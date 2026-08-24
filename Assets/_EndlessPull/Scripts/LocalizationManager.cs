@@ -74,7 +74,16 @@ public static class LocalizationManager
         { "UI_IRON",         new[] { "Hierro", "Iron", "鉄" } },
         { "UI_FOOD",         new[] { "Comida", "Food", "食料" } },
         { "UI_GEMS",         new[] { "Gemas", "Gems", "ジェム" } },
-        { "UI_ATTEMPTS",     new[] { "Intentos", "Attempts", "挑戦回数" } }
+        { "UI_ATTEMPTS",     new[] { "Intentos", "Attempts", "挑戦回数" } },
+
+        { "UI_MENU",         new[] { "Menú", "Menu", "メニュー" } },
+        { "UI_SECTION_MANAGEMENT", new[] { "Gestión", "Management", "運営" } },
+        { "UI_SECTION_STAFF",      new[] { "Personal", "Staff", "人事" } },
+        { "UI_SECTION_FACILITIES", new[] { "Instalaciones", "Facilities", "施設" } },
+
+        { "UI_SUBCLASS",     new[] { "Subclase", "Subclass", "職種" } },
+        { "UI_REPAIR",       new[] { "Reparar", "Repair", "修理" } },
+        { "UI_BROKEN",       new[] { "ROTO", "BROKEN", "破損" } }
     };
 
     // Nombre del idioma en su propio idioma: el selector se entiende sin saber el actual.

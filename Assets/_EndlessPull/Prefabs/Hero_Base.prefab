@@ -321,6 +321,7 @@ GameObject:
   - component: {fileID: 4514228531301686465}
   - component: {fileID: 8534592815500860111}
   - component: {fileID: 6846922646520942439}
+  - component: {fileID: 8913006601584226682}
   m_Layer: 0
   m_Name: Hero_Base
   m_TagString: Untagged
@@ -491,6 +492,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HeroController
   data: {fileID: 11400000, guid: 0ff170ed087d92246ad4b7387a9fc8de, type: 2}
+  trait: 0
   baseAreaCenter: {x: 0, y: 0}
   baseAreaSize: {x: 8, y: 5}
   arriveThreshold: 0.05
@@ -500,6 +502,39 @@ MonoBehaviour:
   attackRange: 1.2
   attackCooldown: 1
   scanInterval: 0.25
+  mpRegenOutOfCombat: 2
+  mpRegenInCombat: 1
+  skill:
+    skillName: Golpe Potente
+    mpCost: 20
+    cooldown: 5
+    damageMultiplier: 2
+  fatiguePerSecondMoving: 2
+  fatiguePerHitTaken: 5
+  fatigueRecoveryIdle: 5
+  fatigueRecoveryResting: 8
+  exhaustionThreshold: 80
+  exhaustionSpeedPenalty: 0.3
+  exhaustionAttackDelay: 0.3
+  startingMorale: 80
+  criticalHealthRatio: 0.25
+  moraleLossOnCritical: 15
+  moraleLossOnAllyDeath: 20
+  allyDeathRadius: 5
+  inspiredThreshold: 80
+  demoralizedThreshold: 30
+  inspiredAttackBonus: 0.1
+  demoralizedSpeedPenalty: 0.2
+  demoralizedAttackDelay: 0.5
+  mastery:
+    pointsPerLevel: 10
+    maxLevel: 10
+    bonusPerLevel: 0.05
+  masteryPerHit: 1
+  evasionChance: 0.15
+  painToleranceFactor: 0.5
+  eagleEyeBonusRange: 3
+  defensiveStanceBonus: 5
 --- !u!114 &8534592815500860111
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -534,7 +569,27 @@ MonoBehaviour:
   expGrowthPerLevel: 1.5
   healthGrowthPerLevel: 0.1
   attackGrowthPerLevel: 2
+  levelsPerStar: 10
+  ascendGemCost: 500
+  ascendStoneCost: 1
+  ascensionStatMultiplier: 1.4
   levelLabel: {fileID: 8932244556792481435}
+--- !u!114 &8913006601584226682
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6736230919267043135}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2eea68e81a29e343a36a3a2b498c623, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpeechBubble
+  intervalRange: {x: 8, y: 20}
+  showSeconds: 3
+  height: 1.5
+  fontSize: 3.2
 --- !u!1 &8488303757097260535
 GameObject:
   m_ObjectHideFlags: 0

@@ -348,14 +348,21 @@ public class RosterUI : MonoBehaviour
         int maxLevel = progress != null ? progress.MaxLevel : 0;
         string tope = progress != null && progress.IsMaxLevel ? "  TOPE" : string.Empty;
 
-        // La fuente por defecto no tiene la estrella tipográfica, así que van en ASCII.
+        // La fuente CJK que se añadió como fallback sí trae la estrella tipográfica.
         var stars = new StringBuilder();
-        for (int i = 0; i < hero.StarRank; i++) stars.Append('*');
+        for (int i = 0; i < hero.StarRank; i++) stars.Append('★');
+
+        string oficio = hero.Subclass != HeroSubclass.None
+            ? hero.SubclassName
+            : HeroTraits.DisplayName(hero.Trait);
+
+        // Insignia discreta: el juego sugiere que sobra, no lo decide por ti.
+        if (hero.IsSynthesisCandidate)
+            oficio += "\n<color=#C08040><size=80%>· candidato a síntesis ·</size></color>";
 
         var label = NewCardLabel(card, "Col_Identity", x, width, 22f, TextAlignmentOptions.TopLeft);
         label.color = HeroProgress.RarityColor(hero.StarRank);
-        label.text = $"{stars}\n<b>{hero.Data.heroName}</b>\nNv. {level}/{maxLevel}{tope}\n" +
-                     $"{HeroTraits.DisplayName(hero.Trait)}";
+        label.text = $"{stars}\n<b>{hero.Data.heroName}</b>\nNv. {level}/{maxLevel}{tope}\n{oficio}";
     }
 
     // Columna 2: tres barras compactas con su cifra al lado.
@@ -416,10 +423,16 @@ public class RosterUI : MonoBehaviour
     private void BuildGear(Transform card, HeroController hero, float x, float width)
     {
         var label = NewCardLabel(card, "Col_Gear", x, width, 17f, TextAlignmentOptions.TopLeft);
+
+        string estados = hero.Status.Describe();
+        string linea = string.IsNullOrEmpty(estados)
+            ? $"Maestría: {hero.Mastery.Describe()}"
+            : $"Estados: {estados}";
+
         label.text = $"Pasivas: {PassiveSkills.Describe(hero.Passives)}\n" +
-                     $"Arma: {SlotLabel(hero.Weapon)}\n" +
-                     $"Escudo: {SlotLabel(hero.Shield)}   Armadura: {SlotLabel(hero.Armor)}\n" +
-                     $"Maestría: {hero.Mastery.Describe()}";
+                     $"Arma: {GearLabel(hero, EquipmentSlot.Weapon)}\n" +
+                     $"Escudo: {GearLabel(hero, EquipmentSlot.Shield)}   " +
+                     $"Arm.: {GearLabel(hero, EquipmentSlot.Armor)}\n{linea}";
     }
 
     // Columna 4: cinco botones en dos filas, para no estirar la tarjeta a lo alto.
@@ -454,6 +467,41 @@ public class RosterUI : MonoBehaviour
 
         CreateButton(card, "Btn_Unequip", x, 5, LocalizationManager.Get("UI_UNEQUIP"),
             wearsGear ? gearColor : disabledColor, wearsGear, () => OnUnequipClicked(hero));
+
+        bool puedeSubclase = hero.StarRank >= HeroSubclasses.MinStarRank;
+        CreateButton(card, "Btn_Subclass", x, 6, LocalizationManager.Get("UI_SUBCLASS"),
+            puedeSubclase ? ascendColor : disabledColor, puedeSubclase, () => OnSubclassClicked(hero));
+
+        bool roto = hero.FirstBrokenSlot() != null;
+        CreateButton(card, "Btn_Repair", x, 7, LocalizationManager.Get("UI_REPAIR"),
+            roto ? lockedColor : disabledColor, roto && crafting != null, () => OnRepairClicked(hero));
+    }
+
+    // Rota entre las tres subclases del arquetipo del héroe.
+    private void OnSubclassClicked(HeroController hero)
+    {
+        var progress = hero.GetComponent<HeroProgress>();
+        if (progress != null) progress.CycleSubclass();
+
+        Rebuild();
+    }
+
+    private void OnRepairClicked(HeroController hero)
+    {
+        if (crafting != null) crafting.TryRepair(hero);
+        Rebuild();
+    }
+
+    // Nombre de la pieza con su desgaste; una rota se marca en el sitio.
+    private static string GearLabel(HeroController hero, EquipmentSlot slot)
+    {
+        var item = hero.GetEquipped(slot);
+        if (item == null) return "-";
+
+        string etiqueta = item.ShortLabel();
+        return hero.IsBroken(slot)
+            ? $"{etiqueta} [{LocalizationManager.Get("UI_BROKEN")}]"
+            : $"{etiqueta} ({hero.DurabilityOf(slot)}/{item.maxDurability})";
     }
 
     // Echar o quitar el candado; un héroe bloqueado no se puede sacrificar.
@@ -577,5 +625,4 @@ public class RosterUI : MonoBehaviour
         Rebuild();
     }
 
-    private static string SlotLabel(EquipmentData item) => item != null ? item.ShortLabel() : "-";
 }

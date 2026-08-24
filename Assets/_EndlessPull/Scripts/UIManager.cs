@@ -13,9 +13,20 @@ public class UIManager : MonoBehaviour
     [Tooltip("Barra de decretos, que se esconde mientras haya un modal abierto.")]
     [SerializeField] private GameObject actionBar;
 
+    [Tooltip("Lógica de la barra: decide además si toca enseñarla o estamos en la base.")]
+    [SerializeField] private MasterActionBar actionBarLogic;
+
     private static UIManager instance;
 
-    void Awake() => instance = this;
+    void Awake()
+    {
+        instance = this;
+        if (actionBarLogic == null) actionBarLogic = UnityEngine.Object.FindFirstObjectByType<MasterActionBar>();
+    }
+
+    // La barra sale solo si no hay modal delante y además hay escuadra desplegada.
+    private bool ShouldShowActionBar(bool modalAbierto)
+        => !modalAbierto && (actionBarLogic == null || actionBarLogic.ShouldShow);
 
     // Los paneles se cierran solos, así que la barra y el fondo tienen que seguirlos.
     void Update()
@@ -25,7 +36,9 @@ public class UIManager : MonoBehaviour
             if (p != null && p.activeSelf) { abierto = true; break; }
 
         if (backdrop != null && backdrop.activeSelf != abierto) backdrop.SetActive(abierto);
-        if (actionBar != null && actionBar.activeSelf == abierto) actionBar.SetActive(!abierto);
+
+        bool mostrarBarra = ShouldShowActionBar(abierto);
+        if (actionBar != null && actionBar.activeSelf != mostrarBarra) actionBar.SetActive(mostrarBarra);
     }
 
     void OnDestroy()
@@ -93,6 +106,6 @@ public class UIManager : MonoBehaviour
             if (p != null) p.SetActive(false);
 
         if (backdrop != null) backdrop.SetActive(false);
-        if (actionBar != null) actionBar.SetActive(true);
+        if (actionBar != null) actionBar.SetActive(ShouldShowActionBar(false));
     }
 }

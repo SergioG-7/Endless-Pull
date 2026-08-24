@@ -145,6 +145,7 @@ public class HeroProgress : MonoBehaviour
         for (int i = 0; i < ascendStoneCost; i++) crafting.TryConsumeStone();
 
         hero.ApplyAscension(ascensionStatMultiplier);
+        GrantSubclassIfDue();
 
         level = 1;
         currentEXP = 0;
@@ -156,6 +157,46 @@ public class HeroProgress : MonoBehaviour
         Debug.Log($"[Ascensión] {hero.Data.heroName} asciende a {hero.StarRank}★ " +
                   $"(x{hero.AscensionMultiplier:0.00} bases, tope Nv. {MaxLevel}).", this);
 
+        SaveManager.RequestSave();
+        return true;
+    }
+
+    // A partir de 3 estrellas el héroe se especializa en el arquetipo del arma que empuña.
+    public void GrantSubclassIfDue()
+    {
+        if (hero == null || hero.StarRank < HeroSubclasses.MinStarRank) return;
+        if (hero.Subclass != HeroSubclass.None) return;
+
+        var arquetipo = hero.EquippedWeaponType;
+        if (HeroSubclasses.OptionsFor(arquetipo).Length == 0) arquetipo = WeaponType.Sword;
+
+        // Con modal en escena elige el jugador; el sorteo solo cubre que no lo haya.
+        if (SubclassSelectionUI.Offer(hero, arquetipo)) return;
+
+        var elegida = HeroSubclasses.RandomFor(arquetipo);
+        hero.SetSubclass(elegida);
+
+        Debug.Log($"[Subclase] {hero.Data.heroName} se especializa como {HeroSubclasses.DisplayName(elegida)} " +
+                  $"({WeaponTypes.DisplayName(arquetipo)}).", this);
+    }
+
+    // Cambio manual desde el roster; solo entre las tres del mismo arquetipo.
+    public bool CycleSubclass()
+    {
+        if (hero == null || hero.StarRank < HeroSubclasses.MinStarRank) return false;
+
+        var arquetipo = hero.Subclass != HeroSubclass.None
+            ? HeroSubclasses.ArchetypeOf(hero.Subclass)
+            : hero.EquippedWeaponType;
+
+        var opciones = HeroSubclasses.OptionsFor(arquetipo);
+        if (opciones.Length == 0) return false;
+
+        int indice = 0;
+        for (int i = 0; i < opciones.Length; i++)
+            if (opciones[i] == hero.Subclass) indice = i + 1;
+
+        hero.SetSubclass(opciones[indice % opciones.Length]);
         SaveManager.RequestSave();
         return true;
     }

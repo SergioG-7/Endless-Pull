@@ -28,6 +28,18 @@ public class HeroController : MonoBehaviour, IHealthOwner
     [Tooltip("Personalidad: decide preferencias de edificio y bonus de combate.")]
     [SerializeField] private HeroTrait trait = HeroTrait.Diligent;
 
+    [Tooltip("Alcance de ataque de arcos y báculos, que pegan sin acercarse.")]
+    [SerializeField] private float rangedAttackRange = 4.5f;
+
+    [Tooltip("Segundos de inactividad tras los que un héroe menor cae en apatía.")]
+    [SerializeField] private float apathyAfterSeconds = 90f;
+
+    [Tooltip("Segundos entre cada bajón de moral por apatía.")]
+    [SerializeField] private float apathyInterval = 15f;
+
+    [Tooltip("Moral que se pierde en cada bajón de apatía.")]
+    [SerializeField] private float apathyMoraleLoss = 5f;
+
     [Tooltip("Centro del área de la base por la que pasea.")]
     [SerializeField] private Vector2 baseAreaCenter = Vector2.zero;
 
@@ -175,6 +187,24 @@ public class HeroController : MonoBehaviour, IHealthOwner
     // En el gimnasio manda el agente: la FSM propia se aparta y la muerte no destruye la unidad.
     private bool externalControl;
 
+    // Subclase elegida al ascender; manda sobre la habilidad activa.
+    private HeroSubclass subclass = HeroSubclass.None;
+
+    // Durabilidad por instancia: el EquipmentData es compartido y no se puede tocar.
+    private readonly Dictionary<EquipmentSlot, int> durability = new Dictionary<EquipmentSlot, int>();
+
+    // Bonus de sinergia por compartir origen con la escuadra, en tanto por uno.
+    private float originSynergy;
+
+    private StatusEffectManager status;
+
+    // Puesto de trabajo fijo; el héroe vuelve solo a él en vez de vagar.
+    private BaseBuilding assignedBuilding;
+
+    // Segundos sin desplegarse, entrenar ni trabajar; alimenta la apatía.
+    private float idleSeconds;
+    private float apathyTimer;
+
     // Objetivo impuesto por el decreto de Enfocar Objetivo; manda sobre el más cercano.
     private EnemyController forcedTarget;
 
@@ -214,7 +244,15 @@ public class HeroController : MonoBehaviour, IHealthOwner
     public bool IsDead => currentHealth <= 0;
     public bool AttackReady => attackTimer <= 0f;
     public bool CanCastSkill => skill != null && skill.CanCast(CurrentMP);
-    public float AttackReach => attackRange;
+    // Arcos y báculos pegan de lejos; el resto tiene que plantarse delante.
+    public bool IsRanged
+        => EquippedWeaponType == WeaponType.Bow || EquippedWeaponType == WeaponType.Staff
+           || HeroSubclasses.ArchetypeOf(subclass) == WeaponType.Bow
+           || HeroSubclasses.ArchetypeOf(subclass) == WeaponType.Staff;
+
+    public float EffectiveAttackRange => IsRanged ? rangedAttackRange : attackRange;
+
+    public float AttackReach => EffectiveAttackRange;
     public float DetectionReach => EffectiveDetectionRange;
     public bool IsDeployed => deployed;
     public bool IsInDefensiveStance => defensiveTimer > 0f;
@@ -225,18 +263,110 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
     public WeaponType EquippedWeaponType => weapon != null ? weapon.weaponType : WeaponType.None;
 
-    public int EquipBonusATK => (weapon != null ? weapon.bonusATK : 0)
-                              + (shield != null ? shield.bonusATK : 0)
-                              + (armor != null ? armor.bonusATK : 0)
-                              + (accessory != null ? accessory.bonusATK : 0);
-    public int EquipBonusDEF => (weapon != null ? weapon.bonusDEF : 0)
-                              + (shield != null ? shield.bonusDEF : 0)
-                              + (armor != null ? armor.bonusDEF : 0)
-                              + (accessory != null ? accessory.bonusDEF : 0);
-    public int EquipBonusHP => (weapon != null ? weapon.bonusHP : 0)
-                             + (shield != null ? shield.bonusHP : 0)
-                             + (armor != null ? armor.bonusHP : 0)
-                             + (accessory != null ? accessory.bonusHP : 0);
+    public HeroSubclass Subclass => subclass;
+    public string SubclassName => HeroSubclasses.DisplayName(subclass);
+    public bool IsSupport => HeroSubclasses.IsSupport(subclass);
+    public bool IsTank => shield != null || HeroSubclasses.IsTank(subclass);
+    public float OriginSynergy => originSynergy;
+    public BaseBuilding AssignedBuilding => assignedBuilding;
+    public float IdleSeconds => idleSeconds;
+
+    // Apatía: 1★ y 2★ que llevan demasiado tiempo sin servir para nada.
+    public bool IsApathetic => StarRank <= 2 && idleSeconds >= apathyAfterSeconds;
+
+    // La insignia del roster: el juego sugiere que sobra, no lo decide por ti.
+    public bool IsSynthesisCandidate => IsApathetic && !isLocked;
+
+    public void SetAssignedBuilding(BaseBuilding building) => assignedBuilding = building;
+
+    // Se crea a demanda: la mayoría de los héroes nunca llegan a tener un estado encima.
+    public StatusEffectManager Status
+    {
+        get
+        {
+            if (status == null) status = StatusEffectManager.For(gameObject);
+            return status;
+        }
+    }
+
+    // Cuántos enemigos le están apuntando ahora mismo; la usa el aggro de los tanques.
+    public int Threat
+    {
+        get
+        {
+            int count = 0;
+            foreach (var e in UnityEngine.Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None))
+                if (e.CurrentTarget == this) count++;
+
+            return count;
+        }
+    }
+
+    // Una pieza rota sigue puesta pero no aporta nada hasta repararla en el Taller.
+    public int EquipBonusATK => BonusOf(EquipmentSlot.Weapon, 0) + BonusOf(EquipmentSlot.Shield, 0)
+                              + BonusOf(EquipmentSlot.Armor, 0) + BonusOf(EquipmentSlot.Accessory, 0);
+    public int EquipBonusDEF => BonusOf(EquipmentSlot.Weapon, 1) + BonusOf(EquipmentSlot.Shield, 1)
+                              + BonusOf(EquipmentSlot.Armor, 1) + BonusOf(EquipmentSlot.Accessory, 1);
+    public int EquipBonusHP => BonusOf(EquipmentSlot.Weapon, 2) + BonusOf(EquipmentSlot.Shield, 2)
+                             + BonusOf(EquipmentSlot.Armor, 2) + BonusOf(EquipmentSlot.Accessory, 2);
+
+    // 0 = ataque, 1 = defensa, 2 = vida; una sola tabla evita repetir el chequeo de rotura.
+    private int BonusOf(EquipmentSlot slot, int kind)
+    {
+        var item = GetEquipped(slot);
+        if (item == null || IsBroken(slot)) return 0;
+
+        return kind == 0 ? item.bonusATK : kind == 1 ? item.bonusDEF : item.bonusHP;
+    }
+
+    public int DurabilityOf(EquipmentSlot slot)
+        => durability.TryGetValue(slot, out int value) ? value : 0;
+
+    public bool IsBroken(EquipmentSlot slot)
+        => GetEquipped(slot) != null && DurabilityOf(slot) <= 0;
+
+    // La usa el SaveManager al restaurar y Equip al colocar una pieza nueva.
+    public void SetDurability(EquipmentSlot slot, int value)
+        => durability[slot] = Mathf.Max(0, value);
+
+    // Cada expedición pasa factura a todo lo que lleve puesto.
+    public void WearEquipment(int amount)
+    {
+        foreach (EquipmentSlot slot in System.Enum.GetValues(typeof(EquipmentSlot)))
+        {
+            var item = GetEquipped(slot);
+            if (item == null) continue;
+
+            int antes = DurabilityOf(slot);
+            if (antes <= 0) continue;
+
+            SetDurability(slot, antes - amount);
+            if (DurabilityOf(slot) <= 0)
+                Debug.LogWarning($"[Desgaste] {data.heroName}: {item.equipName} se ha roto.", this);
+        }
+
+        ClampHealthToMax();
+    }
+
+    // Deja la pieza como nueva; el coste lo cobra quien llama.
+    public bool RepairSlot(EquipmentSlot slot)
+    {
+        var item = GetEquipped(slot);
+        if (item == null || DurabilityOf(slot) >= item.maxDurability) return false;
+
+        SetDurability(slot, item.maxDurability);
+        ClampHealthToMax();
+        return true;
+    }
+
+    // Primera pieza rota que lleve encima; el Taller repara de una en una.
+    public EquipmentSlot? FirstBrokenSlot()
+    {
+        foreach (EquipmentSlot slot in System.Enum.GetValues(typeof(EquipmentSlot)))
+            if (IsBroken(slot)) return slot;
+
+        return null;
+    }
 
     public int CurrentHealth => currentHealth;
     public int MaxHealth => data != null
@@ -244,8 +374,8 @@ public class HeroController : MonoBehaviour, IHealthOwner
         : 0;
 
     public int Defense => data != null
-        ? Mathf.RoundToInt(data.baseDefense * ascensionMultiplier) + EquipBonusDEF
-          + (IsInDefensiveStance ? defensiveStanceBonus : 0)
+        ? Mathf.RoundToInt((Mathf.RoundToInt(data.baseDefense * ascensionMultiplier) + EquipBonusDEF
+          + (IsInDefensiveStance ? defensiveStanceBonus : 0)) * (1f + originSynergy))
         : 0;
 
     // Ascensión, nivel, rasgo y equipo suman; moral y maestría multiplican.
@@ -259,7 +389,8 @@ public class HeroController : MonoBehaviour, IHealthOwner
                       + bonusAttack + HeroTraits.AttackBonus(trait) + EquipBonusATK;
 
             float multiplier = (IsInspired ? 1f + inspiredAttackBonus : 1f)
-                               * mastery.DamageMultiplier(EquippedWeaponType);
+                               * mastery.DamageMultiplier(EquippedWeaponType)
+                               * (1f + originSynergy);
 
             return Mathf.RoundToInt(raw * multiplier);
         }
@@ -303,7 +434,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
             float speed = data.moveSpeed;
             if (IsExhausted) speed *= 1f - exhaustionSpeedPenalty;
             if (IsDemoralized) speed *= 1f - demoralizedSpeedPenalty;
-            return speed;
+            return speed * Status.SpeedMultiplier;
         }
     }
 
@@ -375,6 +506,18 @@ public class HeroController : MonoBehaviour, IHealthOwner
             UnityEngine.Random.Range(-half.y, half.y));
     }
 
+    // Asignar subclase cambia también la habilidad activa por la exclusiva del arquetipo.
+    public void SetSubclass(HeroSubclass value)
+    {
+        subclass = value;
+
+        var exclusiva = HeroSubclasses.MakeSkill(value);
+        if (exclusiva != null) skill = exclusiva;
+    }
+
+    // Compartir origen con al menos un compañero de escuadra da un bonus pasivo en combate.
+    public void SetOriginSynergy(float value) => originSynergy = Mathf.Max(0f, value);
+
     public void SetLocked(bool value) => isLocked = value;
     public bool ToggleLock() { isLocked = !isLocked; return isLocked; }
 
@@ -429,6 +572,10 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
         var replaced = GetEquipped(item.slotType);
         SetSlot(item.slotType, item);
+
+        // Una pieza recién colocada entra entera; el desgaste guardado es por instancia.
+        if (DurabilityOf(item.slotType) <= 0) SetDurability(item.slotType, item.maxDurability);
+
         ClampHealthToMax();
         return replaced;
     }
@@ -545,11 +692,18 @@ public class HeroController : MonoBehaviour, IHealthOwner
         RegenerateMana();
         skill?.Tick(Time.deltaTime);
         if (attackTimer > 0f) attackTimer -= Time.deltaTime;
+        TickApathy();
 
         // Con control externo el agente decide: nada de buscar objetivo ni de correr la FSM.
         if (externalControl) return;
 
+        // Aturdido no piensa ni se mueve, pero el maná y los estados siguen corriendo.
+        if (Status.IsStunned) return;
+
         ScanForEnemies();
+
+        // El soporte cuida de la escuadra desde donde esté, sin esperar a entrar en rango.
+        if (deployed && IsSupport) TickSupport();
 
         switch (state)
         {
@@ -674,6 +828,9 @@ public class HeroController : MonoBehaviour, IHealthOwner
         if (Vector2.Distance(transform.position, wanderTarget) > arriveThreshold) return;
 
         // Si el destino era un edificio y ya está dentro, se pone a usarlo.
+        // Sin sitio libre no se entra: el edificio decide si desplaza a alguien o no.
+        if (destinationBuilding != null && !destinationBuilding.TryAdmit(this)) destinationBuilding = null;
+
         if (destinationBuilding != null && destinationBuilding.IsInside(transform.position))
         {
             EnterBuildingVisit(destinationBuilding);
@@ -731,7 +888,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
         // Correr detrás del enemigo cansa; pararse a golpear, no.
         AddFatigue(fatiguePerSecondMoving * Time.deltaTime);
 
-        if (Vector2.Distance(transform.position, target.transform.position) <= attackRange)
+        if (Vector2.Distance(transform.position, target.transform.position) <= EffectiveAttackRange)
         {
             state = HeroState.CombatAttack;
             attackTimer = 0f;   // el primer golpe sale sin esperar
@@ -743,7 +900,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
         if (target == null) { EnterBaseWander(); return; }
 
         // Si se aleja, vuelve a perseguirlo.
-        if (Vector2.Distance(transform.position, target.transform.position) > attackRange)
+        if (Vector2.Distance(transform.position, target.transform.position) > EffectiveAttackRange)
         {
             state = HeroState.CombatApproach;
             return;
@@ -755,22 +912,265 @@ public class HeroController : MonoBehaviour, IHealthOwner
         attackTimer = EffectiveAttackCooldown;
 
         // Si llega el maná y la habilidad está lista, el golpe especial sustituye al básico.
-        if (skill != null && skill.CanCast(CurrentMP))
+        if (!IsSupport && skill != null && skill.CanCast(CurrentMP))
         {
-            currentMP -= skill.mpCost;
-            skill.PutOnCooldown();
-
-            int damage = skill.DamageFrom(Attack);
-            target.TakeDamage(damage);
-            AddMasteryPoints(masteryPerHit);
-
-            Debug.Log($"[Habilidad] {data.heroName} lanza {skill.skillName}: {damage} de daño " +
-                      $"(-{skill.mpCost} MP, quedan {CurrentMP}/{MaxMP}).", this);
+            CastCombatSkill(target);
             return;
         }
 
-        target.TakeDamage(Attack);
+        // De lejos el golpe viaja: se ve salir la flecha o el proyectil mágico.
+        if (IsRanged) Projectile.Fire(transform.position, target, Attack, ProjectileColor);
+        else target.TakeDamage(Attack);
+
         AddMasteryPoints(masteryPerHit);
+    }
+
+    // Flecha clara para el arco, violeta para la magia.
+    private Color ProjectileColor
+        => EquippedWeaponType == WeaponType.Staff
+           || HeroSubclasses.ArchetypeOf(subclass) == WeaponType.Staff
+            ? new Color(0.70f, 0.45f, 1f)
+            : new Color(1f, 0.92f, 0.60f);
+
+    // Desplegarse, entrenar o trabajar cuenta como servir; lo demás es estar de brazos cruzados.
+    private void TickApathy()
+    {
+        bool ocupado = deployed || currentBuilding != null || assignedBuilding != null;
+
+        if (ocupado)
+        {
+            idleSeconds = 0f;
+            apathyTimer = 0f;
+            return;
+        }
+
+        idleSeconds += Time.deltaTime;
+        if (!IsApathetic) return;
+
+        apathyTimer -= Time.deltaTime;
+        if (apathyTimer > 0f) return;
+
+        apathyTimer = apathyInterval;
+        LoseMorale(apathyMoraleLoss);
+    }
+
+    // La usa el edificio cuando alguien de más rango le quita el sitio.
+    public void EvictFromBuilding()
+    {
+        currentBuilding = null;
+        EnterBaseWander();
+    }
+
+    // Habilidad exclusiva de la subclase; sin subclase sale el golpe potente de siempre.
+    private void CastCombatSkill(EnemyController victim)
+    {
+        currentMP -= skill.mpCost;
+        skill.PutOnCooldown();
+
+        int damage = skill.DamageFrom(Attack);
+        int veneno = Mathf.Max(1, Mathf.RoundToInt(Attack * 0.15f));
+
+        switch (subclass)
+        {
+            case HeroSubclass.ShadowBlade:
+                victim.TakeDamage(damage);
+                StatusEffectManager.Apply(victim.gameObject, StatusEffect.Poison, 6f, veneno);
+                break;
+
+            case HeroSubclass.IronBlade:
+                victim.TakeDamage(damage);
+                Status.Add(StatusEffect.Shield, 8f, Attack * 1.5f);
+                break;
+
+            case HeroSubclass.ZephyrBlade:
+                for (int i = 0; i < 3; i++) victim.TakeDamage(Mathf.Max(1, damage / 2));
+                StatusEffectManager.Apply(victim.gameObject, StatusEffect.Bleed, 5f, veneno);
+                break;
+
+            case HeroSubclass.DragonLancer:
+                // En hilera: alcanza a lo que esté alineado detrás del objetivo.
+                foreach (var e in EnemiesInLine(victim, 3f)) e.TakeDamage(damage);
+                break;
+
+            case HeroSubclass.PikeGuard:
+                victim.TakeDamage(damage);
+                victim.PushBack(transform.position, 1.5f);
+                StatusEffectManager.Apply(victim.gameObject, StatusEffect.Slow, 4f, 0f);
+                break;
+
+            case HeroSubclass.StormPiercer:
+                // Antiarmadura: el daño entra sin restar la defensa del enemigo.
+                victim.TakeDamage(damage, true);
+                StatusEffectManager.Apply(victim.gameObject, StatusEffect.Stun, 1.5f, 0f);
+                break;
+
+            case HeroSubclass.LightPaladin:
+                victim.TakeDamage(damage);
+                foreach (var e in EnemiesAround(transform.position, 4f)) e.Taunt(this, 6f);
+                foreach (var a in AlliesAround(5f)) a.Status.Add(StatusEffect.Shield, 6f, Attack * 0.8f);
+                break;
+
+            case HeroSubclass.Juggernaut:
+                victim.TakeDamage(damage);
+                StatusEffectManager.Apply(victim.gameObject, StatusEffect.Stun, 1.5f, 0f);
+                RecoverFatigue(40f);
+                break;
+
+            case HeroSubclass.ImmortalBastion:
+                victim.TakeDamage(damage);
+                Status.Add(StatusEffect.Shield, 10f, Attack * 4f);
+                break;
+
+            case HeroSubclass.Sniper:
+                Projectile.Fire(transform.position, victim, Mathf.RoundToInt(damage * 1.5f), ProjectileColor);
+                break;
+
+            case HeroSubclass.VolleyShooter:
+                // La flecha que se ve es la del centro; el área la resuelve la habilidad.
+                Projectile.Fire(transform.position, victim, 0, ProjectileColor);
+                foreach (var e in EnemiesAround(victim.transform.position, 3f))
+                {
+                    e.TakeDamage(damage);
+                    StatusEffectManager.Apply(e.gameObject, StatusEffect.Slow, 4f, 0f);
+                }
+                break;
+
+            case HeroSubclass.ShadowHunter:
+                Projectile.Fire(transform.position, victim, damage, ProjectileColor);
+                victim.PushBack(transform.position, 2f);
+                StatusEffectManager.Apply(victim.gameObject, StatusEffect.Poison, 8f, veneno);
+                break;
+
+            case HeroSubclass.Pyromancer:
+                Projectile.Fire(transform.position, victim, 0, new Color(1f, 0.55f, 0.15f));
+                foreach (var e in EnemiesAround(victim.transform.position, 3.5f)) e.TakeDamage(damage, true);
+                break;
+
+            case HeroSubclass.Chronomage:
+                victim.TakeDamage(damage);
+                foreach (var e in EnemiesAround(transform.position, 12f))
+                    StatusEffectManager.Apply(e.gameObject, StatusEffect.Slow, 6f, 0f);
+                break;
+
+            case HeroSubclass.ArcaneMage:
+                // Rayo perforante: gasta todo el maná que quede y pega en proporción.
+                int extra = CurrentMP;
+                currentMP = 0f;
+                Projectile.Fire(transform.position, victim, damage + extra * 2, ProjectileColor, true);
+                break;
+
+            default:
+                victim.TakeDamage(damage);
+                break;
+        }
+
+        AddMasteryPoints(masteryPerHit);
+        Debug.Log($"[Habilidad] {data.heroName} ({SubclassName}) lanza {skill.skillName}: " +
+                  $"{damage} base, {HeroSubclasses.DescribeSkill(subclass)} " +
+                  $"(-{skill.mpCost} MP, quedan {CurrentMP}/{MaxMP}).", this);
+    }
+
+    // Los clérigos miran a la escuadra, no al enemigo: actúan sobre el que peor está.
+    private void TickSupport()
+    {
+        if (skill == null || !skill.CanCast(CurrentMP)) return;
+
+        var herido = MostWoundedAlly();
+        if (herido == null) return;
+
+        // Curar a alguien intacto es tirar el maná; los bufos sí salen sin esperar.
+        bool urgente = herido.MaxHealth > 0 && (float)herido.CurrentHealth / herido.MaxHealth < 0.85f;
+        if (subclass == HeroSubclass.HighPriest && !urgente) return;
+
+        currentMP -= skill.mpCost;
+        skill.PutOnCooldown();
+
+        switch (subclass)
+        {
+            case HeroSubclass.HighPriest:
+                int curado = herido.Heal(Mathf.RoundToInt(Attack * 2f));
+                DamageTextManager.Show(herido.transform.position, $"+{curado}", new Color(0.4f, 1f, 0.5f));
+                Debug.Log($"[Soporte] {data.heroName} cura a {herido.Data.heroName}: +{curado} PV " +
+                          $"({herido.CurrentHealth}/{herido.MaxHealth}).", this);
+                break;
+
+            case HeroSubclass.ProtectiveOracle:
+                foreach (var a in AlliesAround(6f)) a.Status.Add(StatusEffect.Shield, 8f, Attack * 1.2f);
+                Debug.Log($"[Soporte] {data.heroName} escuda a la escuadra.", this);
+                break;
+
+            case HeroSubclass.WarCleric:
+                foreach (var a in AlliesAround(6f)) a.AddMorale(15f);
+                Debug.Log($"[Soporte] {data.heroName} entona el himno: +moral a la escuadra.", this);
+                break;
+        }
+    }
+
+    // El aliado desplegado con menos porcentaje de vida; se incluye a sí mismo.
+    public HeroController MostWoundedAlly()
+    {
+        HeroController peor = null;
+        float mejor = 2f;
+
+        foreach (var other in UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None))
+        {
+            if (other == null || !other.IsDeployed || other.MaxHealth <= 0) continue;
+
+            float ratio = (float)other.CurrentHealth / other.MaxHealth;
+            if (ratio >= mejor) continue;
+
+            mejor = ratio;
+            peor = other;
+        }
+
+        return peor;
+    }
+
+    private List<HeroController> AlliesAround(float radius)
+    {
+        var lista = new List<HeroController>();
+        float sqr = radius * radius;
+
+        foreach (var other in UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None))
+        {
+            if (other == null || !other.IsDeployed) continue;
+            if (((Vector2)(other.transform.position - transform.position)).sqrMagnitude > sqr) continue;
+
+            lista.Add(other);
+        }
+
+        return lista;
+    }
+
+    private List<EnemyController> EnemiesAround(Vector2 center, float radius)
+    {
+        var lista = new List<EnemyController>();
+        float sqr = radius * radius;
+
+        foreach (var e in UnityEngine.Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None))
+            if (((Vector2)e.transform.position - center).sqrMagnitude <= sqr) lista.Add(e);
+
+        return lista;
+    }
+
+    // Los que caen dentro de la banda que va del héroe al objetivo y sigue más allá.
+    private List<EnemyController> EnemiesInLine(EnemyController victim, float width)
+    {
+        var lista = new List<EnemyController>();
+        Vector2 origen = transform.position;
+        Vector2 direccion = ((Vector2)victim.transform.position - origen).normalized;
+
+        foreach (var e in UnityEngine.Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None))
+        {
+            Vector2 delta = (Vector2)e.transform.position - origen;
+            float alcance = Vector2.Dot(delta, direccion);
+            if (alcance < 0f) continue;
+
+            float desvio = (delta - direccion * alcance).magnitude;
+            if (desvio <= width * 0.5f) lista.Add(e);
+        }
+
+        return lista;
     }
 
     private void EnterBaseWander()
@@ -784,6 +1184,14 @@ public class HeroController : MonoBehaviour, IHealthOwner
     private void PickNewWanderTarget()
     {
         destinationBuilding = null;
+
+        // Con puesto asignado no se vaga: se vuelve al trabajo.
+        if (assignedBuilding != null && assignedBuilding.IsUnlocked)
+        {
+            destinationBuilding = assignedBuilding;
+            wanderTarget = assignedBuilding.transform.position;
+            return;
+        }
 
         // A veces el héroe decide ir a un edificio en vez de vagar sin rumbo.
         float chance = buildingVisitChance * HeroTraits.VisitChanceMultiplier(trait);
@@ -814,7 +1222,8 @@ public class HeroController : MonoBehaviour, IHealthOwner
         if (all == null || all.Count == 0) return null;
 
         float total = 0f;
-        foreach (var b in all) total += HeroTraits.BuildingWeight(trait, b.Type);
+        foreach (var b in all)
+            if (b.IsUnlocked && b.HasRoom) total += HeroTraits.BuildingWeight(trait, b.Type);
         if (total <= 0f) return null;
 
         float roll = UnityEngine.Random.Range(0f, total);
@@ -851,6 +1260,11 @@ public class HeroController : MonoBehaviour, IHealthOwner
         }
 
         int finalDamage = ignoresDefense ? Mathf.Max(1, amount) : Mathf.Max(1, amount - Defense);
+
+        // El escudo temporal absorbe primero; lo que sobra es lo que llega a la vida.
+        finalDamage = Status.AbsorbDamage(finalDamage);
+        if (finalDamage <= 0) return;
+
         currentHealth = Mathf.Max(0, currentHealth - finalDamage);
         HealthChanged?.Invoke(currentHealth, MaxHealth);
 
@@ -913,6 +1327,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
         target = null;
         forcedTarget = null;
         defensiveTimer = 0f;
+        Status.Clear();
         HealthChanged?.Invoke(currentHealth, MaxHealth);
     }
 

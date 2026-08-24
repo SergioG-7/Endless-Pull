@@ -20,8 +20,14 @@ public class EnemyController : MonoBehaviour, IHealthOwner
     [Tooltip("Alcance de reserva si el EnemyData no trae uno propio.")]
     [SerializeField] private float attackRange = 1.1f;
 
+    [Tooltip("Alcance a partir del cual el enemigo dispara en vez de golpear de cerca.")]
+    [SerializeField] private float rangedThreshold = 3f;
+
     [Tooltip("Cada cuántos segundos vuelve a buscar héroes cercanos.")]
     [SerializeField] private float scanInterval = 0.25f;
+
+    [Tooltip("Enemigos que puede sujetar un mismo tanque antes de que el resto flanquee.")]
+    [SerializeField] private int maxAggroPerTank = 2;
 
     [Tooltip("Radio del golpe circular del jefe.")]
     [SerializeField] private float bossSlamRadius = 3f;
@@ -60,6 +66,9 @@ public class EnemyController : MonoBehaviour, IHealthOwner
     private SpriteRenderer body;
     private Color baseTint = Color.white;
 
+    private SpriteRenderer telegraph;
+    private static Sprite sharedCircle;
+
     public EnemyData Data => data;
     public EnemyState State => state;
     public bool IsBoss => isBoss;
@@ -68,6 +77,39 @@ public class EnemyController : MonoBehaviour, IHealthOwner
 
     // Lo lee el agente para saber a qué distancia deja de alcanzarle el golpe circular.
     public float SlamRadius => bossSlamRadius;
+
+    // Lo lee el aggro para contar cuántos enemigos apuntan ya a un mismo tanque.
+    public HeroController CurrentTarget => target;
+
+    private StatusEffectManager status;
+
+    public StatusEffectManager Status
+    {
+        get
+        {
+            if (status == null) status = StatusEffectManager.For(gameObject);
+            return status;
+        }
+    }
+
+    // Provocación del Paladín: mientras dure, este enemigo no mira a nadie más.
+    private HeroController taunter;
+    private float tauntTimer;
+
+    public void Taunt(HeroController by, float duration)
+    {
+        taunter = by;
+        tauntTimer = duration;
+        target = by;
+        if (state == EnemyState.Idle) state = EnemyState.Approach;
+    }
+
+    // Empujón: se separa del origen sin atravesar nada, que aquí no hay colisiones.
+    public void PushBack(Vector2 from, float distance)
+    {
+        Vector2 direccion = ((Vector2)transform.position - from).normalized;
+        transform.position = (Vector2)transform.position + direccion * distance;
+    }
 
     // La usa el WaveManager mientras corre la preparacion tactica.
     public void SetFrozen(bool value) => frozen = value;
@@ -120,6 +162,11 @@ public class EnemyController : MonoBehaviour, IHealthOwner
     {
         if (frozen) return;
 
+        // Aturdido se queda quieto; el aviso del golpe se congela con él.
+        if (Status.IsStunned) return;
+
+        if (tauntTimer > 0f) tauntTimer -= Time.deltaTime;
+
         if (isBoss) TickBossSlam();
 
         ScanForHeroes();
@@ -141,6 +188,7 @@ public class EnemyController : MonoBehaviour, IHealthOwner
 
             windingUp = false;
             if (body != null) body.color = baseTint;
+            ShowTelegraph(false);
             ExecuteSlam();
             return;
         }
@@ -158,9 +206,60 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         windupTimer = bossSlamWindup;
 
         if (body != null) body.color = bossWindupTint;
+        ShowTelegraph(true);
 
         DamageTextManager.Show(transform.position, "¡CARGANDO GOLPE!", new Color(1f, 0.3f, 0.25f));
         Debug.Log($"[Jefe] {data.enemyName} carga el golpe: {bossSlamWindup}s para reaccionar.", this);
+    }
+
+    // Círculo rojo en el suelo: marca el radio exacto del golpe antes de que caiga.
+    private void ShowTelegraph(bool visible)
+    {
+        if (telegraph == null)
+        {
+            if (!visible) return;
+
+            var go = new GameObject("SlamTelegraph", typeof(SpriteRenderer));
+            go.transform.SetParent(transform, false);
+
+            telegraph = go.GetComponent<SpriteRenderer>();
+            telegraph.sprite = CircleSprite();
+            telegraph.color = new Color(1f, 1f, 1f, 0.9f);
+
+            // Se dibuja por debajo de todo el mundo, como una marca en el suelo.
+            telegraph.sortingOrder = -50;
+        }
+
+        // El jefe va escalado, así que el círculo compensa para medir unidades reales.
+        float escala = Mathf.Max(0.01f, transform.localScale.x);
+        telegraph.transform.localScale = Vector3.one * (bossSlamRadius * 2f / escala);
+        telegraph.gameObject.SetActive(visible);
+    }
+
+    // Se genera una vez y la comparten todos los jefes; el proyecto no trae sprite circular.
+    private static Sprite CircleSprite()
+    {
+        if (sharedCircle != null) return sharedCircle;
+
+        const int size = 128;
+        var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+        float radio = size * 0.5f;
+
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                float d = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), new Vector2(radio, radio));
+
+                // Borde marcado y relleno tenue: se lee de un vistazo sin tapar el combate.
+                float alpha = d > radio ? 0f : d > radio - 6f ? 0.85f : 0.22f;
+                tex.SetPixel(x, y, new Color(1f, 0.20f, 0.15f, alpha));
+            }
+        }
+
+        tex.Apply();
+        sharedCircle = Sprite.Create(tex, new Rect(0f, 0f, size, size), new Vector2(0.5f, 0.5f), size);
+        return sharedCircle;
     }
 
     private void ExecuteSlam()
@@ -191,6 +290,14 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         if (scanTimer > 0f) return;
         scanTimer = scanInterval;
 
+        // La provocación manda mientras dure y el provocador siga en pie.
+        if (tauntTimer > 0f && taunter != null)
+        {
+            target = taunter;
+            if (state == EnemyState.Idle) state = EnemyState.Approach;
+            return;
+        }
+
         HeroController nearest = FindNearestHero();
 
         if (nearest == null)
@@ -205,23 +312,47 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         if (state == EnemyState.Idle) state = EnemyState.Approach;
     }
 
+    // Un tanque solo puede sujetar a maxAggroPerTank enemigos; el resto va a por la retaguardia.
     private HeroController FindNearestHero()
     {
         var heroes = UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None);
-        HeroController nearest = null;
-        float bestSqr = detectionRange * detectionRange;
+        float rangeSqr = detectionRange * detectionRange;
+
+        HeroController tanqueLibre = null;
+        HeroController masCercano = null;
+        HeroController retaguardia = null;
+
+        float mejorTanque = rangeSqr;
+        float mejorCercano = rangeSqr;
+        float masLejos = -1f;
 
         foreach (var hero in heroes)
         {
             float sqr = ((Vector2)(hero.transform.position - transform.position)).sqrMagnitude;
-            if (sqr <= bestSqr)
+            if (sqr > rangeSqr) continue;
+
+            if (sqr < mejorCercano) { mejorCercano = sqr; masCercano = hero; }
+
+            // El tanque cuenta a los que ya le apuntan, sin contarse a sí mismo dos veces.
+            if (hero.IsTank)
             {
-                bestSqr = sqr;
-                nearest = hero;
+                int sujetos = hero.Threat;
+                if (target == hero) sujetos--;
+
+                if (sujetos < maxAggroPerTank && sqr < mejorTanque)
+                {
+                    mejorTanque = sqr;
+                    tanqueLibre = hero;
+                }
+                continue;
             }
+
+            // Flanquear es ir a por el de más atrás, no a por el que tienes delante.
+            if (sqr > masLejos) { masLejos = sqr; retaguardia = hero; }
         }
 
-        return nearest;
+        if (tanqueLibre != null) return tanqueLibre;
+        return retaguardia != null ? retaguardia : masCercano;
     }
 
     private void TickApproach()
@@ -240,7 +371,8 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         }
 
         // Se para justo en el borde del rango en vez de meterse encima del héroe.
-        float step = Mathf.Min(data.moveSpeed * Time.deltaTime, distance - range);
+        float velocidad = data.moveSpeed * Status.SpeedMultiplier;
+        float step = Mathf.Min(velocidad * Time.deltaTime, distance - range);
         transform.position = Vector2.MoveTowards(
             transform.position,
             target.transform.position,
@@ -262,12 +394,24 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         if (attackTimer > 0f) return;
 
         attackTimer = data.attackCooldown;
+
+        // Tiradores y chamanes disparan: el golpe tarda en llegar y se ve venir.
+        if (AttackRange >= rangedThreshold)
+        {
+            Color tinte = data.magicAttack ? new Color(0.65f, 0.35f, 0.95f) : new Color(0.85f, 0.80f, 0.55f);
+            Projectile.Fire(transform.position, target, Attack, tinte, data.magicAttack);
+            return;
+        }
+
         target.TakeDamage(Attack, data.magicAttack);
     }
 
-    public void TakeDamage(int amount)
+    public void TakeDamage(int amount) => TakeDamage(amount, false);
+
+    // El daño que ignora armadura entra entero; lo usan el antiarmadura y la magia.
+    public void TakeDamage(int amount, bool ignoresDefense)
     {
-        int finalDamage = Mathf.Max(1, amount - data.baseDefense);
+        int finalDamage = ignoresDefense ? Mathf.Max(1, amount) : Mathf.Max(1, amount - data.baseDefense);
         currentHealth = Mathf.Max(0, currentHealth - finalDamage);
         HealthChanged?.Invoke(currentHealth, MaxHealth);
 

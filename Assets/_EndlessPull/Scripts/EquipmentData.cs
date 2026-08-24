@@ -9,7 +9,9 @@ public enum WeaponType
     Bow,
     Shield,
     Armor,
-    Accessory
+    Accessory,
+    Staff,
+    Mace
 }
 
 // Hueco del héroe que ocupa la pieza. Los valores van fijos: insertar Shield en medio
@@ -35,6 +37,8 @@ public static class WeaponTypes
             case WeaponType.Shield: return "Escudo";
             case WeaponType.Armor: return "Armadura";
             case WeaponType.Accessory: return "Accesorio";
+            case WeaponType.Staff: return "Báculo";
+            case WeaponType.Mace: return "Maza";
         }
         return "Sin arma";
     }
@@ -60,6 +64,9 @@ public class EquipmentData : ScriptableObject
 
     [Tooltip("Vida máxima que suma la pieza.")]
     public int bonusHP;
+
+    [Tooltip("Combates que aguanta la pieza antes de romperse y dejar de dar bonus.")]
+    public int maxDurability = 10;
 
     // Texto corto para el roster: nombre y lo que aporta.
     public string ShortLabel()

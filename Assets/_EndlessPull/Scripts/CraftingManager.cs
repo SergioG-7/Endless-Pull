@@ -13,6 +13,12 @@ public class CraftingManager : MonoBehaviour
     [Range(0f, 1f)]
     [SerializeField] private float successChance = 0.7f;
 
+    [Tooltip("Madera que cuesta reparar una pieza rota.")]
+    [SerializeField] private int repairWoodCost = 15;
+
+    [Tooltip("Hierro que cuesta reparar una pieza rota.")]
+    [SerializeField] private int repairIronCost = 15;
+
     [Tooltip("Economía de la que salen los materiales.")]
     [SerializeField] private EconomyManager economy;
 
@@ -22,6 +28,20 @@ public class CraftingManager : MonoBehaviour
     public int WoodCost => woodCost;
     public int IronCost => ironCost;
     public float SuccessChance => successChance;
+
+    // Un Taller construido y mejorado en la base mejora la probabilidad de forja.
+    public float EffectiveSuccessChance
+    {
+        get
+        {
+            float bonus = 0f;
+            foreach (var b in BaseBuilding.All)
+                if (b != null && b.IsUnlocked && b.Type == BuildingType.Workshop)
+                    bonus += 0.05f * b.Level;
+
+            return Mathf.Clamp01(successChance + bonus);
+        }
+    }
 
     public bool CanAttemptCraft => economy != null && economy.CanAffordMaterials(woodCost, ironCost);
 
@@ -46,7 +66,7 @@ public class CraftingManager : MonoBehaviour
             return false;
         }
 
-        bool success = Random.value < successChance;
+        bool success = Random.value < EffectiveSuccessChance;
 
         if (success)
         {
@@ -64,6 +84,41 @@ public class CraftingManager : MonoBehaviour
 
         SaveManager.RequestSave();
         return success;
+    }
+
+    public int RepairWoodCost => repairWoodCost;
+    public int RepairIronCost => repairIronCost;
+
+    public bool CanAffordRepair => economy != null && economy.CanAffordMaterials(repairWoodCost, repairIronCost);
+
+    // Repara la primera pieza rota del héroe; la reparación no falla, solo cuesta.
+    public bool TryRepair(HeroController hero)
+    {
+        if (hero == null) return false;
+
+        var slot = hero.FirstBrokenSlot();
+        if (slot == null)
+        {
+            CraftResolved?.Invoke(false, "No hay nada roto");
+            return false;
+        }
+
+        if (economy == null || !economy.TrySpendMaterials(repairWoodCost, repairIronCost))
+        {
+            Debug.LogWarning($"[Taller] Reparar cuesta {repairWoodCost} madera y {repairIronCost} hierro.", this);
+            CraftResolved?.Invoke(false, "Faltan materiales para reparar");
+            return false;
+        }
+
+        var pieza = hero.GetEquipped(slot.Value);
+        hero.RepairSlot(slot.Value);
+
+        Debug.Log($"[Taller] {pieza.equipName} de {hero.Data.heroName} reparada " +
+                  $"({hero.DurabilityOf(slot.Value)}/{pieza.maxDurability}).", this);
+        CraftResolved?.Invoke(true, $"{pieza.equipName} reparada");
+
+        SaveManager.RequestSave();
+        return true;
     }
 
     public bool HasStone => ascensionStones > 0;

@@ -54,6 +54,12 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Alcance a partir del cual un enemigo aparece más atrás, por ser de rango.")]
     [SerializeField] private float rangedSpawnThreshold = 3f;
 
+    [Tooltip("Bonus de ATK y DEF por compartir origen con la escuadra, en tanto por uno.")]
+    [SerializeField] private float originSynergyBonus = 0.05f;
+
+    [Tooltip("Durabilidad que pierde cada pieza equipada por expedición.")]
+    [SerializeField] private int wearPerExpedition = 1;
+
     [Tooltip("Uno de cada cuántos enemigos de la oleada es tirador.")]
     [SerializeField] private int archerEveryNth = 3;
 
@@ -150,6 +156,13 @@ public class WaveManager : MonoBehaviour
     {
         highestClearedFloor = Mathf.Max(0, savedHighest);
         currentFloor = Mathf.Clamp(savedFloor, 1, HighestSelectableFloor);
+        PublishFloor();
+    }
+
+    // Los edificios miran el piso alcanzado para su capacidad y su desbloqueo.
+    private void PublishFloor()
+    {
+        BaseBuilding.SetTowerFloor(Mathf.Max(currentFloor, highestClearedFloor + 1));
         FloorChanged?.Invoke(currentFloor);
     }
 
@@ -165,7 +178,7 @@ public class WaveManager : MonoBehaviour
         if (floor < 1 || floor > HighestSelectableFloor) return false;
 
         currentFloor = floor;
-        FloorChanged?.Invoke(currentFloor);
+        PublishFloor();
         return true;
     }
 
@@ -304,7 +317,32 @@ public class WaveManager : MonoBehaviour
             slot++;
         }
 
+        ApplyOriginSynergy();
         Debug.Log($"[Expedición] Escuadra desplegada: {deployed.Count} héroe(s).", this);
+    }
+
+    // Compartir tierra natal con alguien de la escuadra da un empujón mientras dure el combate.
+    private void ApplyOriginSynergy()
+    {
+        foreach (var hero in deployed)
+        {
+            if (hero == null || hero.Data == null) continue;
+
+            bool acompanado = false;
+            foreach (var other in deployed)
+            {
+                if (other == null || other == hero || other.Data == null) continue;
+                if (other.Data.origin != hero.Data.origin) continue;
+
+                acompanado = true;
+                break;
+            }
+
+            hero.SetOriginSynergy(acompanado ? originSynergyBonus : 0f);
+            if (acompanado)
+                Debug.Log($"[Sinergia] {hero.Data.heroName} pelea junto a los suyos " +
+                          $"({hero.Data.origin}): +{originSynergyBonus:P0} ATK/DEF.", this);
+        }
     }
 
     // Retirada de emergencia: se cancela el piso, la escuadra vuelve viva y sin premio.
@@ -339,6 +377,9 @@ public class WaveManager : MonoBehaviour
             if (hero == null) continue;
 
             hero.SetDeployed(false);
+            hero.SetOriginSynergy(0f);
+            hero.Status.Clear();
+            hero.WearEquipment(wearPerExpedition);
             if (underfed) hero.LoseMorale(malnutritionMoraleLoss);
         }
 
@@ -420,7 +461,7 @@ public class WaveManager : MonoBehaviour
                 currentFloor = cleared + 1;
             }
 
-            FloorChanged?.Invoke(currentFloor);
+            PublishFloor();
 
             string modo = firstClear
                 ? LocalizationManager.Get("UI_FIRST_CLEAR")

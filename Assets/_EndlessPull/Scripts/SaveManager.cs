@@ -24,6 +24,8 @@ public class HeroSaveData
     public float morale = 80f;
     public HeroTrait trait;
     public bool isLocked;
+    public int subclass;
+    public string assignedBuilding = string.Empty;
 
     // Los enums van como int: es lo único que JsonUtility garantiza dentro de una lista.
     public List<int> passives = new List<int>();
@@ -33,8 +35,15 @@ public class HeroSaveData
     public float ascensionMultiplier = 1f;
 
     public string weaponAssetName;
+    public string shieldAssetName;
     public string armorAssetName;
     public string accessoryAssetName;
+
+    // Durabilidad por hueco: el EquipmentData es compartido y no puede guardarla.
+    public int weaponDurability;
+    public int shieldDurability;
+    public int armorDurability;
+    public int accessoryDurability;
 }
 
 // Nivel de un edificio, identificado por el nombre de su GameObject en la escena.
@@ -204,6 +213,13 @@ public class SaveManager : MonoBehaviour
                 morale = hero.Morale,
                 trait = hero.Trait,
                 isLocked = hero.IsLocked,
+                subclass = (int)hero.Subclass,
+                assignedBuilding = hero.AssignedBuilding != null ? hero.AssignedBuilding.SaveId : string.Empty,
+                shieldAssetName = AssetNameOf(hero.Shield),
+                weaponDurability = hero.DurabilityOf(EquipmentSlot.Weapon),
+                shieldDurability = hero.DurabilityOf(EquipmentSlot.Shield),
+                armorDurability = hero.DurabilityOf(EquipmentSlot.Armor),
+                accessoryDurability = hero.DurabilityOf(EquipmentSlot.Accessory),
                 bonusStarRank = hero.BonusStarRank,
                 ascensionMultiplier = hero.AscensionMultiplier,
                 weaponAssetName = AssetNameOf(hero.Weapon),
@@ -326,8 +342,24 @@ public class SaveManager : MonoBehaviour
         if (shop == null) return;
 
         EquipOne(hero, entry.weaponAssetName);
+        EquipOne(hero, entry.shieldAssetName);
         EquipOne(hero, entry.armorAssetName);
         EquipOne(hero, entry.accessoryAssetName);
+
+        // La durabilidad se escribe después de equipar: Equip deja la pieza entera por defecto.
+        Restore(hero, EquipmentSlot.Weapon, entry.weaponDurability);
+        Restore(hero, EquipmentSlot.Shield, entry.shieldDurability);
+        Restore(hero, EquipmentSlot.Armor, entry.armorDurability);
+        Restore(hero, EquipmentSlot.Accessory, entry.accessoryDurability);
+    }
+
+    // Las partidas anteriores al desgaste traen 0; sin esto todo saldría roto de golpe.
+    private static void Restore(HeroController hero, EquipmentSlot slot, int saved)
+    {
+        var item = hero.GetEquipped(slot);
+        if (item == null) return;
+
+        hero.SetDurability(slot, saved > 0 ? saved : item.maxDurability);
     }
 
     private void EquipOne(HeroController hero, string assetName)
@@ -391,10 +423,26 @@ public class SaveManager : MonoBehaviour
 
             hero.LoadVitals(entry.currentHealth, entry.currentMP, entry.fatigue, entry.morale);
             hero.SetLocked(entry.isLocked);
+            hero.SetSubclass((HeroSubclass)entry.subclass);
+            RestoreWorkplace(hero, entry.assignedBuilding);
             spawned.Add(hero);
         }
 
         RestoreParty(save, spawned);
+    }
+
+    // El puesto de trabajo se cotejaba por nombre de GameObject, igual que el nivel del edificio.
+    private static void RestoreWorkplace(HeroController hero, string buildingId)
+    {
+        if (string.IsNullOrEmpty(buildingId)) return;
+
+        foreach (var building in BaseBuilding.All)
+        {
+            if (building == null || building.SaveId != buildingId) continue;
+
+            building.LoadWorker(hero);
+            return;
+        }
     }
 
     // La escuadra se rehace por identidad, así que da igual en qué orden se hayan creado.

@@ -52,6 +52,9 @@ public class MasterActionBar : MonoBehaviour
         retreatLabel = LabelOf(retreatButton);
     }
 
+    // En la base los decretos no pintan nada: solo salen con la escuadra en la arena.
+    public bool ShouldShow => AnyDeployed();
+
     void Update()
     {
         if (commander == null) return;
