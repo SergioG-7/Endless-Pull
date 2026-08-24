@@ -15,6 +15,9 @@ public class EnemyData : ScriptableObject
     [Tooltip("Defensa que se resta al daño recibido.")]
     public int baseDefense = 2;
 
+    [Tooltip("Distancia a la que deja de acercarse y empieza a atacar.")]
+    public float attackRange = 1.1f;
+
     [Tooltip("Velocidad de movimiento en unidades por segundo.")]
     public float moveSpeed = 1.5f;
 

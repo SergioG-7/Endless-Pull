@@ -17,7 +17,7 @@ public class EnemyController : MonoBehaviour, IHealthOwner
     [Tooltip("Radio en el que el enemigo detecta héroes.")]
     [SerializeField] private float detectionRange = 5f;
 
-    [Tooltip("Distancia a la que deja de acercarse y empieza a golpear.")]
+    [Tooltip("Alcance de reserva si el EnemyData no trae uno propio.")]
     [SerializeField] private float attackRange = 1.1f;
 
     [Tooltip("Cada cuántos segundos vuelve a buscar héroes cercanos.")]
@@ -32,6 +32,12 @@ public class EnemyController : MonoBehaviour, IHealthOwner
     [Tooltip("Daño del golpe circular en tanto por uno sobre el ataque normal.")]
     [SerializeField] private float bossSlamDamageFactor = 0.8f;
 
+    [Tooltip("Segundos de aviso antes de que caiga el golpe circular.")]
+    [SerializeField] private float bossSlamWindup = 1.2f;
+
+    [Tooltip("Tinte del jefe mientras carga el golpe.")]
+    [SerializeField] private Color bossWindupTint = new Color(1f, 0.25f, 0.20f);
+
     private EnemyState state = EnemyState.Idle;
     private int currentHealth;
     private float attackTimer;
@@ -45,9 +51,19 @@ public class EnemyController : MonoBehaviour, IHealthOwner
     private bool isBoss;
     private float slamTimer;
 
+    // Aviso previo: el golpe se ve venir, para que dé tiempo a reagrupar.
+    private bool windingUp;
+    private float windupTimer;
+    private SpriteRenderer body;
+    private Color baseTint = Color.white;
+
     public EnemyData Data => data;
     public EnemyState State => state;
     public bool IsBoss => isBoss;
+    public bool IsWindingUp => windingUp;
+
+    // El alcance sale del asset; el campo del componente solo cubre datos antiguos.
+    public float AttackRange => data != null && data.attackRange > 0f ? data.attackRange : attackRange;
     public float StatMultiplier => statMultiplier;
 
     public int CurrentHealth => currentHealth;
@@ -76,6 +92,9 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         isBoss = true;
         slamTimer = bossSlamInterval;
         transform.localScale *= visualScale;
+
+        body = GetComponent<SpriteRenderer>();
+        if (body != null) baseTint = body.color;
     }
 
     void Start()
@@ -100,14 +119,40 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         }
     }
 
-    // Golpe circular: alcanza a todo héroe dentro del radio, esté o no en contacto.
+    // Golpe circular: primero avisa, y solo después pega. Ese hueco es la ventana de reacción.
     private void TickBossSlam()
     {
+        if (windingUp)
+        {
+            windupTimer -= Time.deltaTime;
+            if (windupTimer > 0f) return;
+
+            windingUp = false;
+            if (body != null) body.color = baseTint;
+            ExecuteSlam();
+            return;
+        }
+
         slamTimer -= Time.deltaTime;
         if (slamTimer > 0f) return;
 
         slamTimer = bossSlamInterval;
+        StartWindup();
+    }
 
+    private void StartWindup()
+    {
+        windingUp = true;
+        windupTimer = bossSlamWindup;
+
+        if (body != null) body.color = bossWindupTint;
+
+        DamageTextManager.Show(transform.position, "¡CARGANDO GOLPE!", new Color(1f, 0.3f, 0.25f));
+        Debug.Log($"[Jefe] {data.enemyName} carga el golpe: {bossSlamWindup}s para reaccionar.", this);
+    }
+
+    private void ExecuteSlam()
+    {
         int damage = Mathf.Max(1, Mathf.RoundToInt(Attack * bossSlamDamageFactor));
         float radiusSqr = bossSlamRadius * bossSlamRadius;
         int hits = 0;
@@ -172,9 +217,10 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         if (target == null) { state = EnemyState.Idle; return; }
 
         float distance = Vector2.Distance(transform.position, target.transform.position);
+        float range = AttackRange;
 
         // Ya está en rango: no avanza ni un pixel, así se evita el temblor.
-        if (distance <= attackRange)
+        if (distance <= range)
         {
             state = EnemyState.Attack;
             attackTimer = data.attackCooldown;   // no golpea nada más llegar
@@ -182,7 +228,7 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         }
 
         // Se para justo en el borde del rango en vez de meterse encima del héroe.
-        float step = Mathf.Min(data.moveSpeed * Time.deltaTime, distance - attackRange);
+        float step = Mathf.Min(data.moveSpeed * Time.deltaTime, distance - range);
         transform.position = Vector2.MoveTowards(
             transform.position,
             target.transform.position,
@@ -194,7 +240,7 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         if (target == null) { state = EnemyState.Idle; return; }
 
         // Si el héroe se aleja, vuelve a perseguirlo.
-        if (Vector2.Distance(transform.position, target.transform.position) > attackRange)
+        if (Vector2.Distance(transform.position, target.transform.position) > AttackRange)
         {
             state = EnemyState.Approach;
             return;
@@ -229,6 +275,6 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         Gizmos.DrawWireSphere(transform.position, detectionRange);
 
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
+        Gizmos.DrawWireSphere(transform.position, AttackRange);
     }
 }

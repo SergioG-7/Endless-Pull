@@ -80,7 +80,7 @@ public class CraftingUI : MonoBehaviour
     {
         if (panel == null) return;
 
-        panel.SetActive(true);
+        UIManager.OpenExclusive(panel);
         Refresh();
     }
 

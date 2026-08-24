@@ -20,6 +20,9 @@ public class MasterCommander : MonoBehaviour
     [Tooltip("Segundos de espera entre usos de Reagruparse.")]
     [SerializeField] private float regroupCooldown = 12f;
 
+    [Tooltip("Gestor de oleadas al que se le pide la retirada.")]
+    [SerializeField] private WaveManager waves;
+
     [Tooltip("Segundos que dura la posición defensiva.")]
     [SerializeField] private float regroupDuration = 4f;
 
@@ -43,6 +46,21 @@ public class MasterCommander : MonoBehaviour
     void Awake()
     {
         if (party == null) party = Object.FindFirstObjectByType<PartyManager>();
+        if (waves == null) waves = Object.FindFirstObjectByType<WaveManager>();
+    }
+
+    // Decreto de Retirada: se abandona el piso, pero nadie se queda atrás.
+    public bool Retreat()
+    {
+        if (waves == null) return false;
+
+        bool ok = waves.RetreatExpedition();
+        if (!ok) return false;
+
+        foreach (var hero in DeployedParty())
+            DamageTextManager.Show(hero.transform.position, "¡RETIRADA!", new Color(0.9f, 0.8f, 0.4f));
+
+        return true;
     }
 
     void Update()
@@ -58,6 +76,7 @@ public class MasterCommander : MonoBehaviour
         if (keyboard.spaceKey.wasPressedThisFrame) HealParty();
         if (keyboard.digit1Key.wasPressedThisFrame) FocusFire();
         if (keyboard.digit2Key.wasPressedThisFrame) Regroup();
+        if (keyboard.digit3Key.wasPressedThisFrame) Retreat();
     }
 
     // Decreto: toda la escuadra se centra en el enemigo más gordo, o en el jefe si lo hay.

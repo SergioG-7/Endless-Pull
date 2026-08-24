@@ -93,7 +93,8 @@ public class RosterUI : MonoBehaviour
     {
         if (panel == null) return;
 
-        panel.SetActive(true);
+        // Abrir uno cierra los demas: nunca se solapan dos modales.
+        UIManager.OpenExclusive(panel);
         refreshTimer = refreshInterval;
         Rebuild();
     }

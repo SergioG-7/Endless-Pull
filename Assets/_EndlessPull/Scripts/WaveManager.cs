@@ -27,6 +27,15 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Datos del jefe que aparece en los pisos marcados.")]
     [SerializeField] private EnemyData bossData;
 
+    [Tooltip("Datos del tirador que se queda en retaguardia.")]
+    [SerializeField] private EnemyData archerData;
+
+    [Tooltip("Uno de cada cuántos enemigos de la oleada es tirador.")]
+    [SerializeField] private int archerEveryNth = 3;
+
+    [Tooltip("Moral que pierde la escuadra al ordenar retirada.")]
+    [SerializeField] private float retreatMoraleLoss = 10f;
+
     [Tooltip("Cada cuántos pisos toca jefe.")]
     [SerializeField] private int bossEveryFloors = 5;
 
@@ -159,11 +168,20 @@ public class WaveManager : MonoBehaviour
                 Random.Range(-half.x, half.x),
                 Random.Range(-half.y, half.y));
 
+            // Uno de cada tres sale tirador: obliga a priorizar objetivos en vez de pegar al más cercano.
+            bool esTirador = archerData != null && archerEveryNth > 0 && (i + 1) % archerEveryNth == 0;
+            var datos = esTirador ? archerData : enemyData;
+
+            // Los tiradores aparecen más atrás, coherente con su alcance.
+            if (esTirador) pos += new Vector2(2f, 0f);
+
             var go = Instantiate(enemyPrefab, pos, Quaternion.identity);
-            go.name = $"Enemy_F{currentFloor}_{i + 1}";
+            go.name = esTirador
+                ? $"Enemy_Archer_F{currentFloor}_{i + 1}"
+                : $"Enemy_F{currentFloor}_{i + 1}";
 
             var enemy = go.GetComponent<EnemyController>();
-            enemy.Initialize(enemyData, mult);
+            enemy.Initialize(datos, mult);
             wave.Add(enemy);
         }
 
@@ -195,6 +213,29 @@ public class WaveManager : MonoBehaviour
         }
 
         Debug.Log($"[Expedición] Escuadra desplegada: {deployed.Count} héroe(s).", this);
+    }
+
+    // Retirada de emergencia: se cancela el piso, la escuadra vuelve viva y sin premio.
+    public bool RetreatExpedition()
+    {
+        if (state != ExpeditionState.InProgress)
+        {
+            Debug.LogWarning("[Retirada] No hay ninguna expedición en curso.", this);
+            return false;
+        }
+
+        int rescatados = CountAliveDeployed();
+
+        foreach (var hero in deployed)
+            if (hero != null) hero.LoseMorale(retreatMoraleLoss);
+
+        DespawnWave();
+        RecallParty();
+        bossFloor = false;
+
+        Report(ExpeditionState.Idle,
+            $"Retirada del piso {currentFloor}: {rescatados} héroe(s) a salvo, sin recompensa");
+        return true;
     }
 
     // Los devuelve a la base y les quita el estado de combate.
