@@ -23,6 +23,7 @@ public class HeroSaveData
     public float fatigue;
     public float morale = 80f;
     public HeroTrait trait;
+    public bool isLocked;
 
     // Los enums van como int: es lo único que JsonUtility garantiza dentro de una lista.
     public List<int> passives = new List<int>();
@@ -53,6 +54,7 @@ public class GameSaveData
     public int iron;
     public int food;
     public int currentFloor = 1;
+    public int highestClearedFloor;
     public int ascensionStones;
     public int expeditionEnergy = 5;
 
@@ -92,6 +94,9 @@ public class SaveManager : MonoBehaviour
     [Tooltip("Escribe el JSON indentado para poder leerlo a mano.")]
     [SerializeField] private bool prettyPrint = true;
 
+    [Tooltip("Carga sola al arrancar; se apaga cuando el menú principal decide qué partida abrir.")]
+    [SerializeField] private bool loadOnStart = true;
+
     private static SaveManager instance;
 
     public string SavePath => Path.Combine(Application.persistentDataPath, fileName);
@@ -123,7 +128,7 @@ public class SaveManager : MonoBehaviour
     // La carga va en Start y no en Awake: así los edificios ya se han registrado en BaseBuilding.All.
     void Start()
     {
-        Load();
+        if (loadOnStart) Load();
     }
 
     // Salir del Play Mode cuenta como cerrar el juego, y hay que conservar maná y fatiga.
@@ -145,6 +150,13 @@ public class SaveManager : MonoBehaviour
 
     public void Save()
     {
+        // Con el menu principal delante aun no se ha elegido partida: guardar borraria la de disco.
+        if (MainMenuUI.IsShowing)
+        {
+            Debug.Log("[Guardado] Ignorado: el menu principal sigue abierto.", this);
+            return;
+        }
+
         var save = new GameSaveData();
 
         if (economy != null)
@@ -158,7 +170,11 @@ public class SaveManager : MonoBehaviour
         if (crafting != null) save.ascensionStones = crafting.AscensionStones;
         if (party != null) save.expeditionEnergy = party.Energy;
 
-        if (waves != null) save.currentFloor = waves.CurrentFloor;
+        if (waves != null)
+        {
+            save.currentFloor = waves.CurrentFloor;
+            save.highestClearedFloor = waves.HighestClearedFloor;
+        }
 
         foreach (var building in BaseBuilding.All)
         {
@@ -187,6 +203,7 @@ public class SaveManager : MonoBehaviour
                 fatigue = hero.Fatigue,
                 morale = hero.Morale,
                 trait = hero.Trait,
+                isLocked = hero.IsLocked,
                 bonusStarRank = hero.BonusStarRank,
                 ascensionMultiplier = hero.AscensionMultiplier,
                 weaponAssetName = AssetNameOf(hero.Weapon),
@@ -249,7 +266,11 @@ public class SaveManager : MonoBehaviour
 
         // LoadState dispara los eventos, así que la UI se pone al día sin depender del orden de Start.
         if (economy != null) economy.LoadState(save.gems, save.wood, save.iron, save.food);
-        if (waves != null) waves.LoadFloor(save.currentFloor);
+        // Las partidas anteriores al selector de torre no traen el piso maximo: se deduce del suyo.
+        if (save.highestClearedFloor <= 0)
+            save.highestClearedFloor = Mathf.Max(0, save.currentFloor - 1);
+
+        if (waves != null) waves.LoadProgress(save.currentFloor, save.highestClearedFloor);
         if (crafting != null) crafting.LoadStones(save.ascensionStones);
         if (party != null) party.LoadEnergy(save.expeditionEnergy);
 
@@ -369,6 +390,7 @@ public class SaveManager : MonoBehaviour
             if (progress != null) progress.LoadState(entry.level, entry.currentExp);
 
             hero.LoadVitals(entry.currentHealth, entry.currentMP, entry.fatigue, entry.morale);
+            hero.SetLocked(entry.isLocked);
             spawned.Add(hero);
         }
 

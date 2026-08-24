@@ -55,6 +55,19 @@ public class HeroProgress : MonoBehaviour
            && economy != null && economy.CanAfford(ascendGemCost)
            && crafting != null && crafting.AscensionStones >= ascendStoneCost;
 
+    // Color por rareza del rótulo flotante: 1* gris, 2* verde, 3* azul, 4* morado, 5* dorado.
+    public static Color RarityColor(int starRank)
+    {
+        switch (starRank)
+        {
+            case 2: return new Color(0.45f, 0.85f, 0.45f);
+            case 3: return new Color(0.40f, 0.65f, 1f);
+            case 4: return new Color(0.72f, 0.45f, 0.95f);
+            case 5: return new Color(1f, 0.82f, 0.30f);
+        }
+        return new Color(0.75f, 0.75f, 0.78f);
+    }
+
     public event System.Action<int> LevelChanged;
     public event System.Action<int, int> EXPChanged;
 
@@ -174,5 +187,6 @@ public class HeroProgress : MonoBehaviour
         }
 
         levelLabel.text = $"{hero.Data.heroName} [{hero.StarRank}*] Nv.{level}";
+        levelLabel.color = RarityColor(hero.StarRank);
     }
 }

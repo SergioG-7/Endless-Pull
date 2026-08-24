@@ -169,6 +169,12 @@ public class HeroController : MonoBehaviour, IHealthOwner
     // Solo los héroes desplegados con la escuadra buscan pelea; el resto sigue en la base.
     private bool deployed;
 
+    // Candado del roster: un héroe bloqueado no se puede sacrificar por accidente.
+    private bool isLocked;
+
+    // En el gimnasio manda el agente: la FSM propia se aparta y la muerte no destruye la unidad.
+    private bool externalControl;
+
     // Objetivo impuesto por el decreto de Enfocar Objetivo; manda sobre el más cercano.
     private EnemyController forcedTarget;
 
@@ -202,6 +208,14 @@ public class HeroController : MonoBehaviour, IHealthOwner
     public EquipmentData Accessory => accessory;
 
     public string HeroInstanceId => heroInstanceId;
+    public bool IsLocked => isLocked;
+
+    public bool ExternalControl { get => externalControl; set => externalControl = value; }
+    public bool IsDead => currentHealth <= 0;
+    public bool AttackReady => attackTimer <= 0f;
+    public bool CanCastSkill => skill != null && skill.CanCast(CurrentMP);
+    public float AttackReach => attackRange;
+    public float DetectionReach => EffectiveDetectionRange;
     public bool IsDeployed => deployed;
     public bool IsInDefensiveStance => defensiveTimer > 0f;
 
@@ -347,9 +361,22 @@ public class HeroController : MonoBehaviour, IHealthOwner
             forcedTarget = null;
             target = null;
             defensiveTimer = 0f;
-            if (IsInCombat()) EnterBaseWander();
+            TeleportToBaseArea();
+            EnterBaseWander();
         }
     }
+
+    // La arena está a decenas de unidades: volver andando serían medio minuto de paseo.
+    private void TeleportToBaseArea()
+    {
+        Vector2 half = baseAreaSize * 0.5f;
+        transform.position = baseAreaCenter + new Vector2(
+            UnityEngine.Random.Range(-half.x, half.x),
+            UnityEngine.Random.Range(-half.y, half.y));
+    }
+
+    public void SetLocked(bool value) => isLocked = value;
+    public bool ToggleLock() { isLocked = !isLocked; return isLocked; }
 
     // Decreto de Enfocar Objetivo: este enemigo pasa por delante del más cercano.
     public void SetForcedTarget(EnemyController enemy)
@@ -515,9 +542,14 @@ public class HeroController : MonoBehaviour, IHealthOwner
     {
         if (defensiveTimer > 0f) defensiveTimer -= Time.deltaTime;
 
-        ScanForEnemies();
         RegenerateMana();
         skill?.Tick(Time.deltaTime);
+        if (attackTimer > 0f) attackTimer -= Time.deltaTime;
+
+        // Con control externo el agente decide: nada de buscar objetivo ni de correr la FSM.
+        if (externalControl) return;
+
+        ScanForEnemies();
 
         switch (state)
         {
@@ -805,7 +837,10 @@ public class HeroController : MonoBehaviour, IHealthOwner
             EffectiveMoveSpeed * Time.deltaTime);
     }
 
-    public void TakeDamage(int amount)
+    public void TakeDamage(int amount) => TakeDamage(amount, false);
+
+    // El daño mágico se salta la defensa: contra un chamán la armadura no protege.
+    public void TakeDamage(int amount, bool ignoresDefense)
     {
         // Evasión: el golpe no llega, así que no hay daño, ni fatiga, ni moral perdida.
         if (HasPassive(PassiveSkill.Evasion) && UnityEngine.Random.value < evasionChance)
@@ -815,7 +850,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
             return;
         }
 
-        int finalDamage = Mathf.Max(1, amount - Defense);
+        int finalDamage = ignoresDefense ? Mathf.Max(1, amount) : Mathf.Max(1, amount - Defense);
         currentHealth = Mathf.Max(0, currentHealth - finalDamage);
         HealthChanged?.Invoke(currentHealth, MaxHealth);
 
@@ -829,11 +864,56 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
         if (currentHealth <= 0)
         {
+            // En el gimnasio la unidad se reaprovecha entre episodios, así que no se destruye.
+            if (externalControl) return;
+
             // Permadeath: el héroe no vuelve.
             NotifyAlliesOfDeath();
             Debug.Log($"[Hero] {data.heroName} ha muerto.", this);
             Destroy(gameObject);
         }
+    }
+
+    // Golpe básico a un enemigo concreto; devuelve true solo si llegó a pegar.
+    public bool TryBasicAttack(EnemyController enemy)
+    {
+        if (enemy == null || !AttackReady) return false;
+        if (Vector2.Distance(transform.position, enemy.transform.position) > attackRange) return false;
+
+        attackTimer = EffectiveAttackCooldown;
+        enemy.TakeDamage(Attack);
+        AddMasteryPoints(masteryPerHit);
+        return true;
+    }
+
+    // Habilidad activa a un enemigo concreto; cobra el maná y arranca el enfriamiento.
+    public bool TrySkillAttack(EnemyController enemy)
+    {
+        if (enemy == null || !AttackReady || !CanCastSkill) return false;
+        if (Vector2.Distance(transform.position, enemy.transform.position) > attackRange) return false;
+
+        attackTimer = EffectiveAttackCooldown;
+        currentMP -= skill.mpCost;
+        skill.PutOnCooldown();
+
+        enemy.TakeDamage(skill.DamageFrom(Attack));
+        AddMasteryPoints(masteryPerHit);
+        return true;
+    }
+
+    // Devuelve la unidad al estado de arranque de un episodio del gimnasio.
+    public void ResetForEpisode()
+    {
+        currentHealth = MaxHealth;
+        currentMP = MaxMP;
+        fatigue = 0f;
+        morale = startingMorale;
+        wasCritical = false;
+        attackTimer = 0f;
+        target = null;
+        forcedTarget = null;
+        defensiveTimer = 0f;
+        HealthChanged?.Invoke(currentHealth, MaxHealth);
     }
 
     // La moral cae al cruzar el umbral crítico, no en cada golpe estando ya por debajo.

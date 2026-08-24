@@ -54,13 +54,15 @@ public class MasterCommander : MonoBehaviour
     {
         if (waves == null) return false;
 
-        bool ok = waves.RetreatExpedition();
-        if (!ok) return false;
+        // Se pinta antes de retirar: al volver ya no están desplegados y la lista saldría vacía.
+        var salen = DeployedParty();
+        if (salen.Count == 0) return false;
 
-        foreach (var hero in DeployedParty())
-            DamageTextManager.Show(hero.transform.position, "¡RETIRADA!", new Color(0.9f, 0.8f, 0.4f));
+        foreach (var hero in salen)
+            DamageTextManager.Show(hero.transform.position,
+                LocalizationManager.Get("UI_RETREAT"), new Color(0.9f, 0.8f, 0.4f));
 
-        return true;
+        return waves.RetreatExpedition();
     }
 
     void Update()

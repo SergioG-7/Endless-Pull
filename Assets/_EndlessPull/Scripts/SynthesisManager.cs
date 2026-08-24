@@ -22,6 +22,13 @@ public class SynthesisManager : MonoBehaviour
     {
         if (hero == null) return;
 
+        // Red de seguridad: el candado manda aunque la UI dejara pulsar el botón.
+        if (hero.IsLocked)
+        {
+            Report($"{Describe(hero)} está bloqueado: quita el candado para poder sintetizarlo.");
+            return;
+        }
+
         if (target == null)
         {
             target = hero;
@@ -53,6 +60,12 @@ public class SynthesisManager : MonoBehaviour
         if (targetHero == null || fodder == null || targetHero == fodder)
         {
             Report("Síntesis inválida: hacen falta dos héroes distintos.");
+            return false;
+        }
+
+        if (fodder.IsLocked)
+        {
+            Report($"{Describe(fodder)} está bloqueado y no se puede sacrificar.");
             return false;
         }
 

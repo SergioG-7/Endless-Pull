@@ -38,6 +38,9 @@ public class EnemyController : MonoBehaviour, IHealthOwner
     [Tooltip("Tinte del jefe mientras carga el golpe.")]
     [SerializeField] private Color bossWindupTint = new Color(1f, 0.25f, 0.20f);
 
+    // Congelado durante la cuenta atras previa al combate: ni piensa ni se mueve.
+    private bool frozen;
+
     private EnemyState state = EnemyState.Idle;
     private int currentHealth;
     private float attackTimer;
@@ -61,6 +64,13 @@ public class EnemyController : MonoBehaviour, IHealthOwner
     public EnemyState State => state;
     public bool IsBoss => isBoss;
     public bool IsWindingUp => windingUp;
+    public bool IsFrozen => frozen;
+
+    // Lo lee el agente para saber a qué distancia deja de alcanzarle el golpe circular.
+    public float SlamRadius => bossSlamRadius;
+
+    // La usa el WaveManager mientras corre la preparacion tactica.
+    public void SetFrozen(bool value) => frozen = value;
 
     // El alcance sale del asset; el campo del componente solo cubre datos antiguos.
     public float AttackRange => data != null && data.attackRange > 0f ? data.attackRange : attackRange;
@@ -108,6 +118,8 @@ public class EnemyController : MonoBehaviour, IHealthOwner
 
     void Update()
     {
+        if (frozen) return;
+
         if (isBoss) TickBossSlam();
 
         ScanForHeroes();
@@ -250,7 +262,7 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         if (attackTimer > 0f) return;
 
         attackTimer = data.attackCooldown;
-        target.TakeDamage(Attack);
+        target.TakeDamage(Attack, data.magicAttack);
     }
 
     public void TakeDamage(int amount)

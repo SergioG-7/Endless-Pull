@@ -17,8 +17,8 @@ public class ResourceExpeditionManager : MonoBehaviour
     [Tooltip("Recurso base que trae la expedición, por héroe enviado.")]
     [SerializeField] private int rewardPerHero = 15;
 
-    [Tooltip("Comida que consume salir a recolectar.")]
-    [SerializeField] private int foodCost = 5;
+    [Tooltip("Intentos de torre que consume salir a recolectar.")]
+    [SerializeField] private int energyCost = 1;
 
     [Tooltip("Economía a la que se abona la cosecha.")]
     [SerializeField] private EconomyManager economy;
@@ -79,7 +79,7 @@ public class ResourceExpeditionManager : MonoBehaviour
 
     public bool CanStart => !IsRunning
         && party != null && party.Party.Count > 0
-        && economy != null && economy.CanAffordFood(foodCost);
+        && party.Energy >= energyCost;
 
     public bool StartExpedition(ResourceExpeditionType type)
     {
@@ -95,9 +95,9 @@ public class ResourceExpeditionManager : MonoBehaviour
             return false;
         }
 
-        if (economy == null || !economy.TrySpendFood(foodCost))
+        if (party.Energy < energyCost || !party.TryConsumeEnergy())
         {
-            Report($"Hacen falta {foodCost} de comida para salir.");
+            Report($"Hacen falta {energyCost} intento(s) de torre para salir.");
             return false;
         }
 

@@ -12,7 +12,7 @@ public class CameraDirector : MonoBehaviour
     [Tooltip("Punto al que mira la cámara mientras se gestiona la base.")]
     [SerializeField] private Vector2 baseView = new Vector2(0f, 0f);
 
-    [Tooltip("Punto al que mira la cámara durante el combate.")]
+    [Tooltip("Punto de combate de reserva; con un WaveManager en escena manda el suyo.")]
     [SerializeField] private Vector2 arenaView = new Vector2(40f, 0f);
 
     [Tooltip("Segundos que tarda el viaje entre base y arena.")]
@@ -61,7 +61,10 @@ public class CameraDirector : MonoBehaviour
 
     public bool IsTravelling => travelTimer < travelSeconds;
 
-    public void GoToArena() => TravelTo(arenaView);
+    // Lo manda el WaveManager para que la cámara no acabe encuadrando una arena vacía.
+    private Vector2 ArenaPoint => waves != null ? waves.ArenaFocus : arenaView;
+
+    public void GoToArena() => TravelTo(ArenaPoint);
     public void GoToBase() => TravelTo(baseView);
 
     private void OnExpeditionChanged(ExpeditionState state, string message)

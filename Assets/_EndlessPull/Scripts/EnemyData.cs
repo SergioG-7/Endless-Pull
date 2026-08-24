@@ -23,4 +23,7 @@ public class EnemyData : ScriptableObject
 
     [Tooltip("Segundos entre golpe y golpe.")]
     public float attackCooldown = 1f;
+
+    [Tooltip("Ataque mágico: el daño entra sin restar la defensa del héroe.")]
+    public bool magicAttack;
 }
