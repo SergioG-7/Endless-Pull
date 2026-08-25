@@ -36,9 +36,6 @@ public class RosterUI : MonoBehaviour
     [Tooltip("Segundos entre refrescos mientras el panel está abierto.")]
     [SerializeField] private float refreshInterval = 0.5f;
 
-    [Tooltip("Alto de cada fila de héroe, en píxeles de UI.")]
-    [SerializeField] private float rowHeight = 78f;
-
     [Tooltip("Tienda de la que salen inventario y equipo.")]
     [SerializeField] private ShopManager shop;
 
@@ -54,44 +51,20 @@ public class RosterUI : MonoBehaviour
     [Tooltip("Gestor de síntesis al que apuntan los botones de cada fila.")]
     [SerializeField] private SynthesisManager synthesis;
 
-    [Tooltip("Alto de la barra de pestañas de filtro.")]
-    [SerializeField] private float tabHeight = 52f;
-
-    [Tooltip("Distancia desde el borde superior del panel hasta la barra de pestañas.")]
-    [SerializeField] private float tabsTopOffset = 85f;
-
-    [Tooltip("Color del candado echado.")]
-    [SerializeField] private Color lockedColor = new Color(0.62f, 0.22f, 0.22f);
-
-    [Tooltip("Color de la pestaña seleccionada.")]
-    [SerializeField] private Color activeTabColor = new Color(0.55f, 0.42f, 0.15f);
-
-    [Tooltip("Fondo de cada tarjeta de héroe.")]
-    [SerializeField] private Color cardColor = new Color(0.14f, 0.14f, 0.19f, 0.95f);
-
-    [Tooltip("Margen interior de la tarjeta, en píxeles.")]
-    [SerializeField] private float cardPadding = 12f;
-
-    [Tooltip("Ancho de los botones de la tarjeta.")]
-    [SerializeField] private float cardButtonWidth = 132f;
-
-    [Tooltip("Alto de los botones de la tarjeta.")]
-    [SerializeField] private float cardButtonHeight = 44f;
-
-    [Tooltip("Color del botón de síntesis en reposo.")]
-    [SerializeField] private Color synthColor = new Color(0.35f, 0.30f, 0.60f);
-
-    [Tooltip("Color del botón del héroe elegido como objetivo.")]
-    [SerializeField] private Color targetColor = new Color(0.70f, 0.45f, 0.15f);
-
-    [Tooltip("Color del botón de ascender cuando se puede pagar.")]
-    [SerializeField] private Color ascendColor = new Color(0.65f, 0.55f, 0.15f);
-
-    [Tooltip("Color de los botones de equipo.")]
-    [SerializeField] private Color gearColor = new Color(0.25f, 0.45f, 0.45f);
-
-    [Tooltip("Color de un botón que ahora mismo no se puede pulsar.")]
-    [SerializeField] private Color disabledColor = new Color(0.28f, 0.28f, 0.32f);
+    // Métricas del mockup: cabecera, tarjeta y rejilla de botones.
+    private const float HeaderHeight = 80f;
+    private const float TabHeight = 36f;
+    private const float RowHeight = 112f;
+    private const float CardPadX = 18f;
+    private const float CardPadY = 14f;
+    private const float ColGap = 18f;
+    private const float ColIdentity = 280f;
+    private const float ColBars = 260f;
+    private const float BtnWidth = 96f;
+    private const float BtnHeight = 38f;
+    private const float BtnGap = 8f;
+    private const float ColActions = BtnWidth * 4f + BtnGap * 3f;
+    private const float PortraitSize = 56f;
 
     private float refreshTimer;
 
@@ -119,7 +92,7 @@ public class RosterUI : MonoBehaviour
         if (panel != null) panel.SetActive(false);
     }
 
-    // Las pestañas se montan una sola vez y el scroll baja para hacerles sitio.
+    // Filtros, orden y cierre viven en la cabecera del panel, alineados a la derecha.
     private void BuildTabs()
     {
         if (panel == null) return;
@@ -131,51 +104,45 @@ public class RosterUI : MonoBehaviour
         brt.anchorMin = new Vector2(0f, 1f);
         brt.anchorMax = new Vector2(1f, 1f);
         brt.pivot = new Vector2(0.5f, 1f);
-        brt.sizeDelta = new Vector2(0f, tabHeight);
-        brt.anchoredPosition = new Vector2(0f, -tabsTopOffset);
+        brt.sizeDelta = new Vector2(0f, HeaderHeight);
+        brt.anchoredPosition = Vector2.zero;
+
+        // El aspa de cerrar ya ocupa la esquina: los demás controles se apilan hacia la izquierda.
+        float cursor = -(28f + 36f + BtnGap);
+
+        sortButton = CreateBarButton(bar.transform, "Btn_Sort",
+            LocalizationManager.Get("UI_SORT_RARITY"), ref cursor, OnSortPressed);
+        sortLabel = sortButton.GetComponentInChildren<TMP_Text>();
 
         string[] keys = { "UI_ALL", "1*", "2*", "3*+", "UI_PARTY" };
-        for (int i = 0; i < keys.Length; i++)
+        for (int i = keys.Length - 1; i >= 0; i--)
         {
             var value = (RosterFilter)i;
             string text = keys[i].StartsWith("UI_") ? LocalizationManager.Get(keys[i]) : keys[i];
 
             var button = CreateBarButton(bar.transform, "Tab_" + value, text,
-                new Vector2(16f + i * 190f, 0f), 180f, () => OnFilterPressed(value));
+                ref cursor, () => OnFilterPressed(value));
 
-            tabButtons.Add(button);
-        }
-
-        sortButton = CreateBarButton(bar.transform, "Btn_Sort", string.Empty,
-            new Vector2(16f + keys.Length * 190f + 30f, 0f), 260f, OnSortPressed);
-        sortLabel = sortButton.GetComponentInChildren<TMP_Text>();
-
-        // El scroll autorizado en escena tiene que dejar hueco a la barra nueva.
-        if (content != null)
-        {
-            var scroll = content.parent != null ? content.parent.parent as RectTransform : null;
-            if (scroll != null) scroll.offsetMax -= new Vector2(0f, tabHeight + 8f);
+            tabButtons.Insert(0, button);
         }
 
         RefreshTabs();
     }
 
+    // El ancho lo marca el texto; el cursor avanza hacia la izquierda tras cada botón.
     private Button CreateBarButton(Transform parent, string name, string text,
-                                   Vector2 position, float width,
+                                   ref float cursor,
                                    UnityEngine.Events.UnityAction onClick)
     {
         var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
         go.transform.SetParent(parent, false);
 
         var rt = go.GetComponent<RectTransform>();
-        rt.anchorMin = new Vector2(0f, 0.5f);
-        rt.anchorMax = new Vector2(0f, 0.5f);
-        rt.pivot = new Vector2(0f, 0.5f);
-        rt.sizeDelta = new Vector2(width, tabHeight - 8f);
-        rt.anchoredPosition = position;
+        rt.anchorMin = new Vector2(1f, 1f);
+        rt.anchorMax = new Vector2(1f, 1f);
+        rt.pivot = new Vector2(1f, 1f);
 
-        var image = go.GetComponent<Image>();
-        image.color = synthColor;
+        var image = UITheme.Surface(go, Color.clear, UITheme.BorderStrong, UITheme.RadiusButton);
 
         var labelGo = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
         labelGo.transform.SetParent(go.transform, false);
@@ -186,10 +153,16 @@ public class RosterUI : MonoBehaviour
         lrt.offsetMax = Vector2.zero;
 
         var tmp = labelGo.GetComponent<TextMeshProUGUI>();
-        tmp.fontSize = 20f;
+        tmp.fontSize = UITheme.SizeBody;
+        tmp.fontStyle = FontStyles.Bold;
         tmp.alignment = TextAlignmentOptions.Center;
-        tmp.color = Color.white;
+        tmp.color = UITheme.Text;
         tmp.text = text;
+
+        float width = Mathf.Max(56f, tmp.preferredWidth + 32f);
+        rt.sizeDelta = new Vector2(width, TabHeight);
+        rt.anchoredPosition = new Vector2(cursor, -22f);
+        cursor -= width + BtnGap;
 
         var button = go.GetComponent<Button>();
         button.targetGraphic = image;
@@ -213,8 +186,16 @@ public class RosterUI : MonoBehaviour
 
     private void RefreshTabs()
     {
+        // La pestaña elegida se tiñe de acento y su borde pasa a ser sólido.
         for (int i = 0; i < tabButtons.Count; i++)
-            tabButtons[i].targetGraphic.color = (int)filter == i ? activeTabColor : synthColor;
+        {
+            bool activa = (int)filter == i;
+            tabButtons[i].targetGraphic.color = activa ? UITheme.AccentPick : Color.clear;
+
+            var borde = tabButtons[i].transform.Find("Border");
+            if (borde != null)
+                borde.GetComponent<Image>().color = activa ? UITheme.Accent : UITheme.BorderStrong;
+        }
 
         if (sortLabel != null)
             sortLabel.text = LocalizationManager.Get(
@@ -316,31 +297,28 @@ public class RosterUI : MonoBehaviour
         go.transform.SetParent(content, false);
 
         var rt = go.GetComponent<RectTransform>();
-        rt.sizeDelta = new Vector2(0f, rowHeight);
-        go.GetComponent<Image>().color = cardColor;
+        rt.sizeDelta = new Vector2(0f, RowHeight);
+        UITheme.Surface(go, UITheme.Card, UITheme.BorderSoft, UITheme.RadiusCard);
 
         // En el primer frame el content aun no tiene ancho: se cae al del panel, que si es fijo.
         float disponible = content.rect.width > 100f
             ? content.rect.width
-            : panel.GetComponent<RectTransform>().rect.width - 76f;
+            : panel.GetComponent<RectTransform>().rect.width - 56f;
 
-        float util = Mathf.Max(600f, disponible - cardPadding * 2f);
-        float col4 = cardButtonWidth * 3f + 12f;
-        float col1 = util * 0.26f;
-        float col2 = util * 0.24f;
-        float col3 = Mathf.Max(160f, util - col1 - col2 - col4);
+        float util = Mathf.Max(900f, disponible - CardPadX * 2f);
+        float colGear = Mathf.Max(160f, util - ColIdentity - ColBars - ColActions - ColGap * 3f);
 
-        float x = cardPadding;
-        BuildIdentity(go.transform, hero, x, col1);
-        x += col1;
-        BuildBars(go.transform, hero, x, col2);
-        x += col2;
-        BuildGear(go.transform, hero, x, col3);
-        x += col3;
-        CreateCardButtons(go.transform, hero, x, col4);
+        float x = CardPadX;
+        BuildIdentity(go.transform, hero, x, ColIdentity);
+        x += ColIdentity + ColGap;
+        BuildBars(go.transform, hero, x, ColBars);
+        x += ColBars + ColGap;
+        BuildGear(go.transform, hero, x, colGear);
+        x += colGear + ColGap;
+        CreateCardButtons(go.transform, hero, x);
     }
 
-    // Columna 1: estrellas, nombre y nivel, todo con el color de la rareza.
+    // Columna 1: retrato con el marco de la rareza y a su lado estrellas, nombre y oficio.
     private void BuildIdentity(Transform card, HeroController hero, float x, float width)
     {
         var progress = hero.GetComponent<HeroProgress>();
@@ -358,85 +336,145 @@ public class RosterUI : MonoBehaviour
 
         // Insignia discreta: el juego sugiere que sobra, no lo decide por ti.
         if (hero.IsSynthesisCandidate)
-            oficio += "\n<color=#C08040><size=80%>· candidato a síntesis ·</size></color>";
+            oficio += "  <color=#C08040>· candidato a síntesis ·</color>";
 
-        var label = NewCardLabel(card, "Col_Identity", x, width, 22f, TextAlignmentOptions.TopLeft);
-        label.color = HeroProgress.RarityColor(hero.StarRank);
-        label.text = $"{stars}\n<b>{hero.Data.heroName}</b>\nNv. {level}/{maxLevel}{tope}\n{oficio}";
+        var rareza = HeroProgress.RarityColor(hero.StarRank);
+        BuildPortrait(card, x, rareza);
+
+        float textoX = x + PortraitSize + 14f;
+        var label = NewCardLabel(card, "Col_Identity", textoX,
+            width - PortraitSize - 14f, UITheme.SizeName, TextAlignmentOptions.Left);
+
+        label.text = $"<size={UITheme.SizeSmall}><b><color={UITheme.Tag(rareza)}>{stars}</color></b></size>\n" +
+                     $"{hero.Data.heroName}\n" +
+                     $"<size={UITheme.SizeSmall}><color={UITheme.Tag(UITheme.TextMuted)}>" +
+                     $"{oficio} · Nv.{level}/{maxLevel}{tope}</color></size>";
     }
 
-    // Columna 2: tres barras compactas con su cifra al lado.
+    // Cuadro con las esquinas redondeadas y el borde del color de la rareza.
+    private void BuildPortrait(Transform card, float x, Color rareza)
+    {
+        var go = new GameObject("Portrait", typeof(RectTransform), typeof(Image));
+        go.transform.SetParent(card, false);
+
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0f, 0.5f);
+        rt.anchorMax = new Vector2(0f, 0.5f);
+        rt.pivot = new Vector2(0f, 0.5f);
+        rt.sizeDelta = new Vector2(PortraitSize, PortraitSize);
+        rt.anchoredPosition = new Vector2(x, 0f);
+
+        UITheme.Surface(go, UITheme.Hex("262838"), rareza, UITheme.RadiusCard);
+        go.GetComponent<Image>().raycastTarget = false;
+    }
+
+    // Columna 2: tres barras finas de 7 px con su rótulo a la izquierda y la cifra a la derecha.
     private void BuildBars(Transform card, HeroController hero, float x, float width)
     {
         float ratioHp = hero.MaxHealth > 0 ? (float)hero.CurrentHealth / hero.MaxHealth : 0f;
         float ratioMp = hero.MaxMP > 0 ? (float)hero.CurrentMP / hero.MaxMP : 0f;
 
-        CreateBar(card, "Bar_HP", x, width, -cardPadding - 4f, ratioHp,
-            new Color(0.80f, 0.25f, 0.25f), $"HP {hero.CurrentHealth}/{hero.MaxHealth}");
-        CreateBar(card, "Bar_MP", x, width, -cardPadding - 38f, ratioMp,
-            new Color(0.25f, 0.45f, 0.85f), $"MP {hero.CurrentMP}/{hero.MaxMP}");
-        CreateBar(card, "Bar_Morale", x, width, -cardPadding - 72f, hero.MoralePercent / 100f,
-            new Color(0.85f, 0.70f, 0.25f), $"Mor {hero.MoralePercent} {hero.MoodName}".TrimEnd());
+        CreateBar(card, "Bar_HP", x, width, 12f, ratioHp, UITheme.BarHP,
+            "HP", $"{hero.CurrentHealth}/{hero.MaxHealth}");
+        CreateBar(card, "Bar_MP", x, width, 0f, ratioMp, UITheme.BarMP,
+            "MP", $"{hero.CurrentMP}/{hero.MaxMP}");
+        CreateBar(card, "Bar_Morale", x, width, -12f, hero.MoralePercent / 100f, UITheme.BarMorale,
+            "Moral", $"{hero.MoralePercent} {hero.MoodName}".TrimEnd());
     }
 
     private void CreateBar(Transform card, string name, float x, float width, float y,
-                           float ratio, Color color, string text)
+                           float ratio, Color color, string caption, string value)
     {
-        var fondo = new GameObject(name, typeof(RectTransform), typeof(Image));
-        fondo.transform.SetParent(card, false);
+        var fila = new GameObject(name, typeof(RectTransform));
+        fila.transform.SetParent(card, false);
 
-        var rt = fondo.GetComponent<RectTransform>();
-        rt.anchorMin = new Vector2(0f, 1f);
-        rt.anchorMax = new Vector2(0f, 1f);
-        rt.pivot = new Vector2(0f, 1f);
+        var rt = fila.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0f, 0.5f);
+        rt.anchorMax = new Vector2(0f, 0.5f);
+        rt.pivot = new Vector2(0f, 0.5f);
         rt.anchoredPosition = new Vector2(x, y);
-        rt.sizeDelta = new Vector2(width - 12f, 28f);
-        fondo.GetComponent<Image>().color = new Color(0.08f, 0.08f, 0.10f, 0.9f);
+        rt.sizeDelta = new Vector2(width, 12f);
+
+        const float anchoRotulo = 42f;
+        const float anchoCifra = 76f;
+
+        var rotulo = MiniLabel(fila.transform, "Caption", 0f, anchoRotulo,
+            TextAlignmentOptions.Left, UITheme.TextMuted);
+        rotulo.text = caption;
+
+        var pista = new GameObject("Track", typeof(RectTransform), typeof(Image));
+        pista.transform.SetParent(fila.transform, false);
+
+        var prt = pista.GetComponent<RectTransform>();
+        prt.anchorMin = new Vector2(0f, 0.5f);
+        prt.anchorMax = new Vector2(0f, 0.5f);
+        prt.pivot = new Vector2(0f, 0.5f);
+        prt.anchoredPosition = new Vector2(anchoRotulo + 6f, 0f);
+        prt.sizeDelta = new Vector2(width - anchoRotulo - anchoCifra - 12f, 7f);
+        UITheme.Surface(pista, UITheme.Track, Color.clear, 3.5f);
+        pista.GetComponent<Image>().raycastTarget = false;
 
         var relleno = new GameObject("Fill", typeof(RectTransform), typeof(Image));
-        relleno.transform.SetParent(fondo.transform, false);
+        relleno.transform.SetParent(pista.transform, false);
 
         var frt = relleno.GetComponent<RectTransform>();
         frt.anchorMin = Vector2.zero;
         frt.anchorMax = new Vector2(Mathf.Clamp01(ratio), 1f);
         frt.offsetMin = Vector2.zero;
         frt.offsetMax = Vector2.zero;
-        relleno.GetComponent<Image>().color = color;
+        UITheme.Surface(relleno, color, Color.clear, 3.5f);
+        relleno.GetComponent<Image>().raycastTarget = false;
 
-        var labelGo = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
-        labelGo.transform.SetParent(fondo.transform, false);
-        var lrt = labelGo.GetComponent<RectTransform>();
-        lrt.anchorMin = Vector2.zero;
-        lrt.anchorMax = Vector2.one;
-        lrt.offsetMin = new Vector2(8f, 0f);
-        lrt.offsetMax = Vector2.zero;
+        var cifra = MiniLabel(fila.transform, "Value", width - anchoCifra, anchoCifra,
+            TextAlignmentOptions.Right, UITheme.TextMuted);
+        cifra.text = value;
+    }
 
-        var tmp = labelGo.GetComponent<TextMeshProUGUI>();
-        tmp.fontSize = 16f;
-        tmp.alignment = TextAlignmentOptions.Left;
-        tmp.color = Color.white;
+    private TMP_Text MiniLabel(Transform parent, string name, float x, float width,
+                               TextAlignmentOptions align, Color color)
+    {
+        var go = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
+        go.transform.SetParent(parent, false);
+
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0f, 0.5f);
+        rt.anchorMax = new Vector2(0f, 0.5f);
+        rt.pivot = new Vector2(0f, 0.5f);
+        rt.anchoredPosition = new Vector2(x, 0f);
+        rt.sizeDelta = new Vector2(width, 14f);
+
+        var tmp = go.GetComponent<TextMeshProUGUI>();
+        tmp.fontSize = UITheme.SizeTiny;
+        tmp.alignment = align;
+        tmp.color = color;
         tmp.raycastTarget = false;
-        tmp.text = text;
+        return tmp;
     }
 
     // Columna 3: lo que lleva puesto y lo que sabe hacer.
     private void BuildGear(Transform card, HeroController hero, float x, float width)
     {
-        var label = NewCardLabel(card, "Col_Gear", x, width, 17f, TextAlignmentOptions.TopLeft);
+        var label = NewCardLabel(card, "Col_Gear", x, width, UITheme.SizeSmall,
+            TextAlignmentOptions.Left);
+        label.color = UITheme.TextSoft;
+        label.lineSpacing = 12f;
 
         string estados = hero.Status.Describe();
         string linea = string.IsNullOrEmpty(estados)
-            ? $"Maestría: {hero.Mastery.Describe()}"
-            : $"Estados: {estados}";
+            ? $"{Key("Maestría")} {hero.Mastery.Describe()}"
+            : $"{Key("Estados")} {estados}";
 
-        label.text = $"Pasivas: {PassiveSkills.Describe(hero.Passives)}\n" +
-                     $"Arma: {GearLabel(hero, EquipmentSlot.Weapon)}\n" +
-                     $"Escudo: {GearLabel(hero, EquipmentSlot.Shield)}   " +
-                     $"Arm.: {GearLabel(hero, EquipmentSlot.Armor)}\n{linea}";
+        label.text = $"{Key("Pasivas")} {PassiveSkills.Describe(hero.Passives)}\n" +
+                     $"{Key("Arma")} {GearLabel(hero, EquipmentSlot.Weapon)}   " +
+                     $"{Key("Escudo")} {GearLabel(hero, EquipmentSlot.Shield)}\n" +
+                     $"{Key("Arm.")} {GearLabel(hero, EquipmentSlot.Armor)}   {linea}";
     }
 
-    // Columna 4: cinco botones en dos filas, para no estirar la tarjeta a lo alto.
-    private void CreateCardButtons(Transform card, HeroController hero, float x, float width)
+    // Los nombres de campo van más apagados que su valor, como en el mockup.
+    private static string Key(string text) => $"<color={UITheme.Tag(UITheme.TextFaint)}>{text}</color>";
+
+    // Columna 4: ocho botones en dos filas de cuatro, para no estirar la tarjeta a lo alto.
+    private void CreateCardButtons(Transform card, HeroController hero, float x)
     {
         var progress = hero.GetComponent<HeroProgress>();
         bool isTarget = synthesis != null && synthesis.Target == hero;
@@ -448,33 +486,33 @@ public class RosterUI : MonoBehaviour
 
         CreateButton(card, "Btn_Lock", x, 0,
             LocalizationManager.Get(hero.IsLocked ? "UI_LOCK" : "UI_UNLOCK"),
-            hero.IsLocked ? lockedColor : synthColor, true, () => OnLockClicked(hero));
+            hero.IsLocked ? UITheme.DangerSoft : UITheme.Neutral, true, () => OnLockClicked(hero));
 
         CreateButton(card, "Btn_Party", x, 1,
             LocalizationManager.Get(inParty ? "UI_IN_PARTY" : "UI_PARTY"),
-            inParty ? targetColor : synthColor, party != null, () => OnPartyClicked(hero));
+            inParty ? UITheme.Amber : UITheme.Neutral, party != null, () => OnPartyClicked(hero));
 
         CreateButton(card, "Btn_Equip", x, 2, LocalizationManager.Get("UI_EQUIP"),
-            hasGear ? gearColor : disabledColor, hasGear, () => OnEquipClicked(hero));
+            UITheme.Teal, hasGear, () => OnEquipClicked(hero));
 
         CreateButton(card, "Btn_Ascend", x, 3, LocalizationManager.Get("UI_ASCEND"),
-            canAscend ? ascendColor : disabledColor, canAscend, () => OnAscendClicked(hero));
+            UITheme.AmberSoft, canAscend, () => OnAscendClicked(hero));
 
         CreateButton(card, "Btn_Synth", x, 4,
             LocalizationManager.Get(isTarget ? "UI_SYNTH_TARGET" : "UI_SYNTH"),
-            hero.IsLocked ? disabledColor : (isTarget ? targetColor : synthColor),
+            isTarget ? UITheme.Amber : UITheme.AccentSoft,
             synthesis != null && !hero.IsLocked, () => OnSynthClicked(hero));
 
         CreateButton(card, "Btn_Unequip", x, 5, LocalizationManager.Get("UI_UNEQUIP"),
-            wearsGear ? gearColor : disabledColor, wearsGear, () => OnUnequipClicked(hero));
+            UITheme.Teal, wearsGear, () => OnUnequipClicked(hero));
 
         bool puedeSubclase = hero.StarRank >= HeroSubclasses.MinStarRank;
         CreateButton(card, "Btn_Subclass", x, 6, LocalizationManager.Get("UI_SUBCLASS"),
-            puedeSubclase ? ascendColor : disabledColor, puedeSubclase, () => OnSubclassClicked(hero));
+            UITheme.AccentSoft, puedeSubclase, () => OnSubclassClicked(hero));
 
         bool roto = hero.FirstBrokenSlot() != null;
         CreateButton(card, "Btn_Repair", x, 7, LocalizationManager.Get("UI_REPAIR"),
-            roto ? lockedColor : disabledColor, roto && crafting != null, () => OnRepairClicked(hero));
+            UITheme.DangerSoft, roto && crafting != null, () => OnRepairClicked(hero));
     }
 
     // Rota entre las tres subclases del arquetipo del héroe.
@@ -524,27 +562,28 @@ public class RosterUI : MonoBehaviour
         Rebuild();
     }
 
-    // El hueco decide la posición: tres botones arriba y dos abajo.
+    // El hueco decide la posición: cuatro botones arriba y cuatro abajo.
     private void CreateButton(Transform card, string name, float x, int slotIndex, string text,
                               Color color, bool interactable, UnityEngine.Events.UnityAction onClick)
     {
         var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
         go.transform.SetParent(card, false);
 
-        int columna = slotIndex % 3;
-        int fila = slotIndex / 3;
+        int columna = slotIndex % 4;
+        int fila = slotIndex / 4;
 
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = new Vector2(0f, 1f);
         rt.anchorMax = new Vector2(0f, 1f);
         rt.pivot = new Vector2(0f, 1f);
         rt.anchoredPosition = new Vector2(
-            x + columna * (cardButtonWidth + 6f),
-            -cardPadding - fila * (cardButtonHeight + 6f));
-        rt.sizeDelta = new Vector2(cardButtonWidth, cardButtonHeight);
+            x + columna * (BtnWidth + BtnGap),
+            -CardPadY - fila * (BtnHeight + BtnGap));
+        rt.sizeDelta = new Vector2(BtnWidth, BtnHeight);
 
-        var image = go.GetComponent<Image>();
-        image.color = color;
+        // Lo que no se puede pulsar se apaga a neutro en vez de cambiar de color.
+        var image = UITheme.Surface(go, interactable ? color : UITheme.Neutral,
+            UITheme.BorderCard, UITheme.RadiusButton);
 
         var labelGo = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
         labelGo.transform.SetParent(go.transform, false);
@@ -556,9 +595,10 @@ public class RosterUI : MonoBehaviour
         lrt.offsetMax = Vector2.zero;
 
         var tmp = labelGo.GetComponent<TextMeshProUGUI>();
-        tmp.fontSize = 17f;
+        tmp.fontSize = UITheme.SizeSmall;
+        tmp.fontStyle = FontStyles.Bold;
         tmp.alignment = TextAlignmentOptions.Center;
-        tmp.color = Color.white;
+        tmp.color = interactable ? UITheme.Text : UITheme.TextFaint;
         tmp.text = text;
 
         var button = go.GetComponent<Button>();
@@ -578,12 +618,12 @@ public class RosterUI : MonoBehaviour
         rt.anchorMax = new Vector2(0f, 1f);
         rt.pivot = new Vector2(0f, 0.5f);
         rt.anchoredPosition = new Vector2(x, 0f);
-        rt.sizeDelta = new Vector2(width - 12f, -cardPadding * 2f);
+        rt.sizeDelta = new Vector2(width, -CardPadY * 2f);
 
         var tmp = go.GetComponent<TextMeshProUGUI>();
         tmp.fontSize = size;
         tmp.alignment = align;
-        tmp.color = Color.white;
+        tmp.color = UITheme.Text;
         tmp.raycastTarget = false;
         return tmp;
     }

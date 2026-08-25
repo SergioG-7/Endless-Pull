@@ -12,28 +12,37 @@ public class SideMenuUI : MonoBehaviour
     [Tooltip("Arranca plegado; en móvil deja la pantalla despejada.")]
     [SerializeField] private bool startCollapsed = true;
 
+    [Tooltip("Ancho del cajón, según el mockup.")]
+    [SerializeField] private float drawerWidth = 216f;
+
     [Tooltip("Alto del botón que abre y cierra el menú.")]
-    [SerializeField] private float toggleHeight = 84f;
+    [SerializeField] private float toggleHeight = 64f;
 
     [Tooltip("Alto de cada rótulo de sección.")]
-    [SerializeField] private float headerHeight = 34f;
+    [SerializeField] private float headerHeight = 22f;
+
+    [Tooltip("Alto de cada opción del menú.")]
+    [SerializeField] private float itemHeight = 40f;
 
     [Tooltip("Margen mínimo contra los bordes, además de la zona segura del dispositivo.")]
     [SerializeField] private float safeMargin = 40f;
 
-    [Tooltip("Color del botón que abre el menú.")]
-    [SerializeField] private Color toggleColor = new Color(0.22f, 0.20f, 0.34f);
-
-    [Tooltip("Color del rótulo de sección.")]
-    [SerializeField] private Color headerColor = new Color(0.75f, 0.68f, 0.45f);
-
     [Tooltip("Barra de decretos: mientras se vea, el menú de gestión se esconde.")]
     [SerializeField] private MasterActionBar combatBar;
+
+    [Tooltip("Barra superior, que arranca justo a la derecha del cajón.")]
+    [SerializeField] private RectTransform topBar;
+
+    [Tooltip("Hueco entre el cajón y la barra superior.")]
+    [SerializeField] private float topBarGap = 24f;
+
+    [Tooltip("Alto de la barra superior, según el mockup.")]
+    [SerializeField] private float topBarHeight = 64f;
 
     // Cada sección con los botones que le tocan, por nombre de GameObject.
     private static readonly (string clave, string[] botones)[] Secciones =
     {
-        ("UI_SECTION_MANAGEMENT", new[] { "Btn_Tower_Open", "Btn_Expeditions_Open" }),
+        ("UI_SECTION_MANAGEMENT", new[] { "Btn_Tower_Open", "Btn_Expeditions_Open", "Btn_Quests" }),
         ("UI_SECTION_STAFF", new[] { "Btn_Roster", "Btn_Pull", "Btn_HealAll" }),
         ("UI_SECTION_FACILITIES", new[] { "Btn_Craft_Open", "Btn_Shop_Open" })
     };
@@ -57,6 +66,9 @@ public class SideMenuUI : MonoBehaviour
         }
 
         if (combatBar == null) combatBar = UnityEngine.Object.FindFirstObjectByType<MasterActionBar>();
+
+        if (topBar == null && sidebar != null && sidebar.parent != null)
+            topBar = sidebar.parent.Find("TopBar") as RectTransform;
 
         Build();
     }
@@ -83,7 +95,11 @@ public class SideMenuUI : MonoBehaviour
     public void SetOpen(bool value)
     {
         open = value;
-        if (body != null) body.SetActive(open);
+
+        // Se esconde el viewport entero: si solo se ocultaba el cuerpo quedaba su recuadro oscuro.
+        if (viewport != null) viewport.gameObject.SetActive(open);
+        if (body != null) body.SetActive(true);
+
         RefreshTexts();
     }
 
@@ -112,11 +128,19 @@ public class SideMenuUI : MonoBehaviour
         float izquierda = safeMargin + segura.x / escala;
         float arriba = safeMargin + (Screen.height - segura.yMax) / escala;
 
-        sidebar.anchoredPosition = new Vector2(izquierda, -(arriba + 90f));
+        sidebar.anchoredPosition = new Vector2(izquierda, -arriba);
+        sidebar.sizeDelta = new Vector2(drawerWidth, sidebar.sizeDelta.y);
 
-        // El botón se ancla arriba del todo; el scroll cuelga justo debajo.
-        toggleButton = CreateButton("Btn_MenuToggle", toggleColor, toggleHeight);
-        toggleButton.transform.SetAsFirstSibling();
+        // La barra superior arranca donde acaba el cajón y respeta la misma zona segura.
+        if (topBar != null)
+        {
+            float derecha = safeMargin + (Screen.width - segura.xMax) / escala;
+            topBar.offsetMin = new Vector2(izquierda + drawerWidth + topBarGap, -arriba - topBarHeight);
+            topBar.offsetMax = new Vector2(-derecha, -arriba);
+        }
+
+        // El botón se ancla arriba del todo; el cajón cuelga justo debajo.
+        toggleButton = CreateToggle();
 
         var trt = toggleButton.GetComponent<RectTransform>();
         trt.anchorMin = new Vector2(0f, 1f);
@@ -132,7 +156,7 @@ public class SideMenuUI : MonoBehaviour
                                     typeof(Mask), typeof(ScrollRect));
         viewGo.transform.SetParent(sidebar, false);
         viewport = viewGo.GetComponent<RectTransform>();
-        viewGo.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.35f);
+        UITheme.Surface(viewGo, UITheme.GlassDeep, UITheme.Hex("E9E9ED", 0.08f), UITheme.RadiusDrawer);
         viewGo.GetComponent<Mask>().showMaskGraphic = true;
 
         body = new GameObject("MenuBody", typeof(RectTransform));
@@ -142,6 +166,7 @@ public class SideMenuUI : MonoBehaviour
         brt.anchorMin = new Vector2(0f, 1f);
         brt.anchorMax = new Vector2(1f, 1f);
         brt.pivot = new Vector2(0.5f, 1f);
+        brt.sizeDelta = new Vector2(0f, 0f);
         brt.anchoredPosition = Vector2.zero;
 
         var scroll = viewGo.GetComponent<ScrollRect>();
@@ -150,17 +175,22 @@ public class SideMenuUI : MonoBehaviour
         scroll.horizontal = false;
         scroll.scrollSensitivity = 30f;
 
+        // Margen interior de 14 y separación de 14 entre secciones, como en el mockup.
         var layout = body.AddComponent<VerticalLayoutGroup>();
-        layout.spacing = 10f;
+        layout.padding = new RectOffset(14, 14, 14, 14);
+        layout.spacing = 14f;
         layout.childControlWidth = true;
         layout.childForceExpandWidth = true;
-        layout.childControlHeight = false;
+        // Cada sección mide lo que suman sus opciones; sin esto las cabeceras se solapaban.
+        layout.childControlHeight = true;
         layout.childForceExpandHeight = false;
         body.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
         foreach (var seccion in Secciones)
         {
-            var header = CreateHeader(seccion.clave);
+            var grupo = CreateSection(seccion.clave);
+
+            var header = CreateHeader(grupo, seccion.clave);
             headers.Add(header);
             headerKeys.Add(seccion.clave);
 
@@ -169,51 +199,84 @@ public class SideMenuUI : MonoBehaviour
                 var boton = sidebar.Find(nombre);
                 if (boton == null) continue;
 
-                boton.SetParent(body.transform, false);
+                boton.SetParent(grupo, false);
                 boton.SetAsLastSibling();
+                StyleItem(boton);
             }
         }
 
-        // El alto del scroll sale de lo que queda de pantalla bajo el botón, con hueco abajo.
+        // El alto del cajón sale de lo que queda de pantalla bajo el botón, con hueco abajo.
         float abajo = safeMargin + segura.y / escala;
-        float disponible = Mathf.Max(200f, altoCanvas - arriba - abajo - toggleHeight - 130f);
+        float disponible = Mathf.Max(200f, altoCanvas - arriba - abajo - toggleHeight - 10f);
 
-        sidebar.sizeDelta = new Vector2(sidebar.sizeDelta.x, toggleHeight + disponible);
+        sidebar.sizeDelta = new Vector2(drawerWidth, toggleHeight + 10f + disponible);
 
         viewport.anchorMin = new Vector2(0f, 1f);
         viewport.anchorMax = new Vector2(1f, 1f);
         viewport.pivot = new Vector2(0.5f, 1f);
         viewport.sizeDelta = new Vector2(0f, disponible);
         viewport.anchoredPosition = new Vector2(0f, -(toggleHeight + 10f));
-
-        // Todos los nombres del menú al mismo tamaño, incluidos los que venían de la escena.
-        foreach (var etiqueta in body.GetComponentsInChildren<TMP_Text>(true))
-            etiqueta.fontSize = UIBuild.NameSize;
     }
 
-    private TMP_Text CreateHeader(string key)
+    // Cada sección es su propio grupo: dentro los botones se separan 6, fuera 14.
+    private Transform CreateSection(string key)
+    {
+        var go = new GameObject("Section_" + key, typeof(RectTransform));
+        go.transform.SetParent(body.transform, false);
+
+        var layout = go.AddComponent<VerticalLayoutGroup>();
+        layout.spacing = 6f;
+        layout.childControlWidth = true;
+        layout.childForceExpandWidth = true;
+        layout.childControlHeight = false;
+        layout.childForceExpandHeight = false;
+
+        return go.transform;
+    }
+
+    private TMP_Text CreateHeader(Transform parent, string key)
     {
         var go = new GameObject("Header_" + key, typeof(RectTransform), typeof(TextMeshProUGUI));
-        go.transform.SetParent(body.transform, false);
+        go.transform.SetParent(parent, false);
         go.GetComponent<RectTransform>().sizeDelta = new Vector2(0f, headerHeight);
 
         var tmp = go.GetComponent<TextMeshProUGUI>();
-        tmp.fontSize = 22f;
-        tmp.alignment = TextAlignmentOptions.Left;
-        tmp.color = headerColor;
+        tmp.fontSize = UITheme.SizeMicro;
+        tmp.fontStyle = FontStyles.Bold;
+        tmp.characterSpacing = 10f;
+        tmp.alignment = TextAlignmentOptions.BottomLeft;
+        tmp.color = UITheme.Hex("A7A1DB", 0.85f);
         tmp.raycastTarget = false;
         tmp.text = LocalizationManager.Get(key).ToUpperInvariant();
         return tmp;
     }
 
-    private Button CreateButton(string name, Color color, float height)
+    // Opción del cajón: fondo transparente, borde fino y texto a la izquierda.
+    private void StyleItem(Transform item)
     {
-        var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
-        go.transform.SetParent(sidebar, false);
-        go.GetComponent<RectTransform>().sizeDelta = new Vector2(0f, height);
+        var rt = item as RectTransform;
+        if (rt != null) rt.sizeDelta = new Vector2(rt.sizeDelta.x, itemHeight);
 
-        var image = go.GetComponent<Image>();
-        image.color = color;
+        UITheme.Surface(item.gameObject, Color.clear, UITheme.Border, UITheme.RadiusItem);
+
+        var tmp = item.GetComponentInChildren<TMP_Text>(true);
+        if (tmp == null) return;
+
+        tmp.fontSize = UITheme.SizeBody;
+        tmp.alignment = TextAlignmentOptions.Left;
+        tmp.color = UITheme.Text;
+        tmp.rectTransform.offsetMin = new Vector2(12f, 0f);
+        tmp.rectTransform.offsetMax = new Vector2(-12f, 0f);
+    }
+
+    private Button CreateToggle()
+    {
+        var go = new GameObject("Btn_MenuToggle", typeof(RectTransform), typeof(Image), typeof(Button));
+        go.transform.SetParent(sidebar, false);
+        go.transform.SetAsFirstSibling();
+        go.GetComponent<RectTransform>().sizeDelta = new Vector2(0f, toggleHeight);
+
+        var image = UITheme.Surface(go, UITheme.Glass, UITheme.Border, UITheme.RadiusDrawer);
 
         var labelGo = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
         labelGo.transform.SetParent(go.transform, false);
@@ -224,9 +287,10 @@ public class SideMenuUI : MonoBehaviour
         lrt.offsetMax = Vector2.zero;
 
         var tmp = labelGo.GetComponent<TextMeshProUGUI>();
-        tmp.fontSize = UIBuild.NameSize;
+        tmp.fontSize = 15f;
+        tmp.fontStyle = FontStyles.Bold;
         tmp.alignment = TextAlignmentOptions.Center;
-        tmp.color = Color.white;
+        tmp.color = UITheme.Text;
 
         var button = go.GetComponent<Button>();
         button.targetGraphic = image;

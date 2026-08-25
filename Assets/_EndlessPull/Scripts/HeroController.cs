@@ -733,7 +733,12 @@ public class HeroController : MonoBehaviour, IHealthOwner
     public void RecoverFatigue(float amount)
     {
         if (amount <= 0f) return;
+
+        bool agotadoAntes = IsExhausted;
         fatigue = Mathf.Max(0f, fatigue - amount);
+
+        // Dejar de estar agotado cuenta como contrato de la cantina cumplido.
+        if (agotadoAntes && !IsExhausted) QuestManager.Report(QuestKind.CureFatigue);
     }
 
     public void AddMorale(float amount)
@@ -1176,6 +1181,9 @@ public class HeroController : MonoBehaviour, IHealthOwner
     private void EnterBaseWander()
     {
         target = null;
+
+        // Al soltar el edificio hay que devolver el punto de llegada que tenía reservado.
+        BaseBuilding.ReleaseSlotEverywhere(this);
         currentBuilding = null;
         state = HeroState.BaseWander;
         PickNewWanderTarget();
@@ -1189,7 +1197,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
         if (assignedBuilding != null && assignedBuilding.IsUnlocked)
         {
             destinationBuilding = assignedBuilding;
-            wanderTarget = assignedBuilding.transform.position;
+            wanderTarget = assignedBuilding.ClaimSlot(this);
             return;
         }
 
@@ -1202,9 +1210,8 @@ public class HeroController : MonoBehaviour, IHealthOwner
             {
                 destinationBuilding = building;
 
-                // Se planta en un punto al azar dentro del radio, no todos en el mismo pixel.
-                Vector2 offset = UnityEngine.Random.insideUnitCircle * (building.InteractionRadius * 0.6f);
-                wanderTarget = (Vector2)building.transform.position + offset;
+                // Cada héroe reserva su propio punto de llegada alrededor del edificio.
+                wanderTarget = building.ClaimSlot(this);
                 return;
             }
         }

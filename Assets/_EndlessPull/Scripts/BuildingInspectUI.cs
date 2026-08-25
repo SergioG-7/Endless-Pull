@@ -25,7 +25,12 @@ public class BuildingInspectUI : MonoBehaviour
     private TMP_Text ocupacion;
     private TMP_Text produccion;
     private RectTransform lista;
+    [Tooltip("Taller que repara el equipo desgastado.")]
+    [SerializeField] private CraftingManager crafting;
+
     private Button botonMejora;
+    private Button botonReparar;
+    private TMP_Text etiquetaReparar;
     private TMP_Text etiquetaMejora;
 
     public bool IsOpen => panel != null && panel.activeSelf;
@@ -91,7 +96,43 @@ public class BuildingInspectUI : MonoBehaviour
             : new Color(0.28f, 0.28f, 0.32f);
         etiquetaMejora.text = $"Mejorar Edificio   ({building.NextWoodCost}M / {building.NextIronCost}H)";
 
+        RefreshMaintenance();
         RebuildWorkerList();
+    }
+
+    // Sección "Mantenimiento de Equipo": el coste sube con el desgaste acumulado.
+    private void RefreshMaintenance()
+    {
+        if (botonReparar == null) return;
+
+        bool esTaller = building.Type == BuildingType.Workshop;
+        if (botonReparar.gameObject.activeSelf != esTaller) botonReparar.gameObject.SetActive(esTaller);
+        if (!esTaller) return;
+
+        if (crafting == null) crafting = UnityEngine.Object.FindFirstObjectByType<CraftingManager>();
+        if (crafting == null) { botonReparar.gameObject.SetActive(false); return; }
+
+        int desgaste = crafting.TotalWear();
+        int madera = crafting.RepairAllWoodCost();
+        int hierro = crafting.RepairAllIronCost();
+
+        bool hayQueReparar = desgaste > 0;
+        bool sePuedePagar = hayQueReparar && economy != null
+                            && economy.CanAffordMaterials(madera, hierro);
+
+        botonReparar.interactable = sePuedePagar;
+        botonReparar.targetGraphic.color = sePuedePagar ? UITheme.AccentSoft : UITheme.Neutral;
+
+        etiquetaReparar.text = hayQueReparar
+            ? $"{LocalizationManager.Get("UI_MAINTENANCE")}: " +
+              $"{LocalizationManager.Get("UI_REPAIR_ALL")}   ({madera}M / {hierro}H)"
+            : LocalizationManager.Get("UI_NOTHING_BROKEN");
+    }
+
+    public void OnRepairAllPressed()
+    {
+        if (crafting != null) crafting.TryRepairAll();
+        Refresh();
     }
 
     // Lo que aporta cada tick, en los términos propios de cada tipo.
@@ -166,6 +207,12 @@ public class BuildingInspectUI : MonoBehaviour
             new Color(0.30f, 0.52f, 0.32f), new Vector2(size.x - 40f, 60f), new Vector2(0f, -136f),
             OnUpgradePressed);
         etiquetaMejora = botonMejora.GetComponentInChildren<TMP_Text>();
+
+        // Mantenimiento: solo tiene sentido en el taller, así que se enseña y esconde según el tipo.
+        botonReparar = UIBuild.Button(panel.transform, "Btn_RepairAll", string.Empty,
+            UITheme.AccentSoft, new Vector2(size.x - 40f, 56f), new Vector2(0f, -200f),
+            OnRepairAllPressed);
+        etiquetaReparar = botonReparar.GetComponentInChildren<TMP_Text>();
 
         // Lista de asignación con scroll: el roster puede ser largo.
         var viewport = new GameObject("Viewport", typeof(RectTransform), typeof(Image),

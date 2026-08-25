@@ -17,11 +17,18 @@ public class WorldInteractionManager : MonoBehaviour
     [Tooltip("Radio de gracia alrededor del héroe, para que el dedo no tenga que ser preciso.")]
     [SerializeField] private float heroTouchRadius = 0.7f;
 
+    [Tooltip("Modal de invocación que abre el Altar.")]
+    [SerializeField] private SummonAltarUI summonCard;
+
+    [Tooltip("Radio de toque del Altar de Invocación.")]
+    [SerializeField] private float altarTouchRadius = 2f;
+
     void Awake()
     {
         if (worldCamera == null) worldCamera = Camera.main;
         if (heroCard == null) heroCard = UnityEngine.Object.FindFirstObjectByType<HeroQuickCardUI>();
         if (buildingCard == null) buildingCard = UnityEngine.Object.FindFirstObjectByType<BuildingInspectUI>();
+        if (summonCard == null) summonCard = UnityEngine.Object.FindFirstObjectByType<SummonAltarUI>();
     }
 
     void Update()
@@ -33,6 +40,14 @@ public class WorldInteractionManager : MonoBehaviour
         if (hero != null)
         {
             if (heroCard != null) heroCard.Show(hero);
+            return;
+        }
+
+        // El Altar no es un BaseBuilding: abre su propio modal de invocación.
+        if (summonCard != null && SummonAltar.Exists
+            && Vector2.Distance(SummonAltar.AltarPosition, punto) <= altarTouchRadius)
+        {
+            summonCard.Open();
             return;
         }
 

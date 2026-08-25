@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 5903096227960687127}
   - component: {fileID: 4335293095279164006}
   - component: {fileID: 3456401659717892001}
+  - component: {fileID: 4985056502365863715}
   m_Layer: 0
   m_Name: Enemy_Base
   m_TagString: Enemy
@@ -185,10 +186,14 @@ MonoBehaviour:
   data: {fileID: 11400000, guid: 4c385b8c16dd6234d95548445e94fc5f, type: 2}
   detectionRange: 5
   attackRange: 1.1
+  rangedThreshold: 3
   scanInterval: 0.25
+  maxAggroPerTank: 2
   bossSlamRadius: 3
   bossSlamInterval: 5
   bossSlamDamageFactor: 0.8
+  bossSlamWindup: 1.2
+  bossWindupTint: {r: 1, g: 0.25, b: 0.2, a: 1}
 --- !u!114 &3456401659717892001
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -206,6 +211,21 @@ MonoBehaviour:
   fullColor: {r: 0.9, g: 0.55, b: 0.2, a: 1}
   lowColor: {r: 0.85, g: 0.25, b: 0.25, a: 1}
   hideWhenFull: 0
+--- !u!114 &4985056502365863715
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2062506768320722534}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d205d49218d394148aaab0b424aa7290, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UnitSeparation
+  radius: 1.2
+  strength: 1.6
+  maxNeighbours: 6
 --- !u!1 &3358320869063661534
 GameObject:
   m_ObjectHideFlags: 0

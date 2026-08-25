@@ -34,6 +34,9 @@ public class HeroProgress : MonoBehaviour
     [Tooltip("Etiqueta flotante que muestra el nivel sobre la barra.")]
     [SerializeField] private TMP_Text levelLabel;
 
+    [Tooltip("Aro exterior del token, que se tiñe con el color de la rareza.")]
+    [SerializeField] private SpriteRenderer rarityRing;
+
     private int currentEXP;
     private HeroController hero;
 
@@ -56,17 +59,7 @@ public class HeroProgress : MonoBehaviour
            && crafting != null && crafting.AscensionStones >= ascendStoneCost;
 
     // Color por rareza del rótulo flotante: 1* gris, 2* verde, 3* azul, 4* morado, 5* dorado.
-    public static Color RarityColor(int starRank)
-    {
-        switch (starRank)
-        {
-            case 2: return new Color(0.45f, 0.85f, 0.45f);
-            case 3: return new Color(0.40f, 0.65f, 1f);
-            case 4: return new Color(0.72f, 0.45f, 0.95f);
-            case 5: return new Color(1f, 0.82f, 0.30f);
-        }
-        return new Color(0.75f, 0.75f, 0.78f);
-    }
+    public static Color RarityColor(int starRank) => UITheme.Rarity(starRank);
 
     public event System.Action<int> LevelChanged;
     public event System.Action<int, int> EXPChanged;
@@ -219,6 +212,8 @@ public class HeroProgress : MonoBehaviour
     // El rótulo flotante identifica a la unidad de un vistazo en la base.
     private void RefreshLabel()
     {
+        if (hero != null && rarityRing != null) rarityRing.color = RarityColor(hero.StarRank);
+
         if (levelLabel == null) return;
 
         if (hero == null || hero.Data == null)
@@ -227,7 +222,13 @@ public class HeroProgress : MonoBehaviour
             return;
         }
 
-        levelLabel.text = $"{hero.Data.heroName} [{hero.StarRank}*] Nv.{level}";
-        levelLabel.color = RarityColor(hero.StarRank);
+        // Insignia bajo el token: estrellas y nombre con el color de rareza, nivel en blanco.
+        var estrellas = new System.Text.StringBuilder();
+        for (int i = 0; i < hero.StarRank; i++) estrellas.Append('★');
+
+        string rareza = UITheme.Tag(RarityColor(hero.StarRank));
+        levelLabel.text = $"<color={rareza}>{estrellas} {hero.Data.heroName}</color>" +
+                          $" · <color={UITheme.Tag(UITheme.Text)}>Nv. {level}</color>";
+        levelLabel.color = UITheme.Text;
     }
 }

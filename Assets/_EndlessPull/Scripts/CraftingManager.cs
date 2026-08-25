@@ -19,6 +19,12 @@ public class CraftingManager : MonoBehaviour
     [Tooltip("Hierro que cuesta reparar una pieza rota.")]
     [SerializeField] private int repairIronCost = 15;
 
+    [Tooltip("Madera por cada punto de durabilidad perdido al reparar todo.")]
+    [SerializeField] private float repairWoodCostPerPoint = 2f;
+
+    [Tooltip("Hierro por cada punto de durabilidad perdido al reparar todo.")]
+    [SerializeField] private float repairIronCostPerPoint = 2f;
+
     [Tooltip("Economía de la que salen los materiales.")]
     [SerializeField] private EconomyManager economy;
 
@@ -113,9 +119,72 @@ public class CraftingManager : MonoBehaviour
         var pieza = hero.GetEquipped(slot.Value);
         hero.RepairSlot(slot.Value);
 
+        QuestManager.Report(QuestKind.RepairGear);
         Debug.Log($"[Taller] {pieza.equipName} de {hero.Data.heroName} reparada " +
                   $"({hero.DurabilityOf(slot.Value)}/{pieza.maxDurability}).", this);
         CraftResolved?.Invoke(true, $"{pieza.equipName} reparada");
+
+        SaveManager.RequestSave();
+        return true;
+    }
+
+    // Puntos de durabilidad que le faltan a todo el equipo de todos los héroes.
+    public int TotalWear()
+    {
+        int total = 0;
+
+        foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None))
+        {
+            if (hero == null) continue;
+
+            foreach (EquipmentSlot slot in System.Enum.GetValues(typeof(EquipmentSlot)))
+            {
+                var item = hero.GetEquipped(slot);
+                if (item == null) continue;
+
+                total += Mathf.Max(0, item.maxDurability - hero.DurabilityOf(slot));
+            }
+        }
+
+        return total;
+    }
+
+    // El coste sale del desgaste acumulado, redondeando hacia arriba por punto perdido.
+    public int RepairAllWoodCost() => Mathf.CeilToInt(TotalWear() * repairWoodCostPerPoint);
+    public int RepairAllIronCost() => Mathf.CeilToInt(TotalWear() * repairIronCostPerPoint);
+
+    // Deja como nuevo todo el equipo de la base de una sola vez.
+    public bool TryRepairAll()
+    {
+        int desgaste = TotalWear();
+        if (desgaste <= 0)
+        {
+            CraftResolved?.Invoke(false, LocalizationManager.Get("UI_NOTHING_BROKEN"));
+            return false;
+        }
+
+        int madera = RepairAllWoodCost();
+        int hierro = RepairAllIronCost();
+
+        if (economy == null || !economy.TrySpendMaterials(madera, hierro))
+        {
+            Debug.LogWarning($"[Taller] Reparar todo cuesta {madera} madera y {hierro} hierro.", this);
+            CraftResolved?.Invoke(false, "Faltan materiales para reparar");
+            return false;
+        }
+
+        int piezas = 0;
+        foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None))
+        {
+            if (hero == null) continue;
+
+            foreach (EquipmentSlot slot in System.Enum.GetValues(typeof(EquipmentSlot)))
+                if (hero.RepairSlot(slot)) piezas++;
+        }
+
+        QuestManager.Report(QuestKind.RepairGear, piezas);
+        Debug.Log($"[Taller] Reparadas {piezas} pieza(s) por {madera} madera y {hierro} hierro.", this);
+        CraftResolved?.Invoke(true, $"{piezas} pieza(s) reparada(s)");
 
         SaveManager.RequestSave();
         return true;

@@ -37,7 +37,16 @@ public static class HeroSubclasses
     // Estrellas a partir de las cuales se puede elegir subclase.
     public const int MinStarRank = 3;
 
+    // El nombre sale del diccionario; la clave es el propio valor del enum.
     public static string DisplayName(HeroSubclass subclass)
+    {
+        if (subclass != HeroSubclass.None)
+            return LocalizationManager.Get("SUB_" + subclass.ToString().ToUpperInvariant());
+
+        return DisplayNameFallback(subclass);
+    }
+
+    private static string DisplayNameFallback(HeroSubclass subclass)
     {
         switch (subclass)
         {
@@ -158,6 +167,14 @@ public static class HeroSubclasses
     // Lo que hace la habilidad más allá del daño; el daño base lo aplica quien la lanza.
     public static string DescribeSkill(HeroSubclass subclass)
     {
+        if (subclass != HeroSubclass.None)
+            return LocalizationManager.Get("SKILLDESC_" + subclass.ToString().ToUpperInvariant());
+
+        return DescribeSkillFallback(subclass);
+    }
+
+    private static string DescribeSkillFallback(HeroSubclass subclass)
+    {
         switch (subclass)
         {
             case HeroSubclass.ShadowBlade: return "envenena 6s";
@@ -184,6 +201,17 @@ public static class HeroSubclasses
 
     private static HeroSkill Skill(string name, int mpCost, float cooldown, float multiplier)
         => new HeroSkill { skillName = name, mpCost = mpCost, cooldown = cooldown, damageMultiplier = multiplier };
+
+    // Nombre y efecto salen del diccionario; la clave es el propio valor del enum.
+    public static string SkillName(HeroSubclass subclass)
+        => subclass == HeroSubclass.None
+           ? string.Empty
+           : LocalizationManager.Get("SKILL_" + subclass.ToString().ToUpperInvariant());
+
+    public static string RoleDescription(HeroSubclass subclass)
+        => subclass == HeroSubclass.None
+           ? string.Empty
+           : LocalizationManager.Get("ROLE_" + subclass.ToString().ToUpperInvariant());
 
     // Sortea una subclase del arquetipo; la usa la ascensión cuando el jugador no elige.
     public static HeroSubclass RandomFor(WeaponType archetype)

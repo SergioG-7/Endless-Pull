@@ -20,7 +20,7 @@ public class StatusVisuals : MonoBehaviour
     [SerializeField] private float stunSwaySpeed = 9f;
 
     [Tooltip("Color del aura del escudo.")]
-    [SerializeField] private Color shieldTint = new Color(0.35f, 0.85f, 1f, 0.35f);
+    [SerializeField] private Color shieldTint = new Color(0f, 0.824f, 1f, 0.40f);
 
     private StatusEffectManager status;
     private SpriteRenderer body;
@@ -111,7 +111,7 @@ public class StatusVisuals : MonoBehaviour
         go.transform.localPosition = new Vector3(0f, 1.1f, 0f);
 
         stunLabel = go.GetComponent<TextMeshPro>();
-        stunLabel.text = "¡ATURDIDO!";
+        stunLabel.text = LocalizationManager.Get("UI_STUNNED");
         stunLabel.fontSize = 3.4f;
         stunLabel.alignment = TextAlignmentOptions.Center;
         stunLabel.color = new Color(1f, 0.85f, 0.30f);

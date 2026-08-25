@@ -321,9 +321,17 @@ public class WaveManager : MonoBehaviour
         Debug.Log($"[Expedición] Escuadra desplegada: {deployed.Count} héroe(s).", this);
     }
 
+    // Origen compartido por la escuadra y cuántos lo aprovechan; lo lee el HUD de combate.
+    public string ActiveSynergyOrigin { get; private set; }
+    public int ActiveSynergyCount { get; private set; }
+    public float OriginSynergyBonus => originSynergyBonus;
+
     // Compartir tierra natal con alguien de la escuadra da un empujón mientras dure el combate.
     private void ApplyOriginSynergy()
     {
+        ActiveSynergyOrigin = null;
+        ActiveSynergyCount = 0;
+
         foreach (var hero in deployed)
         {
             if (hero == null || hero.Data == null) continue;
@@ -339,9 +347,14 @@ public class WaveManager : MonoBehaviour
             }
 
             hero.SetOriginSynergy(acompanado ? originSynergyBonus : 0f);
-            if (acompanado)
-                Debug.Log($"[Sinergia] {hero.Data.heroName} pelea junto a los suyos " +
-                          $"({hero.Data.origin}): +{originSynergyBonus:P0} ATK/DEF.", this);
+            if (!acompanado) continue;
+
+            // El indicador enseña el origen que más gente comparte.
+            ActiveSynergyCount++;
+            if (ActiveSynergyOrigin == null) ActiveSynergyOrigin = hero.Data.origin;
+
+            Debug.Log($"[Sinergia] {hero.Data.heroName} pelea junto a los suyos " +
+                      $"({hero.Data.origin}): +{originSynergyBonus:P0} ATK/DEF.", this);
         }
     }
 
@@ -388,6 +401,8 @@ public class WaveManager : MonoBehaviour
 
         deployed.Clear();
         underfed = false;
+        ActiveSynergyOrigin = null;
+        ActiveSynergyCount = 0;
     }
 
     // El jefe no escala con el piso: sus números son los del asset, para poder ajustarlo a mano.

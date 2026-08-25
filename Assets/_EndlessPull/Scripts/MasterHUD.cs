@@ -95,7 +95,7 @@ public class MasterHUD : MonoBehaviour
     {
         if (party == null) return;
 
-        if (energyLabel != null) energyLabel.text = $"Intentos: {party.Energy}/{party.MaxEnergy}";
+        if (energyLabel != null) energyLabel.text = Chip("INTENTOS", $"{party.Energy}/{party.MaxEnergy}");
 
         // El "+" solo se enciende si falta algún intento y hay gemas para pagarlo.
         if (energyRefillButton != null)
@@ -111,12 +111,24 @@ public class MasterHUD : MonoBehaviour
     {
         if (materialsLabel == null || economy == null) return;
 
-        materialsLabel.text = $"Madera: {economy.Wood} | Hierro: {economy.Iron} | Comida: {economy.Food}";
+        materialsLabel.text = Inline("MADERA", economy.Wood.ToString(), UITheme.Hex("A8895C")) + "   " +
+                              Inline("HIERRO", economy.Iron.ToString(), UITheme.Hex("9397AB")) + "   " +
+                              Inline("COMIDA", economy.Food.ToString(), UITheme.Hex("8FBF5A"));
     }
+
+    // Rótulo pequeño en mayúsculas sobre la cifra, como los bloques del mockup.
+    private static string Chip(string caption, string value)
+        => $"<size={UITheme.SizeCaption}><color={UITheme.Tag(UITheme.TextMuted)}>{caption}</color></size>\n<b>{value}</b>";
+
+    // Chip de recurso en una línea: punto de color, rótulo apagado y cifra grande.
+    private static string Inline(string caption, string value, Color dot)
+        => $"<size={UITheme.SizeCaption}><color={UITheme.Tag(dot)}>■</color> " +
+           $"<color={UITheme.Tag(UITheme.TextFaint)}>{caption}</color></size> <b>{value}</b>";
 
     private void OnGemsChanged(int gems)
     {
-        if (gemsLabel != null) gemsLabel.text = $"Gemas: {gems}";
+        if (gemsLabel != null)
+            gemsLabel.text = $"<color={UITheme.Tag(UITheme.Cyan)}>◆</color> <b>{gems}</b>";
 
         // Con las gemas cambia si se puede pagar la recarga.
         RefreshEnergy();
@@ -137,6 +149,6 @@ public class MasterHUD : MonoBehaviour
     private void RefreshFloor()
     {
         if (floorLabel != null && waves != null)
-            floorLabel.text = $"Piso: {waves.CurrentFloor}";
+            floorLabel.text = Chip("TORRE", $"Piso {waves.CurrentFloor}");
     }
 }

@@ -39,6 +39,13 @@ public class BaseBuilding : MonoBehaviour
     [Tooltip("Radio en el que el héroe se considera dentro del edificio.")]
     [SerializeField] private float interactionRadius = 1.5f;
 
+    [Tooltip("Distancia de los puntos de llegada al centro del edificio.")]
+    [SerializeField] private float slotRadius = 1.2f;
+
+    [Tooltip("Puntos de llegada repartidos alrededor del edificio.")]
+    [Range(4, 8)]
+    [SerializeField] private int slotCount = 6;
+
     [Tooltip("Segundos entre cada efecto aplicado al héroe.")]
     [SerializeField] private float tickInterval = 2f;
 
@@ -280,6 +287,72 @@ public class BaseBuilding : MonoBehaviour
 
     public bool IsInside(Vector2 position)
         => ((Vector2)transform.position - position).sqrMagnitude <= interactionRadius * interactionRadius;
+
+    // Puntos de llegada repartidos en círculo; así dos héroes no caminan al mismo sitio.
+    private readonly Dictionary<int, HeroController> slotOwner = new Dictionary<int, HeroController>();
+
+    public Vector2 SlotPosition(int index)
+    {
+        float angulo = index * Mathf.PI * 2f / Mathf.Max(1, slotCount);
+        return (Vector2)transform.position
+               + new Vector2(Mathf.Cos(angulo), Mathf.Sin(angulo)) * slotRadius;
+    }
+
+    // Reserva el hueco libre más cercano al héroe; sin huecos, se cae al centro de siempre.
+    public Vector2 ClaimSlot(HeroController hero)
+    {
+        if (hero == null) return transform.position;
+
+        ReleaseSlot(hero);
+        PruneSlots();
+
+        int mejor = -1;
+        float mejorDist = float.MaxValue;
+
+        for (int i = 0; i < slotCount; i++)
+        {
+            if (slotOwner.ContainsKey(i)) continue;
+
+            float d = ((Vector2)hero.transform.position - SlotPosition(i)).sqrMagnitude;
+            if (d >= mejorDist) continue;
+
+            mejorDist = d;
+            mejor = i;
+        }
+
+        if (mejor < 0) return transform.position;
+
+        slotOwner[mejor] = hero;
+        return SlotPosition(mejor);
+    }
+
+    public void ReleaseSlot(HeroController hero)
+    {
+        if (hero == null) return;
+
+        int ocupado = -1;
+        foreach (var par in slotOwner)
+            if (par.Value == hero) { ocupado = par.Key; break; }
+
+        if (ocupado >= 0) slotOwner.Remove(ocupado);
+    }
+
+    // Un héroe destruido dejaría su hueco bloqueado para siempre.
+    private void PruneSlots()
+    {
+        var muertos = new List<int>();
+        foreach (var par in slotOwner)
+            if (par.Value == null) muertos.Add(par.Key);
+
+        foreach (var clave in muertos) slotOwner.Remove(clave);
+    }
+
+    // Libera el hueco que tuviera este héroe en cualquier edificio de la base.
+    public static void ReleaseSlotEverywhere(HeroController hero)
+    {
+        foreach (var building in All)
+            if (building != null) building.ReleaseSlot(hero);
+    }
 
     public float RandomVisitDuration()
         => Random.Range(visitDuration.x, visitDuration.y);

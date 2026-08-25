@@ -6,10 +6,10 @@ using UnityEngine.UI;
 public static class UIBuild
 {
     // Un solo tamaño para todos los nombres, para que ninguna ficha desentone.
-    public const float TitleSize = 34f;
-    public const float NameSize = 24f;
-    public const float BodySize = 20f;
-    public const float ButtonSize = 22f;
+    public const float TitleSize = UITheme.SizeTitle;
+    public const float NameSize = UITheme.SizeName;
+    public const float BodySize = UITheme.SizeBody;
+    public const float ButtonSize = UITheme.SizeBody;
 
     public static GameObject Panel(Transform parent, string name, Vector2 size, Color color)
     {
@@ -23,7 +23,7 @@ public static class UIBuild
         rt.sizeDelta = size;
         rt.anchoredPosition = Vector2.zero;
 
-        go.GetComponent<Image>().color = color;
+        UITheme.Surface(go, color, UITheme.Border, UITheme.RadiusPanel);
         return go;
     }
 
@@ -35,7 +35,7 @@ public static class UIBuild
         var tmp = go.GetComponent<TextMeshProUGUI>();
         tmp.fontSize = size;
         tmp.alignment = align;
-        tmp.color = Color.white;
+        tmp.color = UITheme.Text;
         tmp.raycastTarget = false;
         return tmp;
     }
@@ -69,8 +69,7 @@ public static class UIBuild
         rt.sizeDelta = size;
         rt.anchoredPosition = position;
 
-        var image = go.GetComponent<Image>();
-        image.color = color;
+        var image = UITheme.Surface(go, color, UITheme.BorderCard, UITheme.RadiusButton);
 
         var label = Label(go.transform, "Label", ButtonSize, TextAlignmentOptions.Center);
         Stretch(label.rectTransform);
@@ -95,7 +94,7 @@ public static class UIBuild
         rt.pivot = new Vector2(0.5f, 1f);
         rt.sizeDelta = size;
         rt.anchoredPosition = position;
-        fondo.GetComponent<Image>().color = new Color(0.08f, 0.08f, 0.10f, 0.9f);
+        UITheme.Surface(fondo, UITheme.Track, Color.clear, 4f);
 
         var relleno = new GameObject("Fill", typeof(RectTransform), typeof(Image));
         relleno.transform.SetParent(fondo.transform, false);
@@ -105,10 +104,9 @@ public static class UIBuild
         frt.offsetMin = Vector2.zero;
         frt.offsetMax = Vector2.zero;
 
-        var img = relleno.GetComponent<Image>();
-        img.color = color;
+        var img = UITheme.Surface(relleno, color, Color.clear, 4f);
 
-        label = Label(fondo.transform, "Label", BodySize, TextAlignmentOptions.Left);
+        label = Label(fondo.transform, "Label", UITheme.SizeSmall, TextAlignmentOptions.Left);
         var lrt = label.rectTransform;
         lrt.anchorMin = Vector2.zero;
         lrt.anchorMax = Vector2.one;

@@ -67,7 +67,7 @@ public class SubclassSelectionUI : MonoBehaviour
             textos[i].text = $"<b>{HeroSubclasses.DisplayName(sub)}</b>\n" +
                              $"<color=#B9A96A>{RolDe(sub)}</color>\n\n" +
                              $"{ModificadoresDe(sub)}\n\n" +
-                             $"<b>{HeroSubclasses.MakeSkill(sub).skillName}</b>\n" +
+                             $"<b>{HeroSubclasses.SkillName(sub)}</b>\n" +
                              $"{HeroSubclasses.DescribeSkill(sub)}\n" +
                              $"{HeroSubclasses.MakeSkill(sub).mpCost} MP · " +
                              $"{HeroSubclasses.MakeSkill(sub).cooldown:0.#}s";
@@ -116,6 +116,13 @@ public class SubclassSelectionUI : MonoBehaviour
 
     // Resumen honesto de para qué sirve: sale de lo que hace su habilidad.
     private static string ModificadoresDe(HeroSubclass sub)
+    {
+        if (sub != HeroSubclass.None) return HeroSubclasses.RoleDescription(sub);
+
+        return ModificadoresFallback(sub);
+    }
+
+    private static string ModificadoresFallback(HeroSubclass sub)
     {
         switch (sub)
         {

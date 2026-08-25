@@ -166,11 +166,11 @@ public class StatusEffectManager : MonoBehaviour
     {
         switch (type)
         {
-            case StatusEffect.Poison: return "Veneno";
-            case StatusEffect.Bleed: return "Sangrado";
-            case StatusEffect.Stun: return "Aturdido";
-            case StatusEffect.Slow: return "Ralentizado";
-            case StatusEffect.Shield: return "Escudo";
+            case StatusEffect.Poison: return LocalizationManager.Get("ST_POISON");
+            case StatusEffect.Bleed: return LocalizationManager.Get("ST_BLEED");
+            case StatusEffect.Stun: return LocalizationManager.Get("ST_STUN");
+            case StatusEffect.Slow: return LocalizationManager.Get("ST_SLOW");
+            case StatusEffect.Shield: return LocalizationManager.Get("ST_SHIELD");
         }
         return type.ToString();
     }
