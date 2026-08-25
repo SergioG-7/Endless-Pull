@@ -13,6 +13,47 @@ MonoBehaviour:
   m_Name: Hero_Nyx_3Star
   m_EditorClassIdentifier: Assembly-CSharp::HeroData
   heroName: Nyx
+  title: Novato de la Vanguardia
+  origin: Reino Fronterizo
+  bio: 
+  bodySprite: {fileID: -3135972766220646385, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  walkFrames:
+  - {fileID: 8142597483174917156, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: -321724923506628398, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: 1337668322371870614, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: -7509243196556441014, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: -1061476343085551508, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: 940755853793513543, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: 7977251840951436250, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: 6947417234080427164, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: 4616998762328875538, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: -107833012221969649, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: 1829270618603607799, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: 7632676632988262659, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: 4360468960342947036, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: 8530480404107645498, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: 8526796705122895744, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: 7057509981230979237, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: -1407766964034144176, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: -880185352274868067, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: -3135972766220646385, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: 7460263251068846307, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: -6064900654685667784, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: -7612726166056389677, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: 3807938157267429137, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: -3719826600034571120, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: 805222003962754268, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: 4656933949921494786, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: 1131016203262849795, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: 6584196304571394670, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: 366478249695257255, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: -6261786260662448946, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: 1224614578119297973, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: 108435605165654219, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: 8875708947439885159, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: -489635849056888589, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: 7176016596405234114, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
+  - {fileID: 9107025923691628446, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
   starRank: 3
   maxHealth: 220
   maxMP: 50

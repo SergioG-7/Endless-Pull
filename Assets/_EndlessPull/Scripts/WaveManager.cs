@@ -54,6 +54,21 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Alcance a partir del cual un enemigo aparece más atrás, por ser de rango.")]
     [SerializeField] private float rangedSpawnThreshold = 3f;
 
+    [Tooltip("Piso a partir del cual los enemigos pegan mucho más fuerte.")]
+    [SerializeField] private int hardFloorFrom = 4;
+
+    [Tooltip("Ataque extra por cada piso desde el piso duro, en tanto por uno.")]
+    [SerializeField] private float hardAttackGrowth = 0.18f;
+
+    [Tooltip("Vida extra por cada piso desde el piso duro, en tanto por uno.")]
+    [SerializeField] private float hardHealthGrowth = 0.10f;
+
+    [Tooltip("Separación entre la línea de vanguardia y la de retaguardia enemiga.")]
+    [SerializeField] private float lineSpacing = 2.2f;
+
+    [Tooltip("Vida a partir de la cual un enemigo se considera tanque y va delante.")]
+    [SerializeField] private int tankHealthThreshold = 70;
+
     [Tooltip("Bonus de ATK y DEF por compartir origen con la escuadra, en tanto por uno.")]
     [SerializeField] private float originSynergyBonus = 0.05f;
 
@@ -135,7 +150,14 @@ public class WaveManager : MonoBehaviour
     public ExpeditionState State => state;
     public int EnemyCountForFloor => baseEnemyCount + (currentFloor - 1);
     public bool IsBossFloor => bossEveryFloors > 0 && currentFloor % bossEveryFloors == 0;
-    public float StatMultiplierForFloor => 1f + statGrowthPerFloor * (currentFloor - 1);
+    public float StatMultiplierForFloor => 1f + statGrowthPerFloor * (currentFloor - 1)
+                                            + hardHealthGrowth * HardFloors;
+
+    // Pisos por encima del umbral duro; a partir de ahí el rusheo automático deja de valer.
+    public int HardFloors => Mathf.Max(0, currentFloor - hardFloorFrom + 1);
+
+    // El ataque sube más deprisa que la vida: obliga a provocar, curar y retirarse a tiempo.
+    public float AttackMultiplierForFloor => 1f + hardAttackGrowth * HardFloors;
 
     // Punto medio entre la línea de la escuadra y la de los enemigos; ahí encuadra la cámara.
     public Vector2 ArenaFocus => arenaCenter + new Vector2(spawnAreaCenter.x * 0.5f, spawnAreaCenter.y);
@@ -208,12 +230,6 @@ public class WaveManager : MonoBehaviour
             return;
         }
 
-        if (!party.TryConsumeEnergy())
-        {
-            Report(ExpeditionState.Idle, $"Sin intentos de torre ({party.Energy}/{party.MaxEnergy})");
-            return;
-        }
-
         // La comida se cobra al salir; sin despensa la expedición sale igual, pero pasa factura.
         underfed = economy == null || !economy.TrySpendFood(foodPerExpedition);
         if (underfed) Debug.LogWarning("[Expedición] Sin comida: la escuadra volverá desnutrida.", this);
@@ -223,6 +239,7 @@ public class WaveManager : MonoBehaviour
 
         int count = EnemyCountForFloor;
         float mult = StatMultiplierForFloor;
+        float atk = AttackMultiplierForFloor;
 
         for (int i = 0; i < count; i++)
         {
@@ -233,14 +250,14 @@ public class WaveManager : MonoBehaviour
 
             var datos = PickEnemyData(i);
 
-            // Los de rango aparecen más atrás, coherente con su alcance.
-            if (datos != null && datos.attackRange >= rangedSpawnThreshold) pos += new Vector2(2f, 0f);
+            // Cada rol en su línea: los tanques delante y los de rango detrás.
+            pos += new Vector2(LineOffset(datos), 0f);
 
             var go = Instantiate(enemyPrefab, pos, Quaternion.identity);
             go.name = $"Enemy_{SafeName(datos)}_F{currentFloor}_{i + 1}";
 
             var enemy = go.GetComponent<EnemyController>();
-            enemy.Initialize(datos, mult);
+            enemy.Initialize(datos, mult, atk);
             wave.Add(enemy);
         }
 
@@ -252,9 +269,24 @@ public class WaveManager : MonoBehaviour
         BeginCountdown();
 
         string extra = bossFloor ? " + JEFE" : string.Empty;
+        string duro = HardFloors > 0 ? $"  ATK x{atk:0.00}" : string.Empty;
         Report(ExpeditionState.InProgress,
-            $"Piso {currentFloor}: {count} enemigos{extra} (x{mult:0.00})  " +
-            $"Intentos {party.Energy}/{party.MaxEnergy}");
+            $"Piso {currentFloor}: {count} enemigos{extra} (x{mult:0.00}){duro}  " +
+            $"Escuadra {party.Party.Count}/{party.MaxPartySize}");
+    }
+
+    // Desplazamiento en X según el rol: negativo acerca a la escuadra, positivo aleja.
+    private float LineOffset(EnemyData datos)
+    {
+        if (datos == null) return 0f;
+
+        // Arqueros y chamanes se quedan en retaguardia, a cubierto de la primera línea.
+        if (datos.attackRange >= rangedSpawnThreshold) return lineSpacing;
+
+        // Los que aguantan hacen de muro por delante del resto del cuerpo a cuerpo.
+        if (datos.maxHealth >= tankHealthThreshold) return -lineSpacing * 0.5f;
+
+        return 0f;
     }
 
     // Composición por piso: el goblin es el relleno y el resto entra según a qué altura estemos.
@@ -262,12 +294,15 @@ public class WaveManager : MonoBehaviour
     {
         if (archerData != null && archerEveryNth > 0 && (index + 1) % archerEveryNth == 0) return archerData;
 
-        // Los orcos aguantan: se reservan para los pisos pares.
-        if (orcData != null && currentFloor % 2 == 0 && index % 3 == 0) return orcData;
+        // Los orcos aguantan: en los pisos duros salen siempre, no solo en los pares.
+        bool orcosSiempre = currentFloor >= hardFloorFrom;
+        if (orcData != null && (orcosSiempre || currentFloor % 2 == 0) && index % 3 == 0) return orcData;
 
         if (currentFloor >= 3)
         {
-            if (shamanData != null && index % 5 == 4) return shamanData;
+            // A partir del piso duro hay un chamán de cada cuatro: más curas y más control.
+            int cadaChaman = currentFloor >= hardFloorFrom ? 4 : 5;
+            if (shamanData != null && index % cadaChaman == cadaChaman - 1) return shamanData;
             if (skeletonData != null && index % 2 == 1) return skeletonData;
         }
 

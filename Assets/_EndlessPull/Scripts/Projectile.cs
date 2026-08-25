@@ -15,6 +15,9 @@ public class Projectile : MonoBehaviour
     private Transform target;
     private int damage;
     private bool ignoresDefense;
+
+    // Quien dispara: hace falta al impactar para cobrarle el robo de vida y su perforacion.
+    private HeroController shooter;
     private HeroController heroVictim;
     private EnemyController enemyVictim;
 
@@ -22,7 +25,7 @@ public class Projectile : MonoBehaviour
 
     // Disparo contra un enemigo; lo usan arqueros y magos del jugador.
     public static void Fire(Vector2 origin, EnemyController victim, int damage, Color color,
-                            bool ignoresDefense = false)
+                            bool ignoresDefense = false, HeroController shooter = null)
     {
         var p = Create(origin, color);
         if (p == null) return;
@@ -31,6 +34,7 @@ public class Projectile : MonoBehaviour
         p.target = victim.transform;
         p.damage = damage;
         p.ignoresDefense = ignoresDefense;
+        p.shooter = shooter;
     }
 
     // Disparo contra un héroe; lo usan tiradores goblin y chamanes.
@@ -75,7 +79,16 @@ public class Projectile : MonoBehaviour
         // Con daño 0 el proyectil es puro adorno: lo usan las habilidades de área.
         if (damage > 0)
         {
-            if (enemyVictim != null) enemyVictim.TakeDamage(damage, ignoresDefense);
+            if (enemyVictim != null)
+            {
+                // Perforacion y robo de vida del tirador se resuelven aqui, no al disparar.
+                float perfora = shooter != null ? shooter.ArmorPierce : 0f;
+                int antes = enemyVictim.CurrentHealth;
+
+                enemyVictim.TakeDamage(damage, ignoresDefense, perfora);
+
+                if (shooter != null) shooter.StealLife(antes - enemyVictim.CurrentHealth);
+            }
             else if (heroVictim != null) heroVictim.TakeDamage(damage, ignoresDefense);
         }
 
@@ -84,6 +97,8 @@ public class Projectile : MonoBehaviour
 
     private static Projectile Create(Vector2 origin, Color color)
     {
+        AudioManager.PlayAt(SfxId.ArrowShot, origin);
+
         var go = new GameObject("Projectile", typeof(SpriteRenderer), typeof(Projectile));
         go.transform.position = origin;
         go.transform.localScale = new Vector3(0.55f, 0.18f, 1f);

@@ -46,6 +46,14 @@ public class HeroSaveData
     public int accessoryDurability;
 }
 
+// Un preset de escuadras: quién sube a la torre y quién sale a recolectar.
+[System.Serializable]
+public class SquadPresetSaveData
+{
+    public List<string> party = new List<string>();
+    public List<string> expedition = new List<string>();
+}
+
 // Nivel de un edificio, identificado por el nombre de su GameObject en la escena.
 [System.Serializable]
 public class BuildingSaveData
@@ -69,6 +77,8 @@ public class GameSaveData
 
     // Identidad de cada héroe de la escuadra; no depende del orden del array.
     public List<string> party = new List<string>();
+    public List<string> expeditionSquad = new List<string>();
+    public List<SquadPresetSaveData> presets = new List<SquadPresetSaveData>();
     public List<BuildingSaveData> buildings = new List<BuildingSaveData>();
     public List<HeroSaveData> heroes = new List<HeroSaveData>();
 
@@ -238,7 +248,18 @@ public class SaveManager : MonoBehaviour
         if (shop != null)
             foreach (var item in shop.Inventory) save.inventory.Add(item.name);
 
-        if (party != null) save.party.AddRange(party.PartyInstanceIds());
+        if (party != null)
+        {
+            save.party.AddRange(party.PartyInstanceIds());
+            save.expeditionSquad.AddRange(party.ExpeditionInstanceIds());
+
+            for (int i = 0; i < PartyManager.PresetCount; i++)
+                save.presets.Add(new SquadPresetSaveData
+                {
+                    party = new List<string>(party.PresetPartyIds(i)),
+                    expedition = new List<string>(party.PresetExpeditionIds(i))
+                });
+        }
 
         try
         {
@@ -351,6 +372,9 @@ public class SaveManager : MonoBehaviour
         Restore(hero, EquipmentSlot.Shield, entry.shieldDurability);
         Restore(hero, EquipmentSlot.Armor, entry.armorDurability);
         Restore(hero, EquipmentSlot.Accessory, entry.accessoryDurability);
+
+        // Partidas guardadas antes del arma inicial: se les repone la espada de madera.
+        if (gacha != null) gacha.GrantStarterWeapon(hero);
     }
 
     // Las partidas anteriores al desgaste traen 0; sin esto todo saldría roto de golpe.
@@ -445,11 +469,15 @@ public class SaveManager : MonoBehaviour
         }
     }
 
-    // La escuadra se rehace por identidad, así que da igual en qué orden se hayan creado.
+    // Las escuadras se rehacen por identidad, así que da igual en qué orden se hayan creado.
     private void RestoreParty(GameSaveData save, List<HeroController> spawned)
     {
         if (party == null) return;
 
         party.LoadParty(save.party, spawned);
+        party.LoadExpedition(save.expeditionSquad, spawned);
+
+        for (int i = 0; i < save.presets.Count && i < PartyManager.PresetCount; i++)
+            party.LoadPreset(i, save.presets[i].party, save.presets[i].expedition);
     }
 }

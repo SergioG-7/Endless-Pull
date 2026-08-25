@@ -78,6 +78,14 @@ public class CraftingUI : MonoBehaviour
 
     public void Open()
     {
+        // El Taller de Alquimia sustituye a este panel; si está montado, manda él.
+        var alquimia = UnityEngine.Object.FindFirstObjectByType<AlchemyWorkshopUI>();
+        if (alquimia != null)
+        {
+            alquimia.Open();
+            return;
+        }
+
         if (panel == null) return;
 
         UIManager.OpenExclusive(panel);

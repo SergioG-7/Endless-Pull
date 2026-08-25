@@ -13,6 +13,47 @@ MonoBehaviour:
   m_Name: Hero_Iselia_4Star
   m_EditorClassIdentifier: Assembly-CSharp::HeroData
   heroName: Iselia
+  title: Novato de la Vanguardia
+  origin: Reino Fronterizo
+  bio: 
+  bodySprite: {fileID: 5841573359959852688, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  walkFrames:
+  - {fileID: 3386263520470008282, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: 487149156809456657, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: 86953776392142349, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: -8986090132571190274, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: 714695663780857209, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: -3769564391959181785, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: -430728000683895283, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: -188170078232976301, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: -8896839174152871465, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: -817697587909950682, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: -5481682838325726273, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: -793695018395257103, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: -7949571542908816240, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: -2988040722171296241, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: 9120190878865538012, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: -2064216204418714691, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: -6694674367592333036, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: 6527848889270401360, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: 5841573359959852688, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: 3926249292541095321, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: -5767216025142996724, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: 5593918592692965571, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: -6443967036181548026, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: 4441911755498842409, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: 7973198203426647844, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: 3866129137398157286, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: 5483925489154353146, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: -8967728032672029797, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: 2877931612047980412, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: 4663000732076346086, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: 1946352028322422851, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: -7716915657903251221, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: -4410069518159063878, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: -1247145901598178612, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: -4212507181108944363, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
+  - {fileID: -1484159055876052570, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
   starRank: 4
   maxHealth: 380
   maxMP: 50

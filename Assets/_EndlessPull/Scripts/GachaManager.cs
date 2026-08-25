@@ -21,6 +21,9 @@ public class GachaManager : MonoBehaviour
     [Tooltip("Área de paseo que se asigna a cada héroe invocado.")]
     [SerializeField] private Vector2 wanderSize = new Vector2(8f, 5f);
 
+    [Tooltip("Arma con la que sale todo héroe nuevo: espada de madera.")]
+    [SerializeField] private EquipmentData starterWeapon;
+
     [Tooltip("Gemas que cuesta cada tirada.")]
     [SerializeField] private int pullCost = 100;
 
@@ -28,10 +31,39 @@ public class GachaManager : MonoBehaviour
     [SerializeField] private EconomyManager economy;
 
     public int PullCost => pullCost;
+    public EquipmentData StarterWeapon => starterWeapon;
+
+    // Todo héroe empieza empuñando algo: sin arma no entrena maestría ni elige subclase.
+    public bool GrantStarterWeapon(HeroController hero)
+    {
+        if (hero == null || starterWeapon == null) return false;
+        if (hero.GetEquipped(EquipmentSlot.Weapon) != null) return false;
+
+        hero.Equip(starterWeapon);
+        return true;
+    }
 
     void Awake()
     {
         if (economy == null) economy = UnityEngine.Object.FindFirstObjectByType<EconomyManager>();
+    }
+
+    void Start()
+    {
+        StartCoroutine(GrantStarterWeapons());
+    }
+
+    // Un frame de espera: el SaveManager restaura el equipo en su propio Start.
+    // Cubre a los héroes puestos a mano en la escena y a las partidas viejas sin arma.
+    private System.Collections.IEnumerator GrantStarterWeapons()
+    {
+        yield return null;
+
+        if (starterWeapon == null) yield break;
+
+        foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None))
+            if (GrantStarterWeapon(hero))
+                Debug.Log($"[Gacha] {hero.Data.heroName} empieza con {starterWeapon.equipName}.", hero);
     }
 
     // Busca en el catálogo por nombre de asset; la usa el SaveManager al restaurar el roster.
@@ -80,22 +112,29 @@ public class GachaManager : MonoBehaviour
         return names;
     }
 
-    // El catálogo menos los héroes que ya se tienen: de aquí sale toda tirada.
-    public List<HeroData> AvailableHeroes()
+    // El catálogo menos los que ya se tienen. extraOwned son los sacados en la misma tanda,
+    // que aún no están en la base porque el jugador no ha aceptado el resultado.
+    public List<HeroData> AvailableHeroes(HashSet<string> extraOwned = null)
     {
         var owned = LivingHeroNames();
         var available = new List<HeroData>();
 
         foreach (var hero in catalog)
-            if (hero != null && !owned.Contains(hero.heroName)) available.Add(hero);
+        {
+            if (hero == null || owned.Contains(hero.heroName)) continue;
+            if (extraOwned != null && extraOwned.Contains(hero.heroName)) continue;
+
+            available.Add(hero);
+        }
 
         return available;
     }
 
-    public bool HasAvailableHeroes() => AvailableHeroes().Count > 0;
+    public bool HasAvailableHeroes(HashSet<string> extraOwned = null)
+        => AvailableHeroes(extraOwned).Count > 0;
 
     // Tirada ponderada sobre lo que queda por conseguir: primero la rareza, luego el héroe.
-    public HeroData PerformPull()
+    public HeroData PerformPull(HashSet<string> extraOwned = null)
     {
         if (catalog == null || catalog.Count == 0)
         {
@@ -103,7 +142,7 @@ public class GachaManager : MonoBehaviour
             return null;
         }
 
-        var available = AvailableHeroes();
+        var available = AvailableHeroes(extraOwned);
         if (available.Count == 0)
         {
             Debug.LogWarning($"[Gacha] Ya tienes los {catalog.Count} héroes del catálogo.", this);
@@ -164,6 +203,7 @@ public class GachaManager : MonoBehaviour
         // Una o dos pasivas al azar; son innatas y ya no cambian.
         var passives = PassiveSkills.RandomSet();
         hero.SetPassives(passives);
+        GrantStarterWeapon(hero);
 
         DamageTextManager.Show(hero.transform.position, "¡Nuevo Héroe Invocado!",
             new Color(1f, 0.9f, 0.4f));

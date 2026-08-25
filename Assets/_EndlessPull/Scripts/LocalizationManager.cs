@@ -238,7 +238,71 @@ public static class LocalizationManager
         { "Q_ASCEND",        new[] { "Asciende un héroe a {0}★", "Ascend a hero to {0}★", "ヒーローを{0}★に覚醒" } },
         { "Q_WORKERS",       new[] { "Asigna {0} trabajadores", "Assign {0} workers", "作業員を{0}人配置" } },
         { "Q_REPAIR",        new[] { "Repara {0} piezas de equipo", "Repair {0} pieces of gear", "装備を{0}点修理" } },
-        { "Q_RESTED",        new[] { "Cura la fatiga de {0} héroe(s)", "Cure fatigue on {0} hero(es)", "ヒーロー{0}人の疲労を回復" } }
+        { "Q_RESTED",        new[] { "Cura la fatiga de {0} héroe(s)", "Cure fatigue on {0} hero(es)", "ヒーロー{0}人の疲労を回復" } },
+
+        // Puestos: un héroe solo puede ocupar uno a la vez.
+        { "UI_DUTY_FREE",       new[] { "Libre", "Idle", "待機" } },
+        { "UI_DUTY_BUILDING",   new[] { "En un edificio", "At a building", "施設勤務" } },
+        { "UI_DUTY_TOWER",      new[] { "Escuadra de Torre", "Tower Squad", "塔の部隊" } },
+        { "UI_DUTY_EXPEDITION", new[] { "Escuadra de Recolección", "Gathering Squad", "採集部隊" } },
+        { "UI_ALREADY_ASSIGNED", new[] { "{0} ya está en: {1}", "{0} is already at: {1}", "{0}はすでに{1}に配属" } },
+        { "UI_LOCKED",          new[] { "bloqueado", "locked", "ロック中" } },
+
+        // Altar de invocación.
+        { "UI_REVEAL_ALL",   new[] { "Revelar Todo", "Reveal All", "すべて公開" } },
+        { "UI_ACCEPT",       new[] { "Aceptar", "Accept", "決定" } },
+
+        // Taller de Alquimia.
+        { "UI_WORKSHOP",     new[] { "Taller de Alquimia", "Alchemy Workshop", "錬金工房" } },
+        { "UI_ARTISANS",     new[] { "Artesanos", "Artisans", "職人" } },
+        { "UI_COST",         new[] { "Coste", "Cost", "費用" } },
+        { "UI_FORGE_STONES", new[] { "Forja de Piedras", "Stone Forging", "石の錬成" } },
+        { "UI_STONES_HELD",  new[] { "Piedras de Ascensión", "Ascension Stones", "覚醒石" } },
+        { "UI_SUCCESS_CHANCE", new[] { "Probabilidad de éxito", "Success chance", "成功率" } },
+        { "UI_FORGE",        new[] { "Forjar Piedra", "Forge Stone", "石を錬成" } },
+        { "UI_FORGE_WEAPONS", new[] { "Fabricación de Armas", "Weapon Crafting", "武器の製作" } },
+        { "UI_FORGE_WEAPONS_HELP", new[] { "Sale un arma al azar del recetario y va al almacén.",
+                                           "A random weapon from the recipe book goes to storage.",
+                                           "レシピからランダムな武器が倉庫に入る。" } },
+        { "UI_CRAFT_WEAPON", new[] { "Fabricar Arma", "Craft Weapon", "武器を作る" } },
+        { "UI_REPAIR_GEAR",  new[] { "Reparación de Equipo", "Gear Repair", "装備の修理" } },
+        { "UI_TOTAL_WEAR",   new[] { "Desgaste acumulado", "Total wear", "累積損耗" } },
+        { "UI_NO_MATERIALS", new[] { "Faltan materiales", "Not enough materials", "素材が足りない" } },
+        { "UI_NO_RECIPES",   new[] { "Sin recetas de arma", "No weapon recipes", "武器レシピなし" } },
+        { "UI_STONE_FORGED", new[] { "¡Piedra forjada!", "Stone forged!", "石を錬成した！" } },
+        { "UI_CRAFT_FAILED", new[] { "¡FALLO DE FORJA!", "FORGING FAILED!", "錬成失敗！" } },
+
+        // Equipamiento manual y almacén.
+        { "UI_AUTO_EQUIP",   new[] { "Auto-equipar", "Auto-equip", "自動装備" } },
+        { "UI_STORAGE",      new[] { "Almacén", "Storage", "倉庫" } },
+        { "UI_EMPTY_STORAGE", new[] { "Almacén vacío", "Storage is empty", "倉庫は空" } },
+        { "UI_RANDOM_PIECE", new[] { "Pieza al azar", "Random piece", "ランダム装備" } },
+        { "UI_DURABILITY",   new[] { "Durabilidad", "Durability", "耐久" } },
+        { "UI_SLOT_TAKEN",   new[] { "sustituye a la actual", "replaces current", "現在の装備と交換" } },
+        { "UI_SLOT_WEAPON",  new[] { "Arma", "Weapon", "武器" } },
+        { "UI_SLOT_SHIELD",  new[] { "Escudo", "Shield", "盾" } },
+        { "UI_SLOT_ARMOR",   new[] { "Armadura", "Armor", "鎧" } },
+        { "UI_SLOT_ACCESSORY", new[] { "Accesorio", "Accessory", "装飾品" } },
+
+        // Escuadras y presets.
+        { "UI_SQUADS",       new[] { "Escuadras", "Squads", "部隊編成" } },
+        { "UI_TOWER_SQUAD",  new[] { "Torre", "Tower", "塔" } },
+        { "UI_GATHER_SQUAD", new[] { "Recolectar", "Gather", "採集" } },
+        { "UI_PRESET",       new[] { "Escuadra {0}", "Squad {0}", "部隊{0}" } },
+        { "UI_SAVE_PRESET",  new[] { "Guardar", "Save", "保存" } },
+        { "UI_NO_HEROES",    new[] { "No hay héroes en la base", "No heroes at the base", "拠点にヒーローがいない" } },
+        { "UI_GATHERING_NOW", new[] { "Recolección en curso: {0}s", "Gathering in progress: {0}s", "採集中：{0}秒" } },
+
+        // Afijos pasivos del equipo.
+        { "AFFIX_LIFESTEAL",    new[] { "Robo de vida", "Life steal", "吸血" } },
+        { "AFFIX_EVASIONBOOST", new[] { "Evasión", "Evasion", "回避" } },
+        { "AFFIX_CRITDAMAGE",   new[] { "Daño crítico", "Crit damage", "会心ダメージ" } },
+        { "AFFIX_ARMORPIERCE",  new[] { "Perfora armadura", "Armor pierce", "防御貫通" } },
+
+        // Sonido.
+        { "UI_SOUND",        new[] { "Sonido", "Sound", "サウンド" } },
+        { "UI_SOUND_ON",     new[] { "Sonido: sí", "Sound: on", "サウンド：オン" } },
+        { "UI_SOUND_OFF",    new[] { "Sonido: no", "Sound: off", "サウンド：オフ" } }
     };
 
     // Nombre del idioma en su propio idioma: el selector se entiende sin saber el actual.

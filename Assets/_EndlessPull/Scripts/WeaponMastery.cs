@@ -59,6 +59,7 @@ public class WeaponMastery
             parts.Add($"{WeaponTypes.DisplayName(pair.Key)} Nv.{LevelOf(pair.Key)}");
         }
 
-        return parts.Count == 0 ? "sin maestría" : string.Join(", ", parts);
+        // Vacio en vez de un texto: el rotulo del roster ya pone "Maestria" delante.
+        return parts.Count == 0 ? "-" : string.Join(", ", parts);
     }
 }

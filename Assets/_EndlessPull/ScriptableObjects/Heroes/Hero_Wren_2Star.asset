@@ -1,0 +1,62 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Wren_2Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Wren
+  title: Ojo del Sotobosque
+  origin: Bosque de Alder
+  bio: 
+  bodySprite: {fileID: 6921948901457489533, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  walkFrames:
+  - {fileID: 6676618650926496462, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: 1327521751409919052, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: -4094426462143619298, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: 8340433117846740614, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: 5295983206915511331, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: 5661011151876217992, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: -6165614402179155385, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: 7015811748269600042, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: -8799284522755465908, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: -2082783247187298932, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: -6714734958690752363, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: 5293885028776423051, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: 8495372757519223828, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: -4631258414734175198, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: 4898157578771726429, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: -3095997944499965503, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: -8114440140499485261, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: 9015288016483906555, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: 6921948901457489533, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: -6130938928900729920, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: -7993273203659613041, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: -8640276953187738454, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: -6444883020884699291, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: -7419570694058184445, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: 6206267719612870918, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: -7205706065879697811, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: -1179150557746077990, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: -745007996255349114, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: -91032994690944928, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: -2020459067895611299, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: 4277479677673471510, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: 5521359923955827540, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: 7818874630250182922, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: 8981375312029752082, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: -4537644858282167094, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  - {fileID: 7561886242355031579, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
+  starRank: 2
+  maxHealth: 143
+  maxMP: 50
+  baseAttack: 30
+  baseDefense: 6
+  moveSpeed: 2.8

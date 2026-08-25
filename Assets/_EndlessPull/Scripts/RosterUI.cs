@@ -51,6 +51,9 @@ public class RosterUI : MonoBehaviour
     [Tooltip("Gestor de síntesis al que apuntan los botones de cada fila.")]
     [SerializeField] private SynthesisManager synthesis;
 
+    [Tooltip("Modal de equipamiento manual que abre el botón Equipar.")]
+    [SerializeField] private EquipmentSelectModalUI equipModal;
+
     // Métricas del mockup: cabecera, tarjeta y rejilla de botones.
     private const float HeaderHeight = 80f;
     private const float TabHeight = 36f;
@@ -84,6 +87,7 @@ public class RosterUI : MonoBehaviour
         if (economy == null) economy = UnityEngine.Object.FindFirstObjectByType<EconomyManager>();
         if (crafting == null) crafting = UnityEngine.Object.FindFirstObjectByType<CraftingManager>();
         if (party == null) party = UnityEngine.Object.FindFirstObjectByType<PartyManager>();
+        if (equipModal == null) equipModal = UnityEngine.Object.FindFirstObjectByType<EquipmentSelectModalUI>();
     }
 
     void Start()
@@ -339,7 +343,7 @@ public class RosterUI : MonoBehaviour
             oficio += "  <color=#C08040>· candidato a síntesis ·</color>";
 
         var rareza = HeroProgress.RarityColor(hero.StarRank);
-        BuildPortrait(card, x, rareza);
+        BuildPortrait(card, x, rareza, hero.Data.bodySprite);
 
         float textoX = x + PortraitSize + 14f;
         var label = NewCardLabel(card, "Col_Identity", textoX,
@@ -351,8 +355,9 @@ public class RosterUI : MonoBehaviour
                      $"{oficio} · Nv.{level}/{maxLevel}{tope}</color></size>";
     }
 
-    // Cuadro con las esquinas redondeadas y el borde del color de la rareza.
-    private void BuildPortrait(Transform card, float x, Color rareza)
+    // Cuadro con las esquinas redondeadas, el borde del color de la rareza y dentro
+    // el sprite pixel art del héroe.
+    private void BuildPortrait(Transform card, float x, Color rareza, Sprite retrato)
     {
         var go = new GameObject("Portrait", typeof(RectTransform), typeof(Image));
         go.transform.SetParent(card, false);
@@ -363,6 +368,8 @@ public class RosterUI : MonoBehaviour
         rt.pivot = new Vector2(0f, 0.5f);
         rt.sizeDelta = new Vector2(PortraitSize, PortraitSize);
         rt.anchoredPosition = new Vector2(x, 0f);
+
+        UIBuild.HeroArt(go.transform, retrato, PortraitSize - 8f);
 
         UITheme.Surface(go, UITheme.Hex("262838"), rareza, UITheme.RadiusCard);
         go.GetComponent<Image>().raycastTarget = false;
@@ -480,7 +487,7 @@ public class RosterUI : MonoBehaviour
         bool isTarget = synthesis != null && synthesis.Target == hero;
         bool canAscend = progress != null && progress.CanAscend(economy, crafting);
         bool inParty = party != null && party.IsInParty(hero);
-        bool hasGear = shop != null && shop.FirstEquippableFor(hero) != null;
+        bool hasGear = shop != null;
         bool wearsGear = hero.Weapon != null || hero.Shield != null
                          || hero.Armor != null || hero.Accessory != null;
 
@@ -604,6 +611,7 @@ public class RosterUI : MonoBehaviour
         var button = go.GetComponent<Button>();
         button.targetGraphic = image;
         button.interactable = interactable;
+        button.onClick.AddListener(() => AudioManager.Play(SfxId.UiClick));
         button.onClick.AddListener(onClick);
     }
 
@@ -635,8 +643,16 @@ public class RosterUI : MonoBehaviour
         Rebuild();
     }
 
+    // Abre el modal para elegir pieza a mano; el auto-equipar vive dentro, de atajo.
     private void OnEquipClicked(HeroController hero)
     {
+        if (equipModal != null)
+        {
+            equipModal.Open(hero);
+            return;
+        }
+
+        // Sin modal montado se cae al comportamiento de siempre.
         if (shop == null) return;
 
         shop.EquipFromInventory(hero, shop.FirstEquippableFor(hero));

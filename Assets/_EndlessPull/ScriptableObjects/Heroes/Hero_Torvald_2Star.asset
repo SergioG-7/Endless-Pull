@@ -1,0 +1,62 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Torvald_2Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Torvald
+  title: Escudero del Risco
+  origin: Fiordos del Norte
+  bio: 
+  bodySprite: {fileID: 2672728995424534982, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  walkFrames:
+  - {fileID: 8824692790474697442, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: -4773402689838334507, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: 4361679259247068734, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: 7632741425066992064, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: -8070600112493822196, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: 3771225562056972691, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: -4567688682828319646, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: -1059011475572132523, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: 1242882937770328172, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: 7173143634345003741, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: 384358024380673735, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: 1852803622557460227, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: 7955973877369255384, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: 4105125850309007259, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: -6778895644033953543, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: 3567936998404303033, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: -4307618638551071415, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: -6067445258244509586, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: 2672728995424534982, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: 219649948948176544, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: -7699330296528449572, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: -4948998859538842967, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: 2840037870689395649, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: -2077094397952035308, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: 1515128385966480347, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: -478643751154718145, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: 2321297424435493980, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: 7367594048289084581, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: 9067308673325415014, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: -758362967323640578, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: 2065457549044292249, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: 806662335922064206, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: 3013249403898819041, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: 7561452593603358061, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: 6279873901400926544, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  - {fileID: -476123710705411802, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
+  starRank: 2
+  maxHealth: 186
+  maxMP: 50
+  baseAttack: 21
+  baseDefense: 13
+  moveSpeed: 2.05

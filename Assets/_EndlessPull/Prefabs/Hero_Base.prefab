@@ -77,8 +77,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 751597202
+  m_SortingLayer: 2
   m_SortingOrder: 1
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: ae40b009b74ac4b4b9ca30534b21968a, type: 3}
@@ -202,8 +202,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 751597202
+  m_SortingLayer: 2
   m_SortingOrder: 3
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: f83447f4a3e51d941bb6dc70cd6110d6, type: 3}
@@ -298,8 +298,8 @@ MeshRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 751597202
+  m_SortingLayer: 2
   m_SortingOrder: 4
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
@@ -393,7 +393,7 @@ MonoBehaviour:
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   _SortingLayer: 0
-  _SortingLayerID: 0
+  _SortingLayerID: 751597202
   _SortingOrder: 4
   m_hasFontAssetChanged: 0
   m_renderer: {fileID: 7097841373338571640}
@@ -475,8 +475,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 751597202
+  m_SortingLayer: 2
   m_SortingOrder: 1
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 515a2b9dd68856b46af2226d648d71fd, type: 3}
@@ -507,6 +507,8 @@ GameObject:
   - component: {fileID: 6846922646520942439}
   - component: {fileID: 8913006601584226682}
   - component: {fileID: 75170119577100740}
+  - component: {fileID: 1624746207007868752}
+  - component: {fileID: 2284392694718890242}
   m_Layer: 0
   m_Name: Hero_Base
   m_TagString: Untagged
@@ -578,8 +580,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 751597202
+  m_SortingLayer: 2
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 03a452d5151ca2e4a965092bfbf72a16, type: 3}
@@ -697,6 +699,7 @@ MonoBehaviour:
   mpRegenInCombat: 1
   skill:
     skillName: Golpe Potente
+    subclass: 0
     mpCost: 20
     cooldown: 5
     damageMultiplier: 2
@@ -723,6 +726,8 @@ MonoBehaviour:
     bonusPerLevel: 0.05
   masteryPerHit: 1
   evasionChance: 0.15
+  baseCritChance: 0.12
+  baseCritMultiplier: 1.5
   painToleranceFactor: 0.5
   eagleEyeBonusRange: 3
   defensiveStanceBonus: 5
@@ -799,6 +804,39 @@ MonoBehaviour:
   radius: 1.8
   strength: 1.6
   maxNeighbours: 6
+--- !u!114 &1624746207007868752
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6736230919267043135}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 10c352b5ba3d6c44189291f9709b3c37, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::YSorter
+  renderers: []
+  precision: 100
+  baseOrder: 0
+  footOffset: 0
+  onlyWhenMoving: 1
+--- !u!114 &2284392694718890242
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6736230919267043135}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62f04b1b655a7fd4fb9490240e5e6130, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LPCAnimator
+  target: {fileID: 0}
+  walkThreshold: 0.05
+  framesPerSecond: 9
+  idleGrace: 0.1
 --- !u!1 &6744772514828819670
 GameObject:
   m_ObjectHideFlags: 0
@@ -877,8 +915,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 751597202
+  m_SortingLayer: 2
   m_SortingOrder: 2
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: c6d58e7150e6a6441ad6a02a83f264cb, type: 3}
@@ -1001,8 +1039,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 751597202
+  m_SortingLayer: 2
   m_SortingOrder: 2
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 515a2b9dd68856b46af2226d648d71fd, type: 3}

@@ -110,9 +110,14 @@ public class ShopManager : MonoBehaviour
     {
         if (hero == null) return null;
 
-        // Primero lo que rellena un hueco vacío, y si no, cualquier pieza.
+        // El hueco de arma manda: sin arma, un escudo en la mano principal no sirve de nada.
+        if (hero.GetEquipped(EquipmentSlot.Weapon) == null)
+            foreach (var item in inventory)
+                if (item != null && item.slotType == EquipmentSlot.Weapon) return item;
+
+        // Luego lo que rellena cualquier otro hueco vacío, y si no, la primera pieza.
         foreach (var item in inventory)
-            if (hero.GetEquipped(item.slotType) == null) return item;
+            if (item != null && hero.GetEquipped(item.slotType) == null) return item;
 
         return inventory.Count > 0 ? inventory[0] : null;
     }

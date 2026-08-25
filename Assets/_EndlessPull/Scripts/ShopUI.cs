@@ -44,7 +44,22 @@ public class ShopUI : MonoBehaviour
     void Start()
     {
         if (panel != null) panel.SetActive(false);
+
+        // Los rótulos vienen de la escena con el tamaño viejo: se suben al mínimo legible.
+        Style(priceLabel, UITheme.SizeValue);
+        Style(inventoryLabel, UITheme.SizeBody);
+
         Refresh();
+    }
+
+    // Tamaño fijo y alto contraste; el autoajuste de TMP encoge el texto al entrar en Play.
+    private static void Style(TMP_Text label, float size)
+    {
+        if (label == null) return;
+
+        label.enableAutoSizing = false;
+        label.fontSize = size;
+        label.color = UITheme.Text;
     }
 
     // Las gemas cambian solas, así que el botón se repasa mientras esté abierto.
@@ -84,8 +99,12 @@ public class ShopUI : MonoBehaviour
         if (shop == null) return;
 
         if (priceLabel != null)
-            priceLabel.text = $"Pieza al azar: {shop.EquipmentPullCost} gemas" +
-                              (economy != null ? $"     Tienes {economy.Gems}" : string.Empty);
+            priceLabel.text = $"<b>{LocalizationManager.Get("UI_RANDOM_PIECE")}</b>  " +
+                              $"<color={UITheme.Tag(UITheme.Cyan)}>◆</color> {shop.EquipmentPullCost}" +
+                              (economy != null
+                                  ? $"     <color={UITheme.Tag(UITheme.TextMuted)}>" +
+                                    $"{LocalizationManager.Get("UI_GEMS")}</color> <b>{economy.Gems}</b>"
+                                  : string.Empty);
 
         if (inventoryLabel != null) inventoryLabel.text = DescribeInventory();
 
@@ -96,7 +115,7 @@ public class ShopUI : MonoBehaviour
     // Agrupa las piezas repetidas para no listar veinte líneas iguales.
     private string DescribeInventory()
     {
-        if (shop.Inventory.Count == 0) return "Almacén vacío";
+        if (shop.Inventory.Count == 0) return LocalizationManager.Get("UI_EMPTY_STORAGE");
 
         var conteo = new System.Collections.Generic.Dictionary<string, int>();
         foreach (var item in shop.Inventory)
@@ -106,8 +125,10 @@ public class ShopUI : MonoBehaviour
         }
 
         var lineas = new System.Collections.Generic.List<string>();
-        foreach (var par in conteo) lineas.Add($"{par.Key}  x{par.Value}");
+        foreach (var par in conteo)
+            lineas.Add($"{par.Key}  <color={UITheme.Tag(UITheme.Cyan)}>x{par.Value}</color>");
 
-        return $"Almacén ({shop.Inventory.Count}):\n" + string.Join("\n", lineas);
+        return $"<b>{LocalizationManager.Get("UI_STORAGE")} ({shop.Inventory.Count})</b>\n"
+               + string.Join("\n", lineas);
     }
 }

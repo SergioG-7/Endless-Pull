@@ -13,6 +13,47 @@ MonoBehaviour:
   m_Name: Hero_Malakor_4Star
   m_EditorClassIdentifier: Assembly-CSharp::HeroData
   heroName: Malakor
+  title: Novato de la Vanguardia
+  origin: Reino Fronterizo
+  bio: 
+  bodySprite: {fileID: -672808676215049941, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  walkFrames:
+  - {fileID: 4790201261077115631, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: 3322517124087401975, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: 6583586691806197626, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: -1746724775581007232, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: 7555285796542054663, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: -4788306682258600015, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: -7305785155986185541, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: 3250844916632192448, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: -2909737610985303450, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: -8650586113541242402, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: 3051176782459576139, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: -8813602329540101188, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: -1730786788867430125, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: -8273220534439377740, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: -5757958887284149853, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: -3171970081042621221, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: -3184911311736591552, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: 4078699751153424038, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: -672808676215049941, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: 7320642069197682252, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: -2958597605555075832, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: -464973607276599887, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: 9125289480729947921, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: -5596691086262718753, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: -8943987518559184131, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: -5664242615108003533, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: -6362684644862784471, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: -3154370826685392506, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: 6424589369557467487, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: -4186289633684753495, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: -5427832583531547945, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: 5417399891770799664, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: -6728863171539617016, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: 2876875160020141181, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: 8790239048309950030, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
+  - {fileID: 1167491825022573901, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
   starRank: 4
   maxHealth: 440
   maxMP: 50

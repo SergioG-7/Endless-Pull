@@ -17,13 +17,13 @@ public class ResourceExpeditionManager : MonoBehaviour
     [Tooltip("Recurso base que trae la expedición, por héroe enviado.")]
     [SerializeField] private int rewardPerHero = 15;
 
-    [Tooltip("Intentos de torre que consume salir a recolectar.")]
+    [Tooltip("Intentos diarios que consume salir a recolectar.")]
     [SerializeField] private int energyCost = 1;
 
     [Tooltip("Economía a la que se abona la cosecha.")]
     [SerializeField] private EconomyManager economy;
 
-    [Tooltip("Escuadra que se manda a recolectar.")]
+    [Tooltip("Gestor del que sale la escuadra de recolección y los intentos diarios.")]
     [SerializeField] private PartyManager party;
 
     private ResourceExpeditionType currentType;
@@ -77,8 +77,10 @@ public class ResourceExpeditionManager : MonoBehaviour
         return "recursos";
     }
 
+    public int EnergyCost => energyCost;
+
     public bool CanStart => !IsRunning
-        && party != null && party.Party.Count > 0
+        && party != null && party.ExpeditionSquad.Count > 0
         && party.Energy >= energyCost;
 
     public bool StartExpedition(ResourceExpeditionType type)
@@ -89,20 +91,20 @@ public class ResourceExpeditionManager : MonoBehaviour
             return false;
         }
 
-        if (party == null || party.Party.Count == 0)
+        if (party == null || party.ExpeditionSquad.Count == 0)
         {
-            Report("Asigna héroes a la escuadra antes de salir a recolectar.");
+            Report("Asigna héroes a la escuadra de recolección antes de salir.");
             return false;
         }
 
         if (party.Energy < energyCost || !party.TryConsumeEnergy())
         {
-            Report($"Hacen falta {energyCost} intento(s) de torre para salir.");
+            Report($"Hacen falta {energyCost} intento(s) diario(s) para salir.");
             return false;
         }
 
         currentType = type;
-        heroesSent = party.Party.Count;
+        heroesSent = party.ExpeditionSquad.Count;
         remaining = durationSeconds;
 
         Report($"Escuadra de {heroesSent} enviada a {DisplayName(type)} ({durationSeconds:0}s).");

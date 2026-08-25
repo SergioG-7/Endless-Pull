@@ -1,0 +1,62 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Ulric_4Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Ulric
+  title: Yunque de Invierno
+  origin: Fiordos del Norte
+  bio: 
+  bodySprite: {fileID: -476264227650138789, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  walkFrames:
+  - {fileID: -5706094381064792113, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: 8626633404445586514, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: 1026667651658922522, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: 5531591015173693791, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: 5260502824429676025, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: -7709814769232297759, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: -4361222518905561018, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: 7700873359321721647, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: 6150742379869100791, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: 5034377444994960548, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: -952464311904794436, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: 1398123918999868531, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: -8150650167419603189, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: -3046950239844218002, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: 5062949676012172949, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: -5133784904850093725, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: 6343961792124261389, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: -8921260240007976210, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: -476264227650138789, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: -720037021902038608, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: 2834599048340192567, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: -2595257779279180768, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: -462104644642251509, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: 6904499259032256145, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: -3829235973627792395, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: -6666958617960666726, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: -130887230202279497, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: 944936590615694016, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: 646545221167726020, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: 2076121208211845450, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: -5680907244554128173, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: -5422068224844771508, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: 4058149898783306129, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: -5764533697779492978, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: -6727052614820461829, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  - {fileID: 8175265143907141944, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
+  starRank: 4
+  maxHealth: 465
+  maxMP: 50
+  baseAttack: 47
+  baseDefense: 26
+  moveSpeed: 2.35

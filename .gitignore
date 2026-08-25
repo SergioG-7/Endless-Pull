@@ -88,3 +88,8 @@ Desktop.ini
 ~UnityDirMonSyncFile~*
 *.private
 *.private.meta
+
+# ---------------------------------------------------------------
+# Generador LPC clonado (89k ficheros de terceros, no se versiona)
+# ---------------------------------------------------------------
+/tools/LPC_Assets/

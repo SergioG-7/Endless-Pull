@@ -1,0 +1,62 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Kraven_5Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Kraven
+  title: Verdugo del Ocaso
+  origin: Marca Quemada
+  bio: 
+  bodySprite: {fileID: -7367305072550069824, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  walkFrames:
+  - {fileID: -7661199024462390445, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: 3320997443699279613, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: -4422917155843043502, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: 8657611456940234175, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: -7497724482080096962, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: -4314391579876834879, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: -7415345082144790876, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: 902344628096206951, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: 159670703797815340, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: -8373985491593056446, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: 2666172073814010509, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: 9018481090448926226, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: 244262093391014131, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: -3335540047471615847, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: 3278607241824211744, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: -7333055709664225986, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: -4430516376142598697, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: -735296108954819828, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: -7367305072550069824, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: -4137524428748476119, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: -5946469923813538054, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: 8446291362949042094, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: -3734923986145913811, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: -4923131177723154539, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: -753617008796854539, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: 802699640786381354, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: 4430147299881355248, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: 5899435039891095435, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: 6133623016911278917, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: -334250159034097170, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: 5976905662257211737, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: -5074745574096835496, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: 7088351623920668029, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: 8699222886551264139, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: -8596293091172714052, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  - {fileID: -7854083655067371598, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
+  starRank: 5
+  maxHealth: 615
+  maxMP: 50
+  baseAttack: 77
+  baseDefense: 30
+  moveSpeed: 2.95

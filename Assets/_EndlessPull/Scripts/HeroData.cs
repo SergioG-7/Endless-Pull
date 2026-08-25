@@ -16,6 +16,12 @@ public class HeroData : ScriptableObject
     [TextArea(2, 4)]
     public string bio = string.Empty;
 
+    [Tooltip("Sprite del cuerpo, recortado del spritesheet LPC de este héroe.")]
+    public Sprite bodySprite;
+
+    [Tooltip("Los 36 recortes de la hoja LPC, por filas de 9; los rellena el editor.")]
+    public Sprite[] walkFrames;
+
     [Tooltip("Rareza del héroe, de 1 a 5 estrellas.")]
     [Range(1, 5)]
     public int starRank = 1;

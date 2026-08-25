@@ -18,3 +18,5 @@ MonoBehaviour:
   bonusATK: 0
   bonusDEF: 0
   bonusHP: 40
+  passiveTrait: 1
+  passiveValue: 8.0

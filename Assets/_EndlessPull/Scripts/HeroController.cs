@@ -142,6 +142,13 @@ public class HeroController : MonoBehaviour, IHealthOwner
     [Range(0f, 1f)]
     [SerializeField] private float evasionChance = 0.15f;
 
+    [Tooltip("Probabilidad base de golpe crítico, de 0 a 1.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float baseCritChance = 0.12f;
+
+    [Tooltip("Multiplicador de daño de un crítico antes de sumar el afijo de la pieza.")]
+    [SerializeField] private float baseCritMultiplier = 1.5f;
+
     [Tooltip("Fatiga que se conserva por golpe con la pasiva de Aguante.")]
     [Range(0f, 1f)]
     [SerializeField] private float painToleranceFactor = 0.5f;
@@ -319,6 +326,71 @@ public class HeroController : MonoBehaviour, IHealthOwner
         return kind == 0 ? item.bonusATK : kind == 1 ? item.bonusDEF : item.bonusHP;
     }
 
+    // Suma el afijo entre las piezas sanas; una rota no aporta nada, como sus cifras.
+    public float AffixTotal(EquipmentAffix affix)
+    {
+        if (affix == EquipmentAffix.None) return 0f;
+
+        float total = 0f;
+        foreach (EquipmentSlot slot in System.Enum.GetValues(typeof(EquipmentSlot)))
+        {
+            var item = GetEquipped(slot);
+            if (item == null || IsBroken(slot) || item.passiveTrait != affix) continue;
+
+            total += item.passiveValue;
+        }
+
+        return total;
+    }
+
+    // Los afijos van en porcentaje: aquí se pasan a tanto por uno una sola vez.
+    public float EffectiveEvasionChance
+        => Mathf.Clamp01(evasionChance + AffixTotal(EquipmentAffix.EvasionBoost) * 0.01f);
+
+    public float ArmorPierce
+        => Mathf.Clamp01(AffixTotal(EquipmentAffix.ArmorPierce) * 0.01f);
+
+    public float LifeStealRatio
+        => Mathf.Clamp01(AffixTotal(EquipmentAffix.LifeSteal) * 0.01f);
+
+    public float CritChance => Mathf.Clamp01(baseCritChance);
+
+    public float CritMultiplier
+        => baseCritMultiplier + AffixTotal(EquipmentAffix.CritDamage) * 0.01f;
+
+    // Tira el crítico sobre un daño ya calculado; el robo de vida se cobra al impactar.
+    public int RollStrike(int raw, out bool critico)
+    {
+        critico = CritMultiplier > 1f && UnityEngine.Random.value < CritChance;
+        return critico ? Mathf.Max(1, Mathf.RoundToInt(raw * CritMultiplier)) : raw;
+    }
+
+    // Golpe completo contra un enemigo: crítico, perforación de armadura y robo de vida.
+    public void StrikeEnemy(EnemyController enemy, int raw, bool ignoresDefense = false)
+    {
+        if (enemy == null) return;
+
+        int damage = RollStrike(raw, out bool critico);
+        int antes = enemy.CurrentHealth;
+
+        AudioManager.PlayAt(SfxId.MeleeHit, enemy.transform.position);
+        enemy.TakeDamage(damage, ignoresDefense, ArmorPierce);
+
+        if (critico) DamageTextManager.Show(enemy.transform.position, "¡CRÍTICO!", UITheme.BarMorale);
+
+        StealLife(antes - enemy.CurrentHealth);
+    }
+
+    // Cura al héroe con una parte del daño que acaba de meter; solo con afijo de robo.
+    public void StealLife(int damageDealt)
+    {
+        float ratio = LifeStealRatio;
+        if (ratio <= 0f || damageDealt <= 0) return;
+
+        int curado = Heal(Mathf.Max(1, Mathf.RoundToInt(damageDealt * ratio)));
+        if (curado > 0) Debug.Log($"[Afijo] {data.heroName} roba {curado} de vida.", this);
+    }
+
     public int DurabilityOf(EquipmentSlot slot)
         => durability.TryGetValue(slot, out int value) ? value : 0;
 
@@ -479,7 +551,27 @@ public class HeroController : MonoBehaviour, IHealthOwner
         fatigue = 0f;
         morale = startingMorale;
         wasCritical = false;
+
+        ApplyBodySprite();
         HealthChanged?.Invoke(currentHealth, MaxHealth);
+    }
+
+    // Pone el sprite LPC del héroe en su SpriteRenderer; sin sprite se deja el del prefab.
+    public void ApplyBodySprite()
+    {
+        if (data == null || data.bodySprite == null) return;
+
+        var sr = GetComponent<SpriteRenderer>();
+        if (sr == null) return;
+
+        sr.sprite = data.bodySprite;
+
+        // El cuadro cuadrado del prefab venía teñido; el sprite real va sin tinte.
+        sr.color = Color.white;
+
+        // Y el animador recibe los 36 recortes de esa misma hoja.
+        var animator = GetComponent<LPCAnimator>();
+        if (animator != null) animator.SetFrames(data.walkFrames);
     }
 
     // La llama el WaveManager al mandar o retirar la escuadra de la torre.
@@ -682,6 +774,8 @@ public class HeroController : MonoBehaviour, IHealthOwner
             return;
         }
 
+        // Los héroes puestos a mano en la escena no pasan por Initialize.
+        ApplyBodySprite();
         EnterBaseWander();
     }
 
@@ -924,8 +1018,9 @@ public class HeroController : MonoBehaviour, IHealthOwner
         }
 
         // De lejos el golpe viaja: se ve salir la flecha o el proyectil mágico.
-        if (IsRanged) Projectile.Fire(transform.position, target, Attack, ProjectileColor);
-        else target.TakeDamage(Attack);
+        if (IsRanged) Projectile.Fire(transform.position, target, RollStrike(Attack, out _),
+                                      ProjectileColor, false, this);
+        else StrikeEnemy(target, Attack);
 
         AddMasteryPoints(masteryPerHit);
     }
@@ -972,7 +1067,11 @@ public class HeroController : MonoBehaviour, IHealthOwner
         currentMP -= skill.mpCost;
         skill.PutOnCooldown();
 
-        int damage = skill.DamageFrom(Attack);
+        // El crítico se tira una vez para toda la habilidad; las 18 ramas usan este daño.
+        int damage = RollStrike(skill.DamageFrom(Attack), out bool critico);
+        if (critico) DamageTextManager.Show(transform.position, "¡CRÍTICO!", UITheme.BarMorale);
+
+        int vidaVictima = victim != null ? victim.CurrentHealth : 0;
         int veneno = Mathf.Max(1, Mathf.RoundToInt(Attack * 0.15f));
 
         switch (subclass)
@@ -1069,8 +1168,11 @@ public class HeroController : MonoBehaviour, IHealthOwner
                 break;
         }
 
+        // El robo de vida se cobra sobre lo que ha perdido de verdad la victima.
+        if (victim != null) StealLife(vidaVictima - victim.CurrentHealth);
+
         AddMasteryPoints(masteryPerHit);
-        Debug.Log($"[Habilidad] {data.heroName} ({SubclassName}) lanza {skill.skillName}: " +
+        Debug.Log($"[Habilidad] {data.heroName} ({SubclassName}) lanza {skill.GetDisplayName()}: " +
                   $"{damage} base, {HeroSubclasses.DescribeSkill(subclass)} " +
                   $"(-{skill.mpCost} MP, quedan {CurrentMP}/{MaxMP}).", this);
     }
@@ -1259,7 +1361,11 @@ public class HeroController : MonoBehaviour, IHealthOwner
     public void TakeDamage(int amount, bool ignoresDefense)
     {
         // Evasión: el golpe no llega, así que no hay daño, ni fatiga, ni moral perdida.
-        if (HasPassive(PassiveSkill.Evasion) && UnityEngine.Random.value < evasionChance)
+        // La pasiva innata da el grueso y el afijo de la pieza suma encima.
+        bool puedeEsquivar = HasPassive(PassiveSkill.Evasion)
+                             || AffixTotal(EquipmentAffix.EvasionBoost) > 0f;
+
+        if (puedeEsquivar && UnityEngine.Random.value < EffectiveEvasionChance)
         {
             DamageTextManager.ShowDodge(transform.position);
             Debug.Log($"[Pasiva] {data.heroName} esquiva el golpe.", this);
@@ -1289,6 +1395,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
             if (externalControl) return;
 
             // Permadeath: el héroe no vuelve.
+            AudioManager.PlayAt(SfxId.Defeat, transform.position);
             NotifyAlliesOfDeath();
             Debug.Log($"[Hero] {data.heroName} ha muerto.", this);
             Destroy(gameObject);
@@ -1302,7 +1409,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
         if (Vector2.Distance(transform.position, enemy.transform.position) > attackRange) return false;
 
         attackTimer = EffectiveAttackCooldown;
-        enemy.TakeDamage(Attack);
+        StrikeEnemy(enemy, Attack);
         AddMasteryPoints(masteryPerHit);
         return true;
     }
@@ -1317,7 +1424,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
         currentMP -= skill.mpCost;
         skill.PutOnCooldown();
 
-        enemy.TakeDamage(skill.DamageFrom(Attack));
+        StrikeEnemy(enemy, skill.DamageFrom(Attack));
         AddMasteryPoints(masteryPerHit);
         return true;
     }

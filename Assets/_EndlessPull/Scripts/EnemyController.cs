@@ -56,6 +56,9 @@ public class EnemyController : MonoBehaviour, IHealthOwner
     // Multiplicador de piso: escala vida y ataque sin tocar el EnemyData compartido.
     private float statMultiplier = 1f;
 
+    // A partir de cierto piso el ataque sube más deprisa que la vida; de ahí el multiplicador aparte.
+    private float attackMultiplier = 1f;
+
     // Los jefes pegan además un golpe en área cada pocos segundos.
     private bool isBoss;
     private float slamTimer;
@@ -120,7 +123,11 @@ public class EnemyController : MonoBehaviour, IHealthOwner
 
     public int CurrentHealth => currentHealth;
     public int MaxHealth => data != null ? Mathf.RoundToInt(data.maxHealth * statMultiplier) : 0;
-    public int Attack => data != null ? Mathf.RoundToInt(data.baseAttack * statMultiplier) : 0;
+    public int Attack => data != null
+        ? Mathf.RoundToInt(data.baseAttack * statMultiplier * attackMultiplier)
+        : 0;
+
+    public float AttackMultiplier => attackMultiplier;
     public event Action<int, int> HealthChanged;
 
     void Awake()
@@ -130,9 +137,13 @@ public class EnemyController : MonoBehaviour, IHealthOwner
 
     // La usa el WaveManager: asigna datos y escalado tras instanciar, antes del primer Start.
     public void Initialize(EnemyData enemyData, float multiplier)
+        => Initialize(enemyData, multiplier, 1f);
+
+    public void Initialize(EnemyData enemyData, float multiplier, float attackScale)
     {
         data = enemyData;
         statMultiplier = Mathf.Max(0.01f, multiplier);
+        attackMultiplier = Mathf.Max(0.01f, attackScale);
 
         currentHealth = MaxHealth;
         HealthChanged?.Invoke(currentHealth, MaxHealth);
@@ -406,20 +417,25 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         target.TakeDamage(Attack, data.magicAttack);
     }
 
-    public void TakeDamage(int amount) => TakeDamage(amount, false);
+    public void TakeDamage(int amount) => TakeDamage(amount, false, 0f);
 
-    // El daño que ignora armadura entra entero; lo usan el antiarmadura y la magia.
-    public void TakeDamage(int amount, bool ignoresDefense)
+    public void TakeDamage(int amount, bool ignoresDefense) => TakeDamage(amount, ignoresDefense, 0f);
+
+    // El daño que ignora armadura entra entero; armorPierce recorta solo una parte de la defensa.
+    public void TakeDamage(int amount, bool ignoresDefense, float armorPierce)
     {
-        int finalDamage = ignoresDefense ? Mathf.Max(1, amount) : Mathf.Max(1, amount - data.baseDefense);
+        int defensa = Mathf.RoundToInt(data.baseDefense * (1f - Mathf.Clamp01(armorPierce)));
+        int finalDamage = ignoresDefense ? Mathf.Max(1, amount) : Mathf.Max(1, amount - defensa);
         currentHealth = Mathf.Max(0, currentHealth - finalDamage);
         HealthChanged?.Invoke(currentHealth, MaxHealth);
 
         DamageTextManager.ShowDamage(transform.position, finalDamage);
+        AudioManager.PlayAt(SfxId.Impact, transform.position);
         Debug.Log($"[Enemy] {data.enemyName} recibe {finalDamage} ({currentHealth}/{MaxHealth})", this);
 
         if (currentHealth <= 0)
         {
+            AudioManager.PlayAt(SfxId.Defeat, transform.position);
             Debug.Log($"[Enemy] {data.enemyName} destruido.", this);
             Destroy(gameObject);
         }

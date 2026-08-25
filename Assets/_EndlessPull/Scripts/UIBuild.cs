@@ -77,6 +77,9 @@ public static class UIBuild
 
         var button = go.GetComponent<Button>();
         button.targetGraphic = image;
+
+        // El clic suena antes de hacer nada; asi tambien suenan los botones sin accion.
+        button.onClick.AddListener(() => AudioManager.Play(SfxId.UiClick));
         if (onClick != null) button.onClick.AddListener(onClick);
         return button;
     }
@@ -124,6 +127,43 @@ public static class UIBuild
         var rt = fill.rectTransform;
         rt.anchorMax = new Vector2(Mathf.Clamp01(ratio), 1f);
         rt.offsetMax = Vector2.zero;
+    }
+
+    // Pixel art del héroe centrado dentro de un marco, sin deformarlo ni teñirlo.
+    // Devuelve null si el HeroData todavía no tiene sprite asignado.
+    public static Image HeroArt(Transform parent, Sprite sprite, float size)
+    {
+        var previo = parent.Find("Art");
+        if (sprite == null)
+        {
+            if (previo != null) previo.gameObject.SetActive(false);
+            return null;
+        }
+
+        var go = previo != null ? previo.gameObject
+                                : new GameObject("Art", typeof(RectTransform), typeof(Image));
+        go.transform.SetParent(parent, false);
+        go.SetActive(true);
+
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0.5f, 0.5f);
+        rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.sizeDelta = new Vector2(size, size);
+        rt.anchoredPosition = Vector2.zero;
+
+        var image = go.GetComponent<Image>();
+        image.sprite = sprite;
+        image.preserveAspect = true;
+        image.color = Color.white;
+        image.raycastTarget = false;
+
+        // Por encima del fondo del marco pero por debajo de su aro de rareza.
+        go.transform.SetAsLastSibling();
+        var borde = parent.Find("Border");
+        if (borde != null) borde.SetAsLastSibling();
+
+        return image;
     }
 
     public static void Stretch(RectTransform rt)

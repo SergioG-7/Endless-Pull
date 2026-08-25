@@ -1,0 +1,62 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Bruno_1Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Bruno
+  title: Muro de la Puerta Vieja
+  origin: Reino Fronterizo
+  bio: 
+  bodySprite: {fileID: -3909910242700766556, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  walkFrames:
+  - {fileID: -3346887454132151732, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: -4057110914067758943, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: -7174909793937489952, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: -6956460734415167937, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: -8503207821885009700, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: -6044979255893683117, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: -7777243050439764083, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: -5412584353658357037, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: 1773230500850304313, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: -7149237557466442116, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: 3563876356966354925, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: 8610868852867610929, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: 4868957715650790778, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: 173445950169123855, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: 8682554260228403319, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: -6559543876727820428, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: 9190194456165882842, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: -6330707391515235441, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: -3909910242700766556, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: 8216640835867300972, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: -6912009882995275677, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: -1931311782934371276, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: 1713451584960667583, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: -3641523177970569748, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: -4733847608728259091, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: -7773458180019487565, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: -854272071226121883, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: 8229443100203883686, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: 8300577795616756327, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: -77514033081112956, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: -4949924803883066941, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: -6922059359354062024, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: -1416882277999711578, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: -7066232624929134814, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: 8691643995654374974, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  - {fileID: -2398003112349499922, guid: b924408405d786d47b782c45617bdfdd, type: 3}
+  starRank: 1
+  maxHealth: 132
+  maxMP: 50
+  baseAttack: 12
+  baseDefense: 9
+  moveSpeed: 2

@@ -168,6 +168,13 @@ public class BaseBuilding : MonoBehaviour
             return false;
         }
 
+        // Un puesto por héroe: el que está en la torre o de recolección no puede currar aquí.
+        if (HeroAssignment.IsBusyElsewhere(hero, HeroDuty.Building))
+        {
+            Debug.LogWarning($"[Edificio] {HeroAssignment.BusyWarning(hero)}", this);
+            return false;
+        }
+
         if (workers.Count >= Capacity)
         {
             Debug.LogWarning($"[Edificio] {buildingName} está al completo ({workers.Count}/{Capacity}).", this);

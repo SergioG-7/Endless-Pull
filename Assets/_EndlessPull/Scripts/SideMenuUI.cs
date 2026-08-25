@@ -42,7 +42,7 @@ public class SideMenuUI : MonoBehaviour
     // Cada sección con los botones que le tocan, por nombre de GameObject.
     private static readonly (string clave, string[] botones)[] Secciones =
     {
-        ("UI_SECTION_MANAGEMENT", new[] { "Btn_Tower_Open", "Btn_Expeditions_Open", "Btn_Quests" }),
+        ("UI_SECTION_MANAGEMENT", new[] { "Btn_Tower_Open", "Btn_Squads", "Btn_Expeditions_Open", "Btn_Quests" }),
         ("UI_SECTION_STAFF", new[] { "Btn_Roster", "Btn_Pull", "Btn_HealAll" }),
         ("UI_SECTION_FACILITIES", new[] { "Btn_Craft_Open", "Btn_Shop_Open" })
     };

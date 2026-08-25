@@ -71,8 +71,9 @@ public class TowerPanelUI : MonoBehaviour
             Destroy(content.GetChild(i).gameObject);
 
         title.text = LocalizationManager.Get("UI_TOWER");
-        info.text = LocalizationManager.Get("UI_ATTEMPTS") + ": "
-                  + (party != null ? party.Energy + "/" + party.MaxEnergy : "-");
+        // La torre ya no gasta intentos diarios: lo que manda es la escuadra que sube.
+        info.text = LocalizationManager.Get("UI_TOWER_SQUAD") + ": "
+                  + (party != null ? party.Party.Count + "/" + party.MaxPartySize : "-");
 
         int top = waves.HighestSelectableFloor;
         content.sizeDelta = new Vector2(content.sizeDelta.x, top * (rowHeight + 6f) + 12f);

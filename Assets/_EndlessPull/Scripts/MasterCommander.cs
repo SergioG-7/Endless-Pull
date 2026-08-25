@@ -123,6 +123,8 @@ public class MasterCommander : MonoBehaviour
         }
 
         int count = 0;
+        AudioManager.Play(SfxId.DecreeRegroup);
+
         foreach (var hero in DeployedParty())
         {
             hero.SetForcedTarget(null);
@@ -192,6 +194,7 @@ public class MasterCommander : MonoBehaviour
         int total = 0;
         foreach (var hero in objetivos) total += HealHero(hero, quickHealAmount);
 
+        AudioManager.Play(SfxId.DecreeHeal);
         healTimer = healCooldown;
         Debug.Log($"[Decreto] Curar Escuadra: +{total} PV entre {objetivos.Count} héroe(s).", this);
         return true;

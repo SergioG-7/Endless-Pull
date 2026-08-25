@@ -69,14 +69,15 @@ public static class UITheme
     public static readonly Color DecreeRegroup = Hex("2A92BB");
     public static readonly Color DecreeRetreat = Hex("972527");
 
-    // Escala tipográfica, en unidades de canvas (referencia 1920).
-    public const float SizeTitle = 22f;
-    public const float SizeValue = 18f;
-    public const float SizeName = 16f;
-    public const float SizeBody = 15f;
-    public const float SizeLabel = 14f;
-    public const float SizeCaption = 13f;
-    public const float SizeMicro = 12f;
+    // Escala tipográfica, en unidades de canvas (referencia 1920). El mínimo legible en
+    // móvil son 15: por debajo solo quedan las cabeceras de sección y los rótulos de barra.
+    public const float SizeTitle = 24f;
+    public const float SizeValue = 19f;
+    public const float SizeName = 17f;
+    public const float SizeBody = 16f;
+    public const float SizeLabel = 15f;
+    public const float SizeCaption = 15f;
+    public const float SizeMicro = 13f;
 
     // Alias antiguos, ya alineados con la escala nueva.
     public const float SizeSmall = SizeCaption;

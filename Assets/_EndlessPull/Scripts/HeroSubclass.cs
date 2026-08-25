@@ -133,7 +133,16 @@ public static class HeroSubclasses
         => ArchetypeOf(subclass) == WeaponType.Shield;
 
     // Habilidad exclusiva de la subclase; sustituye a la genérica del prefab.
+    // El nombre en español es solo el respaldo: el visible sale de GetDisplayName().
     public static HeroSkill MakeSkill(HeroSubclass subclass)
+    {
+        var hecha = Build(subclass);
+        if (hecha != null) hecha.subclass = subclass;
+
+        return hecha;
+    }
+
+    private static HeroSkill Build(HeroSubclass subclass)
     {
         switch (subclass)
         {

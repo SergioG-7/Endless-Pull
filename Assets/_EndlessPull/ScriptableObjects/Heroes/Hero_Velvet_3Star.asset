@@ -13,6 +13,47 @@ MonoBehaviour:
   m_Name: Hero_Velvet_3Star
   m_EditorClassIdentifier: Assembly-CSharp::HeroData
   heroName: Velvet
+  title: Novato de la Vanguardia
+  origin: Reino Fronterizo
+  bio: 
+  bodySprite: {fileID: -5377984356645680581, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  walkFrames:
+  - {fileID: -5847817129920232263, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: 4449133813383826531, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: 8829588956151470604, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: 7287232707198473463, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: 3658751217809449500, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: -2653245336212335467, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: 6966132924477031824, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: 2758862114166665667, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: 7028792000123580947, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: -8810618229992525473, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: 1285213994999609517, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: 1329210008816900163, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: -6040398945633466953, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: 5146222247441269375, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: 3229681556543687642, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: 5401211019198710005, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: -8833010167175745409, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: -6328337533194520405, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: -5377984356645680581, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: 9142257857054011697, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: 4532933402716521970, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: 420568337466697806, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: -6363743932185390723, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: -5459236151551599792, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: -3831263629136482306, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: 8283510644089001959, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: -422169447889942284, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: 8001426065152594950, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: -5442241616978752913, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: -8744114915411165668, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: 2172305821238312081, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: 2903412387452933601, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: -8448254974282401411, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: -4398405999509969710, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: 2494315779218571578, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
+  - {fileID: 9111355232144562199, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
   starRank: 3
   maxHealth: 240
   maxMP: 50
