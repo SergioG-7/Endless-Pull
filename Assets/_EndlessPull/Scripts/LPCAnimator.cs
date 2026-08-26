@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 // Anima los 36 recortes de una hoja LPC de marcha (9 columnas x 4 direcciones) sin
@@ -17,6 +18,14 @@ public class LPCAnimator : MonoBehaviour
 
     [Tooltip("Margen antes de dar por parado al héroe; evita el tirón de la separación.")]
     [SerializeField] private float idleGrace = 0.1f;
+
+    [Tooltip("Distancia que avanza la arremetida visual al golpear cuerpo a cuerpo.")]
+    [SerializeField] private float lungeDistance = 0.15f;
+
+    [Tooltip("Segundos que dura la arremetida completa, ida y vuelta.")]
+    [SerializeField] private float lungeDuration = 0.15f;
+
+    private Coroutine lungeRoutine;
 
     public const int Columnas = 9;
     public const int Filas = 4;
@@ -101,6 +110,36 @@ public class LPCAnimator : MonoBehaviour
         Apply();
     }
 
+    private static readonly Dictionary<Texture2D, Sprite[]> sliceCache = new Dictionary<Texture2D, Sprite[]>();
+
+    // Recorta una hoja LPC de 9x4 en 36 sprites. Los héroes traen sus recortes horneados a
+    // mano, pero los enemigos comparten hoja por tipo: se recorta una vez por textura y el
+    // resto de instancias del mismo tipo reusan el resultado.
+    public static Sprite[] SliceWalkSheet(Texture2D sheet)
+    {
+        if (sheet == null) return null;
+        if (sliceCache.TryGetValue(sheet, out var cached)) return cached;
+
+        int frameWidth = sheet.width / Columnas;
+        int frameHeight = sheet.height / Filas;
+        var frames = new Sprite[Columnas * Filas];
+
+        for (int fila = 0; fila < Filas; fila++)
+        {
+            // Fila 0 (arriba) es la primera del PNG, que en coordenadas UV queda arriba del todo.
+            float y = (Filas - 1 - fila) * frameHeight;
+
+            for (int columna = 0; columna < Columnas; columna++)
+            {
+                var rect = new Rect(columna * frameWidth, y, frameWidth, frameHeight);
+                frames[fila * Columnas + columna] = Sprite.Create(sheet, rect, new Vector2(0.5f, 0.22f), 64f);
+            }
+        }
+
+        sliceCache[sheet] = frames;
+        return frames;
+    }
+
     // La componente mayor manda: así una diagonal elige el lateral, que se lee mejor.
     private static int DirectionOf(Vector2 delta)
     {
@@ -116,5 +155,37 @@ public class LPCAnimator : MonoBehaviour
 
         var sprite = frames[row * Columnas + Mathf.Clamp(column, 0, Columnas - 1)];
         if (sprite != null) target.sprite = sprite;
+    }
+
+    // Golpe cuerpo a cuerpo: un empujón corto hacia el objetivo y vuelta, sin tocar la colisión real.
+    public void PlayAttackLunge(Vector2 hacia)
+    {
+        if (lungeRoutine != null) StopCoroutine(lungeRoutine);
+        lungeRoutine = StartCoroutine(LungeRoutine(hacia));
+    }
+
+    private System.Collections.IEnumerator LungeRoutine(Vector2 hacia)
+    {
+        Vector3 origen = transform.position;
+        Vector2 direccion = hacia - (Vector2)origen;
+        if (direccion.sqrMagnitude > 0.0001f) direccion.Normalize();
+
+        Vector3 destino = origen + (Vector3)(direccion * lungeDistance);
+        float mitad = Mathf.Max(0.01f, lungeDuration * 0.5f);
+
+        for (float t = 0f; t < mitad; t += Time.deltaTime)
+        {
+            transform.position = Vector3.Lerp(origen, destino, t / mitad);
+            yield return null;
+        }
+
+        for (float t = 0f; t < mitad; t += Time.deltaTime)
+        {
+            transform.position = Vector3.Lerp(destino, origen, t / mitad);
+            yield return null;
+        }
+
+        transform.position = origen;
+        lungeRoutine = null;
     }
 }

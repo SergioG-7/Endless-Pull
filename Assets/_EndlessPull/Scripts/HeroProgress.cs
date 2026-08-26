@@ -34,9 +34,6 @@ public class HeroProgress : MonoBehaviour
     [Tooltip("Etiqueta flotante que muestra el nivel sobre la barra.")]
     [SerializeField] private TMP_Text levelLabel;
 
-    [Tooltip("Aro exterior del token, que se tiñe con el color de la rareza.")]
-    [SerializeField] private SpriteRenderer rarityRing;
-
     private int currentEXP;
     private HeroController hero;
 
@@ -212,8 +209,6 @@ public class HeroProgress : MonoBehaviour
     // El rótulo flotante identifica a la unidad de un vistazo en la base.
     private void RefreshLabel()
     {
-        if (hero != null && rarityRing != null) rarityRing.color = RarityColor(hero.StarRank);
-
         if (levelLabel == null) return;
 
         if (hero == null || hero.Data == null)

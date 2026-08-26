@@ -10,7 +10,7 @@ public class GachaManager : MonoBehaviour
     [SerializeField] private GameObject heroPrefab;
 
     [Tooltip("Pesos por rareza, del índice 0 = 1★ al índice 4 = 5★.")]
-    [SerializeField] private float[] rarityWeights = { 60f, 30f, 10f, 0f, 0f };
+    [SerializeField] private float[] rarityWeights = { 50f, 34f, 12f, 3.2f, 0.8f };
 
     [Tooltip("Centro de la base donde aparecen los héroes invocados.")]
     [SerializeField] private Vector2 spawnCenter = Vector2.zero;

@@ -18,3 +18,4 @@ MonoBehaviour:
   baseDefense: 6
   moveSpeed: 1.2
   attackCooldown: 1.4
+  walkSheet: {fileID: 2800000, guid: 561f8fff6d144aa09f898dc9843dab8c, type: 3}

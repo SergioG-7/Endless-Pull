@@ -205,6 +205,8 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
     private StatusEffectManager status;
 
+    private LPCAnimator animator;
+
     // Puesto de trabajo fijo; el héroe vuelve solo a él en vez de vagar.
     private BaseBuilding assignedBuilding;
 
@@ -373,6 +375,8 @@ public class HeroController : MonoBehaviour, IHealthOwner
         int damage = RollStrike(raw, out bool critico);
         int antes = enemy.CurrentHealth;
 
+        if (animator != null) animator.PlayAttackLunge(enemy.transform.position);
+
         AudioManager.PlayAt(SfxId.MeleeHit, enemy.transform.position);
         enemy.TakeDamage(damage, ignoresDefense, ArmorPierce);
 
@@ -529,6 +533,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
         // Un héroe de escena arranca con id propio; el SaveManager lo pisa si viene de un guardado.
         if (string.IsNullOrEmpty(heroInstanceId)) heroInstanceId = System.Guid.NewGuid().ToString();
 
+        animator = GetComponent<LPCAnimator>();
         morale = startingMorale;
 
         if (data != null)
@@ -570,7 +575,6 @@ public class HeroController : MonoBehaviour, IHealthOwner
         sr.color = Color.white;
 
         // Y el animador recibe los 36 recortes de esa misma hoja.
-        var animator = GetComponent<LPCAnimator>();
         if (animator != null) animator.SetFrames(data.walkFrames);
     }
 
@@ -1066,6 +1070,9 @@ public class HeroController : MonoBehaviour, IHealthOwner
     {
         currentMP -= skill.mpCost;
         skill.PutOnCooldown();
+
+        // Los golpes a distancia ya tienen su propio proyectil; el empujón es solo cuerpo a cuerpo.
+        if (!IsRanged && animator != null) animator.PlayAttackLunge(victim.transform.position);
 
         // El crítico se tira una vez para toda la habilidad; las 18 ramas usan este daño.
         int damage = RollStrike(skill.DamageFrom(Attack), out bool critico);

@@ -26,4 +26,7 @@ public class EnemyData : ScriptableObject
 
     [Tooltip("Ataque mágico: el daño entra sin restar la defensa del héroe.")]
     public bool magicAttack;
+
+    [Tooltip("Hoja LPC de marcha (9x4, 64px) generada por tools/generate_enemies_lpc.py; se recorta en tiempo de ejecución.")]
+    public Texture2D walkSheet;
 }

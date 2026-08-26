@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 3456401659717892001}
   - component: {fileID: 4985056502365863715}
   - component: {fileID: 7131717740852623528}
+  - component: {fileID: 8765432109876543210}
   m_Layer: 0
   m_Name: Enemy_Base
   m_TagString: Enemy
@@ -244,6 +245,24 @@ MonoBehaviour:
   baseOrder: 0
   footOffset: 0
   onlyWhenMoving: 1
+--- !u!114 &8765432109876543210
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2062506768320722534}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62f04b1b655a7fd4fb9490240e5e6130, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LPCAnimator
+  target: {fileID: 0}
+  walkThreshold: 0.05
+  framesPerSecond: 9
+  idleGrace: 0.1
+  lungeDistance: 0.15
+  lungeDuration: 0.15
 --- !u!1 &3358320869063661534
 GameObject:
   m_ObjectHideFlags: 0

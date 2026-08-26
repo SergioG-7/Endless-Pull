@@ -335,6 +335,25 @@ TORSO_POR_RAREZA = {
     5: ("torso/armour/plate", "cape/solid"),
 }
 
+# Piernas y calzado suben de rareza igual que el torso: de pantalon sencillo a placas.
+PIERNAS_POR_RAREZA = {
+    1: "legs/pantaloons",
+    2: "legs/leggings",
+    3: "legs/cuffed",
+    4: "legs/armour/plate",
+    5: "legs/armour/plate",
+}
+CALZADO_POR_RAREZA = {
+    1: "feet/shoes/basic",
+    2: "feet/boots/basic",
+    3: "feet/boots/fold",
+    4: "feet/armour/plate",
+    5: "feet/armour/plate",
+}
+
+# Hombreras: solo rematan la armadura completa de las rarezas altas.
+HOMBRO_POR_RAREZA = {4: "shoulders/epaulets", 5: "shoulders/pauldrons"}
+
 # El pelo de color imposible se reserva a las rarezas altas; los comunes van naturales.
 PELO_NATURAL = ("ash", "black", "blonde", "carrot", "chestnut", "dark_brown", "dark_gray",
                 "ginger", "gold", "gray", "light_brown", "platinum", "raven", "redhead",
@@ -349,7 +368,25 @@ CATEGORIA_ARMA = {
     "shield": "sword",
 }
 
-CUERPOS = ("male", "female", "muscular", "teen")
+CUERPOS_MASCULINOS = ("male", "muscular", "teen")
+CUERPOS_FEMENINOS = ("female",)
+
+# Reparto fijo del catalogo: 30 heroes masculinos / 20 femeninos (60% / 40%).
+PROPORCION_MASCULINA = 0.6
+
+
+def asignar_generos(heroes):
+    """Genero por heroe, estable ante relecturas: se ordena por nombre (no por
+    orden de disco) y se baraja con semilla fija, asi el reparto 30M/20F cae
+    siempre sobre los mismos heroes aunque cambie el listado del directorio."""
+    nombres = sorted(hero["heroName"] for hero in heroes)
+
+    rng = random.Random("genero:reparto")
+    barajado = list(nombres)
+    rng.shuffle(barajado)
+
+    corte = round(len(barajado) * PROPORCION_MASCULINA)
+    return {nombre: ("male" if i < corte else "female") for i, nombre in enumerate(barajado)}
 
 # Cabeza humana que encaja con cada tipo de cuerpo; el musculoso usa la masculina.
 CABEZA_POR_CUERPO = {
@@ -384,18 +421,29 @@ def elegir(rng, lista):
 
 
 def por_tipo(rutas, tipo):
-    """Prefiere la variante que encaja con el tipo de cuerpo; si no hay, cualquiera."""
+    """Prefiere la variante que encaja con el tipo de cuerpo; si no hay, cualquiera.
+
+    Piernas y calzado no traen corte "female" propio en este set LPC: la silueta
+    equivalente es "thin", asi que el cuerpo femenino cae ahi antes de rendirse
+    a cualquier variante."""
     encaja = [r for r in rutas if os.sep + tipo + os.sep in r]
+    if not encaja and tipo == "female":
+        encaja = [r for r in rutas if os.sep + "thin" + os.sep in r]
     return encaja or rutas
 
 
-def generar(hero, anim, rampas_piel, rampas_pelo, rampas_ojos, cache, verbose=True):
+def generar(hero, anim, genero, rampas_piel, rampas_pelo, rampas_ojos, cache, verbose=True):
     rng = random.Random(hero["heroName"])
     rareza = max(1, min(5, hero.get("starRank", 1)))
     rol = arquetipo(hero)
 
-    # Los tanques y lanceros salen corpulentos; los lanzadores, no.
-    tipo = "muscular" if rol in ("shield", "spear") and rng.random() < 0.7 else elegir(rng, CUERPOS)
+    # El genero fija el cuerpo disponible (30M/20F de asignar_generos); dentro de
+    # los masculinos, tanques y lanceros salen corpulentos.
+    cuerpos_genero = CUERPOS_MASCULINOS if genero == "male" else CUERPOS_FEMENINOS
+    if rol in ("shield", "spear") and "muscular" in cuerpos_genero and rng.random() < 0.7:
+        tipo = "muscular"
+    else:
+        tipo = elegir(rng, cuerpos_genero)
 
     lienzo = Image.new("RGBA", LIENZO, (0, 0, 0, 0))
     capas = []
@@ -456,7 +504,20 @@ def generar(hero, anim, rampas_piel, rampas_pelo, rampas_ojos, cache, verbose=Tr
             return None, "sin cuerpo"
         capas.append("body:male")
 
-    # 3. Cabeza: el cuerpo LPC viene sin ella. Va con la misma rampa de piel.
+    # 3a. Piernas y calzado, escalados por rareza (pantalon sencillo -> placas).
+    familia_piernas = PIERNAS_POR_RAREZA[rareza]
+    piernas = cache.setdefault(("legs", familia_piernas, anim), hojas_con(familia_piernas, anim))
+    pieza_piernas = elegir(rng, por_tipo(piernas, tipo))
+    if pegar(lienzo, pieza_piernas):
+        capas.append("legs:" + familia_piernas.split("/")[-1])
+
+    familia_calzado = CALZADO_POR_RAREZA[rareza]
+    calzado = cache.setdefault(("feet", familia_calzado, anim), hojas_con(familia_calzado, anim))
+    pieza_calzado = elegir(rng, por_tipo(calzado, tipo))
+    if pegar(lienzo, pieza_calzado):
+        capas.append("feet:" + familia_calzado.split("/")[-1])
+
+    # 3b. Cabeza: el cuerpo LPC viene sin ella. Va con la misma rampa de piel.
     cabeza = CABEZA_POR_CUERPO.get(tipo, "male")
     ruta_cabeza = os.path.join(HOJAS, "head", "heads", "human", cabeza, anim + ".png")
 
@@ -481,6 +542,14 @@ def generar(hero, anim, rampas_piel, rampas_pelo, rampas_ojos, cache, verbose=Tr
     torso = elegir(rng, por_tipo(torsos, tipo))
     if pegar(lienzo, torso):
         capas.append("torso")
+
+    # 5b. Hombreras: remate de armadura completa, solo en las dos rarezas mas altas.
+    familia_hombro = HOMBRO_POR_RAREZA.get(rareza)
+    if familia_hombro:
+        hombros = cache.setdefault(("shoulders", familia_hombro, anim), hojas_con(familia_hombro, anim))
+        pieza_hombro = elegir(rng, por_tipo(hombros, tipo))
+        if pegar(lienzo, pieza_hombro):
+            capas.append("shoulders:" + familia_hombro.split("/")[-1])
 
     # 6. Pelo, sobre la cabeza y ya teñido con el color elegido mas arriba.
     if pegar(lienzo, pelo, color_pelo, "hair", rampas_pelo):
@@ -523,18 +592,22 @@ def main():
     rampas_piel = cargar_rampas("body")
     rampas_pelo = cargar_rampas("hair")
     rampas_ojos = cargar_rampas("eye")
+    generos = asignar_generos(heroes)
 
     if not args.dry_run:
         os.makedirs(SALIDA, exist_ok=True)
 
-    print(f"Generando {len(heroes)} spritesheet(s) con la animacion '{args.anim}':")
+    n_m = sum(1 for g in generos.values() if g == "male")
+    print(f"Generando {len(heroes)} spritesheet(s) con la animacion '{args.anim}' "
+          f"({n_m}M / {len(generos) - n_m}F):")
 
     cache = {}
     hechos = 0
     fallos = []
 
     for hero in heroes:
-        lienzo, error = generar(hero, args.anim, rampas_piel, rampas_pelo, rampas_ojos, cache)
+        genero = generos[hero["heroName"]]
+        lienzo, error = generar(hero, args.anim, genero, rampas_piel, rampas_pelo, rampas_ojos, cache)
         if lienzo is None:
             fallos.append((hero["heroName"], error))
             continue

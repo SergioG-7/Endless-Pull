@@ -13791,11 +13791,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 838da2bcd9ecb2744931be97de05ace6, type: 2}
   heroPrefab: {fileID: 6736230919267043135, guid: f4eeb623c176605469538185d9c4937b, type: 3}
   rarityWeights:
-  - 52
-  - 28
-  - 13
-  - 5
-  - 2
+  - 50
+  - 34
+  - 12
+  - 3.2
+  - 0.8
   spawnCenter: {x: 0, y: 0}
   spawnJitter: {x: 2.5, y: 1.5}
   wanderSize: {x: 8, y: 5}

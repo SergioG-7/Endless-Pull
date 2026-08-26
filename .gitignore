@@ -93,3 +93,21 @@ Desktop.ini
 # Generador LPC clonado (89k ficheros de terceros, no se versiona)
 # ---------------------------------------------------------------
 /tools/LPC_Assets/
+/tools/__pycache__/
+*.pyc
+
+# ---------------------------------------------------------------
+# Claude Code Game Studios: estado efímero, no se versiona
+# ---------------------------------------------------------------
+/production/session-state/*
+!/production/session-state/.gitkeep
+/production/session-logs/
+
+# Memoria por-agente autogenerada por Claude Code (no es contenido autoría del usuario)
+/.claude/agent-memory/
+
+# ---------------------------------------------------------------
+# Documentación de ingeniería inversa (WIP, aún no revisada para commit)
+# ---------------------------------------------------------------
+/design/gdd/
+/production/project-stage-report.md

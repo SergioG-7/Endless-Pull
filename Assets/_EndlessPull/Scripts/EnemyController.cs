@@ -68,6 +68,7 @@ public class EnemyController : MonoBehaviour, IHealthOwner
     private float windupTimer;
     private SpriteRenderer body;
     private Color baseTint = Color.white;
+    private LPCAnimator animator;
 
     private SpriteRenderer telegraph;
     private static Sprite sharedCircle;
@@ -132,7 +133,20 @@ public class EnemyController : MonoBehaviour, IHealthOwner
 
     void Awake()
     {
-        if (data != null) currentHealth = MaxHealth;
+        animator = GetComponent<LPCAnimator>();
+        if (data != null)
+        {
+            currentHealth = MaxHealth;
+            ApplyBodySprite();
+        }
+    }
+
+    // Pone el sprite LPC del enemigo y le pasa los 36 recortes al animador; sin hoja se queda
+    // con el cuadro rojo de reserva del prefab.
+    private void ApplyBodySprite()
+    {
+        if (data == null || data.walkSheet == null || animator == null) return;
+        animator.SetFrames(LPCAnimator.SliceWalkSheet(data.walkSheet));
     }
 
     // La usa el WaveManager: asigna datos y escalado tras instanciar, antes del primer Start.
@@ -147,6 +161,7 @@ public class EnemyController : MonoBehaviour, IHealthOwner
 
         currentHealth = MaxHealth;
         HealthChanged?.Invoke(currentHealth, MaxHealth);
+        ApplyBodySprite();
     }
 
     // La usa el WaveManager en los pisos de jefe: escala el cuerpo y activa el golpe en área.
@@ -414,6 +429,7 @@ public class EnemyController : MonoBehaviour, IHealthOwner
             return;
         }
 
+        if (animator != null) animator.PlayAttackLunge(target.transform.position);
         target.TakeDamage(Attack, data.magicAttack);
     }
 

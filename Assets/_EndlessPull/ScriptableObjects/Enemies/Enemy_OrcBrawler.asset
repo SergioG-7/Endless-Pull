@@ -20,3 +20,4 @@ MonoBehaviour:
   moveSpeed: 0.8
   attackCooldown: 1.4
   magicAttack: 0
+  walkSheet: {fileID: 2800000, guid: f1f7cb5e14b24256ba97a4dce96f8a84, type: 3}
