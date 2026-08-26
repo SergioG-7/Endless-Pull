@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Kael
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: 
+  bio: "Kael acaba de sumarse a las filas de la torre, con más ganas que experiencia. Golpea desde la distancia, castigando al enemigo antes de que pueda acercarse."
+  bioEn: "Kael has just joined the tower's ranks, more eager than experienced. Keeps their distance and fires with precision while others hold the line."
+  bioJa: "Kaelは塔に加わったばかりの新兵で、経験より意気込みが先立つ。距離を保ちながら、味方が前線を支える間に正確に狙い撃つ。"
   bodySprite: {fileID: -2407326887507690720, guid: 581ab4b0213f7c845b00bd3c954d3ceb, type: 3}
   walkFrames:
   - {fileID: 6058451269891298689, guid: 581ab4b0213f7c845b00bd3c954d3ceb, type: 3}

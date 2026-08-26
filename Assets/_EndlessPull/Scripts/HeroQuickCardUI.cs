@@ -11,6 +11,9 @@ public class HeroQuickCardUI : MonoBehaviour
     [Tooltip("Roster al que salta el botón 'Ver en Roster'.")]
     [SerializeField] private RosterUI roster;
 
+    [Tooltip("Taller del que salen las pociones de curación.")]
+    [SerializeField] private CraftingManager crafting;
+
     [Tooltip("Tamaño de la ficha.")]
     [SerializeField] private Vector2 size = new Vector2(760f, 620f);
 
@@ -20,10 +23,16 @@ public class HeroQuickCardUI : MonoBehaviour
     private TMP_Text titulo;
     private TMP_Text subclase;
     private TMP_Text equipo;
+    private TMP_Text bio;
     private TMP_Text estados;
+
+    // Alto que ocupa el bloque de bio nuevo; empuja estados y botones hacia abajo esa misma medida.
+    private const float BioBlockHeight = 78f;
 
     private Image barHp, barMp, barMoral, barFatiga;
     private TMP_Text txtHp, txtMp, txtMoral, txtFatiga;
+    private Button usePotionButton;
+    private TMP_Text usePotionLabel;
 
     public bool IsOpen => panel != null && panel.activeSelf;
 
@@ -31,6 +40,7 @@ public class HeroQuickCardUI : MonoBehaviour
     {
         if (canvas == null) canvas = UnityEngine.Object.FindFirstObjectByType<Canvas>();
         if (roster == null) roster = UnityEngine.Object.FindFirstObjectByType<RosterUI>();
+        if (crafting == null) crafting = UnityEngine.Object.FindFirstObjectByType<CraftingManager>();
 
         Build();
     }
@@ -70,6 +80,11 @@ public class HeroQuickCardUI : MonoBehaviour
         if (roster != null) roster.Open();
     }
 
+    public void OnUsePotionPressed()
+    {
+        if (crafting != null && hero != null) crafting.TryUseHealingPotion(hero);
+    }
+
     private void Refresh()
     {
         var progress = hero.GetComponent<HeroProgress>();
@@ -89,43 +104,53 @@ public class HeroQuickCardUI : MonoBehaviour
         subclase.text = $"{oficio}   ·   {HeroTraits.DisplayName(hero.Trait)}{puesto}";
 
         UIBuild.SetBar(barHp, hero.MaxHealth > 0 ? (float)hero.CurrentHealth / hero.MaxHealth : 0f);
-        txtHp.text = $"HP  {hero.CurrentHealth}/{hero.MaxHealth}";
+        txtHp.text = string.Format(LocalizationManager.Get("UI_QUICKCARD_HP"), hero.CurrentHealth, hero.MaxHealth);
 
         UIBuild.SetBar(barMp, hero.MaxMP > 0 ? (float)hero.CurrentMP / hero.MaxMP : 0f);
-        txtMp.text = $"MP  {hero.CurrentMP}/{hero.MaxMP}";
+        txtMp.text = string.Format(LocalizationManager.Get("UI_QUICKCARD_MP"), hero.CurrentMP, hero.MaxMP);
 
         UIBuild.SetBar(barMoral, hero.MoralePercent / 100f);
-        txtMoral.text = $"Moral  {hero.MoralePercent}   {hero.MoodName}".TrimEnd();
+        txtMoral.text = string.Format(LocalizationManager.Get("UI_QUICKCARD_MORALE"),
+            hero.MoralePercent, hero.MoodName).TrimEnd();
 
         UIBuild.SetBar(barFatiga, hero.Fatigue / 100f);
-        txtFatiga.text = $"Fatiga  {hero.FatiguePercent}" + (hero.IsExhausted ? "   AGOTADO" : string.Empty);
+        txtFatiga.text = string.Format(LocalizationManager.Get("UI_QUICKCARD_FATIGUE"), hero.FatiguePercent) +
+                         (hero.IsExhausted ? LocalizationManager.Get("UI_EXHAUSTED") : string.Empty);
 
-        equipo.text = $"ATK {hero.Attack}   DEF {hero.Defense}\n" +
-                      $"Arma: {Pieza(EquipmentSlot.Weapon)}\n" +
-                      $"Escudo: {Pieza(EquipmentSlot.Shield)}\n" +
-                      $"Armadura: {Pieza(EquipmentSlot.Armor)}\n" +
-                      $"Accesorio: {Pieza(EquipmentSlot.Accessory)}";
+        equipo.text = string.Format(LocalizationManager.Get("UI_QUICKCARD_GEAR"),
+            hero.Attack, hero.Defense,
+            Pieza(EquipmentSlot.Weapon), Pieza(EquipmentSlot.Shield),
+            Pieza(EquipmentSlot.Armor), Pieza(EquipmentSlot.Accessory));
+
+        bio.text = hero.Data.GetLocalizedBio();
+
+        int pociones = crafting != null ? crafting.HealingPotions : 0;
+        if (usePotionButton != null) usePotionButton.interactable = pociones > 0 && hero.CurrentHealth < hero.MaxHealth;
+        if (usePotionLabel != null) usePotionLabel.text = $"Usar Poción ({pociones})";
 
         string activos = hero.Status.Describe();
-        string apatia = hero.IsApathetic ? "   ·   APÁTICO (candidato a síntesis)" : string.Empty;
-        estados.text = (string.IsNullOrEmpty(activos) ? "Sin estados alterados" : activos) + apatia;
+        string apatia = hero.IsApathetic ? LocalizationManager.Get("UI_APATHETIC") : string.Empty;
+        estados.text = (string.IsNullOrEmpty(activos) ? LocalizationManager.Get("UI_NO_STATUS") : activos) + apatia;
     }
 
     private string Pieza(EquipmentSlot slot)
     {
         var item = hero.GetEquipped(slot);
-        if (item == null) return "-";
+        if (item == null) return LocalizationManager.Get("UI_GEAR_EMPTY");
 
         return hero.IsBroken(slot)
-            ? $"{item.equipName} [ROTO]"
-            : $"{item.equipName} ({hero.DurabilityOf(slot)}/{item.maxDurability})";
+            ? string.Format(LocalizationManager.Get("UI_GEAR_PIECE_BROKEN"), item.equipName)
+            : string.Format(LocalizationManager.Get("UI_GEAR_PIECE"), item.equipName,
+                hero.DurabilityOf(slot), item.maxDurability);
     }
 
     private void Build()
     {
         if (canvas == null) return;
 
-        panel = UIBuild.Panel(canvas.transform, "HeroQuickCard", size, new Color(0.11f, 0.11f, 0.17f, 0.98f));
+        // El tamaño de referencia se queda corto para el bloque de bio nuevo; se fuerza un mínimo.
+        var panelSize = new Vector2(size.x, Mathf.Max(size.y, 620f + BioBlockHeight));
+        panel = UIBuild.Panel(canvas.transform, "HeroQuickCard", panelSize, new Color(0.11f, 0.11f, 0.17f, 0.98f));
 
         titulo = UIBuild.TopLabel(panel.transform, "Title", UIBuild.TitleSize, 46f, -14f,
             TextAlignmentOptions.Left);
@@ -143,15 +168,24 @@ public class HeroQuickCardUI : MonoBehaviour
 
         equipo = UIBuild.TopLabel(panel.transform, "Gear", UIBuild.BodySize, 160f, -280f,
             TextAlignmentOptions.TopLeft);
-        estados = UIBuild.TopLabel(panel.transform, "Status", UIBuild.BodySize, 40f, -448f,
+        bio = UIBuild.TopLabel(panel.transform, "Bio", UIBuild.BodySize, BioBlockHeight - 8f, -448f,
+            TextAlignmentOptions.TopLeft);
+        bio.color = UITheme.TextSoft;
+        estados = UIBuild.TopLabel(panel.transform, "Status", UIBuild.BodySize, 40f, -448f - BioBlockHeight,
             TextAlignmentOptions.Left);
 
+        float botonesY = -520f - BioBlockHeight;
+        usePotionButton = UIBuild.Button(panel.transform, "Btn_UsePotion", "Usar Poción",
+            new Color(0.30f, 0.55f, 0.35f), new Vector2(220f, 62f), new Vector2(-240f, botonesY),
+            OnUsePotionPressed);
+        usePotionLabel = usePotionButton.GetComponentInChildren<TMP_Text>();
+
         UIBuild.Button(panel.transform, "Btn_SeeRoster", "Ver en Roster",
-            new Color(0.35f, 0.30f, 0.60f), new Vector2(320f, 62f), new Vector2(-170f, -520f),
+            new Color(0.35f, 0.30f, 0.60f), new Vector2(220f, 62f), new Vector2(0f, botonesY),
             OnSeeInRosterPressed);
 
         UIBuild.Button(panel.transform, "Btn_CloseCard", "Cerrar",
-            new Color(0.32f, 0.28f, 0.36f), new Vector2(320f, 62f), new Vector2(170f, -520f),
+            new Color(0.32f, 0.28f, 0.36f), new Vector2(220f, 62f), new Vector2(240f, botonesY),
             Close);
     }
 }

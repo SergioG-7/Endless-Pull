@@ -10,8 +10,9 @@ public enum RosterFilter
     All,
     OneStar,
     TwoStar,
-    ThreePlus,
-    Party
+    ThreeStar,
+    FourStar,
+    FiveStar
 }
 
 // Criterio de ordenación de las filas.
@@ -21,7 +22,9 @@ public enum RosterSort
     Level
 }
 
-// Panel modal que lista los héroes vivos de la base.
+// Panel modal que lista los héroes vivos de la base. Cada tarjeta es solo lectura:
+// retrato, nombre, estrellas, nivel, subclase, vida y estado. Un clic abre HeroDetailModal,
+// donde viven las acciones (bloquear, escuadra, equipo, ascender, sintetizar, subclase, reparar).
 public class RosterUI : MonoBehaviour
 {
     [Tooltip("Raíz del panel; se activa y desactiva al abrir y cerrar.")]
@@ -36,38 +39,19 @@ public class RosterUI : MonoBehaviour
     [Tooltip("Segundos entre refrescos mientras el panel está abierto.")]
     [SerializeField] private float refreshInterval = 0.5f;
 
-    [Tooltip("Tienda de la que salen inventario y equipo.")]
-    [SerializeField] private ShopManager shop;
+    [Tooltip("Ficha de detalle que abre un clic sobre la tarjeta; ahí viven las acciones.")]
+    [SerializeField] private HeroDetailModal detailModal;
 
-    [Tooltip("Economía que paga las ascensiones.")]
-    [SerializeField] private EconomyManager economy;
-
-    [Tooltip("Taller del que salen las Piedras de Ascensión.")]
-    [SerializeField] private CraftingManager crafting;
-
-    [Tooltip("Escuadra a la que se apunta o se saca a los héroes.")]
-    [SerializeField] private PartyManager party;
-
-    [Tooltip("Gestor de síntesis al que apuntan los botones de cada fila.")]
-    [SerializeField] private SynthesisManager synthesis;
-
-    [Tooltip("Modal de equipamiento manual que abre el botón Equipar.")]
-    [SerializeField] private EquipmentSelectModalUI equipModal;
-
-    // Métricas del mockup: cabecera, tarjeta y rejilla de botones.
+    // Métricas de la tarjeta compacta.
     private const float HeaderHeight = 80f;
     private const float TabHeight = 36f;
-    private const float RowHeight = 112f;
-    private const float CardPadX = 18f;
-    private const float CardPadY = 14f;
-    private const float ColGap = 18f;
-    private const float ColIdentity = 280f;
-    private const float ColBars = 260f;
-    private const float BtnWidth = 96f;
-    private const float BtnHeight = 38f;
     private const float BtnGap = 8f;
-    private const float ColActions = BtnWidth * 4f + BtnGap * 3f;
-    private const float PortraitSize = 56f;
+    private const float RowHeight = 64f;
+    private const float CardPadX = 14f;
+    private const float PortraitSize = 44f;
+    private const float ColName = 300f;
+    private const float ColHealth = 190f;
+    private const float ColStatus = 220f;
 
     private float refreshTimer;
 
@@ -78,16 +62,28 @@ public class RosterUI : MonoBehaviour
     private Button sortButton;
     private TMP_Text sortLabel;
 
+    // Un widget por fila visible; se reutilizan entre refrescos en vez de destruirse y
+    // recrearse, que es lo que hacía caer el framerate con un roster de 50+ héroes.
+    private class CardWidgets
+    {
+        public GameObject root;
+        public Button button;
+        public Image portraitFrame;
+        public TMP_Text info;
+        public Image hpFill;
+        public TMP_Text hpLabel;
+        public TMP_Text statusLabel;
+        public HeroController hero;
+    }
+
+    private readonly List<CardWidgets> pool = new List<CardWidgets>();
+    private readonly List<HeroController> scratch = new List<HeroController>();
+
     public bool IsOpen => panel != null && panel.activeSelf;
 
     void Awake()
     {
-        if (synthesis == null) synthesis = UnityEngine.Object.FindFirstObjectByType<SynthesisManager>();
-        if (shop == null) shop = UnityEngine.Object.FindFirstObjectByType<ShopManager>();
-        if (economy == null) economy = UnityEngine.Object.FindFirstObjectByType<EconomyManager>();
-        if (crafting == null) crafting = UnityEngine.Object.FindFirstObjectByType<CraftingManager>();
-        if (party == null) party = UnityEngine.Object.FindFirstObjectByType<PartyManager>();
-        if (equipModal == null) equipModal = UnityEngine.Object.FindFirstObjectByType<EquipmentSelectModalUI>();
+        if (detailModal == null) detailModal = UnityEngine.Object.FindFirstObjectByType<HeroDetailModal>();
     }
 
     void Start()
@@ -118,7 +114,8 @@ public class RosterUI : MonoBehaviour
             LocalizationManager.Get("UI_SORT_RARITY"), ref cursor, OnSortPressed);
         sortLabel = sortButton.GetComponentInChildren<TMP_Text>();
 
-        string[] keys = { "UI_ALL", "1*", "2*", "3*+", "UI_PARTY" };
+        // Seis pestañas exactas: Todos y una por cada rango de estrella.
+        string[] keys = { "UI_ALL", "1★", "2★", "3★", "4★", "5★" };
         for (int i = keys.Length - 1; i >= 0; i--)
         {
             var value = (RosterFilter)i;
@@ -212,8 +209,9 @@ public class RosterUI : MonoBehaviour
         {
             case RosterFilter.OneStar: return hero.StarRank == 1;
             case RosterFilter.TwoStar: return hero.StarRank == 2;
-            case RosterFilter.ThreePlus: return hero.StarRank >= 3;
-            case RosterFilter.Party: return party != null && party.IsInParty(hero);
+            case RosterFilter.ThreeStar: return hero.StarRank == 3;
+            case RosterFilter.FourStar: return hero.StarRank == 4;
+            case RosterFilter.FiveStar: return hero.StarRank == 5;
         }
         return true;
     }
@@ -250,27 +248,34 @@ public class RosterUI : MonoBehaviour
         if (panel != null) panel.SetActive(false);
     }
 
-    // Regenera la lista entera; con una decena de héroes sale más barato que diferenciar.
+    // Actualiza las tarjetas ya existentes en vez de destruir y recrear; con un roster
+    // grande abierto de fondo, esto es lo que evita el bajón de FPS al hacer scroll.
     private void Rebuild()
     {
         if (content == null) return;
 
-        for (int i = content.childCount - 1; i >= 0; i--)
-            Destroy(content.GetChild(i).gameObject);
-
         var todos = UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None);
 
-        var heroes = new List<HeroController>();
+        scratch.Clear();
         foreach (var hero in todos)
-            if (hero != null && hero.Data != null && PassesFilter(hero)) heroes.Add(hero);
+            if (hero != null && hero.Data != null && PassesFilter(hero)) scratch.Add(hero);
 
-        // FindObjectsByType no garantiza orden y las filas llevan botón: sin ordenar, bailan al refrescar.
-        heroes.Sort(CompareHeroes);
+        // FindObjectsByType no garantiza orden y las filas no deben bailar entre refrescos.
+        scratch.Sort(CompareHeroes);
 
-        if (emptyLabel != null) emptyLabel.gameObject.SetActive(heroes.Count == 0);
+        if (emptyLabel != null) emptyLabel.gameObject.SetActive(scratch.Count == 0);
 
-        foreach (var hero in heroes)
-            CreateCard(hero);
+        for (int i = 0; i < scratch.Count; i++)
+        {
+            if (i >= pool.Count) pool.Add(CreateCardWidgets());
+
+            var widgets = pool[i];
+            widgets.root.SetActive(true);
+            UpdateCard(widgets, scratch[i]);
+        }
+
+        for (int i = scratch.Count; i < pool.Count; i++)
+            pool[i].root.SetActive(false);
     }
 
     // El desempate siempre es el nombre: sin él, dos héroes iguales bailarían entre refrescos.
@@ -294,43 +299,51 @@ public class RosterUI : MonoBehaviour
         return progress != null ? progress.Level : 1;
     }
 
-    // Cada héroe es una tarjeta con fondo propio y cuatro columnas de ancho fijo.
-    private void CreateCard(HeroController hero)
+    // Fila compacta: retrato, identidad, vida y estado. Sin botones: todo eso vive en el modal.
+    private CardWidgets CreateCardWidgets()
     {
-        var go = new GameObject($"Card_{hero.name}", typeof(RectTransform), typeof(Image));
+        var go = new GameObject("Card", typeof(RectTransform), typeof(Image), typeof(Button));
         go.transform.SetParent(content, false);
 
         var rt = go.GetComponent<RectTransform>();
         rt.sizeDelta = new Vector2(0f, RowHeight);
-        UITheme.Surface(go, UITheme.Card, UITheme.BorderSoft, UITheme.RadiusCard);
+        var cardImage = UITheme.Surface(go, UITheme.Card, UITheme.BorderSoft, UITheme.RadiusCard);
 
-        // En el primer frame el content aun no tiene ancho: se cae al del panel, que si es fijo.
-        float disponible = content.rect.width > 100f
-            ? content.rect.width
-            : panel.GetComponent<RectTransform>().rect.width - 56f;
+        var widgets = new CardWidgets { root = go };
 
-        float util = Mathf.Max(900f, disponible - CardPadX * 2f);
-        float colGear = Mathf.Max(160f, util - ColIdentity - ColBars - ColActions - ColGap * 3f);
+        widgets.portraitFrame = BuildPortrait(go.transform, CardPadX);
 
-        float x = CardPadX;
-        BuildIdentity(go.transform, hero, x, ColIdentity);
-        x += ColIdentity + ColGap;
-        BuildBars(go.transform, hero, x, ColBars);
-        x += ColBars + ColGap;
-        BuildGear(go.transform, hero, x, colGear);
-        x += colGear + ColGap;
-        CreateCardButtons(go.transform, hero, x);
+        float x = CardPadX + PortraitSize + 12f;
+        widgets.info = NewCardLabel(go.transform, "Col_Identity", x, ColName,
+            UITheme.SizeName, TextAlignmentOptions.Left);
+
+        x += ColName + 12f;
+        widgets.hpFill = UIBuild.Bar(go.transform, "Bar_HP", new Vector2(ColHealth, 14f),
+            new Vector2(x, 0f), UITheme.BarHP, out widgets.hpLabel);
+        var hpRt = widgets.hpFill.transform.parent.GetComponent<RectTransform>();
+        hpRt.anchorMin = new Vector2(0f, 0.5f);
+        hpRt.anchorMax = new Vector2(0f, 0.5f);
+        hpRt.pivot = new Vector2(0f, 0.5f);
+        hpRt.anchoredPosition = new Vector2(x, 0f);
+
+        x += ColHealth + 12f;
+        widgets.statusLabel = NewCardLabel(go.transform, "Col_Status", x, ColStatus,
+            UITheme.SizeSmall, TextAlignmentOptions.Left);
+        widgets.statusLabel.color = UITheme.TextSoft;
+
+        widgets.button = go.GetComponent<Button>();
+        widgets.button.targetGraphic = cardImage;
+
+        return widgets;
     }
 
-    // Columna 1: retrato con el marco de la rareza y a su lado estrellas, nombre y oficio.
-    private void BuildIdentity(Transform card, HeroController hero, float x, float width)
+    private void UpdateCard(CardWidgets widgets, HeroController hero)
     {
+        widgets.hero = hero;
+
         var progress = hero.GetComponent<HeroProgress>();
         int level = progress != null ? progress.Level : 1;
-        int maxLevel = progress != null ? progress.MaxLevel : 0;
-        string tope = progress != null && progress.IsMaxLevel ? "  TOPE" : string.Empty;
 
-        // La fuente CJK que se añadió como fallback sí trae la estrella tipográfica.
         var stars = new StringBuilder();
         for (int i = 0; i < hero.StarRank; i++) stars.Append('★');
 
@@ -338,26 +351,38 @@ public class RosterUI : MonoBehaviour
             ? hero.SubclassName
             : HeroTraits.DisplayName(hero.Trait);
 
-        // Insignia discreta: el juego sugiere que sobra, no lo decide por ti.
-        if (hero.IsSynthesisCandidate)
-            oficio += "  <color=#C08040>· candidato a síntesis ·</color>";
-
         var rareza = HeroProgress.RarityColor(hero.StarRank);
-        BuildPortrait(card, x, rareza, hero.Data.bodySprite);
+        var borde = widgets.portraitFrame.transform.Find("Border");
+        if (borde != null) borde.GetComponent<Image>().color = rareza;
+        UIBuild.HeroArt(widgets.portraitFrame.transform, hero.Data.bodySprite, PortraitSize - 8f);
 
-        float textoX = x + PortraitSize + 14f;
-        var label = NewCardLabel(card, "Col_Identity", textoX,
-            width - PortraitSize - 14f, UITheme.SizeName, TextAlignmentOptions.Left);
+        widgets.info.text = $"<size={UITheme.SizeSmall}><b><color={UITheme.Tag(rareza)}>{stars}</color></b></size>  " +
+                            $"{hero.Data.heroName}\n" +
+                            $"<size={UITheme.SizeSmall}><color={UITheme.Tag(UITheme.TextMuted)}>" +
+                            $"{oficio} · Nv.{level}</color></size>";
 
-        label.text = $"<size={UITheme.SizeSmall}><b><color={UITheme.Tag(rareza)}>{stars}</color></b></size>\n" +
-                     $"{hero.Data.heroName}\n" +
-                     $"<size={UITheme.SizeSmall}><color={UITheme.Tag(UITheme.TextMuted)}>" +
-                     $"{oficio} · Nv.{level}/{maxLevel}{tope}</color></size>";
+        float ratioHp = hero.MaxHealth > 0 ? (float)hero.CurrentHealth / hero.MaxHealth : 0f;
+        UIBuild.SetBar(widgets.hpFill, ratioHp);
+        widgets.hpLabel.text = $"{hero.CurrentHealth}/{hero.MaxHealth}";
+
+        string estados = hero.Status.Describe();
+        widgets.statusLabel.text = string.IsNullOrEmpty(estados)
+            ? hero.MoodName
+            : $"{hero.MoodName}  {estados}".TrimStart();
+
+        widgets.button.onClick.RemoveAllListeners();
+        widgets.button.onClick.AddListener(() => AudioManager.Play(SfxId.UiClick));
+        widgets.button.onClick.AddListener(() => OnCardClicked(widgets.hero));
+    }
+
+    private void OnCardClicked(HeroController hero)
+    {
+        if (detailModal != null) detailModal.Open(hero);
     }
 
     // Cuadro con las esquinas redondeadas, el borde del color de la rareza y dentro
     // el sprite pixel art del héroe.
-    private void BuildPortrait(Transform card, float x, Color rareza, Sprite retrato)
+    private Image BuildPortrait(Transform card, float x)
     {
         var go = new GameObject("Portrait", typeof(RectTransform), typeof(Image));
         go.transform.SetParent(card, false);
@@ -369,250 +394,9 @@ public class RosterUI : MonoBehaviour
         rt.sizeDelta = new Vector2(PortraitSize, PortraitSize);
         rt.anchoredPosition = new Vector2(x, 0f);
 
-        UIBuild.HeroArt(go.transform, retrato, PortraitSize - 8f);
-
-        UITheme.Surface(go, UITheme.Hex("262838"), rareza, UITheme.RadiusCard);
-        go.GetComponent<Image>().raycastTarget = false;
-    }
-
-    // Columna 2: tres barras finas de 7 px con su rótulo a la izquierda y la cifra a la derecha.
-    private void BuildBars(Transform card, HeroController hero, float x, float width)
-    {
-        float ratioHp = hero.MaxHealth > 0 ? (float)hero.CurrentHealth / hero.MaxHealth : 0f;
-        float ratioMp = hero.MaxMP > 0 ? (float)hero.CurrentMP / hero.MaxMP : 0f;
-
-        CreateBar(card, "Bar_HP", x, width, 12f, ratioHp, UITheme.BarHP,
-            "HP", $"{hero.CurrentHealth}/{hero.MaxHealth}");
-        CreateBar(card, "Bar_MP", x, width, 0f, ratioMp, UITheme.BarMP,
-            "MP", $"{hero.CurrentMP}/{hero.MaxMP}");
-        CreateBar(card, "Bar_Morale", x, width, -12f, hero.MoralePercent / 100f, UITheme.BarMorale,
-            "Moral", $"{hero.MoralePercent} {hero.MoodName}".TrimEnd());
-    }
-
-    private void CreateBar(Transform card, string name, float x, float width, float y,
-                           float ratio, Color color, string caption, string value)
-    {
-        var fila = new GameObject(name, typeof(RectTransform));
-        fila.transform.SetParent(card, false);
-
-        var rt = fila.GetComponent<RectTransform>();
-        rt.anchorMin = new Vector2(0f, 0.5f);
-        rt.anchorMax = new Vector2(0f, 0.5f);
-        rt.pivot = new Vector2(0f, 0.5f);
-        rt.anchoredPosition = new Vector2(x, y);
-        rt.sizeDelta = new Vector2(width, 12f);
-
-        const float anchoRotulo = 42f;
-        const float anchoCifra = 76f;
-
-        var rotulo = MiniLabel(fila.transform, "Caption", 0f, anchoRotulo,
-            TextAlignmentOptions.Left, UITheme.TextMuted);
-        rotulo.text = caption;
-
-        var pista = new GameObject("Track", typeof(RectTransform), typeof(Image));
-        pista.transform.SetParent(fila.transform, false);
-
-        var prt = pista.GetComponent<RectTransform>();
-        prt.anchorMin = new Vector2(0f, 0.5f);
-        prt.anchorMax = new Vector2(0f, 0.5f);
-        prt.pivot = new Vector2(0f, 0.5f);
-        prt.anchoredPosition = new Vector2(anchoRotulo + 6f, 0f);
-        prt.sizeDelta = new Vector2(width - anchoRotulo - anchoCifra - 12f, 7f);
-        UITheme.Surface(pista, UITheme.Track, Color.clear, 3.5f);
-        pista.GetComponent<Image>().raycastTarget = false;
-
-        var relleno = new GameObject("Fill", typeof(RectTransform), typeof(Image));
-        relleno.transform.SetParent(pista.transform, false);
-
-        var frt = relleno.GetComponent<RectTransform>();
-        frt.anchorMin = Vector2.zero;
-        frt.anchorMax = new Vector2(Mathf.Clamp01(ratio), 1f);
-        frt.offsetMin = Vector2.zero;
-        frt.offsetMax = Vector2.zero;
-        UITheme.Surface(relleno, color, Color.clear, 3.5f);
-        relleno.GetComponent<Image>().raycastTarget = false;
-
-        var cifra = MiniLabel(fila.transform, "Value", width - anchoCifra, anchoCifra,
-            TextAlignmentOptions.Right, UITheme.TextMuted);
-        cifra.text = value;
-    }
-
-    private TMP_Text MiniLabel(Transform parent, string name, float x, float width,
-                               TextAlignmentOptions align, Color color)
-    {
-        var go = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
-        go.transform.SetParent(parent, false);
-
-        var rt = go.GetComponent<RectTransform>();
-        rt.anchorMin = new Vector2(0f, 0.5f);
-        rt.anchorMax = new Vector2(0f, 0.5f);
-        rt.pivot = new Vector2(0f, 0.5f);
-        rt.anchoredPosition = new Vector2(x, 0f);
-        rt.sizeDelta = new Vector2(width, 14f);
-
-        var tmp = go.GetComponent<TextMeshProUGUI>();
-        tmp.fontSize = UITheme.SizeTiny;
-        tmp.alignment = align;
-        tmp.color = color;
-        tmp.raycastTarget = false;
-        return tmp;
-    }
-
-    // Columna 3: lo que lleva puesto y lo que sabe hacer.
-    private void BuildGear(Transform card, HeroController hero, float x, float width)
-    {
-        var label = NewCardLabel(card, "Col_Gear", x, width, UITheme.SizeSmall,
-            TextAlignmentOptions.Left);
-        label.color = UITheme.TextSoft;
-        label.lineSpacing = 12f;
-
-        string estados = hero.Status.Describe();
-        string linea = string.IsNullOrEmpty(estados)
-            ? $"{Key("Maestría")} {hero.Mastery.Describe()}"
-            : $"{Key("Estados")} {estados}";
-
-        label.text = $"{Key("Pasivas")} {PassiveSkills.Describe(hero.Passives)}\n" +
-                     $"{Key("Arma")} {GearLabel(hero, EquipmentSlot.Weapon)}   " +
-                     $"{Key("Escudo")} {GearLabel(hero, EquipmentSlot.Shield)}\n" +
-                     $"{Key("Arm.")} {GearLabel(hero, EquipmentSlot.Armor)}   {linea}";
-    }
-
-    // Los nombres de campo van más apagados que su valor, como en el mockup.
-    private static string Key(string text) => $"<color={UITheme.Tag(UITheme.TextFaint)}>{text}</color>";
-
-    // Columna 4: ocho botones en dos filas de cuatro, para no estirar la tarjeta a lo alto.
-    private void CreateCardButtons(Transform card, HeroController hero, float x)
-    {
-        var progress = hero.GetComponent<HeroProgress>();
-        bool isTarget = synthesis != null && synthesis.Target == hero;
-        bool canAscend = progress != null && progress.CanAscend(economy, crafting);
-        bool inParty = party != null && party.IsInParty(hero);
-        bool hasGear = shop != null;
-        bool wearsGear = hero.Weapon != null || hero.Shield != null
-                         || hero.Armor != null || hero.Accessory != null;
-
-        CreateButton(card, "Btn_Lock", x, 0,
-            LocalizationManager.Get(hero.IsLocked ? "UI_LOCK" : "UI_UNLOCK"),
-            hero.IsLocked ? UITheme.DangerSoft : UITheme.Neutral, true, () => OnLockClicked(hero));
-
-        CreateButton(card, "Btn_Party", x, 1,
-            LocalizationManager.Get(inParty ? "UI_IN_PARTY" : "UI_PARTY"),
-            inParty ? UITheme.Amber : UITheme.Neutral, party != null, () => OnPartyClicked(hero));
-
-        CreateButton(card, "Btn_Equip", x, 2, LocalizationManager.Get("UI_EQUIP"),
-            UITheme.Teal, hasGear, () => OnEquipClicked(hero));
-
-        CreateButton(card, "Btn_Ascend", x, 3, LocalizationManager.Get("UI_ASCEND"),
-            UITheme.AmberSoft, canAscend, () => OnAscendClicked(hero));
-
-        CreateButton(card, "Btn_Synth", x, 4,
-            LocalizationManager.Get(isTarget ? "UI_SYNTH_TARGET" : "UI_SYNTH"),
-            isTarget ? UITheme.Amber : UITheme.AccentSoft,
-            synthesis != null && !hero.IsLocked, () => OnSynthClicked(hero));
-
-        CreateButton(card, "Btn_Unequip", x, 5, LocalizationManager.Get("UI_UNEQUIP"),
-            UITheme.Teal, wearsGear, () => OnUnequipClicked(hero));
-
-        bool puedeSubclase = hero.StarRank >= HeroSubclasses.MinStarRank;
-        CreateButton(card, "Btn_Subclass", x, 6, LocalizationManager.Get("UI_SUBCLASS"),
-            UITheme.AccentSoft, puedeSubclase, () => OnSubclassClicked(hero));
-
-        bool roto = hero.FirstBrokenSlot() != null;
-        CreateButton(card, "Btn_Repair", x, 7, LocalizationManager.Get("UI_REPAIR"),
-            UITheme.DangerSoft, roto && crafting != null, () => OnRepairClicked(hero));
-    }
-
-    // Rota entre las tres subclases del arquetipo del héroe.
-    private void OnSubclassClicked(HeroController hero)
-    {
-        var progress = hero.GetComponent<HeroProgress>();
-        if (progress != null) progress.CycleSubclass();
-
-        Rebuild();
-    }
-
-    private void OnRepairClicked(HeroController hero)
-    {
-        if (crafting != null) crafting.TryRepair(hero);
-        Rebuild();
-    }
-
-    // Nombre de la pieza con su desgaste; una rota se marca en el sitio.
-    private static string GearLabel(HeroController hero, EquipmentSlot slot)
-    {
-        var item = hero.GetEquipped(slot);
-        if (item == null) return "-";
-
-        string etiqueta = item.ShortLabel();
-        return hero.IsBroken(slot)
-            ? $"{etiqueta} [{LocalizationManager.Get("UI_BROKEN")}]"
-            : $"{etiqueta} ({hero.DurabilityOf(slot)}/{item.maxDurability})";
-    }
-
-    // Echar o quitar el candado; un héroe bloqueado no se puede sacrificar.
-    private void OnLockClicked(HeroController hero)
-    {
-        bool locked = hero.ToggleLock();
-
-        // Si estaba elegido como objetivo de síntesis, bloquearlo cancela la operación.
-        if (locked && synthesis != null && synthesis.Target == hero) synthesis.ClearTarget();
-
-        SaveManager.RequestSave();
-        Rebuild();
-    }
-
-    private void OnPartyClicked(HeroController hero)
-    {
-        if (party == null) return;
-
-        party.Toggle(hero);
-        Rebuild();
-    }
-
-    // El hueco decide la posición: cuatro botones arriba y cuatro abajo.
-    private void CreateButton(Transform card, string name, float x, int slotIndex, string text,
-                              Color color, bool interactable, UnityEngine.Events.UnityAction onClick)
-    {
-        var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
-        go.transform.SetParent(card, false);
-
-        int columna = slotIndex % 4;
-        int fila = slotIndex / 4;
-
-        var rt = go.GetComponent<RectTransform>();
-        rt.anchorMin = new Vector2(0f, 1f);
-        rt.anchorMax = new Vector2(0f, 1f);
-        rt.pivot = new Vector2(0f, 1f);
-        rt.anchoredPosition = new Vector2(
-            x + columna * (BtnWidth + BtnGap),
-            -CardPadY - fila * (BtnHeight + BtnGap));
-        rt.sizeDelta = new Vector2(BtnWidth, BtnHeight);
-
-        // Lo que no se puede pulsar se apaga a neutro en vez de cambiar de color.
-        var image = UITheme.Surface(go, interactable ? color : UITheme.Neutral,
-            UITheme.BorderCard, UITheme.RadiusButton);
-
-        var labelGo = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
-        labelGo.transform.SetParent(go.transform, false);
-
-        var lrt = labelGo.GetComponent<RectTransform>();
-        lrt.anchorMin = Vector2.zero;
-        lrt.anchorMax = Vector2.one;
-        lrt.offsetMin = Vector2.zero;
-        lrt.offsetMax = Vector2.zero;
-
-        var tmp = labelGo.GetComponent<TextMeshProUGUI>();
-        tmp.fontSize = UITheme.SizeSmall;
-        tmp.fontStyle = FontStyles.Bold;
-        tmp.alignment = TextAlignmentOptions.Center;
-        tmp.color = interactable ? UITheme.Text : UITheme.TextFaint;
-        tmp.text = text;
-
-        var button = go.GetComponent<Button>();
-        button.targetGraphic = image;
-        button.interactable = interactable;
-        button.onClick.AddListener(() => AudioManager.Play(SfxId.UiClick));
-        button.onClick.AddListener(onClick);
+        var image = UITheme.Surface(go, UITheme.Hex("262838"), UITheme.BorderSoft, UITheme.RadiusCard);
+        image.raycastTarget = false;
+        return image;
     }
 
     private TMP_Text NewCardLabel(Transform card, string name, float x, float width,
@@ -626,7 +410,7 @@ public class RosterUI : MonoBehaviour
         rt.anchorMax = new Vector2(0f, 1f);
         rt.pivot = new Vector2(0f, 0.5f);
         rt.anchoredPosition = new Vector2(x, 0f);
-        rt.sizeDelta = new Vector2(width, -CardPadY * 2f);
+        rt.sizeDelta = new Vector2(width, -8f);
 
         var tmp = go.GetComponent<TextMeshProUGUI>();
         tmp.fontSize = size;
@@ -635,50 +419,4 @@ public class RosterUI : MonoBehaviour
         tmp.raycastTarget = false;
         return tmp;
     }
-
-    private void OnAscendClicked(HeroController hero)
-    {
-        var progress = hero.GetComponent<HeroProgress>();
-        if (progress != null) progress.AscendHero(economy, crafting);
-        Rebuild();
-    }
-
-    // Abre el modal para elegir pieza a mano; el auto-equipar vive dentro, de atajo.
-    private void OnEquipClicked(HeroController hero)
-    {
-        if (equipModal != null)
-        {
-            equipModal.Open(hero);
-            return;
-        }
-
-        // Sin modal montado se cae al comportamiento de siempre.
-        if (shop == null) return;
-
-        shop.EquipFromInventory(hero, shop.FirstEquippableFor(hero));
-        Rebuild();
-    }
-
-    // Quita la primera pieza que lleve puesta, de arma a accesorio.
-    private void OnUnequipClicked(HeroController hero)
-    {
-        if (shop == null) return;
-
-        if (hero.Weapon != null) shop.UnequipToInventory(hero, EquipmentSlot.Weapon);
-        else if (hero.Shield != null) shop.UnequipToInventory(hero, EquipmentSlot.Shield);
-        else if (hero.Armor != null) shop.UnequipToInventory(hero, EquipmentSlot.Armor);
-        else if (hero.Accessory != null) shop.UnequipToInventory(hero, EquipmentSlot.Accessory);
-
-        Rebuild();
-    }
-
-    // Primer clic elige objetivo; el segundo, sobre otro héroe, lo sacrifica.
-    private void OnSynthClicked(HeroController hero)
-    {
-        if (synthesis == null) return;
-
-        synthesis.SelectHero(hero);
-        Rebuild();
-    }
-
 }

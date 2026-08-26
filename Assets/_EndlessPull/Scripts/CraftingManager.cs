@@ -38,6 +38,27 @@ public class CraftingManager : MonoBehaviour
     [Tooltip("Comida que consume la cuadrilla mientras fabrica un arma.")]
     [SerializeField] private int weaponFoodCost = 20;
 
+    [Tooltip("Comida que cuesta fabricar una poción de curación instantánea.")]
+    [SerializeField] private int potionFoodCost = 20;
+
+    [Tooltip("Madera que cuesta fabricar una poción de curación instantánea.")]
+    [SerializeField] private int potionWoodCost = 10;
+
+    [Tooltip("Madera que cuesta una mejora de equipo básico.")]
+    [SerializeField] private int upgradeWoodCost = 50;
+
+    [Tooltip("Hierro que cuesta una mejora de equipo básico.")]
+    [SerializeField] private int upgradeIronCost = 50;
+
+    [Tooltip("Comida que cuesta una mejora de equipo básico.")]
+    [SerializeField] private int upgradeFoodCost = 30;
+
+    [Tooltip("Ataque plano que suma cada mejora de equipo básico.")]
+    [SerializeField] private int upgradeAttackBonus = 3;
+
+    [Tooltip("Defensa plana que suma cada mejora de equipo básico.")]
+    [SerializeField] private int upgradeDefenseBonus = 2;
+
     [Tooltip("Rebaja de materiales por cada artesano asignado al Taller, en tanto por uno.")]
     [SerializeField] private float artisanDiscount = 0.05f;
 
@@ -54,8 +75,10 @@ public class CraftingManager : MonoBehaviour
     [SerializeField] private EconomyManager economy;
 
     private int ascensionStones;
+    private int healingPotions;
 
     public int AscensionStones => ascensionStones;
+    public int HealingPotions => healingPotions;
     public float SuccessChance => successChance;
 
     // Los costes que se cobran de verdad ya llevan la rebaja de los artesanos.
@@ -64,6 +87,11 @@ public class CraftingManager : MonoBehaviour
     public int WeaponWoodCost => Discounted(weaponWoodCost);
     public int WeaponIronCost => Discounted(weaponIronCost);
     public int WeaponFoodCost => Discounted(weaponFoodCost);
+    public int PotionWoodCost => Discounted(potionWoodCost);
+    public int PotionFoodCost => Discounted(potionFoodCost);
+    public int UpgradeWoodCost => Discounted(upgradeWoodCost);
+    public int UpgradeIronCost => Discounted(upgradeIronCost);
+    public int UpgradeFoodCost => Discounted(upgradeFoodCost);
 
     // Héroes asignados a un Taller; de ahí salen la rebaja y la probabilidad extra.
     public int Artisans
@@ -128,11 +156,21 @@ public class CraftingManager : MonoBehaviour
         && economy.CanAffordMaterials(WeaponWoodCost, WeaponIronCost)
         && economy.CanAffordFood(WeaponFoodCost);
 
+    public bool CanCraftPotion => economy != null
+        && economy.CanAffordMaterials(PotionWoodCost, 0) && economy.CanAffordFood(PotionFoodCost);
+
+    public bool CanUpgradeGear => economy != null
+        && economy.CanAffordMaterials(UpgradeWoodCost, UpgradeIronCost)
+        && economy.CanAffordFood(UpgradeFoodCost);
+
     // Se dispara con (éxito, mensaje) tras cada intento.
     public event System.Action<bool, string> CraftResolved;
 
     // Se dispara con el número de piedras cada vez que cambia.
     public event System.Action<int> StonesChanged;
+
+    // Se dispara con el número de pociones cada vez que cambia.
+    public event System.Action<int> PotionsChanged;
 
     void Awake()
     {
@@ -210,6 +248,81 @@ public class CraftingManager : MonoBehaviour
         return pieza;
     }
 
+    // La comida se cobra siempre que hay madera; fabricar una poción no falla.
+    public bool TryCraftPotion()
+    {
+        int madera = PotionWoodCost;
+        int comida = PotionFoodCost;
+
+        if (economy == null || !economy.CanAffordMaterials(madera, 0) || !economy.CanAffordFood(comida))
+        {
+            Debug.LogWarning($"[Taller] Poción: hacen falta {madera} madera y {comida} comida.", this);
+            CraftResolved?.Invoke(false, LocalizationManager.Get("UI_NO_MATERIALS"));
+            return false;
+        }
+
+        economy.TrySpendMaterials(madera, 0);
+        economy.TrySpendFood(comida);
+
+        healingPotions++;
+        PotionsChanged?.Invoke(healingPotions);
+
+        Debug.Log($"[Taller] Poción de curación fabricada. Tienes {healingPotions}.", this);
+        CraftResolved?.Invoke(true, LocalizationManager.Get("UI_POTION_CRAFTED"));
+
+        SaveManager.RequestSave();
+        return true;
+    }
+
+    // Cura al héroe al máximo y consume una poción del almacén.
+    public bool TryUseHealingPotion(HeroController target)
+    {
+        if (target == null || healingPotions <= 0) return false;
+
+        target.Heal(target.MaxHealth);
+
+        healingPotions--;
+        PotionsChanged?.Invoke(healingPotions);
+
+        SaveManager.RequestSave();
+        return true;
+    }
+
+    // Mejora a todo el roster de una vez: bonus plano de ataque/defensa a coste fijo,
+    // así la tarjeta del Taller no necesita un selector de héroe.
+    public bool TryUpgradeAllGear()
+    {
+        int madera = UpgradeWoodCost;
+        int hierro = UpgradeIronCost;
+        int comida = UpgradeFoodCost;
+
+        if (economy == null || !economy.CanAffordMaterials(madera, hierro) || !economy.CanAffordFood(comida))
+        {
+            Debug.LogWarning($"[Taller] Mejora: hacen falta {madera} madera, {hierro} hierro y {comida} comida.", this);
+            CraftResolved?.Invoke(false, LocalizationManager.Get("UI_NO_MATERIALS"));
+            return false;
+        }
+
+        economy.TrySpendMaterials(madera, hierro);
+        economy.TrySpendFood(comida);
+
+        int heroes = 0;
+        foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None))
+        {
+            if (hero == null) continue;
+
+            hero.ApplyGearUpgrade(upgradeAttackBonus, upgradeDefenseBonus);
+            heroes++;
+        }
+
+        Debug.Log($"[Taller] Equipo mejorado para {heroes} héroe(s) (+{upgradeAttackBonus} ATQ, " +
+                  $"+{upgradeDefenseBonus} DEF).", this);
+        CraftResolved?.Invoke(true, LocalizationManager.Get("UI_ALL_GEAR_UPGRADED"));
+
+        SaveManager.RequestSave();
+        return true;
+    }
+
     public int RepairWoodCost => Discounted(repairWoodCost);
     public int RepairIronCost => Discounted(repairIronCost);
 
@@ -223,14 +336,14 @@ public class CraftingManager : MonoBehaviour
         var slot = hero.FirstBrokenSlot();
         if (slot == null)
         {
-            CraftResolved?.Invoke(false, "No hay nada roto");
+            CraftResolved?.Invoke(false, LocalizationManager.Get("UI_NOTHING_BROKEN"));
             return false;
         }
 
         if (economy == null || !economy.TrySpendMaterials(RepairWoodCost, RepairIronCost))
         {
             Debug.LogWarning($"[Taller] Reparar cuesta {RepairWoodCost} madera y {RepairIronCost} hierro.", this);
-            CraftResolved?.Invoke(false, "Faltan materiales para reparar");
+            CraftResolved?.Invoke(false, LocalizationManager.Get("UI_NO_REPAIR_MATERIALS"));
             return false;
         }
 
@@ -240,7 +353,7 @@ public class CraftingManager : MonoBehaviour
         QuestManager.Report(QuestKind.RepairGear);
         Debug.Log($"[Taller] {pieza.equipName} de {hero.Data.heroName} reparada " +
                   $"({hero.DurabilityOf(slot.Value)}/{pieza.maxDurability}).", this);
-        CraftResolved?.Invoke(true, $"{pieza.equipName} reparada");
+        CraftResolved?.Invoke(true, string.Format(LocalizationManager.Get("UI_PIECE_REPAIRED"), pieza.equipName));
 
         SaveManager.RequestSave();
         return true;
@@ -287,7 +400,7 @@ public class CraftingManager : MonoBehaviour
         if (economy == null || !economy.TrySpendMaterials(madera, hierro))
         {
             Debug.LogWarning($"[Taller] Reparar todo cuesta {madera} madera y {hierro} hierro.", this);
-            CraftResolved?.Invoke(false, "Faltan materiales para reparar");
+            CraftResolved?.Invoke(false, LocalizationManager.Get("UI_NO_REPAIR_MATERIALS"));
             return false;
         }
 
@@ -302,7 +415,7 @@ public class CraftingManager : MonoBehaviour
 
         QuestManager.Report(QuestKind.RepairGear, piezas);
         Debug.Log($"[Taller] Reparadas {piezas} pieza(s) por {madera} madera y {hierro} hierro.", this);
-        CraftResolved?.Invoke(true, $"{piezas} pieza(s) reparada(s)");
+        CraftResolved?.Invoke(true, string.Format(LocalizationManager.Get("UI_PIECES_REPAIRED"), piezas));
 
         SaveManager.RequestSave();
         return true;
@@ -333,5 +446,12 @@ public class CraftingManager : MonoBehaviour
     {
         ascensionStones = Mathf.Max(0, saved);
         StonesChanged?.Invoke(ascensionStones);
+    }
+
+    // La usa el SaveManager al cargar.
+    public void LoadPotions(int saved)
+    {
+        healingPotions = Mathf.Max(0, saved);
+        PotionsChanged?.Invoke(healingPotions);
     }
 }

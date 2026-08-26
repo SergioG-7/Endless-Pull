@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Kaelen
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: 
+  bio: "Kaelen ha superado ya varios combates y empieza a ganarse un nombre en la torre. Combate cuerpo a cuerpo sin dudar, buscando siempre el punto débil del enemigo."
+  bioEn: "Kaelen has already come through several fights and is starting to make a name in the tower. Closes into direct combat, blow after blow, until one side falls."
+  bioJa: "Kaelenはすでにいくつもの戦いをくぐり抜け、塔の中で名を上げ始めている。一撃また一撃と直接ぶつかり合い、どちらかが倒れるまで戦う。"
   bodySprite: {fileID: -2254043511531407488, guid: 9a74e8934c1ca7a459f27cda9de8f0b4, type: 3}
   walkFrames:
   - {fileID: -8902187881078299480, guid: 9a74e8934c1ca7a459f27cda9de8f0b4, type: 3}

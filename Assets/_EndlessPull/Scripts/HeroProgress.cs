@@ -22,8 +22,8 @@ public class HeroProgress : MonoBehaviour
     [Tooltip("Niveles que da cada estrella: el tope es estrellas x este valor.")]
     [SerializeField] private int levelsPerStar = 10;
 
-    [Tooltip("Gemas que cuesta ascender una estrella.")]
-    [SerializeField] private int ascendGemCost = 500;
+    [Tooltip("Gemas que cuesta ascender según la rareza actual: índice 0 = 1★→2★ ... índice 3 = 4★→5★.")]
+    [SerializeField] private int[] ascendGemCostByStar = { 100, 250, 500, 1000 };
 
     [Tooltip("Piedras de Ascensión que cuesta subir una estrella.")]
     [SerializeField] private int ascendStoneCost = 1;
@@ -45,14 +45,21 @@ public class HeroProgress : MonoBehaviour
     public int MaxLevel => hero != null ? Mathf.Max(1, hero.StarRank) * levelsPerStar : levelsPerStar;
     public bool IsMaxLevel => level >= MaxLevel;
 
-    public int AscendGemCost => ascendGemCost;
+    // Sube con la rareza: 1★→2★ es barato, 4★→5★ cuesta el doble que 3★→4★.
+    public int AscendGemCost => CostForStar(hero != null ? hero.StarRank : 1);
     public int AscendStoneCost => ascendStoneCost;
+
+    private int CostForStar(int starRank)
+    {
+        int index = Mathf.Clamp(starRank - 1, 0, ascendGemCostByStar.Length - 1);
+        return ascendGemCostByStar[index];
+    }
 
     // Solo se asciende a tope de nivel, por debajo de 5★ y con gemas y piedra en mano.
     public bool CanAscend(EconomyManager economy, CraftingManager crafting)
         => IsMaxLevel
            && hero != null && hero.StarRank < 5
-           && economy != null && economy.CanAfford(ascendGemCost)
+           && economy != null && economy.CanAfford(AscendGemCost)
            && crafting != null && crafting.AscensionStones >= ascendStoneCost;
 
     // Color por rareza del rótulo flotante: 1* gris, 2* verde, 3* azul, 4* morado, 5* dorado.
@@ -126,12 +133,12 @@ public class HeroProgress : MonoBehaviour
         // Se comprueba todo antes de cobrar nada, para no dejar el pago a medias.
         if (!CanAscend(economy, crafting))
         {
-            Debug.LogWarning($"[Ascensión] Faltan recursos: {ascendGemCost} gemas " +
+            Debug.LogWarning($"[Ascensión] Faltan recursos: {AscendGemCost} gemas " +
                              $"y {ascendStoneCost} Piedra(s) de Ascensión.", this);
             return false;
         }
 
-        economy.TrySpend(ascendGemCost);
+        economy.TrySpend(AscendGemCost);
         for (int i = 0; i < ascendStoneCost; i++) crafting.TryConsumeStone();
 
         hero.ApplyAscension(ascensionStatMultiplier);

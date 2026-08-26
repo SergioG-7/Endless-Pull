@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Sylas
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: 
+  bio: "Sylas ha superado ya varios combates y empieza a ganarse un nombre en la torre. Prefiere el choque frontal: acercarse, golpear y no dejar que el rival respire."
+  bioEn: "Sylas has already come through several fights and is starting to make a name in the tower. Closes into direct combat, blow after blow, until one side falls."
+  bioJa: "Sylasはすでにいくつもの戦いをくぐり抜け、塔の中で名を上げ始めている。正面からの激突を好み、近づいて叩き、敵に息をつかせない。"
   bodySprite: {fileID: -7322985971413935403, guid: eb65e0ab20ebbe6489f868bacfe6fcf8, type: 3}
   walkFrames:
   - {fileID: -4821397991083008215, guid: eb65e0ab20ebbe6489f868bacfe6fcf8, type: 3}

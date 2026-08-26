@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Solveig
   title: Lectora de Escarcha
   origin: Fiordos del Norte
-  bio: 
+  bio: "Solveig carga con más batallas de las que se pueden contar con los dedos de una mano. Golpea desde la distancia, castigando al enemigo antes de que pueda acercarse."
+  bioEn: "Solveig carries more battles than can be counted on one hand. Strikes from a distance, punishing the enemy before they can close in."
+  bioJa: "Solveigは数えきれないほどの戦いを重ねてきた古参兵だ。距離を保ちながら、味方が前線を支える間に正確に狙い撃つ。"
   bodySprite: {fileID: 6198918007889144012, guid: b446321685ef3cd4dba7f8cee298db4a, type: 3}
   walkFrames:
   - {fileID: 4881179919355823047, guid: b446321685ef3cd4dba7f8cee298db4a, type: 3}

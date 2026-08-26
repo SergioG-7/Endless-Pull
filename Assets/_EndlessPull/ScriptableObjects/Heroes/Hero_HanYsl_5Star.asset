@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Han Ysl
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: 
+  bio: "Pocos en la torre no han oído hablar de Han Ysl, cuyas hazañas ya son leyenda. Se planta en primera línea y absorbe los golpes que el resto no podría soportar."
+  bioEn: "Few in the tower haven't heard of Han Ysl, whose feats are already legend. Never gives an inch: the wall that shields the whole squad."
+  bioJa: "塔の中でHan Yslの名を知らぬ者は少なく、その武勲はすでに伝説となっている。前線を支え、仲間が背後から攻撃できるようにする。"
   bodySprite: {fileID: 8857963479767297247, guid: 5825b9d2b64a70b41a8174dc42b05d09, type: 3}
   walkFrames:
   - {fileID: 4668943251254395369, guid: 5825b9d2b64a70b41a8174dc42b05d09, type: 3}

@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Tobb
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: 
+  bio: "Tobb acaba de sumarse a las filas de la torre, con más ganas que experiencia. Aguanta el frente de batalla mientras sus compañeros golpean desde atrás."
+  bioEn: "Tobb has just joined the tower's ranks, more eager than experienced. Never gives an inch: the wall that shields the whole squad."
+  bioJa: "Tobbは塔に加わったばかりの新兵で、経験より意気込みが先立つ。前線に立ち、他の誰も耐えられない攻撃を一身に受け止める。"
   bodySprite: {fileID: 1291466799349859116, guid: 25774bb866e23094fb45322058595def, type: 3}
   walkFrames:
   - {fileID: -5091478849103021033, guid: 25774bb866e23094fb45322058595def, type: 3}

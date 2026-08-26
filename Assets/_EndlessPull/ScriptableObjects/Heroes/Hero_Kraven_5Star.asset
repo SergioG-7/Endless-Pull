@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Kraven
   title: Verdugo del Ocaso
   origin: Marca Quemada
-  bio: 
+  bio: "Pocos en la torre no han oído hablar de Kraven, cuyas hazañas ya son leyenda. Combate cuerpo a cuerpo sin dudar, buscando siempre el punto débil del enemigo."
+  bioEn: "Few in the tower haven't heard of Kraven, whose feats are already legend. Prefers the head-on clash: close in, strike, and give the enemy no room to breathe."
+  bioJa: "塔の中でKravenの名を知らぬ者は少なく、その武勲はすでに伝説となっている。迷わず接近戦を挑み、常に敵の弱点を探る。"
   bodySprite: {fileID: -7367305072550069824, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
   walkFrames:
   - {fileID: -7661199024462390445, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}

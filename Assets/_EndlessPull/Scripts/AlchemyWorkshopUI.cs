@@ -24,10 +24,14 @@ public class AlchemyWorkshopUI : MonoBehaviour
     private const float CardWidth = 300f;
     private const float CardHeight = 268f;
     private const float CardGap = 20f;
+    private const float RowGap = 24f;
 
     // La tarjeta se reparte en cuatro bandas: título, cuerpo, coste y botón al pie.
     private const float CardTop = 76f;
     private const float ButtonHeight = 48f;
+
+    // Alto que añade la segunda fila (poción + mejora) por debajo de las tres tarjetas originales.
+    private const float RowExtra = CardHeight + RowGap;
 
     private GameObject panel;
     private TMP_Text titulo;
@@ -39,6 +43,8 @@ public class AlchemyWorkshopUI : MonoBehaviour
     private Ficha piedras;
     private Ficha armas;
     private Ficha reparar;
+    private Ficha pocion;
+    private Ficha mejora;
 
     private class Ficha
     {
@@ -121,6 +127,18 @@ public class AlchemyWorkshopUI : MonoBehaviour
         Refresh();
     }
 
+    public void OnCraftPotionPressed()
+    {
+        if (crafting != null) crafting.TryCraftPotion();
+        Refresh();
+    }
+
+    public void OnUpgradeGearPressed()
+    {
+        if (crafting != null) crafting.TryUpgradeAllGear();
+        Refresh();
+    }
+
     private void OnResolved(bool success, string message)
     {
         if (feedback == null) return;
@@ -176,15 +194,27 @@ public class AlchemyWorkshopUI : MonoBehaviour
             && economy.CanAffordMaterials(crafting.RepairAllWoodCost(), crafting.RepairAllIronCost());
         SetButton(reparar, LocalizationManager.Get("UI_REPAIR_ALL"), puedeReparar, UITheme.DangerSoft);
 
+        // Pociones de Curación
+        pocion.titulo.text = LocalizationManager.Get("UI_FORGE_POTIONS");
+        pocion.cuerpo.text = $"{LocalizationManager.Get("UI_POTIONS_HELD")} <b>{crafting.HealingPotions}</b>";
+        pocion.coste.text = Cost(crafting.PotionWoodCost, 0, crafting.PotionFoodCost);
+        SetButton(pocion, LocalizationManager.Get("UI_CRAFT_POTION"), crafting.CanCraftPotion, UITheme.Cyan);
+
+        // Mejora de Equipo
+        mejora.titulo.text = LocalizationManager.Get("UI_UPGRADE_GEAR");
+        mejora.cuerpo.text = LocalizationManager.Get("UI_UPGRADE_GEAR_HELP");
+        mejora.coste.text = Cost(crafting.UpgradeWoodCost, crafting.UpgradeIronCost, crafting.UpgradeFoodCost);
+        SetButton(mejora, LocalizationManager.Get("UI_UPGRADE_BUTTON"), crafting.CanUpgradeGear, UITheme.Teal);
+
         etiquetaCerrar.text = LocalizationManager.Get("UI_CLOSE");
     }
 
     // Coste en columnas: el recurso a la izquierda y la cifra siempre en la misma tabulación.
     private static string Cost(int wood, int iron, int food)
     {
-        string texto = Row(LocalizationManager.Get("UI_WOOD"), wood)
-                     + "\n" + Row(LocalizationManager.Get("UI_IRON"), iron);
+        string texto = Row(LocalizationManager.Get("UI_WOOD"), wood);
 
+        if (iron > 0) texto += "\n" + Row(LocalizationManager.Get("UI_IRON"), iron);
         if (food > 0) texto += "\n" + Row(LocalizationManager.Get("UI_FOOD"), food);
         return texto;
     }
@@ -204,7 +234,9 @@ public class AlchemyWorkshopUI : MonoBehaviour
     {
         if (canvas == null) return;
 
-        panel = UIBuild.Panel(canvas.transform, "AlchemyWorkshopPanel", size, UITheme.Bg);
+        // El tamaño de referencia solo preveía tres tarjetas; se fuerza sitio para la segunda fila.
+        var panelSize = new Vector2(size.x, Mathf.Max(size.y, 482f + RowExtra));
+        panel = UIBuild.Panel(canvas.transform, "AlchemyWorkshopPanel", panelSize, UITheme.Bg);
 
         titulo = UIBuild.TopLabel(panel.transform, "Title", UITheme.SizeTitle, 34f, -20f,
             TextAlignmentOptions.Left);
@@ -214,20 +246,25 @@ public class AlchemyWorkshopUI : MonoBehaviour
         recursos.color = UITheme.TextSoft;
 
         float x = -(CardWidth + CardGap);
-        piedras = CreateCard("Card_Stones", x, OnCraftStonePressed);
-        armas = CreateCard("Card_Weapons", 0f, OnCraftWeaponPressed);
-        reparar = CreateCard("Card_Repair", -x, OnRepairAllPressed);
+        piedras = CreateCard("Card_Stones", x, 0f, OnCraftStonePressed);
+        armas = CreateCard("Card_Weapons", 0f, 0f, OnCraftWeaponPressed);
+        reparar = CreateCard("Card_Repair", -x, 0f, OnRepairAllPressed);
+
+        // Segunda fila, centrada bajo las tres tarjetas originales.
+        float xPar = -(CardWidth + CardGap) * 0.5f;
+        pocion = CreateCard("Card_Potion", xPar, RowExtra, OnCraftPotionPressed);
+        mejora = CreateCard("Card_Upgrade", -xPar, RowExtra, OnUpgradeGearPressed);
 
         feedback = UIBuild.TopLabel(panel.transform, "Feedback", UITheme.SizeBody, 26f,
-            -(CardTop + CardHeight + 8f), TextAlignmentOptions.Center);
+            -(CardTop + CardHeight + RowExtra + 8f), TextAlignmentOptions.Center);
 
         var cerrar = UIBuild.Button(panel.transform, "Btn_CloseWorkshop", string.Empty,
-            Color.clear, new Vector2(240f, 46f), new Vector2(0f, -(size.y - 62f)), Close);
+            Color.clear, new Vector2(240f, 46f), new Vector2(0f, -(panelSize.y - 62f)), Close);
         etiquetaCerrar = cerrar.GetComponentInChildren<TMP_Text>();
     }
 
     // Tarjeta compacta: título arriba, cuerpo, coste pegado al botón y botón al pie.
-    private Ficha CreateCard(string name, float x, UnityEngine.Events.UnityAction onClick)
+    private Ficha CreateCard(string name, float x, float yOffset, UnityEngine.Events.UnityAction onClick)
     {
         var go = new GameObject(name, typeof(RectTransform), typeof(Image));
         go.transform.SetParent(panel.transform, false);
@@ -237,7 +274,7 @@ public class AlchemyWorkshopUI : MonoBehaviour
         rt.anchorMax = new Vector2(0.5f, 1f);
         rt.pivot = new Vector2(0.5f, 1f);
         rt.sizeDelta = new Vector2(CardWidth, CardHeight);
-        rt.anchoredPosition = new Vector2(x, -CardTop);
+        rt.anchoredPosition = new Vector2(x, -CardTop - yOffset);
 
         UITheme.Surface(go, UITheme.Card, UITheme.BorderCard, UITheme.RadiusCard);
 

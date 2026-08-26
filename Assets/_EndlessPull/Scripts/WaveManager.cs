@@ -1,5 +1,18 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
+// Desglose de la recompensa de un piso superado; lo consume el modal de cofre.
+public struct FloorRewardInfo
+{
+    public int floor;
+    public bool firstClear;
+    public bool bossFloor;
+    public int gems;
+    public int wood;
+    public int iron;
+    public int exp;
+}
 
 // Estado de la expedición del piso actual.
 public enum ExpeditionState
@@ -39,8 +52,8 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Chamán oscuro de ataque mágico a distancia; sale a partir del piso 3.")]
     [SerializeField] private EnemyData shamanData;
 
-    [Tooltip("Segundos de preparación táctica antes de que los enemigos se muevan.")]
-    [SerializeField] private float combatCountdown = 1.5f;
+    [Tooltip("Segundos de preparación táctica antes de que empiece el combate (cuenta atrás 3-2-1-¡Lucha!).")]
+    [SerializeField] private float combatCountdown = 3f;
 
     [Tooltip("Piso más alto superado; manda sobre qué pisos se pueden elegir.")]
     [SerializeField] private int highestClearedFloor;
@@ -102,6 +115,12 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Madera y hierro extra del cofre que suelta el jefe.")]
     [SerializeField] private int bossChestMaterials = 60;
 
+    [Tooltip("Segundos de pausa dramática antes de la cuenta atrás cuando aparece el jefe.")]
+    [SerializeField] private float bossArrivalPause = 0.5f;
+
+    [Tooltip("Segundos que se enseña el aviso '¡JEFE!' en pantalla.")]
+    [SerializeField] private float bossArrivalBannerSeconds = 1.2f;
+
     [Tooltip("Origen de la arena; la base queda lejos para que no se mezclen las dos zonas.")]
     [SerializeField] private Vector2 arenaCenter = new Vector2(40f, 0f);
 
@@ -126,8 +145,8 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Hierro que da superar el piso 1; escala con el piso.")]
     [SerializeField] private int ironReward = 10;
 
-    [Tooltip("Centro de la zona de aparición, relativo al origen de la arena.")]
-    [SerializeField] private Vector2 spawnAreaCenter = new Vector2(6f, 0f);
+    [Tooltip("Centro de la zona de aparición, relativo al origen de la arena. Se aleja lo suficiente de la formación de la escuadra (hasta x=3.5) para que nadie se toque durante la cuenta atrás.")]
+    [SerializeField] private Vector2 spawnAreaCenter = new Vector2(9f, 0f);
 
     [Tooltip("Ancho y alto de la zona de aparición.")]
     [SerializeField] private Vector2 spawnAreaSize = new Vector2(2f, 3f);
@@ -139,9 +158,16 @@ public class WaveManager : MonoBehaviour
     // Preparación táctica: la oleada está en escena pero congelada.
     private float countdownTimer;
 
+    // Último número entero mostrado en el rótulo de cuenta atrás; evita repintar cada frame.
+    private int lastCountdownTick = -1;
+
     // Se apunta al salir: si no hubo comida, la moral lo paga al volver.
     private bool underfed;
     private bool bossFloor;
+    private EnemyController currentBoss;
+
+    // El jefe vivo de esta expedición; null fuera de piso de jefe o si ya cayó.
+    public EnemyController CurrentBoss => currentBoss != null ? currentBoss : null;
 
     public int CurrentFloor => currentFloor;
     public int HighestClearedFloor => highestClearedFloor;
@@ -167,11 +193,30 @@ public class WaveManager : MonoBehaviour
         get { PruneWave(); return wave.Count; }
     }
 
+    // Vida agregada de la escuadra desplegada (0-1); 1 si no hay nadie fuera. Lo usa el auto-retirada.
+    public float DeployedHealthRatio
+    {
+        get
+        {
+            int cur = 0, max = 0;
+            foreach (var hero in deployed)
+            {
+                if (hero == null) continue;
+                cur += hero.CurrentHealth;
+                max += hero.MaxHealth;
+            }
+            return max > 0 ? (float)cur / max : 1f;
+        }
+    }
+
     // Se dispara con (estado, mensaje) para que la UI muestre el feedback.
     public event System.Action<ExpeditionState, string> ExpeditionChanged;
 
     // Se dispara con el piso nuevo; evita que la UI dependa del orden de los Start.
     public event System.Action<int> FloorChanged;
+
+    // Se dispara al superar un piso, con el desglose exacto del botín; lo consume el modal de cofre.
+    public event System.Action<FloorRewardInfo> FloorCleared;
 
     // La usa el SaveManager al cargar una partida.
     public void LoadProgress(int savedFloor, int savedHighest)
@@ -226,7 +271,7 @@ public class WaveManager : MonoBehaviour
 
         if (party == null || party.Party.Count == 0)
         {
-            Report(ExpeditionState.Idle, "Asigna héroes a la escuadra");
+            Report(ExpeditionState.Idle, LocalizationManager.Get("UI_STATUS_ASSIGN_HEROES"));
             return;
         }
 
@@ -266,13 +311,15 @@ public class WaveManager : MonoBehaviour
         if (bossFloor) SpawnBoss();
 
         // Preparación táctica: la oleada ya está puesta, pero no se mueve hasta que pase la cuenta atrás.
-        BeginCountdown();
+        // En piso de jefe hay una pausa dramática y un aviso en pantalla antes de arrancar la cuenta atrás.
+        if (bossFloor) StartCoroutine(BossArrivalThenCountdown());
+        else BeginCountdown();
 
-        string extra = bossFloor ? " + JEFE" : string.Empty;
+        string extra = bossFloor ? LocalizationManager.Get("UI_BOSS_TAG") : string.Empty;
         string duro = HardFloors > 0 ? $"  ATK x{atk:0.00}" : string.Empty;
-        Report(ExpeditionState.InProgress,
-            $"Piso {currentFloor}: {count} enemigos{extra} (x{mult:0.00}){duro}  " +
-            $"Escuadra {party.Party.Count}/{party.MaxPartySize}");
+        Report(ExpeditionState.InProgress, string.Format(
+            LocalizationManager.Get("UI_STATUS_FLOOR_START"),
+            currentFloor, count, extra, mult, duro, party.Party.Count, party.MaxPartySize));
     }
 
     // Desplazamiento en X según el rol: negativo acerca a la escuadra, positivo aleja.
@@ -314,22 +361,39 @@ public class WaveManager : MonoBehaviour
             ? data.enemyName.Replace(" ", string.Empty)
             : "Enemy";
 
-    // Congela la oleada y avisa; da tiempo a leer el campo antes de que empiece el follón.
+    // Pausa dramática (tiempo real, sin depender del timeScale de combate) + aviso "¡JEFE!" antes de la cuenta atrás.
+    private IEnumerator BossArrivalThenCountdown()
+    {
+        ScreenBanner.Show(LocalizationManager.Get("UI_BOSS_ARRIVAL"), bossArrivalBannerSeconds,
+            new Color(1f, 0.25f, 0.20f));
+
+        yield return new WaitForSecondsRealtime(bossArrivalPause);
+        BeginCountdown();
+    }
+
+    // Congela oleada y escuadra; la cuenta atrás numérica (3-2-1-¡Lucha!) da tiempo a leer el campo.
     private void BeginCountdown()
     {
         countdownTimer = Mathf.Max(0f, combatCountdown);
+        lastCountdownTick = Mathf.CeilToInt(countdownTimer);
 
         foreach (var enemy in wave)
             if (enemy != null) enemy.SetFrozen(countdownTimer > 0f);
 
-        if (countdownTimer > 0f)
-            ScreenBanner.Show(LocalizationManager.Get("UI_READY"), countdownTimer, new Color(1f, 0.85f, 0.35f));
+        foreach (var hero in deployed)
+            if (hero != null) hero.SetFrozen(countdownTimer > 0f);
+
+        if (countdownTimer > 0f && lastCountdownTick > 0)
+            ScreenBanner.Show(lastCountdownTick.ToString(), 1f, new Color(1f, 0.85f, 0.35f));
     }
 
     private void ReleaseWave()
     {
         foreach (var enemy in wave)
             if (enemy != null) enemy.SetFrozen(false);
+
+        foreach (var hero in deployed)
+            if (hero != null) hero.SetFrozen(false);
 
         ScreenBanner.Show(LocalizationManager.Get("UI_ENGAGE"), 1f, new Color(1f, 0.45f, 0.30f));
         Debug.Log("[Expedición] Fin de la preparación: la oleada se mueve.", this);
@@ -412,8 +476,8 @@ public class WaveManager : MonoBehaviour
         bossFloor = false;
         countdownTimer = 0f;
 
-        Report(ExpeditionState.Idle,
-            $"Retirada del piso {currentFloor}: {rescatados} héroe(s) a salvo, sin recompensa");
+        Report(ExpeditionState.Idle, string.Format(
+            LocalizationManager.Get("UI_STATUS_RETREAT"), currentFloor, rescatados));
         return true;
     }
 
@@ -426,6 +490,7 @@ public class WaveManager : MonoBehaviour
 
             hero.SetDeployed(false);
             hero.SetOriginSynergy(0f);
+            hero.SetFrozen(false);
             hero.Status.Clear();
             hero.WearEquipment(wearPerExpedition);
             if (underfed) hero.LoseMorale(malnutritionMoraleLoss);
@@ -450,6 +515,7 @@ public class WaveManager : MonoBehaviour
         boss.Initialize(bossData, bossStatMultiplier);
         boss.MakeBoss(bossScale);
         wave.Add(boss);
+        currentBoss = boss;
 
         Debug.Log($"[Jefe] {bossData.enemyName} aparece en el piso {currentFloor} " +
                   $"con {boss.MaxHealth} PV.", this);
@@ -473,6 +539,15 @@ public class WaveManager : MonoBehaviour
         if (countdownTimer > 0f)
         {
             countdownTimer -= Time.deltaTime;
+
+            // Repinta el rótulo solo al cruzar cada segundo entero: 3... 2... 1...
+            int tick = Mathf.CeilToInt(countdownTimer);
+            if (tick > 0 && tick != lastCountdownTick)
+            {
+                lastCountdownTick = tick;
+                ScreenBanner.Show(tick.ToString(), 1f, new Color(1f, 0.85f, 0.35f));
+            }
+
             if (countdownTimer > 0f) return;
 
             countdownTimer = 0f;
@@ -490,13 +565,14 @@ public class WaveManager : MonoBehaviour
             int gemGain = firstClear ? floorReward : 0;
             int woodGain = Mathf.Max(1, Mathf.RoundToInt(woodReward * cleared * factor));
             int ironGain = Mathf.Max(1, Mathf.RoundToInt(ironReward * cleared * factor));
+            bool bossChest = bossFloor && firstClear;
 
             if (gemGain > 0) economy?.Add(gemGain);
             economy?.AddMaterials(woodGain, ironGain);
 
-            if (bossFloor && firstClear) GrantBossChest();
-            bossFloor = false;
+            if (bossChest) GrantBossChest();
 
+            int expGain = Mathf.Max(1, expReward * cleared);
             GrantCombatExp(cleared);
 
             // Ganar sube la moral de todo el que siga en pie.
@@ -517,8 +593,21 @@ public class WaveManager : MonoBehaviour
                 ? LocalizationManager.Get("UI_FIRST_CLEAR")
                 : LocalizationManager.Get("UI_REPEAT");
 
-            Report(ExpeditionState.Won,
-                $"Piso {cleared} superado ({modo})  +{gemGain} gemas, +{woodGain} madera, +{ironGain} hierro");
+            AudioManager.Play(SfxId.Victory);
+            FloorCleared?.Invoke(new FloorRewardInfo
+            {
+                floor = cleared,
+                firstClear = firstClear,
+                bossFloor = bossChest,
+                gems = gemGain + (bossChest ? bossChestGems : 0),
+                wood = woodGain + (bossChest ? bossChestMaterials : 0),
+                iron = ironGain + (bossChest ? bossChestMaterials : 0),
+                exp = expGain
+            });
+
+            Report(ExpeditionState.Won, string.Format(
+                LocalizationManager.Get("UI_STATUS_WON"), cleared, modo, gemGain, woodGain, ironGain));
+            bossFloor = false;
             return;
         }
 
@@ -529,7 +618,9 @@ public class WaveManager : MonoBehaviour
             RecallParty();
             bossFloor = false;
             countdownTimer = 0f;
-            Report(ExpeditionState.Lost, $"Expedición fallida en el piso {currentFloor}");
+            AudioManager.Play(SfxId.Defeat);
+            Report(ExpeditionState.Lost, string.Format(
+                LocalizationManager.Get("UI_STATUS_LOST"), currentFloor));
         }
     }
 
@@ -578,6 +669,7 @@ public class WaveManager : MonoBehaviour
             if (e != null) Destroy(e.gameObject);
 
         wave.Clear();
+        currentBoss = null;
     }
 
     private void Report(ExpeditionState newState, string message)

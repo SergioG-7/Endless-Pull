@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Fenn
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: 
+  bio: "Fenn acaba de sumarse a las filas de la torre, con más ganas que experiencia. Prefiere el choque frontal: acercarse, golpear y no dejar que el rival respire."
+  bioEn: "Fenn has just joined the tower's ranks, more eager than experienced. Prefers the head-on clash: close in, strike, and give the enemy no room to breathe."
+  bioJa: "Fennは塔に加わったばかりの新兵で、経験より意気込みが先立つ。一撃また一撃と直接ぶつかり合い、どちらかが倒れるまで戦う。"
   bodySprite: {fileID: 3683762034286491040, guid: a5987cf371792c54092be48547f15109, type: 3}
   walkFrames:
   - {fileID: -536284557478516784, guid: a5987cf371792c54092be48547f15109, type: 3}

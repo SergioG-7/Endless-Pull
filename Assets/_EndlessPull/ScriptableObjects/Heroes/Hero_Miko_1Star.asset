@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Miko
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: 
+  bio: "Miko acaba de sumarse a las filas de la torre, con más ganas que experiencia. No retrocede ni un paso: es el muro que protege a toda la escuadra."
+  bioEn: "Miko has just joined the tower's ranks, more eager than experienced. Holds the front line and soaks up the hits the rest of the squad could not survive."
+  bioJa: "Mikoは塔に加わったばかりの新兵で、経験より意気込みが先立つ。一歩も引かず、部隊全体を守る盾となる。"
   bodySprite: {fileID: 3784304678136605315, guid: 7f0a9beded1079d42babd0b380a13382, type: 3}
   walkFrames:
   - {fileID: -5258788679262437922, guid: 7f0a9beded1079d42babd0b380a13382, type: 3}

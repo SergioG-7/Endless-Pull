@@ -14,6 +14,9 @@ public class TowerPanelUI : MonoBehaviour
     [Tooltip("Escuadra de la que salen los intentos de torre.")]
     [SerializeField] private PartyManager party;
 
+    [Tooltip("Modal de escuadra: confirma quién sube antes de arrancar el piso.")]
+    [SerializeField] private SquadManagementUI squadUI;
+
     [Tooltip("Alto de cada fila de piso, en píxeles de UI.")]
     [SerializeField] private float rowHeight = 64f;
 
@@ -35,6 +38,7 @@ public class TowerPanelUI : MonoBehaviour
         if (canvas == null) canvas = UnityEngine.Object.FindFirstObjectByType<Canvas>();
         if (waves == null) waves = UnityEngine.Object.FindFirstObjectByType<WaveManager>();
         if (party == null) party = UnityEngine.Object.FindFirstObjectByType<PartyManager>();
+        if (squadUI == null) squadUI = UnityEngine.Object.FindFirstObjectByType<SquadManagementUI>();
 
         Build();
     }
@@ -71,7 +75,6 @@ public class TowerPanelUI : MonoBehaviour
             Destroy(content.GetChild(i).gameObject);
 
         title.text = LocalizationManager.Get("UI_TOWER");
-        // La torre ya no gasta intentos diarios: lo que manda es la escuadra que sube.
         info.text = LocalizationManager.Get("UI_TOWER_SQUAD") + ": "
                   + (party != null ? party.Party.Count + "/" + party.MaxPartySize : "-");
 
@@ -122,15 +125,30 @@ public class TowerPanelUI : MonoBehaviour
         int chosen = floor;
         var button = go.GetComponent<Button>();
         button.targetGraphic = image;
+        button.onClick.AddListener(() => AudioManager.Play(SfxId.UiClick));
         button.onClick.AddListener(() => OnFloorPressed(chosen));
+        ButtonPressFeedback.Attach(go);
     }
 
-    // Elegir piso y salir en la misma pulsación: el panel se cierra para dejar ver el combate.
+    // Elegir piso abre la confirmación de escuadra; el combate solo arranca si el jugador confirma.
     private void OnFloorPressed(int floor)
     {
         if (waves == null || !waves.SelectFloor(floor)) return;
 
         Close();
+
+        if (squadUI != null)
+        {
+            squadUI.OpenForConfirm(true, StartConfirmedFloor);
+            return;
+        }
+
+        // Sin modal de escuadra en escena, se mantiene el arranque directo de antes.
+        StartConfirmedFloor();
+    }
+
+    private void StartConfirmedFloor()
+    {
         UIManager.CloseEverything();
         waves.StartFloorExpedition();
     }
@@ -215,7 +233,9 @@ public class TowerPanelUI : MonoBehaviour
 
         var closeButton = close.GetComponent<Button>();
         closeButton.targetGraphic = close.GetComponent<Image>();
+        closeButton.onClick.AddListener(() => AudioManager.Play(SfxId.UiClick));
         closeButton.onClick.AddListener(Close);
+        ButtonPressFeedback.Attach(close);
     }
 
     private static TMP_Text NewLabel(Transform parent, string name, float size)

@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Darian
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: 
+  bio: "Darian carga con más batallas de las que se pueden contar con los dedos de una mano. Prefiere el choque frontal: acercarse, golpear y no dejar que el rival respire."
+  bioEn: "Darian carries more battles than can be counted on one hand. Prefers the head-on clash: close in, strike, and give the enemy no room to breathe."
+  bioJa: "Darianは数えきれないほどの戦いを重ねてきた古参兵だ。迷わず接近戦を挑み、常に敵の弱点を探る。"
   bodySprite: {fileID: -8449178597520688327, guid: 39f80dde0e17d6940b5499c6f2828288, type: 3}
   walkFrames:
   - {fileID: 3962814023620503394, guid: 39f80dde0e17d6940b5499c6f2828288, type: 3}

@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Thorne
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: 
+  bio: "Thorne ha superado ya varios combates y empieza a ganarse un nombre en la torre. Se planta en primera línea y absorbe los golpes que el resto no podría soportar."
+  bioEn: "Thorne has already come through several fights and is starting to make a name in the tower. Holds the front line and soaks up the hits the rest of the squad could not survive."
+  bioJa: "Thorneはすでにいくつもの戦いをくぐり抜け、塔の中で名を上げ始めている。前線を支え、仲間が背後から攻撃できるようにする。"
   bodySprite: {fileID: -962366301516999236, guid: 91dc51a73f82d28488bc24b872dd67ba, type: 3}
   walkFrames:
   - {fileID: 2579939159561201561, guid: 91dc51a73f82d28488bc24b872dd67ba, type: 3}

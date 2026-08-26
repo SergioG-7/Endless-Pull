@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Karon
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: 
+  bio: "Karon ha superado ya varios combates y empieza a ganarse un nombre en la torre. Entra en combate directo, golpe tras golpe, hasta que uno de los dos cae."
+  bioEn: "Karon has already come through several fights and is starting to make a name in the tower. Prefers the head-on clash: close in, strike, and give the enemy no room to breathe."
+  bioJa: "Karonはすでにいくつもの戦いをくぐり抜け、塔の中で名を上げ始めている。一撃また一撃と直接ぶつかり合い、どちらかが倒れるまで戦う。"
   bodySprite: {fileID: -2627375359352995852, guid: 7f1a9a54f954c974c8e6b3563dc24010, type: 3}
   walkFrames:
   - {fileID: -8394334911490046115, guid: 7f1a9a54f954c974c8e6b3563dc24010, type: 3}

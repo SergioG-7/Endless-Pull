@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Kaelith
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: 
+  bio: "Kaelith carga con más batallas de las que se pueden contar con los dedos de una mano. Combate cuerpo a cuerpo sin dudar, buscando siempre el punto débil del enemigo."
+  bioEn: "Kaelith carries more battles than can be counted on one hand. Fights hand to hand without hesitation, always hunting the enemy's weak point."
+  bioJa: "Kaelithは数えきれないほどの戦いを重ねてきた古参兵だ。正面からの激突を好み、近づいて叩き、敵に息をつかせない。"
   bodySprite: {fileID: -3429057358050773073, guid: 3821e60ae24d7da4db624f9d3ffd6058, type: 3}
   walkFrames:
   - {fileID: -4899965220573197181, guid: 3821e60ae24d7da4db624f9d3ffd6058, type: 3}

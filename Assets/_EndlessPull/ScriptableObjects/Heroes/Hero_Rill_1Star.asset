@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Rill
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: 
+  bio: "Rill acaba de sumarse a las filas de la torre, con más ganas que experiencia. Golpea desde la distancia, castigando al enemigo antes de que pueda acercarse."
+  bioEn: "Rill has just joined the tower's ranks, more eager than experienced. Keeps their distance and fires with precision while others hold the line."
+  bioJa: "Rillは塔に加わったばかりの新兵で、経験より意気込みが先立つ。遠くから傷を負わせることを好み、攻撃の瞬間を見極める。"
   bodySprite: {fileID: -2636015974470744541, guid: 3154a616b1ab7e64db017a39791f9aa0, type: 3}
   walkFrames:
   - {fileID: -7773754502311432807, guid: 3154a616b1ab7e64db017a39791f9aa0, type: 3}

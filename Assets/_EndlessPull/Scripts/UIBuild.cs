@@ -81,6 +81,9 @@ public static class UIBuild
         // El clic suena antes de hacer nada; asi tambien suenan los botones sin accion.
         button.onClick.AddListener(() => AudioManager.Play(SfxId.UiClick));
         if (onClick != null) button.onClick.AddListener(onClick);
+
+        // Micro-escala al pulsar: feedback táctil consistente en todos los botones construidos aquí.
+        ButtonPressFeedback.Attach(go);
         return button;
     }
 

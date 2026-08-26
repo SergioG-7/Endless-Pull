@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Astraea
   title: Saeta del Alba
   origin: Torre de Marfil
-  bio: 
+  bio: "Pocos en la torre no han oído hablar de Astraea, cuyas hazañas ya son leyenda. Mantiene las distancias y dispara con precisión mientras otros cubren el frente."
+  bioEn: "Few in the tower haven't heard of Astraea, whose feats are already legend. Prefers to wound from afar, choosing the exact moment to strike."
+  bioJa: "塔の中でAstraeaの名を知らぬ者は少なく、その武勲はすでに伝説となっている。距離を保ちながら、味方が前線を支える間に正確に狙い撃つ。"
   bodySprite: {fileID: -1889733937686977549, guid: 6f22caf9a772b294c92d02cea6f7b3dd, type: 3}
   walkFrames:
   - {fileID: -6323454350601256274, guid: 6f22caf9a772b294c92d02cea6f7b3dd, type: 3}

@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Jinx
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: 
+  bio: "Jinx acaba de sumarse a las filas de la torre, con más ganas que experiencia. Prefiere el choque frontal: acercarse, golpear y no dejar que el rival respire."
+  bioEn: "Jinx has just joined the tower's ranks, more eager than experienced. Prefers the head-on clash: close in, strike, and give the enemy no room to breathe."
+  bioJa: "Jinxは塔に加わったばかりの新兵で、経験より意気込みが先立つ。正面からの激突を好み、近づいて叩き、敵に息をつかせない。"
   bodySprite: {fileID: -5047079090910889395, guid: 4445c73d3914cd647b2d5f4e89da0724, type: 3}
   walkFrames:
   - {fileID: 5302614008490479814, guid: 4445c73d3914cd647b2d5f4e89da0724, type: 3}

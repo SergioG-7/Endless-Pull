@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Seraphina
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: 
+  bio: "El nombre de Seraphina circula entre las tropas como sinónimo de victoria. Entra en combate directo, golpe tras golpe, hasta que uno de los dos cae."
+  bioEn: "Seraphina's name circulates among the troops as a byword for victory. Fights hand to hand without hesitation, always hunting the enemy's weak point."
+  bioJa: "Seraphinaの名は勝利の代名詞として兵士たちの間で語られている。迷わず接近戦を挑み、常に敵の弱点を探る。"
   bodySprite: {fileID: -1105421486738788266, guid: b02a707218237a0438fb4cfb20563fcc, type: 3}
   walkFrames:
   - {fileID: -6432311967426725011, guid: b02a707218237a0438fb4cfb20563fcc, type: 3}

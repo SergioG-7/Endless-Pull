@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Rask
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: 
+  bio: "Rask ha superado ya varios combates y empieza a ganarse un nombre en la torre. Se planta en primera línea y absorbe los golpes que el resto no podría soportar."
+  bioEn: "Rask has already come through several fights and is starting to make a name in the tower. Never gives an inch: the wall that shields the whole squad."
+  bioJa: "Raskはすでにいくつもの戦いをくぐり抜け、塔の中で名を上げ始めている。前線に立ち、他の誰も耐えられない攻撃を一身に受け止める。"
   bodySprite: {fileID: 8184598351940752428, guid: b7a6700dee995c44b92aff933a84ee4a, type: 3}
   walkFrames:
   - {fileID: 6104764443293610261, guid: b7a6700dee995c44b92aff933a84ee4a, type: 3}

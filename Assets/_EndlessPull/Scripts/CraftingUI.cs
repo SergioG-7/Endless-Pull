@@ -109,12 +109,14 @@ public class CraftingUI : MonoBehaviour
         if (crafting == null) return;
 
         if (recipeLabel != null)
-            recipeLabel.text = $"Coste: {crafting.WoodCost} Madera + {crafting.IronCost} Hierro\n" +
-                               $"Probabilidad de éxito: {crafting.SuccessChance * 100f:0}%";
+            recipeLabel.text = string.Format(LocalizationManager.Get("UI_CRAFT_COST"),
+                crafting.WoodCost, crafting.IronCost, crafting.SuccessChance * 100f);
 
         if (stonesLabel != null)
-            stonesLabel.text = $"Piedras de Ascensión: {crafting.AscensionStones}" +
-                               (economy != null ? $"     Madera {economy.Wood} | Hierro {economy.Iron}" : string.Empty);
+            stonesLabel.text = string.Format(LocalizationManager.Get("UI_CRAFT_STONES"), crafting.AscensionStones) +
+                               (economy != null
+                                   ? string.Format(LocalizationManager.Get("UI_CRAFT_STORAGE"), economy.Wood, economy.Iron)
+                                   : string.Empty);
 
         if (craftButton != null) craftButton.interactable = crafting.CanAttemptCraft;
     }

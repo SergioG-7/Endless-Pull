@@ -83,18 +83,20 @@ public class BuildingInspectUI : MonoBehaviour
     {
         if (building == null) return;
 
-        titulo.text = $"{building.BuildingName}   ·   Nv. {building.Level}";
-        ocupacion.text = $"Ocupación: {building.CurrentOccupants}/{building.Capacity} " +
-                         $"({BuildingTypes.DisplayName(building.Type)})   ·   " +
-                         $"Torre: piso {BaseBuilding.TowerFloor}";
-        produccion.text = "Por tick: " + BeneficioPorTick();
+        titulo.text = string.Format(LocalizationManager.Get("UI_BUILDING_TITLE"),
+            building.BuildingName, building.Level);
+        ocupacion.text = string.Format(LocalizationManager.Get("UI_OCCUPANCY"),
+            building.CurrentOccupants, building.Capacity,
+            BuildingTypes.DisplayName(building.Type), BaseBuilding.TowerFloor);
+        produccion.text = string.Format(LocalizationManager.Get("UI_PER_TICK"), BeneficioPorTick());
 
         bool puede = economy != null && economy.CanAffordMaterials(building.NextWoodCost, building.NextIronCost);
         botonMejora.interactable = puede;
         botonMejora.targetGraphic.color = puede
             ? new Color(0.30f, 0.52f, 0.32f)
             : new Color(0.28f, 0.28f, 0.32f);
-        etiquetaMejora.text = $"Mejorar Edificio   ({building.NextWoodCost}M / {building.NextIronCost}H)";
+        etiquetaMejora.text = string.Format(LocalizationManager.Get("UI_UPGRADE_BUILDING"),
+            building.NextWoodCost, building.NextIronCost);
 
         RefreshMaintenance();
         RebuildWorkerList();

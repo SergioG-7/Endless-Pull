@@ -40,6 +40,14 @@ public class SquadManagementUI : MonoBehaviour
 
     private float refreshTimer;
 
+    // Modo confirmación: se abre desde Torre/Expediciones para revisar la escuadra antes de salir.
+    // En este modo aparece un botón extra que dispara la acción real (empezar piso o expedición).
+    private bool confirmMode;
+    private bool confirmForTower;
+    private System.Action pendingConfirmAction;
+    private Button confirmButton;
+    private TMP_Text confirmLabel;
+
     public bool IsOpen => panel != null && panel.activeSelf;
 
     void Awake()
@@ -91,9 +99,45 @@ public class SquadManagementUI : MonoBehaviour
     {
         if (panel == null) return;
 
+        confirmMode = false;
+        pendingConfirmAction = null;
+
         refreshTimer = refreshInterval;
         Rebuild();
         UIManager.OpenExclusive(panel);
+    }
+
+    // Lo llaman Torre/Expediciones antes de arrancar: el jugador revisa y confirma la escuadra
+    // correspondiente, o cierra el modal sin más si solo quería ajustar algo.
+    public void OpenForConfirm(bool forTower, System.Action onConfirm)
+    {
+        if (panel == null) return;
+
+        confirmMode = true;
+        confirmForTower = forTower;
+        pendingConfirmAction = onConfirm;
+
+        refreshTimer = refreshInterval;
+        Rebuild();
+        UIManager.OpenExclusive(panel);
+    }
+
+    private void OnConfirmPressed()
+    {
+        if (party == null) return;
+
+        int count = confirmForTower ? party.Party.Count : party.ExpeditionSquad.Count;
+        if (count <= 0)
+        {
+            aviso.text = LocalizationManager.Get("UI_CONFIRM_NEED_HEROES");
+            return;
+        }
+
+        var accion = pendingConfirmAction;
+        confirmMode = false;
+        pendingConfirmAction = null;
+        Close();
+        accion?.Invoke();
     }
 
     public void Close()
@@ -154,15 +198,22 @@ public class SquadManagementUI : MonoBehaviour
         titulo.text = LocalizationManager.Get("UI_SQUADS");
         etiquetaCerrar.text = LocalizationManager.Get("UI_CLOSE");
 
+        confirmButton.gameObject.SetActive(confirmMode);
+        if (confirmMode)
+        {
+            confirmLabel.text = LocalizationManager.Get(
+                confirmForTower ? "UI_CONFIRM_ENTER_TOWER" : "UI_CONFIRM_SEND_GATHER");
+            int count = party == null ? 0 : (confirmForTower ? party.Party.Count : party.ExpeditionSquad.Count);
+            confirmButton.interactable = count > 0;
+        }
+
         bool recolectando = expeditions != null && expeditions.IsRunning;
 
         contadores.text = party == null ? string.Empty
             : $"<color={UITheme.Tag(UITheme.Amber)}>{LocalizationManager.Get("UI_TOWER_SQUAD")}</color> " +
               $"<b>{party.Party.Count}/{party.MaxPartySize}</b>    " +
               $"<color={UITheme.Tag(UITheme.Cyan)}>{LocalizationManager.Get("UI_GATHER_SQUAD")}</color> " +
-              $"<b>{party.ExpeditionSquad.Count}/{party.MaxExpeditionSize}</b>    " +
-              $"<color={UITheme.Tag(UITheme.TextMuted)}>{LocalizationManager.Get("UI_ATTEMPTS")}</color> " +
-              $"<b>{party.Energy}/{party.MaxEnergy}</b>";
+              $"<b>{party.ExpeditionSquad.Count}/{party.MaxExpeditionSize}</b>";
 
         if (recolectando && string.IsNullOrEmpty(aviso.text))
             aviso.text = string.Format(LocalizationManager.Get("UI_GATHERING_NOW"),
@@ -375,7 +426,13 @@ public class SquadManagementUI : MonoBehaviour
         vacio.color = UITheme.TextMuted;
 
         var cerrar = UIBuild.Button(panel.transform, "Btn_CloseSquads", string.Empty,
-            Color.clear, new Vector2(260f, 46f), new Vector2(0f, -(size.y - 62f)), Close);
+            Color.clear, new Vector2(260f, 46f), new Vector2(-150f, -(size.y - 62f)), Close);
         etiquetaCerrar = cerrar.GetComponentInChildren<TMP_Text>();
+
+        // Solo se ve en modo confirmación (abierto desde Torre/Expediciones antes de salir).
+        confirmButton = UIBuild.Button(panel.transform, "Btn_ConfirmSquad", string.Empty,
+            UITheme.AccentPick, new Vector2(340f, 46f), new Vector2(220f, -(size.y - 62f)), OnConfirmPressed);
+        confirmLabel = confirmButton.GetComponentInChildren<TMP_Text>();
+        confirmButton.gameObject.SetActive(false);
     }
 }

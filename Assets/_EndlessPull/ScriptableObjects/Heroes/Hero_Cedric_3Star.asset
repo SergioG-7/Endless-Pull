@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Cedric
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: 
+  bio: "Cedric carga con más batallas de las que se pueden contar con los dedos de una mano. Aguanta el frente de batalla mientras sus compañeros golpean desde atrás."
+  bioEn: "Cedric carries more battles than can be counted on one hand. Holds the battle line while allies strike from behind."
+  bioJa: "Cedricは数えきれないほどの戦いを重ねてきた古参兵だ。前線を支え、仲間が背後から攻撃できるようにする。"
   bodySprite: {fileID: 4239610823210194468, guid: b365e2b55be3d2b479af04e203b92f41, type: 3}
   walkFrames:
   - {fileID: -5140935178603436132, guid: b365e2b55be3d2b479af04e203b92f41, type: 3}

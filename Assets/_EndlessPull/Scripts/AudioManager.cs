@@ -10,10 +10,12 @@ public enum SfxId
     CardReveal,
     MeleeHit,
     ArrowShot,
+    MagicBolt,
     DecreeHeal,
     DecreeRegroup,
     Impact,
-    Defeat
+    Defeat,
+    Victory
 }
 
 public enum AudioChannel
@@ -239,6 +241,12 @@ public class AudioManager : MonoBehaviour
                 break;
             case SfxId.ArrowShot:
                 duracion = 0.16f; desde = 1500f; hasta = 500f; ruido = 0.35f; decaimiento = 22f; cuadrada = false;
+                break;
+            case SfxId.MagicBolt:
+                duracion = 0.22f; desde = 700f; hasta = 1900f; ruido = 0.10f; decaimiento = 9f; cuadrada = false;
+                break;
+            case SfxId.Victory:
+                duracion = 0.7f; desde = 500f; hasta = 1300f; ruido = 0f; decaimiento = 3f; cuadrada = false;
                 break;
             case SfxId.DecreeHeal:
                 duracion = 0.45f; desde = 520f; hasta = 1040f; ruido = 0f; decaimiento = 5f; cuadrada = false;

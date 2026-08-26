@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Xander
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: 
+  bio: "Xander carga con más batallas de las que se pueden contar con los dedos de una mano. Se planta en primera línea y absorbe los golpes que el resto no podría soportar."
+  bioEn: "Xander carries more battles than can be counted on one hand. Holds the battle line while allies strike from behind."
+  bioJa: "Xanderは数えきれないほどの戦いを重ねてきた古参兵だ。一歩も引かず、部隊全体を守る盾となる。"
   bodySprite: {fileID: -3148421101356277040, guid: acf0fa9072c765c46a6b534d85d36556, type: 3}
   walkFrames:
   - {fileID: -5562162028762126420, guid: acf0fa9072c765c46a6b534d85d36556, type: 3}

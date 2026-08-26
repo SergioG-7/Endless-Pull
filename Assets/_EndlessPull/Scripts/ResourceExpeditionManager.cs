@@ -11,29 +11,33 @@ public enum ResourceExpeditionType
 // Expediciones de granjeo: la escuadra se va un rato y vuelve con material, sin combate.
 public class ResourceExpeditionManager : MonoBehaviour
 {
-    [Tooltip("Segundos que dura una expedición de recursos.")]
-    [SerializeField] private float durationSeconds = 20f;
+    [Tooltip("Segundos que dura una expedición de recursos (3-5 minutos recomendado).")]
+    [SerializeField] private float durationSeconds = 240f;
 
     [Tooltip("Recurso base que trae la expedición, por héroe enviado.")]
     [SerializeField] private int rewardPerHero = 15;
 
-    [Tooltip("Intentos diarios que consume salir a recolectar.")]
-    [SerializeField] private int energyCost = 1;
-
     [Tooltip("Economía a la que se abona la cosecha.")]
     [SerializeField] private EconomyManager economy;
 
-    [Tooltip("Gestor del que sale la escuadra de recolección y los intentos diarios.")]
+    [Tooltip("Gestor del que sale la escuadra de recolección.")]
     [SerializeField] private PartyManager party;
 
     private ResourceExpeditionType currentType;
     private float remaining;
     private int heroesSent;
 
-    public bool IsRunning => remaining > 0f;
+    // El temporizador puede llegar a cero antes de que el jugador reclame: los héroes
+    // siguen bloqueados hasta el reclamo explícito, no se cobra sola la recompensa.
+    private bool readyToClaim;
+
+    // Ocupa el "slot" de expedición tanto contando atrás como esperando reclamo.
+    public bool IsRunning => remaining > 0f || readyToClaim;
+    public bool ReadyToClaim => readyToClaim;
     public float Remaining => Mathf.Max(0f, remaining);
     public float Duration => durationSeconds;
     public ResourceExpeditionType CurrentType => currentType;
+    public int HeroesSent => heroesSent;
 
     // Se dispara con el mensaje de estado para que la UI lo muestre.
     public event System.Action<string> ExpeditionChanged;
@@ -46,22 +50,23 @@ public class ResourceExpeditionManager : MonoBehaviour
 
     void Update()
     {
-        if (!IsRunning) return;
+        if (remaining <= 0f) return;
 
         remaining -= Time.deltaTime;
         if (remaining > 0f) return;
 
         remaining = 0f;
-        Collect();
+        readyToClaim = true;
+        Report(string.Format(LocalizationManager.Get("UI_EXPEDITION_READY"), DisplayName(currentType)));
     }
 
     public static string DisplayName(ResourceExpeditionType type)
     {
         switch (type)
         {
-            case ResourceExpeditionType.Forest: return "Bosque";
-            case ResourceExpeditionType.Mine: return "Mina";
-            case ResourceExpeditionType.Hunt: return "Cacería";
+            case ResourceExpeditionType.Forest: return LocalizationManager.Get("UI_FOREST");
+            case ResourceExpeditionType.Mine: return LocalizationManager.Get("UI_MINE");
+            case ResourceExpeditionType.Hunt: return LocalizationManager.Get("UI_HUNT");
         }
         return type.ToString();
     }
@@ -70,50 +75,46 @@ public class ResourceExpeditionManager : MonoBehaviour
     {
         switch (type)
         {
-            case ResourceExpeditionType.Forest: return "Madera";
-            case ResourceExpeditionType.Mine: return "Hierro";
-            case ResourceExpeditionType.Hunt: return "Comida";
+            case ResourceExpeditionType.Forest: return LocalizationManager.Get("UI_WOOD");
+            case ResourceExpeditionType.Mine: return LocalizationManager.Get("UI_IRON");
+            case ResourceExpeditionType.Hunt: return LocalizationManager.Get("UI_FOOD");
         }
-        return "recursos";
+        return LocalizationManager.Get("UI_GEMS");
     }
 
-    public int EnergyCost => energyCost;
-
-    public bool CanStart => !IsRunning
-        && party != null && party.ExpeditionSquad.Count > 0
-        && party.Energy >= energyCost;
+    // Ya no consume intentos: solo hace falta escuadra libre y ningún slot ocupado.
+    public bool CanStart => !IsRunning && party != null && party.ExpeditionSquad.Count > 0;
 
     public bool StartExpedition(ResourceExpeditionType type)
     {
         if (IsRunning)
         {
-            Report($"La escuadra ya está en {DisplayName(currentType)}.");
+            Report(string.Format(LocalizationManager.Get("UI_EXPEDITION_BUSY"), DisplayName(currentType)));
             return false;
         }
 
         if (party == null || party.ExpeditionSquad.Count == 0)
         {
-            Report("Asigna héroes a la escuadra de recolección antes de salir.");
-            return false;
-        }
-
-        if (party.Energy < energyCost || !party.TryConsumeEnergy())
-        {
-            Report($"Hacen falta {energyCost} intento(s) diario(s) para salir.");
+            Report(LocalizationManager.Get("UI_STATUS_ASSIGN_HEROES"));
             return false;
         }
 
         currentType = type;
         heroesSent = party.ExpeditionSquad.Count;
         remaining = durationSeconds;
+        readyToClaim = false;
 
-        Report($"Escuadra de {heroesSent} enviada a {DisplayName(type)} ({durationSeconds:0}s).");
+        Report(string.Format(LocalizationManager.Get("UI_EXPEDITION_SENT"),
+            heroesSent, DisplayName(type), durationSeconds));
         return true;
     }
 
-    // La cosecha escala con cuánta gente fue, no con cuánto se tardó.
-    private void Collect()
+    // La cosecha escala con cuánta gente fue, no con cuánto se tardó. Llamado a mano por la UI:
+    // el temporizador en cero solo avisa, no cobra sola.
+    public bool ClaimReward()
     {
+        if (!readyToClaim) return false;
+
         int amount = rewardPerHero * Mathf.Max(1, heroesSent);
 
         switch (currentType)
@@ -123,13 +124,32 @@ public class ResourceExpeditionManager : MonoBehaviour
             case ResourceExpeditionType.Hunt: economy.AddFood(amount); break;
         }
 
-        Report($"Vuelta de {DisplayName(currentType)}: +{amount} {RewardName(currentType)}.");
+        Report(string.Format(LocalizationManager.Get("UI_EXPEDITION_CLAIMED"),
+            DisplayName(currentType), amount, RewardName(currentType)));
+
+        readyToClaim = false;
+        heroesSent = 0;
+
+        // Al reclamar, la escuadra de recolección queda libre de golpe: no hace falta
+        // que el jugador la desmarque a mano héroe por héroe.
+        if (party != null) party.ClearExpedition();
+
         SaveManager.RequestSave();
+        return true;
     }
 
     private void Report(string message)
     {
         Debug.Log($"[Recolección] {message}", this);
         ExpeditionChanged?.Invoke(message);
+    }
+
+    // La usa el SaveManager: recupera el temporizador exactamente donde se dejó.
+    public void LoadState(int type, float savedRemaining, int savedHeroesSent, bool savedReadyToClaim)
+    {
+        currentType = (ResourceExpeditionType)type;
+        remaining = Mathf.Max(0f, savedRemaining);
+        heroesSent = Mathf.Max(0, savedHeroesSent);
+        readyToClaim = savedReadyToClaim;
     }
 }

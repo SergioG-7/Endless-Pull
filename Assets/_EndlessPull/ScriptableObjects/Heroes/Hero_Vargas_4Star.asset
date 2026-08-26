@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Vargas
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: 
+  bio: "El nombre de Vargas circula entre las tropas como sinónimo de victoria. No retrocede ni un paso: es el muro que protege a toda la escuadra."
+  bioEn: "Vargas's name circulates among the troops as a byword for victory. Never gives an inch: the wall that shields the whole squad."
+  bioJa: "Vargasの名は勝利の代名詞として兵士たちの間で語られている。前線に立ち、他の誰も耐えられない攻撃を一身に受け止める。"
   bodySprite: {fileID: 7904752373497160689, guid: 2ae881761ddeb42428b400eeb8237fa3, type: 3}
   walkFrames:
   - {fileID: -6040229978690606124, guid: 2ae881761ddeb42428b400eeb8237fa3, type: 3}

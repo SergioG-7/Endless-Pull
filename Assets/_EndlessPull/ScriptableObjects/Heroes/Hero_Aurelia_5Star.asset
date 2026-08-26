@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Aurelia
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: 
+  bio: "Pocos en la torre no han oído hablar de Aurelia, cuyas hazañas ya son leyenda. No retrocede ni un paso: es el muro que protege a toda la escuadra."
+  bioEn: "Few in the tower haven't heard of Aurelia, whose feats are already legend. Holds the battle line while allies strike from behind."
+  bioJa: "塔の中でAureliaの名を知らぬ者は少なく、その武勲はすでに伝説となっている。一歩も引かず、部隊全体を守る盾となる。"
   bodySprite: {fileID: 6464256375535466415, guid: 0fb828b740088e2489a365ac7e7155ea, type: 3}
   walkFrames:
   - {fileID: 243849454842238905, guid: 0fb828b740088e2489a365ac7e7155ea, type: 3}

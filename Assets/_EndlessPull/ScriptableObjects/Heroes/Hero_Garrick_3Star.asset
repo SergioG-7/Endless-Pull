@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Garrick
   title: Sargento de Brecha
   origin: Ciudad Baja
-  bio: 
+  bio: "Garrick carga con más batallas de las que se pueden contar con los dedos de una mano. Se planta en primera línea y absorbe los golpes que el resto no podría soportar."
+  bioEn: "Garrick carries more battles than can be counted on one hand. Never gives an inch: the wall that shields the whole squad."
+  bioJa: "Garrickは数えきれないほどの戦いを重ねてきた古参兵だ。前線に立ち、他の誰も耐えられない攻撃を一身に受け止める。"
   bodySprite: {fileID: 6653841963207370318, guid: 707a2fbc04094d5468eabac524b0afbf, type: 3}
   walkFrames:
   - {fileID: -6787367573396235645, guid: 707a2fbc04094d5468eabac524b0afbf, type: 3}

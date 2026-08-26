@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Vane
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: 
+  bio: "Vane acaba de sumarse a las filas de la torre, con más ganas que experiencia. Entra en combate directo, golpe tras golpe, hasta que uno de los dos cae."
+  bioEn: "Vane has just joined the tower's ranks, more eager than experienced. Prefers the head-on clash: close in, strike, and give the enemy no room to breathe."
+  bioJa: "Vaneは塔に加わったばかりの新兵で、経験より意気込みが先立つ。迷わず接近戦を挑み、常に敵の弱点を探る。"
   bodySprite: {fileID: -2693818098107673473, guid: 143ca3fcd14e88842809292bd5db108d, type: 3}
   walkFrames:
   - {fileID: -6017575933627125971, guid: 143ca3fcd14e88842809292bd5db108d, type: 3}

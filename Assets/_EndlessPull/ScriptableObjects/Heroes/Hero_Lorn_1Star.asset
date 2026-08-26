@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Lorn
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: 
+  bio: "Lorn acaba de sumarse a las filas de la torre, con más ganas que experiencia. Aguanta el frente de batalla mientras sus compañeros golpean desde atrás."
+  bioEn: "Lorn has just joined the tower's ranks, more eager than experienced. Holds the battle line while allies strike from behind."
+  bioJa: "Lornは塔に加わったばかりの新兵で、経験より意気込みが先立つ。前線に立ち、他の誰も耐えられない攻撃を一身に受け止める。"
   bodySprite: {fileID: -4684144319048947732, guid: bd5b51c808f55d74bb2f0b0ef2628b2e, type: 3}
   walkFrames:
   - {fileID: -1823533600934397242, guid: bd5b51c808f55d74bb2f0b0ef2628b2e, type: 3}

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// Escuadra de asalto: quién sube a la torre y cuántos intentos quedan.
+// Escuadra de asalto: quién sube a la torre y quién sale a recolectar.
 public class PartyManager : MonoBehaviour
 {
     [Tooltip("Héroes que caben en la escuadra.")]
@@ -9,15 +9,6 @@ public class PartyManager : MonoBehaviour
 
     [Tooltip("Héroes que caben en la escuadra de expedición de recursos.")]
     [SerializeField] private int maxExpeditionSize = 4;
-
-    [Tooltip("Intentos diarios disponibles al empezar; solo los gastan las expediciones.")]
-    [SerializeField] private int maxEnergy = 5;
-
-    [Tooltip("Segundos que tarda en recargarse un intento.")]
-    [SerializeField] private float energyRechargeSeconds = 300f;
-
-    [Tooltip("Gemas que cuesta rellenar los intentos de torre al máximo.")]
-    [SerializeField] private int energyRefillCost = 100;
 
     [Tooltip("Puestos de la formación, del slot 1 al 4; evitan que la escuadra se apile.")]
     [SerializeField] private Vector2[] formationSlots =
@@ -28,9 +19,6 @@ public class PartyManager : MonoBehaviour
         new Vector2(1.0f, 0f)
     };
 
-    [Tooltip("Economía de la que sale el pago de las recargas.")]
-    [SerializeField] private EconomyManager economy;
-
     private readonly List<HeroController> party = new List<HeroController>();
 
     // Escuadra aparte para recolectar: subir la torre y granjear no se hacen a la vez.
@@ -40,41 +28,18 @@ public class PartyManager : MonoBehaviour
     private readonly List<string>[] presetParty = { new List<string>(), new List<string>() };
     private readonly List<string>[] presetExpedition = { new List<string>(), new List<string>() };
 
-    private int energy;
-    private float rechargeTimer;
-
     public IReadOnlyList<HeroController> Party => party;
     public IReadOnlyList<HeroController> ExpeditionSquad => expedition;
     public int MaxPartySize => maxPartySize;
     public int MaxExpeditionSize => maxExpeditionSize;
     public const int PresetCount = 2;
-    public int Energy => energy;
-    public int MaxEnergy => maxEnergy;
-    public int EnergyRefillCost => energyRefillCost;
-    public float SecondsToNextEnergy => energy >= maxEnergy ? 0f : rechargeTimer;
 
-    // Se dispara cuando cambia la escuadra o la energía.
+    // Se dispara cuando cambia la escuadra.
     public event System.Action PartyChanged;
-
-    void Awake()
-    {
-        if (economy == null) economy = UnityEngine.Object.FindFirstObjectByType<EconomyManager>();
-        energy = maxEnergy;
-        rechargeTimer = energyRechargeSeconds;
-    }
 
     void Update()
     {
         PruneParty();
-
-        if (energy >= maxEnergy) return;
-
-        rechargeTimer -= Time.deltaTime;
-        if (rechargeTimer > 0f) return;
-
-        rechargeTimer = energyRechargeSeconds;
-        energy++;
-        PartyChanged?.Invoke();
     }
 
     // Puesto que le toca al héroe según su orden en la escuadra.
@@ -167,48 +132,6 @@ public class PartyManager : MonoBehaviour
         PartyChanged?.Invoke();
     }
 
-    // Gasta un intento de torre; el WaveManager la llama antes de montar la oleada.
-    public bool TryConsumeEnergy()
-    {
-        if (energy <= 0)
-        {
-            Debug.LogWarning("[Escuadra] Sin intentos de torre. Espera la recarga o paga gemas.", this);
-            return false;
-        }
-
-        // El contador de recarga arranca al gastar el primer intento del tope.
-        if (energy == maxEnergy) rechargeTimer = energyRechargeSeconds;
-
-        energy--;
-        PartyChanged?.Invoke();
-        return true;
-    }
-
-    // Rellena los intentos hasta el tope de una vez; no compensa pagar por uno solo.
-    public bool TryRefillEnergyWithGems()
-    {
-        if (energy >= maxEnergy)
-        {
-            Debug.LogWarning("[Escuadra] Los intentos de torre ya están al máximo.", this);
-            return false;
-        }
-
-        if (economy == null || !economy.TrySpend(energyRefillCost))
-        {
-            int saldo = economy != null ? economy.Gems : 0;
-            Debug.LogWarning($"[Escuadra] Recarga bloqueada: cuesta {energyRefillCost} y hay {saldo} gemas.", this);
-            return false;
-        }
-
-        energy = maxEnergy;
-        rechargeTimer = energyRechargeSeconds;
-        PartyChanged?.Invoke();
-
-        Debug.Log($"[Escuadra] Intentos recargados a {energy}/{maxEnergy} por {energyRefillCost} gemas.", this);
-        SaveManager.RequestSave();
-        return true;
-    }
-
     // Ids de la escuadra, para guardarla sin depender del orden del array.
     public List<string> PartyInstanceIds()
     {
@@ -236,14 +159,6 @@ public class PartyManager : MonoBehaviour
             }
         }
 
-        PartyChanged?.Invoke();
-    }
-
-    // La usa el SaveManager al cargar.
-    public void LoadEnergy(int savedEnergy)
-    {
-        energy = Mathf.Clamp(savedEnergy, 0, maxEnergy);
-        rechargeTimer = energyRechargeSeconds;
         PartyChanged?.Invoke();
     }
 

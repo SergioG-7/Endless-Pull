@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 // Estados del enemigo: espera, persigue al héroe o le golpea.
@@ -26,6 +27,21 @@ public class EnemyController : MonoBehaviour, IHealthOwner
     [Tooltip("Cada cuántos segundos vuelve a buscar héroes cercanos.")]
     [SerializeField] private float scanInterval = 0.25f;
 
+    [Tooltip("Vida a partir de la cual el enemigo se considera línea frontal (orcos/jefes) y nunca retrocede.")]
+    [SerializeField] private float tankHealthThreshold = 70f;
+
+    [Tooltip("Fracción del alcance por debajo de la cual tiradores y chamanes se retiran del héroe.")]
+    [SerializeField] private float safeDistanceFactor = 0.55f;
+
+    [Tooltip("Daño acumulado en la ventana de ráfaga, como fracción de la vida máxima, que dispara el micro-paso de recolocación.")]
+    [SerializeField] private float burstDamageThreshold = 0.12f;
+
+    [Tooltip("Segundos que dura la ventana en la que se suma el daño de ráfaga.")]
+    [SerializeField] private float burstWindowSeconds = 0.6f;
+
+    [Tooltip("Distancia del micro-paso de recolocación al encajar una ráfaga.")]
+    [SerializeField] private float repositionStep = 0.4f;
+
     [Tooltip("Enemigos que puede sujetar un mismo tanque antes de que el resto flanquee.")]
     [SerializeField] private int maxAggroPerTank = 2;
 
@@ -43,6 +59,12 @@ public class EnemyController : MonoBehaviour, IHealthOwner
 
     [Tooltip("Tinte del jefe mientras carga el golpe.")]
     [SerializeField] private Color bossWindupTint = new Color(1f, 0.25f, 0.20f);
+
+    [Tooltip("Fracción de la vida máxima en un solo golpe a partir de la cual se ve el flash blanco.")]
+    [SerializeField] private float hitFlashThreshold = 0.12f;
+
+    [Tooltip("Segundos que dura el flash blanco al recibir un golpe fuerte o una ráfaga.")]
+    [SerializeField] private float hitFlashDuration = 0.08f;
 
     // Congelado durante la cuenta atras previa al combate: ni piensa ni se mueve.
     private bool frozen;
@@ -72,6 +94,11 @@ public class EnemyController : MonoBehaviour, IHealthOwner
 
     private SpriteRenderer telegraph;
     private static Sprite sharedCircle;
+
+    // Acumula el daño reciente para detectar ráfagas y disparar el micro-paso de recolocación.
+    private float recentBurstDamage;
+    private float burstWindowTimer;
+    private Coroutine flashRoutine;
 
     public EnemyData Data => data;
     public EnemyState State => state;
@@ -122,6 +149,12 @@ public class EnemyController : MonoBehaviour, IHealthOwner
     public float AttackRange => data != null && data.attackRange > 0f ? data.attackRange : attackRange;
     public float StatMultiplier => statMultiplier;
 
+    // Tiradores y chamanes: mismo criterio que ya usaba TickAttack para elegir disparo en vez de golpe.
+    public bool IsRanged => AttackRange >= rangedThreshold;
+
+    // Orcos y jefes: línea frontal, nunca kitean aunque cambien los datos del enemigo.
+    public bool IsFrontline => isBoss || (data != null && data.maxHealth >= tankHealthThreshold);
+
     public int CurrentHealth => currentHealth;
     public int MaxHealth => data != null ? Mathf.RoundToInt(data.maxHealth * statMultiplier) : 0;
     public int Attack => data != null
@@ -134,6 +167,9 @@ public class EnemyController : MonoBehaviour, IHealthOwner
     void Awake()
     {
         animator = GetComponent<LPCAnimator>();
+        body = GetComponent<SpriteRenderer>();
+        if (body != null) baseTint = body.color;
+
         if (data != null)
         {
             currentHealth = MaxHealth;
@@ -192,6 +228,7 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         if (Status.IsStunned) return;
 
         if (tauntTimer > 0f) tauntTimer -= Time.deltaTime;
+        if (burstWindowTimer > 0f) burstWindowTimer -= Time.deltaTime;
 
         if (isBoss) TickBossSlam();
 
@@ -234,7 +271,7 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         if (body != null) body.color = bossWindupTint;
         ShowTelegraph(true);
 
-        DamageTextManager.Show(transform.position, "¡CARGANDO GOLPE!", new Color(1f, 0.3f, 0.25f));
+        DamageTextManager.Show(transform.position, "¡CARGANDO PISOTÓN!", new Color(1f, 0.3f, 0.25f));
         Debug.Log($"[Jefe] {data.enemyName} carga el golpe: {bossSlamWindup}s para reaccionar.", this);
     }
 
@@ -304,7 +341,7 @@ public class EnemyController : MonoBehaviour, IHealthOwner
 
         if (hits > 0)
         {
-            DamageTextManager.Show(transform.position, "¡GOLPE!", new Color(1f, 0.4f, 0.3f));
+            DamageTextManager.Show(transform.position, "¡PISOTÓN!", new Color(1f, 0.4f, 0.3f));
             Debug.Log($"[Jefe] {data.enemyName} sacude a {hits} héroe(s) por {damage}.", this);
         }
     }
@@ -409,11 +446,27 @@ public class EnemyController : MonoBehaviour, IHealthOwner
     {
         if (target == null) { state = EnemyState.Idle; return; }
 
+        float distance = Vector2.Distance(transform.position, target.transform.position);
+
         // Si el héroe se aleja, vuelve a perseguirlo.
-        if (Vector2.Distance(transform.position, target.transform.position) > AttackRange)
+        if (distance > AttackRange)
         {
             state = EnemyState.Approach;
             return;
+        }
+
+        // Tiradores y chamanes no dejan que el héroe se les pegue: si entra en la zona de
+        // seguridad, se retiran en vez de quedarse quietos. Orcos y jefes (línea frontal)
+        // nunca entran aquí porque IsRanged es falso para ellos.
+        if (IsRanged && !IsFrontline)
+        {
+            float safeDistance = AttackRange * safeDistanceFactor;
+            if (distance < safeDistance)
+            {
+                Vector2 alejarse = ((Vector2)transform.position - (Vector2)target.transform.position).normalized;
+                float velocidad = data.moveSpeed * Status.SpeedMultiplier;
+                transform.position = (Vector2)transform.position + alejarse * velocidad * Time.deltaTime;
+            }
         }
 
         attackTimer -= Time.deltaTime;
@@ -425,7 +478,7 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         if (AttackRange >= rangedThreshold)
         {
             Color tinte = data.magicAttack ? new Color(0.65f, 0.35f, 0.95f) : new Color(0.85f, 0.80f, 0.55f);
-            Projectile.Fire(transform.position, target, Attack, tinte, data.magicAttack);
+            Projectile.Fire(transform.position, target, Attack, tinte, data.magicAttack, magic: data.magicAttack);
             return;
         }
 
@@ -440,10 +493,17 @@ public class EnemyController : MonoBehaviour, IHealthOwner
     // El daño que ignora armadura entra entero; armorPierce recorta solo una parte de la defensa.
     public void TakeDamage(int amount, bool ignoresDefense, float armorPierce)
     {
+        // Congelado en la cuenta atrás: invulnerabilidad estricta, sin excepciones por origen del golpe.
+        if (frozen) return;
+
         int defensa = Mathf.RoundToInt(data.baseDefense * (1f - Mathf.Clamp01(armorPierce)));
         int finalDamage = ignoresDefense ? Mathf.Max(1, amount) : Mathf.Max(1, amount - defensa);
         currentHealth = Mathf.Max(0, currentHealth - finalDamage);
         HealthChanged?.Invoke(currentHealth, MaxHealth);
+        TrackBurstDamage(finalDamage);
+
+        // Golpe grande de un solo tirón: el flash blanco lo delata igual que a una ráfaga acumulada.
+        if (MaxHealth > 0 && finalDamage >= MaxHealth * hitFlashThreshold) HitFlash();
 
         DamageTextManager.ShowDamage(transform.position, finalDamage);
         AudioManager.PlayAt(SfxId.Impact, transform.position);
@@ -455,6 +515,41 @@ public class EnemyController : MonoBehaviour, IHealthOwner
             Debug.Log($"[Enemy] {data.enemyName} destruido.", this);
             Destroy(gameObject);
         }
+    }
+
+    // Ráfaga de daño en poco tiempo: el enemigo se recoloca un paso corto para no quedarse
+    // plantado bajo fuego concentrado. Se aleja del objetivo actual como aproximación de "atacante".
+    private void TrackBurstDamage(int finalDamage)
+    {
+        if (burstWindowTimer <= 0f) recentBurstDamage = 0f;
+
+        recentBurstDamage += finalDamage;
+        burstWindowTimer = burstWindowSeconds;
+
+        if (target != null && recentBurstDamage >= MaxHealth * burstDamageThreshold)
+        {
+            PushBack(target.transform.position, repositionStep);
+            HitFlash();
+            recentBurstDamage = 0f;
+            burstWindowTimer = 0f;
+        }
+    }
+
+    // Flash blanco breve; restaura el tinte que hubiera justo antes (normal o de carga del jefe).
+    private void HitFlash()
+    {
+        if (body == null) return;
+        if (flashRoutine != null) StopCoroutine(flashRoutine);
+        flashRoutine = StartCoroutine(FlashRoutine());
+    }
+
+    private IEnumerator FlashRoutine()
+    {
+        Color before = body.color;
+        body.color = Color.white;
+        yield return new WaitForSeconds(hitFlashDuration);
+        body.color = before;
+        flashRoutine = null;
     }
 
     void OnDrawGizmosSelected()

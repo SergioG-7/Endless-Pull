@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Elara
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: 
+  bio: "Elara carga con más batallas de las que se pueden contar con los dedos de una mano. Prefiere herir desde lejos, eligiendo el momento exacto para atacar."
+  bioEn: "Elara carries more battles than can be counted on one hand. Strikes from a distance, punishing the enemy before they can close in."
+  bioJa: "Elaraは数えきれないほどの戦いを重ねてきた古参兵だ。遠くから傷を負わせることを好み、攻撃の瞬間を見極める。"
   bodySprite: {fileID: 4346744599194961606, guid: da5cf68128ee0954ea00ecd1fe871b27, type: 3}
   walkFrames:
   - {fileID: 3225643570380084551, guid: da5cf68128ee0954ea00ecd1fe871b27, type: 3}

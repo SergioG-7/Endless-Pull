@@ -25,9 +25,9 @@ public class Projectile : MonoBehaviour
 
     // Disparo contra un enemigo; lo usan arqueros y magos del jugador.
     public static void Fire(Vector2 origin, EnemyController victim, int damage, Color color,
-                            bool ignoresDefense = false, HeroController shooter = null)
+                            bool ignoresDefense = false, HeroController shooter = null, bool magic = false)
     {
-        var p = Create(origin, color);
+        var p = Create(origin, color, magic);
         if (p == null) return;
 
         p.enemyVictim = victim;
@@ -39,9 +39,9 @@ public class Projectile : MonoBehaviour
 
     // Disparo contra un héroe; lo usan tiradores goblin y chamanes.
     public static void Fire(Vector2 origin, HeroController victim, int damage, Color color,
-                            bool ignoresDefense = false)
+                            bool ignoresDefense = false, bool magic = false)
     {
-        var p = Create(origin, color);
+        var p = Create(origin, color, magic);
         if (p == null) return;
 
         p.heroVictim = victim;
@@ -95,9 +95,9 @@ public class Projectile : MonoBehaviour
         Destroy(gameObject);
     }
 
-    private static Projectile Create(Vector2 origin, Color color)
+    private static Projectile Create(Vector2 origin, Color color, bool magic = false)
     {
-        AudioManager.PlayAt(SfxId.ArrowShot, origin);
+        AudioManager.PlayAt(magic ? SfxId.MagicBolt : SfxId.ArrowShot, origin);
 
         var go = new GameObject("Projectile", typeof(SpriteRenderer), typeof(Projectile));
         go.transform.position = origin;

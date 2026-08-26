@@ -14,6 +14,9 @@ public class ResourceExpeditionUI : MonoBehaviour
     [Tooltip("Escuadra de la que salen los intentos de torre.")]
     [SerializeField] private PartyManager party;
 
+    [Tooltip("Modal de escuadra: confirma quién sale antes de arrancar la expedición.")]
+    [SerializeField] private SquadManagementUI squadUI;
+
     [Tooltip("Color de un destino disponible.")]
     [SerializeField] private Color readyColor = new Color(0.25f, 0.45f, 0.35f);
 
@@ -26,6 +29,8 @@ public class ResourceExpeditionUI : MonoBehaviour
     private readonly Button[] buttons = new Button[3];
     private readonly TMP_Text[] buttonLabels = new TMP_Text[3];
     private TMP_Text closeLabel;
+    private Button claimButton;
+    private TMP_Text claimLabel;
 
     public bool IsOpen => panel != null && panel.activeSelf;
 
@@ -34,6 +39,7 @@ public class ResourceExpeditionUI : MonoBehaviour
         if (canvas == null) canvas = UnityEngine.Object.FindFirstObjectByType<Canvas>();
         if (expeditions == null) expeditions = UnityEngine.Object.FindFirstObjectByType<ResourceExpeditionManager>();
         if (party == null) party = UnityEngine.Object.FindFirstObjectByType<PartyManager>();
+        if (squadUI == null) squadUI = UnityEngine.Object.FindFirstObjectByType<SquadManagementUI>();
 
         Build();
     }
@@ -72,7 +78,23 @@ public class ResourceExpeditionUI : MonoBehaviour
     {
         if (expeditions == null) return;
 
+        if (squadUI != null)
+        {
+            Close();
+            squadUI.OpenForConfirm(false, () => expeditions.StartExpedition(type));
+            return;
+        }
+
+        // Sin modal de escuadra en escena, se mantiene el arranque directo de antes.
         expeditions.StartExpedition(type);
+        Refresh();
+    }
+
+    private void OnClaimPressed()
+    {
+        if (expeditions == null) return;
+
+        expeditions.ClaimReward();
         Refresh();
     }
 
@@ -80,19 +102,28 @@ public class ResourceExpeditionUI : MonoBehaviour
     {
         title.text = LocalizationManager.Get("UI_EXPEDITIONS");
         closeLabel.text = LocalizationManager.Get("UI_CLOSE");
+        claimLabel.text = LocalizationManager.Get("UI_CLAIM_REWARD");
 
         bool running = expeditions != null && expeditions.IsRunning;
+        bool ready = expeditions != null && expeditions.ReadyToClaim;
         bool canStart = expeditions != null && expeditions.CanStart;
 
-        status.text = running
-            ? DestinationName(expeditions.CurrentType) + "   " + expeditions.Remaining.ToString("0.0") + "s"
-            : LocalizationManager.Get("UI_ATTEMPTS") + ": "
-              + (party != null ? party.Energy + "/" + party.MaxEnergy : "-");
+        status.text = ready
+            ? string.Format(LocalizationManager.Get("UI_EXPEDITION_READY"), DestinationName(expeditions.CurrentType))
+            : running
+                ? DestinationName(expeditions.CurrentType) + "   " + expeditions.Remaining.ToString("0") + "s"
+                : party != null
+                    ? LocalizationManager.Get("UI_GATHER_SQUAD") + ": " + party.ExpeditionSquad.Count + "/" + party.MaxExpeditionSize
+                    : string.Empty;
+
+        // Con recompensa lista, el hueco de destinos se convierte en el botón de reclamo.
+        claimButton.gameObject.SetActive(ready);
 
         for (int i = 0; i < buttons.Length; i++)
         {
             var type = (ResourceExpeditionType)i;
             buttonLabels[i].text = DestinationName(type) + "   ->   " + RewardName(type);
+            buttons[i].gameObject.SetActive(!ready);
             buttons[i].interactable = canStart;
             buttons[i].targetGraphic.color = canStart ? readyColor : busyColor;
         }
@@ -165,11 +196,36 @@ public class ResourceExpeditionUI : MonoBehaviour
 
             var button = go.GetComponent<Button>();
             button.targetGraphic = go.GetComponent<Image>();
+            button.onClick.AddListener(() => AudioManager.Play(SfxId.UiClick));
             button.onClick.AddListener(() => OnDestinationPressed(type));
+            ButtonPressFeedback.Attach(go);
 
             buttons[i] = button;
             buttonLabels[i] = label;
         }
+
+        var claim = new GameObject("Btn_ClaimExpedition", typeof(RectTransform), typeof(Image), typeof(Button));
+        claim.transform.SetParent(panel.transform, false);
+        var clrt = claim.GetComponent<RectTransform>();
+        clrt.anchorMin = new Vector2(0.5f, 1f);
+        clrt.anchorMax = new Vector2(0.5f, 1f);
+        clrt.pivot = new Vector2(0.5f, 1f);
+        clrt.sizeDelta = new Vector2(760f, 90f);
+        clrt.anchoredPosition = new Vector2(0f, -130f);
+        claim.GetComponent<Image>().color = new Color(0.55f, 0.42f, 0.15f);
+
+        claimLabel = NewLabel(claim.transform, "Label", 30f);
+        claimLabel.rectTransform.anchorMin = Vector2.zero;
+        claimLabel.rectTransform.anchorMax = Vector2.one;
+        claimLabel.rectTransform.offsetMin = Vector2.zero;
+        claimLabel.rectTransform.offsetMax = Vector2.zero;
+
+        claimButton = claim.GetComponent<Button>();
+        claimButton.targetGraphic = claim.GetComponent<Image>();
+        claimButton.onClick.AddListener(() => AudioManager.Play(SfxId.UiClick));
+        claimButton.onClick.AddListener(OnClaimPressed);
+        ButtonPressFeedback.Attach(claim);
+        claim.SetActive(false);
 
         var close = new GameObject("Btn_CloseExpedition", typeof(RectTransform), typeof(Image), typeof(Button));
         close.transform.SetParent(panel.transform, false);
@@ -189,7 +245,9 @@ public class ResourceExpeditionUI : MonoBehaviour
 
         var closeButton = close.GetComponent<Button>();
         closeButton.targetGraphic = close.GetComponent<Image>();
+        closeButton.onClick.AddListener(() => AudioManager.Play(SfxId.UiClick));
         closeButton.onClick.AddListener(Close);
+        ButtonPressFeedback.Attach(close);
     }
 
     private static void Place(RectTransform rt, float anchorY, Vector2 size, Vector2 position)

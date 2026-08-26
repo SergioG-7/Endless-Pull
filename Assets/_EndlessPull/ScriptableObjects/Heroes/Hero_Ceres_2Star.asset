@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Ceres
   title: Hermana de la Vigilia
   origin: Abadia de Sal
-  bio: 
+  bio: "Ceres ha superado ya varios combates y empieza a ganarse un nombre en la torre. Prefiere el choque frontal: acercarse, golpear y no dejar que el rival respire."
+  bioEn: "Ceres has already come through several fights and is starting to make a name in the tower. Closes into direct combat, blow after blow, until one side falls."
+  bioJa: "Ceresはすでにいくつもの戦いをくぐり抜け、塔の中で名を上げ始めている。正面からの激突を好み、近づいて叩き、敵に息をつかせない。"
   bodySprite: {fileID: -23705988903414339, guid: 7fd4ff17e89acfb41bcef767b848eeb8, type: 3}
   walkFrames:
   - {fileID: 2375594699956174231, guid: 7fd4ff17e89acfb41bcef767b848eeb8, type: 3}

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -30,6 +31,13 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
     [Tooltip("Alcance de ataque de arcos y báculos, que pegan sin acercarse.")]
     [SerializeField] private float rangedAttackRange = 4.5f;
+
+    [Tooltip("Fracción del alcance de rango por debajo de la cual se aleja para no dejarse alcanzar.")]
+    [Range(0.1f, 0.9f)]
+    [SerializeField] private float rangedSafeDistanceRatio = 0.55f;
+
+    [Tooltip("Distancia del micro-paso de retirada tras encajar daño o esquivar (los tanques no lo dan).")]
+    [SerializeField] private float microStepDistance = 0.4f;
 
     [Tooltip("Segundos de inactividad tras los que un héroe menor cae en apatía.")]
     [SerializeField] private float apathyAfterSeconds = 90f;
@@ -194,6 +202,9 @@ public class HeroController : MonoBehaviour, IHealthOwner
     // En el gimnasio manda el agente: la FSM propia se aparta y la muerte no destruye la unidad.
     private bool externalControl;
 
+    // Congelado durante la cuenta atrás de combate: ni FSM ni maná ni estados corren.
+    private bool frozen;
+
     // Subclase elegida al ascender; manda sobre la habilidad activa.
     private HeroSubclass subclass = HeroSubclass.None;
 
@@ -206,6 +217,14 @@ public class HeroController : MonoBehaviour, IHealthOwner
     private StatusEffectManager status;
 
     private LPCAnimator animator;
+    private SpriteRenderer body;
+    private Coroutine flashRoutine;
+
+    [Tooltip("Fracción de la vida máxima en un solo golpe a partir de la cual se ve el flash blanco.")]
+    [SerializeField] private float hitFlashThreshold = 0.12f;
+
+    [Tooltip("Segundos que dura el flash blanco al recibir un golpe fuerte.")]
+    [SerializeField] private float hitFlashDuration = 0.08f;
 
     // Puesto de trabajo fijo; el héroe vuelve solo a él en vez de vagar.
     private BaseBuilding assignedBuilding;
@@ -227,6 +246,10 @@ public class HeroController : MonoBehaviour, IHealthOwner
     // Bonus por instancia que aporta el nivel; el HeroData compartido no se toca nunca.
     private int bonusMaxHealth;
     private int bonusAttack;
+
+    // Mejora de equipo básico del Taller: plano, independiente del nivel y de la ascensión.
+    private int gearUpgradeAttack;
+    private int gearUpgradeDefense;
 
     private BaseBuilding destinationBuilding;
     private BaseBuilding currentBuilding;
@@ -250,6 +273,8 @@ public class HeroController : MonoBehaviour, IHealthOwner
     public bool IsLocked => isLocked;
 
     public bool ExternalControl { get => externalControl; set => externalControl = value; }
+    public bool IsFrozen => frozen;
+    public void SetFrozen(bool value) => frozen = value;
     public bool IsDead => currentHealth <= 0;
     public bool AttackReady => attackTimer <= 0f;
     public bool CanCastSkill => skill != null && skill.CanCast(CurrentMP);
@@ -451,7 +476,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
     public int Defense => data != null
         ? Mathf.RoundToInt((Mathf.RoundToInt(data.baseDefense * ascensionMultiplier) + EquipBonusDEF
-          + (IsInDefensiveStance ? defensiveStanceBonus : 0)) * (1f + originSynergy))
+          + gearUpgradeDefense + (IsInDefensiveStance ? defensiveStanceBonus : 0)) * (1f + originSynergy))
         : 0;
 
     // Ascensión, nivel, rasgo y equipo suman; moral y maestría multiplican.
@@ -462,7 +487,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
             if (data == null) return 0;
 
             int raw = Mathf.RoundToInt(data.baseAttack * ascensionMultiplier)
-                      + bonusAttack + HeroTraits.AttackBonus(trait) + EquipBonusATK;
+                      + bonusAttack + gearUpgradeAttack + HeroTraits.AttackBonus(trait) + EquipBonusATK;
 
             float multiplier = (IsInspired ? 1f + inspiredAttackBonus : 1f)
                                * mastery.DamageMultiplier(EquippedWeaponType)
@@ -534,6 +559,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
         if (string.IsNullOrEmpty(heroInstanceId)) heroInstanceId = System.Guid.NewGuid().ToString();
 
         animator = GetComponent<LPCAnimator>();
+        body = GetComponent<SpriteRenderer>();
         morale = startingMorale;
 
         if (data != null)
@@ -734,6 +760,23 @@ public class HeroController : MonoBehaviour, IHealthOwner
         ascensionMultiplier = savedMultiplier > 0f ? savedMultiplier : 1f;
     }
 
+    public int GearUpgradeAttack => gearUpgradeAttack;
+    public int GearUpgradeDefense => gearUpgradeDefense;
+
+    // La llama el Taller: mejora de equipo básico, plana y acumulable.
+    public void ApplyGearUpgrade(int attackFlat, int defenseFlat)
+    {
+        gearUpgradeAttack += Mathf.Max(0, attackFlat);
+        gearUpgradeDefense += Mathf.Max(0, defenseFlat);
+    }
+
+    // La usa el SaveManager al cargar.
+    public void LoadGearUpgrade(int savedAttack, int savedDefense)
+    {
+        gearUpgradeAttack = Mathf.Max(0, savedAttack);
+        gearUpgradeDefense = Mathf.Max(0, savedDefense);
+    }
+
     // La usa el SaveManager para devolverle su identidad original al cargar la partida.
     public void LoadInstanceId(string savedId)
     {
@@ -785,6 +828,9 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
     void Update()
     {
+        // La cuenta atrás previa al combate lo congela todo, igual que a los enemigos.
+        if (frozen) return;
+
         if (defensiveTimer > 0f) defensiveTimer -= Time.deltaTime;
 
         RegenerateMana();
@@ -1002,12 +1048,19 @@ public class HeroController : MonoBehaviour, IHealthOwner
     {
         if (target == null) { EnterBaseWander(); return; }
 
+        float distancia = Vector2.Distance(transform.position, target.transform.position);
+
         // Si se aleja, vuelve a perseguirlo.
-        if (Vector2.Distance(transform.position, target.transform.position) > EffectiveAttackRange)
+        if (distancia > EffectiveAttackRange)
         {
             state = HeroState.CombatApproach;
             return;
         }
+
+        // El rango no se deja alcanzar: si el objetivo entra demasiado cerca, se reposiciona
+        // mientras sigue disparando, en vez de plantarse a pegar cuerpo a cuerpo.
+        if (IsRanged && distancia < EffectiveAttackRange * rangedSafeDistanceRatio)
+            MoveAwayFrom(target.transform.position);
 
         attackTimer -= Time.deltaTime;
         if (attackTimer > 0f) return;
@@ -1023,7 +1076,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
         // De lejos el golpe viaja: se ve salir la flecha o el proyectil mágico.
         if (IsRanged) Projectile.Fire(transform.position, target, RollStrike(Attack, out _),
-                                      ProjectileColor, false, this);
+                                      ProjectileColor, false, this, magic: IsStaffRanged);
         else StrikeEnemy(target, Attack);
 
         AddMasteryPoints(masteryPerHit);
@@ -1031,10 +1084,14 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
     // Flecha clara para el arco, violeta para la magia.
     private Color ProjectileColor
-        => EquippedWeaponType == WeaponType.Staff
-           || HeroSubclasses.ArchetypeOf(subclass) == WeaponType.Staff
+        => IsStaffRanged
             ? new Color(0.70f, 0.45f, 1f)
             : new Color(1f, 0.92f, 0.60f);
+
+    // Mismo criterio que el color: el báculo (equipado o de archetipo) es lo que se oye como magia.
+    private bool IsStaffRanged
+        => EquippedWeaponType == WeaponType.Staff
+           || HeroSubclasses.ArchetypeOf(subclass) == WeaponType.Staff;
 
     // Desplegarse, entrenar o trabajar cuenta como servir; lo demás es estar de brazos cruzados.
     private void TickApathy()
@@ -1153,7 +1210,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
                 break;
 
             case HeroSubclass.Pyromancer:
-                Projectile.Fire(transform.position, victim, 0, new Color(1f, 0.55f, 0.15f));
+                Projectile.Fire(transform.position, victim, 0, new Color(1f, 0.55f, 0.15f), magic: true);
                 foreach (var e in EnemiesAround(victim.transform.position, 3.5f)) e.TakeDamage(damage, true);
                 break;
 
@@ -1167,7 +1224,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
                 // Rayo perforante: gasta todo el maná que quede y pega en proporción.
                 int extra = CurrentMP;
                 currentMP = 0f;
-                Projectile.Fire(transform.position, victim, damage + extra * 2, ProjectileColor, true);
+                Projectile.Fire(transform.position, victim, damage + extra * 2, ProjectileColor, true, magic: true);
                 break;
 
             default:
@@ -1362,11 +1419,55 @@ public class HeroController : MonoBehaviour, IHealthOwner
             EffectiveMoveSpeed * Time.deltaTime);
     }
 
+    // Igual que MoveTowards pero en la dirección contraria: mantener las distancias de rango.
+    private void MoveAwayFrom(Vector2 origin)
+    {
+        Vector2 aqui = transform.position;
+        Vector2 direccion = (aqui - origin).normalized;
+        if (direccion == Vector2.zero) direccion = UnityEngine.Random.insideUnitCircle.normalized;
+
+        transform.position = aqui + direccion * (EffectiveMoveSpeed * Time.deltaTime);
+    }
+
+    // Paso corto e instantáneo lejos del objetivo tras encajar un golpe o esquivar uno: da la
+    // sensación de que la unidad reacciona, sin convertirlo en una huida continua. Los tanques
+    // aguantan la línea a propósito y no lo dan.
+    private void TriggerMicroStep()
+    {
+        if (IsTank || target == null) return;
+
+        Vector2 aqui = transform.position;
+        Vector2 direccion = (aqui - (Vector2)target.transform.position).normalized;
+        if (direccion == Vector2.zero) direccion = UnityEngine.Random.insideUnitCircle.normalized;
+
+        transform.position = aqui + direccion * microStepDistance;
+    }
+
+    // Flash blanco breve; restaura el tinte que hubiera justo antes.
+    private void HitFlash()
+    {
+        if (body == null) return;
+        if (flashRoutine != null) StopCoroutine(flashRoutine);
+        flashRoutine = StartCoroutine(FlashRoutine());
+    }
+
+    private IEnumerator FlashRoutine()
+    {
+        Color before = body.color;
+        body.color = Color.white;
+        yield return new WaitForSeconds(hitFlashDuration);
+        body.color = before;
+        flashRoutine = null;
+    }
+
     public void TakeDamage(int amount) => TakeDamage(amount, false);
 
     // El daño mágico se salta la defensa: contra un chamán la armadura no protege.
     public void TakeDamage(int amount, bool ignoresDefense)
     {
+        // Congelado en la cuenta atrás: invulnerabilidad estricta, sin excepciones por origen del golpe.
+        if (frozen) return;
+
         // Evasión: el golpe no llega, así que no hay daño, ni fatiga, ni moral perdida.
         // La pasiva innata da el grueso y el afijo de la pieza suma encima.
         bool puedeEsquivar = HasPassive(PassiveSkill.Evasion)
@@ -1376,6 +1477,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
         {
             DamageTextManager.ShowDodge(transform.position);
             Debug.Log($"[Pasiva] {data.heroName} esquiva el golpe.", this);
+            TriggerMicroStep();
             return;
         }
 
@@ -1389,6 +1491,10 @@ public class HeroController : MonoBehaviour, IHealthOwner
         HealthChanged?.Invoke(currentHealth, MaxHealth);
 
         DamageTextManager.ShowDamage(transform.position, finalDamage);
+        TriggerMicroStep();
+
+        // Golpe fuerte o ráfaga (p.ej. el Pisotón del jefe): flash blanco breve.
+        if (MaxHealth > 0 && finalDamage >= MaxHealth * hitFlashThreshold) HitFlash();
 
         // Encajar golpes cansa; con Aguante, la mitad.
         AddFatigue(fatiguePerHitTaken * (HasPassive(PassiveSkill.PainTolerance) ? painToleranceFactor : 1f));

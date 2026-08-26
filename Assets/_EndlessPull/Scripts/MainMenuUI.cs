@@ -26,11 +26,6 @@ public class MainMenuUI : MonoBehaviour
     [Tooltip("Color del idioma seleccionado.")]
     [SerializeField] private Color selectedColor = new Color(0.70f, 0.55f, 0.20f);
 
-    private static bool showing;
-
-    // Mientras el menu manda, nadie ha elegido partida todavia: guardar pisaria el JSON de disco.
-    public static bool IsShowing => showing;
-
     private GameObject root;
     private GameObject optionsPanel;
     private Button continueButton;
@@ -70,7 +65,8 @@ public class MainMenuUI : MonoBehaviour
         root.SetActive(true);
         root.transform.SetAsLastSibling();
         optionsPanel.SetActive(false);
-        showing = true;
+        // Mientras el menu manda, nadie ha elegido partida todavia: guardar pisaria el JSON de disco.
+        SaveManager.SavingAllowed = false;
         Time.timeScale = 0f;
 
         bool hasSave = saves != null && saves.HasSave;
@@ -83,7 +79,7 @@ public class MainMenuUI : MonoBehaviour
     public void Close()
     {
         if (root != null) root.SetActive(false);
-        showing = false;
+        SaveManager.SavingAllowed = true;
         Time.timeScale = 1f;
     }
 

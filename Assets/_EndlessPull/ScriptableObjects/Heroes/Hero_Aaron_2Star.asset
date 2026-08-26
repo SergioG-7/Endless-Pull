@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Aaron
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: 
+  bio: "Aaron ha superado ya varios combates y empieza a ganarse un nombre en la torre. Combate cuerpo a cuerpo sin dudar, buscando siempre el punto débil del enemigo."
+  bioEn: "Aaron has already come through several fights and is starting to make a name in the tower. Fights hand to hand without hesitation, always hunting the enemy's weak point."
+  bioJa: "Aaronはすでにいくつもの戦いをくぐり抜け、塔の中で名を上げ始めている。迷わず接近戦を挑み、常に敵の弱点を探る。"
   bodySprite: {fileID: 5455465019858200972, guid: 9f24767f02f016b418ab5f58d4209338, type: 3}
   walkFrames:
   - {fileID: 4737852236037946580, guid: 9f24767f02f016b418ab5f58d4209338, type: 3}

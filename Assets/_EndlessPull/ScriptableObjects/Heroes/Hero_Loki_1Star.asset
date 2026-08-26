@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Loki
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: 
+  bio: "Loki acaba de sumarse a las filas de la torre, con más ganas que experiencia. Prefiere el choque frontal: acercarse, golpear y no dejar que el rival respire."
+  bioEn: "Loki has just joined the tower's ranks, more eager than experienced. Closes into direct combat, blow after blow, until one side falls."
+  bioJa: "Lokiは塔に加わったばかりの新兵で、経験より意気込みが先立つ。迷わず接近戦を挑み、常に敵の弱点を探る。"
   bodySprite: {fileID: 2914959115193528987, guid: cb31d0cb0ba1949438d4123bc6d05e22, type: 3}
   walkFrames:
   - {fileID: 7223212680756178324, guid: cb31d0cb0ba1949438d4123bc6d05e22, type: 3}

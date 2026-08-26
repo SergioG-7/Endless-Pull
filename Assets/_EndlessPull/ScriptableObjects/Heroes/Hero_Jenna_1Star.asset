@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Jenna
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: 
+  bio: "Jenna acaba de sumarse a las filas de la torre, con más ganas que experiencia. Prefiere herir desde lejos, eligiendo el momento exacto para atacar."
+  bioEn: "Jenna has just joined the tower's ranks, more eager than experienced. Prefers to wound from afar, choosing the exact moment to strike."
+  bioJa: "Jennaは塔に加わったばかりの新兵で、経験より意気込みが先立つ。距離を保ちながら、味方が前線を支える間に正確に狙い撃つ。"
   bodySprite: {fileID: 1348145604099744802, guid: cd86ec4d446584b4e8811ba4c427ebe9, type: 3}
   walkFrames:
   - {fileID: -768354131081340927, guid: cd86ec4d446584b4e8811ba4c427ebe9, type: 3}

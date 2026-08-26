@@ -34,6 +34,10 @@ public class HeroSaveData
     public int bonusStarRank;
     public float ascensionMultiplier = 1f;
 
+    // Mejora de equipo básico del Taller: bonus plano, independiente del nivel/ascensión.
+    public int gearUpgradeAttack;
+    public int gearUpgradeDefense;
+
     public string weaponAssetName;
     public string shieldAssetName;
     public string armorAssetName;
@@ -66,6 +70,9 @@ public class BuildingSaveData
 [System.Serializable]
 public class GameSaveData
 {
+    // Version del esquema de guardado; permite migrar formatos antiguos en el futuro.
+    public int saveVersion = 1;
+
     public int gems;
     public int wood;
     public int iron;
@@ -73,7 +80,13 @@ public class GameSaveData
     public int currentFloor = 1;
     public int highestClearedFloor;
     public int ascensionStones;
-    public int expeditionEnergy = 5;
+    public int healingPotions;
+
+    // Expedición de recursos en curso, si la había al guardar (WS3: cooldown real + reclamo manual).
+    public int expeditionType;
+    public float expeditionRemaining;
+    public int expeditionHeroesSent;
+    public bool expeditionReadyToClaim;
 
     // Identidad de cada héroe de la escuadra; no depende del orden del array.
     public List<string> party = new List<string>();
@@ -89,6 +102,9 @@ public class GameSaveData
 // Guarda y restaura la partida en JSON dentro de Application.persistentDataPath.
 public class SaveManager : MonoBehaviour
 {
+    // Version actual del esquema; se escribe en cada guardado nuevo.
+    private const int CurrentSaveVersion = 1;
+
     [Tooltip("Nombre del fichero dentro de Application.persistentDataPath.")]
     [SerializeField] private string fileName = "savegame.json";
 
@@ -110,6 +126,9 @@ public class SaveManager : MonoBehaviour
     [Tooltip("Escuadra: guarda quién está apuntado y los intentos de torre.")]
     [SerializeField] private PartyManager party;
 
+    [Tooltip("Expediciones de recursos: guarda el temporizador y si hay recompensa pendiente.")]
+    [SerializeField] private ResourceExpeditionManager expeditions;
+
     [Tooltip("Escribe el JSON indentado para poder leerlo a mano.")]
     [SerializeField] private bool prettyPrint = true;
 
@@ -118,7 +137,13 @@ public class SaveManager : MonoBehaviour
 
     private static SaveManager instance;
 
+    // La pone en true/false quien muestre un menú previo a elegir partida (p.ej. MainMenuUI):
+    // así SaveManager no necesita conocer ninguna clase de UI.
+    public static bool SavingAllowed = true;
+
     public string SavePath => Path.Combine(Application.persistentDataPath, fileName);
+    public string TempSavePath => SavePath + ".tmp";
+    public string BackupSavePath => SavePath + ".bak";
     public bool HasSave => File.Exists(SavePath);
 
     void Awake()
@@ -131,6 +156,7 @@ public class SaveManager : MonoBehaviour
         if (shop == null) shop = UnityEngine.Object.FindFirstObjectByType<ShopManager>();
         if (crafting == null) crafting = UnityEngine.Object.FindFirstObjectByType<CraftingManager>();
         if (party == null) party = UnityEngine.Object.FindFirstObjectByType<PartyManager>();
+        if (expeditions == null) expeditions = UnityEngine.Object.FindFirstObjectByType<ResourceExpeditionManager>();
     }
 
     void OnEnable()
@@ -170,13 +196,13 @@ public class SaveManager : MonoBehaviour
     public void Save()
     {
         // Con el menu principal delante aun no se ha elegido partida: guardar borraria la de disco.
-        if (MainMenuUI.IsShowing)
+        if (!SavingAllowed)
         {
-            Debug.Log("[Guardado] Ignorado: el menu principal sigue abierto.", this);
+            Debug.Log("[Guardado] Ignorado: aun no se ha elegido partida.", this);
             return;
         }
 
-        var save = new GameSaveData();
+        var save = new GameSaveData { saveVersion = CurrentSaveVersion };
 
         if (economy != null)
         {
@@ -187,7 +213,15 @@ public class SaveManager : MonoBehaviour
         }
 
         if (crafting != null) save.ascensionStones = crafting.AscensionStones;
-        if (party != null) save.expeditionEnergy = party.Energy;
+        if (crafting != null) save.healingPotions = crafting.HealingPotions;
+
+        if (expeditions != null)
+        {
+            save.expeditionType = (int)expeditions.CurrentType;
+            save.expeditionRemaining = expeditions.Remaining;
+            save.expeditionHeroesSent = expeditions.HeroesSent;
+            save.expeditionReadyToClaim = expeditions.ReadyToClaim;
+        }
 
         if (waves != null)
         {
@@ -232,6 +266,8 @@ public class SaveManager : MonoBehaviour
                 accessoryDurability = hero.DurabilityOf(EquipmentSlot.Accessory),
                 bonusStarRank = hero.BonusStarRank,
                 ascensionMultiplier = hero.AscensionMultiplier,
+                gearUpgradeAttack = hero.GearUpgradeAttack,
+                gearUpgradeDefense = hero.GearUpgradeDefense,
                 weaponAssetName = AssetNameOf(hero.Weapon),
                 armorAssetName = AssetNameOf(hero.Armor),
                 accessoryAssetName = AssetNameOf(hero.Accessory)
@@ -263,7 +299,14 @@ public class SaveManager : MonoBehaviour
 
         try
         {
-            File.WriteAllText(SavePath, JsonUtility.ToJson(save, prettyPrint));
+            // Se escribe primero a un temporal: si el proceso muere a mitad, el .json de verdad
+            // ni se toca. File.Replace intercambia ambos de un golpe y deja el anterior en .bak.
+            File.WriteAllText(TempSavePath, JsonUtility.ToJson(save, prettyPrint));
+
+            if (File.Exists(SavePath))
+                File.Replace(TempSavePath, SavePath, BackupSavePath);
+            else
+                File.Move(TempSavePath, SavePath);
         }
         catch (System.Exception e)
         {
@@ -309,7 +352,11 @@ public class SaveManager : MonoBehaviour
 
         if (waves != null) waves.LoadProgress(save.currentFloor, save.highestClearedFloor);
         if (crafting != null) crafting.LoadStones(save.ascensionStones);
-        if (party != null) party.LoadEnergy(save.expeditionEnergy);
+        if (crafting != null) crafting.LoadPotions(save.healingPotions);
+
+        if (expeditions != null)
+            expeditions.LoadState(save.expeditionType, save.expeditionRemaining,
+                save.expeditionHeroesSent, save.expeditionReadyToClaim);
 
         RestoreBuildings(save);
         RestoreInventory(save);
@@ -431,6 +478,7 @@ public class SaveManager : MonoBehaviour
 
             // La ascensión va antes que el nivel: escala las bases sobre las que se calculan los bonus.
             hero.LoadAscension(entry.bonusStarRank, entry.ascensionMultiplier);
+            hero.LoadGearUpgrade(entry.gearUpgradeAttack, entry.gearUpgradeDefense);
 
             var passives = new List<PassiveSkill>();
             foreach (int value in entry.passives) passives.Add((PassiveSkill)value);

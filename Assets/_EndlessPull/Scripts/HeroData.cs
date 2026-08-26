@@ -12,9 +12,17 @@ public class HeroData : ScriptableObject
     [Tooltip("Lugar del que viene.")]
     public string origin = "Reino Fronterizo";
 
-    [Tooltip("Trasfondo breve del héroe.")]
+    [Tooltip("Trasfondo breve del héroe (español).")]
     [TextArea(2, 4)]
     public string bio = string.Empty;
+
+    [Tooltip("Trasfondo breve del héroe (inglés).")]
+    [TextArea(2, 4)]
+    public string bioEn = string.Empty;
+
+    [Tooltip("Trasfondo breve del héroe (japonés).")]
+    [TextArea(2, 4)]
+    public string bioJa = string.Empty;
 
     [Tooltip("Sprite del cuerpo, recortado del spritesheet LPC de este héroe.")]
     public Sprite bodySprite;
@@ -40,4 +48,17 @@ public class HeroData : ScriptableObject
 
     [Tooltip("Velocidad de movimiento en unidades por segundo.")]
     public float moveSpeed = 2.5f;
+
+    // Bio en el idioma activo, con fallback a español si la traducción está vacía.
+    public string GetLocalizedBio()
+    {
+        string localized = LocalizationManager.Current switch
+        {
+            GameLanguage.English => bioEn,
+            GameLanguage.Japanese => bioJa,
+            _ => bio
+        };
+
+        return string.IsNullOrEmpty(localized) ? bio : localized;
+    }
 }

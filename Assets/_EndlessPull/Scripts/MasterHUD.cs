@@ -29,15 +29,6 @@ public class MasterHUD : MonoBehaviour
     [Tooltip("Botón de invocación, se deshabilita si no hay gemas.")]
     [SerializeField] private Button pullButton;
 
-    [Tooltip("Escuadra de la que se leen los intentos de torre.")]
-    [SerializeField] private PartyManager party;
-
-    [Tooltip("Texto con los intentos de torre restantes.")]
-    [SerializeField] private TextMeshProUGUI energyLabel;
-
-    [Tooltip("Botón táctil que recarga los intentos pagando gemas.")]
-    [SerializeField] private Button energyRefillButton;
-
     void OnEnable()
     {
         if (economy != null)
@@ -51,7 +42,6 @@ public class MasterHUD : MonoBehaviour
             waves.ExpeditionChanged += OnExpeditionChanged;
             waves.FloorChanged += OnFloorChanged;
         }
-        if (party != null) party.PartyChanged += RefreshEnergy;
     }
 
     void OnDisable()
@@ -67,7 +57,6 @@ public class MasterHUD : MonoBehaviour
             waves.ExpeditionChanged -= OnExpeditionChanged;
             waves.FloorChanged -= OnFloorChanged;
         }
-        if (party != null) party.PartyChanged -= RefreshEnergy;
     }
 
     void Start()
@@ -81,26 +70,6 @@ public class MasterHUD : MonoBehaviour
         }
 
         RefreshFloor();
-        RefreshEnergy();
-    }
-
-    // Enganchado al botón "+" de la barra de intentos.
-    public void OnRefillEnergyPressed()
-    {
-        if (party != null) party.TryRefillEnergyWithGems();
-        RefreshEnergy();
-    }
-
-    private void RefreshEnergy()
-    {
-        if (party == null) return;
-
-        if (energyLabel != null) energyLabel.text = Chip("INTENTOS", $"{party.Energy}/{party.MaxEnergy}");
-
-        // El "+" solo se enciende si falta algún intento y hay gemas para pagarlo.
-        if (energyRefillButton != null)
-            energyRefillButton.interactable = party.Energy < party.MaxEnergy
-                && economy != null && economy.CanAfford(party.EnergyRefillCost);
     }
 
     // Madera, hierro y comida comparten etiqueta; se repinta con lo que haya en economía.
@@ -129,9 +98,6 @@ public class MasterHUD : MonoBehaviour
     {
         if (gemsLabel != null)
             gemsLabel.text = $"<color={UITheme.Tag(UITheme.Cyan)}>◆</color> <b>{gems}</b>";
-
-        // Con las gemas cambia si se puede pagar la recarga.
-        RefreshEnergy();
 
         // El botón de tirada se apaga solo cuando no llega el saldo.
         if (pullButton != null && gacha != null)

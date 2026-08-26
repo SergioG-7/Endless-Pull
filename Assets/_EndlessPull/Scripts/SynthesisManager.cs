@@ -25,21 +25,21 @@ public class SynthesisManager : MonoBehaviour
         // Red de seguridad: el candado manda aunque la UI dejara pulsar el botón.
         if (hero.IsLocked)
         {
-            Report($"{Describe(hero)} está bloqueado: quita el candado para poder sintetizarlo.");
+            Report(string.Format(LocalizationManager.Get("UI_SYNTH_LOCKED"), Describe(hero)));
             return;
         }
 
         if (target == null)
         {
             target = hero;
-            Report($"Objetivo: {Describe(hero)}. Pulsa en otro héroe para sacrificarlo.");
+            Report(string.Format(LocalizationManager.Get("UI_SYNTH_TARGET_SET"), Describe(hero)));
             return;
         }
 
         if (target == hero)
         {
             target = null;
-            Report("Síntesis cancelada.");
+            Report(LocalizationManager.Get("UI_SYNTH_CANCELLED"));
             return;
         }
 
@@ -51,7 +51,7 @@ public class SynthesisManager : MonoBehaviour
         if (target == null) return;
 
         target = null;
-        Report("Síntesis cancelada.");
+        Report(LocalizationManager.Get("UI_SYNTH_CANCELLED"));
     }
 
     // Destruye al sacrificado y le pasa la EXP al objetivo.
@@ -59,20 +59,20 @@ public class SynthesisManager : MonoBehaviour
     {
         if (targetHero == null || fodder == null || targetHero == fodder)
         {
-            Report("Síntesis inválida: hacen falta dos héroes distintos.");
+            Report(LocalizationManager.Get("UI_SYNTH_INVALID"));
             return false;
         }
 
         if (fodder.IsLocked)
         {
-            Report($"{Describe(fodder)} está bloqueado y no se puede sacrificar.");
+            Report(string.Format(LocalizationManager.Get("UI_SYNTH_FODDER_LOCKED"), Describe(fodder)));
             return false;
         }
 
         var progress = targetHero.GetComponent<HeroProgress>();
         if (progress == null)
         {
-            Report($"{Describe(targetHero)} no tiene HeroProgress; no puede absorber EXP.");
+            Report(string.Format(LocalizationManager.Get("UI_SYNTH_NO_PROGRESS"), Describe(targetHero)));
             return false;
         }
 
@@ -87,7 +87,8 @@ public class SynthesisManager : MonoBehaviour
         progress.AddEXP(exp);
         target = null;
 
-        Report($"{fodderName} sacrificado: +{exp} EXP para {targetName} (Nv. {progress.Level}).");
+        Report(string.Format(LocalizationManager.Get("UI_SYNTH_DONE"),
+            fodderName, exp, targetName, progress.Level));
         SaveManager.RequestSave();
         return true;
     }

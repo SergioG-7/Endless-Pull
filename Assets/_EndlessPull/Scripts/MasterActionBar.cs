@@ -48,8 +48,15 @@ public class MasterActionBar : MonoBehaviour
     private Disco regroup;
     private Disco retreat;
 
+    [Tooltip("Margen mínimo contra el borde de la zona segura del dispositivo.")]
+    [SerializeField] private float safeMargin = 16f;
+
     private TMP_Text synergyTag;
     private WaveManager waves;
+
+    private RectTransform barRoot;
+    private Vector2 barBasePosition;
+    private bool barBaseCaptured;
 
     void Awake()
     {
@@ -58,6 +65,7 @@ public class MasterActionBar : MonoBehaviour
         if (waves == null) waves = UnityEngine.Object.FindFirstObjectByType<WaveManager>();
 
         BuildChrome();
+        ApplySafeArea();
     }
 
     // Monta los discos; se puede llamar desde el editor para que la escena coincida con el juego.
@@ -147,6 +155,40 @@ public class MasterActionBar : MonoBehaviour
         Place(disco.time, -30f, 16f, UITheme.SizeMicro, FontStyles.Bold, UITheme.TextSoft);
 
         return disco;
+    }
+
+    // La barra vive anclada a un borde (esquina inferior izquierda por defecto en el mockup),
+    // así que UIManager.CenterInSafeArea la ignora: se recoloca aquí según a qué borde esté anclada.
+    private void ApplySafeArea()
+    {
+        if (healButton == null) return;
+
+        barRoot = healButton.transform.parent as RectTransform;
+        if (barRoot == null) return;
+
+        if (!barBaseCaptured)
+        {
+            barBasePosition = barRoot.anchoredPosition;
+            barBaseCaptured = true;
+        }
+
+        var canvas = barRoot.GetComponentInParent<Canvas>();
+        float escala = canvas != null && canvas.scaleFactor > 0f ? canvas.scaleFactor : 1f;
+        var segura = Screen.safeArea;
+
+        float izquierda = segura.x / escala + safeMargin;
+        float derecha = (Screen.width - segura.xMax) / escala + safeMargin;
+        float abajo = segura.y / escala + safeMargin;
+        float arriba = (Screen.height - segura.yMax) / escala + safeMargin;
+
+        float dx = 0f, dy = 0f;
+        if (barRoot.anchorMin.x <= 0.01f && barRoot.anchorMax.x <= 0.01f) dx = izquierda;
+        else if (barRoot.anchorMin.x >= 0.99f && barRoot.anchorMax.x >= 0.99f) dx = -derecha;
+
+        if (barRoot.anchorMin.y <= 0.01f && barRoot.anchorMax.y <= 0.01f) dy = abajo;
+        else if (barRoot.anchorMin.y >= 0.99f && barRoot.anchorMax.y >= 0.99f) dy = -arriba;
+
+        barRoot.anchoredPosition = barBasePosition + new Vector2(dx, dy);
     }
 
     // Se reutiliza la que ya hubiera: así montar dos veces no duplica etiquetas.

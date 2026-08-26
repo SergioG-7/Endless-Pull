@@ -15,7 +15,9 @@ MonoBehaviour:
   heroName: Nerezza
   title: Tejedora de Cenizas
   origin: Marca Quemada
-  bio: 
+  bio: "El nombre de Nerezza circula entre las tropas como sinónimo de victoria. Mantiene las distancias y dispara con precisión mientras otros cubren el frente."
+  bioEn: "Nerezza's name circulates among the troops as a byword for victory. Strikes from a distance, punishing the enemy before they can close in."
+  bioJa: "Nerezzaの名は勝利の代名詞として兵士たちの間で語られている。遠距離から攻撃し、敵が近づく前に打ち倒す。"
   bodySprite: {fileID: -6159139413331256516, guid: fd7d77f6f38b4004da582c7a194e0410, type: 3}
   walkFrames:
   - {fileID: 2251706833468408020, guid: fd7d77f6f38b4004da582c7a194e0410, type: 3}
