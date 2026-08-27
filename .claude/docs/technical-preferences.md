@@ -18,7 +18,7 @@
 - **Target Platforms**: PC, Mobile (iOS/Android)
 - **Input Methods**: Keyboard/Mouse, Touch
 - **Primary Input**: Mouse (PC-first during development; touch layer follows for mobile)
-- **Gamepad Support**: Partial
+- **Gamepad Support**: None — solo Mouse (PC) y Touch (móvil)
 - **Touch Support**: Full
 - **Platform Notes**: UI must work with both mouse clicks and touch taps. No hover-only interactions or tooltips as the sole source of information.
 
