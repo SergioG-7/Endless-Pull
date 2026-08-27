@@ -97,10 +97,11 @@ public class CraftingUI : MonoBehaviour
         if (panel != null) panel.SetActive(false);
     }
 
-    // Enganchado al onClick del botón "Craftear Piedra".
+    // Enganchado al onClick del botón "Craftear Piedra"; este panel heredado solo forja el
+    // tier Menor, el resto de tiers vive en AlchemyWorkshopUI (que sustituye a este panel).
     public void OnCraftPressed()
     {
-        if (crafting != null) crafting.TryCraftAscensionStone();
+        if (crafting != null) crafting.TryCraftStone(AscensionStoneTier.Menor);
         Refresh();
     }
 
@@ -110,15 +111,17 @@ public class CraftingUI : MonoBehaviour
 
         if (recipeLabel != null)
             recipeLabel.text = string.Format(LocalizationManager.Get("UI_CRAFT_COST"),
-                crafting.WoodCost, crafting.IronCost, crafting.SuccessChance * 100f);
+                crafting.StoneWoodCost(AscensionStoneTier.Menor),
+                crafting.StoneIronCost(AscensionStoneTier.Menor), crafting.SuccessChance * 100f);
 
         if (stonesLabel != null)
-            stonesLabel.text = string.Format(LocalizationManager.Get("UI_CRAFT_STONES"), crafting.AscensionStones) +
+            stonesLabel.text = string.Format(LocalizationManager.Get("UI_CRAFT_STONES"),
+                                   crafting.StoneCount(AscensionStoneTier.Menor)) +
                                (economy != null
                                    ? string.Format(LocalizationManager.Get("UI_CRAFT_STORAGE"), economy.Wood, economy.Iron)
                                    : string.Empty);
 
-        if (craftButton != null) craftButton.interactable = crafting.CanAttemptCraft;
+        if (craftButton != null) craftButton.interactable = crafting.CanCraftStone(AscensionStoneTier.Menor);
     }
 
     private void OnCraftResolved(bool success, string message)
@@ -129,5 +132,5 @@ public class CraftingUI : MonoBehaviour
         feedbackLabel.color = success ? successColor : failureColor;
     }
 
-    private void OnStonesChanged(int stones) => Refresh();
+    private void OnStonesChanged(AscensionStoneTier tier, int stones) => Refresh();
 }

@@ -2,8 +2,9 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// Taller de Alquimia: tres tarjetas compactas (piedras, armas y reparación). Todo se paga
-// con madera, hierro y comida; las gemas quedan para el gacha y las recargas.
+// Taller de Alquimia: tarjetas compactas para las 4 Piedras de Ascensión, armas, reparación,
+// pociones y mejora de equipo. Todo se paga con madera, hierro y comida; las gemas quedan
+// para el gacha y las recargas.
 public class AlchemyWorkshopUI : MonoBehaviour
 {
     [Tooltip("Canvas sobre el que se monta el modal.")]
@@ -40,11 +41,14 @@ public class AlchemyWorkshopUI : MonoBehaviour
     private TMP_Text etiquetaCerrar;
 
     // Una ficha por operación: cuerpo con el detalle, coste y su botón.
-    private Ficha piedras;
+    private Ficha piedraMenor;
     private Ficha armas;
     private Ficha reparar;
     private Ficha pocion;
     private Ficha mejora;
+
+    // Las otras tres piedras van en su propia fila; el índice es el AscensionStoneTier.
+    private readonly Ficha[] piedrasSuperiores = new Ficha[3];
 
     private class Ficha
     {
@@ -109,9 +113,9 @@ public class AlchemyWorkshopUI : MonoBehaviour
         if (panel != null) panel.SetActive(false);
     }
 
-    public void OnCraftStonePressed()
+    public void OnCraftStonePressed(AscensionStoneTier tier)
     {
-        if (crafting != null) crafting.TryCraftAscensionStone();
+        if (crafting != null) crafting.TryCraftStone(tier);
         Refresh();
     }
 
@@ -166,14 +170,10 @@ public class AlchemyWorkshopUI : MonoBehaviour
               $"{LocalizationManager.Get("UI_FOOD")} <b>{economy.Food}</b>{rebaja}"
             : string.Empty;
 
-        // Forja de Piedras
-        piedras.titulo.text = LocalizationManager.Get("UI_FORGE_STONES");
-        piedras.cuerpo.text = $"{LocalizationManager.Get("UI_STONES_HELD")} " +
-                              $"<b>{crafting.AscensionStones}</b>\n" +
-                              $"{LocalizationManager.Get("UI_SUCCESS_CHANCE")} " +
-                              $"<b>{crafting.EffectiveSuccessChance * 100f:0}%</b>";
-        piedras.coste.text = Cost(crafting.WoodCost, crafting.IronCost, 0);
-        SetButton(piedras, LocalizationManager.Get("UI_FORGE"), crafting.CanAttemptCraft, UITheme.Amber);
+        // Forja de Piedras: Menor en la fila principal, las otras tres en su propia fila.
+        RefreshStoneCard(piedraMenor, AscensionStoneTier.Menor);
+        for (int i = 0; i < piedrasSuperiores.Length; i++)
+            RefreshStoneCard(piedrasSuperiores[i], (AscensionStoneTier)(i + 1));
 
         // Fabricación de Armas
         armas.titulo.text = LocalizationManager.Get("UI_FORGE_WEAPONS");
@@ -209,6 +209,17 @@ public class AlchemyWorkshopUI : MonoBehaviour
         etiquetaCerrar.text = LocalizationManager.Get("UI_CLOSE");
     }
 
+    private void RefreshStoneCard(Ficha ficha, AscensionStoneTier tier)
+    {
+        ficha.titulo.text = AscensionStoneTiers.DisplayName(tier);
+        ficha.cuerpo.text = $"{LocalizationManager.Get("UI_STONES_HELD")} " +
+                            $"<b>{crafting.StoneCount(tier)}</b>\n" +
+                            $"{LocalizationManager.Get("UI_SUCCESS_CHANCE")} " +
+                            $"<b>{crafting.EffectiveSuccessChance * 100f:0}%</b>";
+        ficha.coste.text = Cost(crafting.StoneWoodCost(tier), crafting.StoneIronCost(tier), 0);
+        SetButton(ficha, LocalizationManager.Get("UI_FORGE"), crafting.CanCraftStone(tier), UITheme.Amber);
+    }
+
     // Coste en columnas: el recurso a la izquierda y la cifra siempre en la misma tabulación.
     private static string Cost(int wood, int iron, int food)
     {
@@ -234,8 +245,8 @@ public class AlchemyWorkshopUI : MonoBehaviour
     {
         if (canvas == null) return;
 
-        // El tamaño de referencia solo preveía tres tarjetas; se fuerza sitio para la segunda fila.
-        var panelSize = new Vector2(size.x, Mathf.Max(size.y, 482f + RowExtra));
+        // El tamaño de referencia solo preveía tres tarjetas; se fuerza sitio para las dos filas extra.
+        var panelSize = new Vector2(size.x, Mathf.Max(size.y, 482f + RowExtra * 2f));
         panel = UIBuild.Panel(canvas.transform, "AlchemyWorkshopPanel", panelSize, UITheme.Bg);
 
         titulo = UIBuild.TopLabel(panel.transform, "Title", UITheme.SizeTitle, 34f, -20f,
@@ -246,7 +257,7 @@ public class AlchemyWorkshopUI : MonoBehaviour
         recursos.color = UITheme.TextSoft;
 
         float x = -(CardWidth + CardGap);
-        piedras = CreateCard("Card_Stones", x, 0f, OnCraftStonePressed);
+        piedraMenor = CreateCard("Card_StoneMenor", x, 0f, () => OnCraftStonePressed(AscensionStoneTier.Menor));
         armas = CreateCard("Card_Weapons", 0f, 0f, OnCraftWeaponPressed);
         reparar = CreateCard("Card_Repair", -x, 0f, OnRepairAllPressed);
 
@@ -255,8 +266,16 @@ public class AlchemyWorkshopUI : MonoBehaviour
         pocion = CreateCard("Card_Potion", xPar, RowExtra, OnCraftPotionPressed);
         mejora = CreateCard("Card_Upgrade", -xPar, RowExtra, OnUpgradeGearPressed);
 
+        // Tercera fila: las tres piedras que no caben arriba (Media, Mayor, Legendaria).
+        piedrasSuperiores[0] = CreateCard("Card_StoneMedia", x, RowExtra * 2f,
+            () => OnCraftStonePressed(AscensionStoneTier.Media));
+        piedrasSuperiores[1] = CreateCard("Card_StoneMayor", 0f, RowExtra * 2f,
+            () => OnCraftStonePressed(AscensionStoneTier.Mayor));
+        piedrasSuperiores[2] = CreateCard("Card_StoneLegendaria", -x, RowExtra * 2f,
+            () => OnCraftStonePressed(AscensionStoneTier.Legendaria));
+
         feedback = UIBuild.TopLabel(panel.transform, "Feedback", UITheme.SizeBody, 26f,
-            -(CardTop + CardHeight + RowExtra + 8f), TextAlignmentOptions.Center);
+            -(CardTop + CardHeight + RowExtra * 2f + 8f), TextAlignmentOptions.Center);
 
         var cerrar = UIBuild.Button(panel.transform, "Btn_CloseWorkshop", string.Empty,
             Color.clear, new Vector2(240f, 46f), new Vector2(0f, -(panelSize.y - 62f)), Close);

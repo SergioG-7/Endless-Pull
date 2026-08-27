@@ -88,6 +88,9 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Durabilidad que pierde cada pieza equipada por expedición.")]
     [SerializeField] private int wearPerExpedition = 1;
 
+    [Tooltip("Máximo de héroes que aterrizan en el Portal al volver; el resto va directo a su zona.")]
+    [SerializeField] private int gatewayVisibleCap = 6;
+
     [Tooltip("Uno de cada cuántos enemigos de la oleada es tirador.")]
     [SerializeField] private int archerEveryNth = 3;
 
@@ -114,6 +117,12 @@ public class WaveManager : MonoBehaviour
 
     [Tooltip("Madera y hierro extra del cofre que suelta el jefe.")]
     [SerializeField] private int bossChestMaterials = 60;
+
+    [Tooltip("Taller del que sale la Piedra de Ascensión que suelta el cofre de jefe.")]
+    [SerializeField] private CraftingManager crafting;
+
+    [Tooltip("Último piso de cada tier en el cofre de jefe (Menor, Media, Mayor); por encima cae Legendaria.")]
+    [SerializeField] private int[] stoneTierFloorCap = { 5, 10, 15 };
 
     [Tooltip("Segundos de pausa dramática antes de la cuenta atrás cuando aparece el jefe.")]
     [SerializeField] private float bossArrivalPause = 0.5f;
@@ -253,6 +262,7 @@ public class WaveManager : MonoBehaviour
     {
         if (economy == null) economy = UnityEngine.Object.FindFirstObjectByType<EconomyManager>();
         if (party == null) party = UnityEngine.Object.FindFirstObjectByType<PartyManager>();
+        if (crafting == null) crafting = UnityEngine.Object.FindFirstObjectByType<CraftingManager>();
     }
 
     public void StartFloorExpedition()
@@ -484,11 +494,16 @@ public class WaveManager : MonoBehaviour
     // Los devuelve a la base y les quita el estado de combate.
     private void RecallParty()
     {
+        int gatewayCount = 0;
+
         foreach (var hero in deployed)
         {
             if (hero == null) continue;
 
-            hero.SetDeployed(false);
+            bool viaGateway = gatewayCount < gatewayVisibleCap;
+            if (viaGateway) gatewayCount++;
+
+            hero.SetDeployed(false, viaGateway);
             hero.SetOriginSynergy(0f);
             hero.SetFrozen(false);
             hero.Status.Clear();
@@ -521,14 +536,26 @@ public class WaveManager : MonoBehaviour
                   $"con {boss.MaxHealth} PV.", this);
     }
 
-    // Botín garantizado por tumbar al jefe.
-    private void GrantBossChest()
+    // Botín garantizado por tumbar al jefe: gemas, materiales y una Piedra de Ascensión cuyo
+    // tier sube con la franja de piso, igual que los biomas (1-5 Menor ... 16+ Legendaria).
+    private void GrantBossChest(int floor)
     {
         economy?.Add(bossChestGems);
         economy?.AddMaterials(bossChestMaterials, bossChestMaterials);
 
+        var tier = StoneTierForFloor(floor);
+        crafting?.AddStones(tier, 1);
+
         Debug.Log($"[Cofre] Botín del jefe: +{bossChestGems} gemas, " +
-                  $"+{bossChestMaterials} madera y +{bossChestMaterials} hierro.", this);
+                  $"+{bossChestMaterials} madera, +{bossChestMaterials} hierro y +1 Piedra {tier}.", this);
+    }
+
+    private AscensionStoneTier StoneTierForFloor(int floor)
+    {
+        if (floor <= stoneTierFloorCap[0]) return AscensionStoneTier.Menor;
+        if (floor <= stoneTierFloorCap[1]) return AscensionStoneTier.Media;
+        if (floor <= stoneTierFloorCap[2]) return AscensionStoneTier.Mayor;
+        return AscensionStoneTier.Legendaria;
     }
 
     void Update()
@@ -570,7 +597,7 @@ public class WaveManager : MonoBehaviour
             if (gemGain > 0) economy?.Add(gemGain);
             economy?.AddMaterials(woodGain, ironGain);
 
-            if (bossChest) GrantBossChest();
+            if (bossChest) GrantBossChest(cleared);
 
             int expGain = Mathf.Max(1, expReward * cleared);
             GrantCombatExp(cleared);

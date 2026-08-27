@@ -4,8 +4,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 // Ficha de detalle de un héroe: la abre un clic sobre su tarjeta en el Roster. Aquí viven
-// las ocho acciones que antes iban pegadas a la tarjeta (Lock, Party, Equip/Unequip, Ascend,
-// Synth, Subclass, Repair), para que la lista del Roster quede ligera y de solo lectura.
+// seis de las ocho acciones que antes iban pegadas a la tarjeta (Lock, Party, Equip/Unequip,
+// Subclass, Repair); Ascend y Synth se mudaron al Santuario (ver SanctuaryUI).
 public class HeroDetailModal : MonoBehaviour
 {
     [Tooltip("Canvas sobre el que se monta el modal.")]
@@ -14,17 +14,11 @@ public class HeroDetailModal : MonoBehaviour
     [Tooltip("Tienda de la que salen inventario y equipo.")]
     [SerializeField] private ShopManager shop;
 
-    [Tooltip("Economía que paga las ascensiones.")]
-    [SerializeField] private EconomyManager economy;
-
-    [Tooltip("Taller del que salen las Piedras de Ascensión.")]
+    [Tooltip("Taller que repara el equipo desgastado.")]
     [SerializeField] private CraftingManager crafting;
 
     [Tooltip("Escuadra a la que se apunta o se saca al héroe.")]
     [SerializeField] private PartyManager party;
-
-    [Tooltip("Gestor de síntesis al que apunta el botón de Sintetizar.")]
-    [SerializeField] private SynthesisManager synthesis;
 
     [Tooltip("Modal de equipamiento manual que abre el botón Equipar.")]
     [SerializeField] private EquipmentSelectModalUI equipModal;
@@ -54,17 +48,10 @@ public class HeroDetailModal : MonoBehaviour
     private Image portraitArt;
     private Image portraitFrame;
 
-    private Button btnLock, btnParty, btnEquip, btnAscend, btnSynth, btnUnequip, btnSubclass, btnRepair;
+    private Button btnLock, btnParty, btnEquip, btnUnequip, btnSubclass, btnRepair;
 
     private HeroController hero;
     private float refreshTimer;
-
-    // Confirmación previa al sacrificio de Síntesis: se guarda a quién se iba a sacrificar
-    // mientras el jugador decide, sin tocar el estado de SynthesisManager todavía.
-    private GameObject synthConfirmOverlay;
-    private TMP_Text synthConfirmMessage;
-    private HeroController pendingSynthTarget;
-    private HeroController pendingSynthFodder;
 
     public bool IsOpen => panel != null && panel.activeSelf;
     public HeroController CurrentHero => hero;
@@ -73,10 +60,8 @@ public class HeroDetailModal : MonoBehaviour
     {
         if (canvas == null) canvas = UnityEngine.Object.FindFirstObjectByType<Canvas>();
         if (shop == null) shop = UnityEngine.Object.FindFirstObjectByType<ShopManager>();
-        if (economy == null) economy = UnityEngine.Object.FindFirstObjectByType<EconomyManager>();
         if (crafting == null) crafting = UnityEngine.Object.FindFirstObjectByType<CraftingManager>();
         if (party == null) party = UnityEngine.Object.FindFirstObjectByType<PartyManager>();
-        if (synthesis == null) synthesis = UnityEngine.Object.FindFirstObjectByType<SynthesisManager>();
         if (equipModal == null) equipModal = UnityEngine.Object.FindFirstObjectByType<EquipmentSelectModalUI>();
 
         Build();
@@ -112,7 +97,6 @@ public class HeroDetailModal : MonoBehaviour
     public void Close()
     {
         if (panel != null) panel.SetActive(false);
-        CloseSynthConfirm();
         hero = null;
     }
 
@@ -186,9 +170,6 @@ public class HeroDetailModal : MonoBehaviour
 
     private void RefreshButtons()
     {
-        var progress = hero.GetComponent<HeroProgress>();
-        bool isTarget = synthesis != null && synthesis.Target == hero;
-        bool canAscend = progress != null && progress.CanAscend(economy, crafting);
         bool inParty = party != null && party.IsInParty(hero);
         bool wearsGear = hero.Weapon != null || hero.Shield != null
                          || hero.Armor != null || hero.Accessory != null;
@@ -200,9 +181,6 @@ public class HeroDetailModal : MonoBehaviour
         SetButton(btnParty, LocalizationManager.Get(inParty ? "UI_IN_PARTY" : "UI_PARTY"),
             inParty ? UITheme.Amber : UITheme.Neutral, party != null);
         SetButton(btnEquip, LocalizationManager.Get("UI_EQUIP"), UITheme.Teal, shop != null);
-        SetButton(btnAscend, LocalizationManager.Get("UI_ASCEND"), UITheme.AmberSoft, canAscend);
-        SetButton(btnSynth, LocalizationManager.Get(isTarget ? "UI_SYNTH_TARGET" : "UI_SYNTH"),
-            isTarget ? UITheme.Amber : UITheme.AccentSoft, synthesis != null && !hero.IsLocked);
         SetButton(btnUnequip, LocalizationManager.Get("UI_UNEQUIP"), UITheme.Teal, wearsGear);
         SetButton(btnSubclass, LocalizationManager.Get("UI_SUBCLASS"), UITheme.AccentSoft, puedeSubclase);
         SetButton(btnRepair, LocalizationManager.Get("UI_REPAIR"), UITheme.DangerSoft, roto && crafting != null);
@@ -227,8 +205,7 @@ public class HeroDetailModal : MonoBehaviour
     {
         if (hero == null) return;
 
-        bool locked = hero.ToggleLock();
-        if (locked && synthesis != null && synthesis.Target == hero) synthesis.ClearTarget();
+        hero.ToggleLock();
 
         SaveManager.RequestSave();
         Rebuild();
@@ -265,15 +242,6 @@ public class HeroDetailModal : MonoBehaviour
         Rebuild();
     }
 
-    private void OnAscendClicked()
-    {
-        if (hero == null) return;
-
-        var progress = hero.GetComponent<HeroProgress>();
-        if (progress != null) progress.AscendHero(economy, crafting);
-        Rebuild();
-    }
-
     // Rota entre las tres subclases del arquetipo del héroe.
     private void OnSubclassClicked()
     {
@@ -290,60 +258,6 @@ public class HeroDetailModal : MonoBehaviour
 
         if (crafting != null) crafting.TryRepair(hero);
         Rebuild();
-    }
-
-    // Primer clic elige objetivo; el segundo, sobre otro héroe, pide confirmación antes de sacrificarlo.
-    private void OnSynthClicked()
-    {
-        if (hero == null || synthesis == null) return;
-
-        if (synthesis.HasTarget && synthesis.Target != hero && !hero.IsLocked)
-        {
-            ShowSynthConfirm(synthesis.Target, hero);
-            return;
-        }
-
-        synthesis.SelectHero(hero);
-        Rebuild();
-    }
-
-    private void ShowSynthConfirm(HeroController target, HeroController fodder)
-    {
-        if (synthConfirmOverlay == null || target == null || fodder == null) return;
-
-        pendingSynthTarget = target;
-        pendingSynthFodder = fodder;
-
-        int exp = synthesis != null ? synthesis.ExpFrom(fodder) : 0;
-        string fodderName = fodder.Data != null ? fodder.Data.heroName : fodder.name;
-        string targetName = target.Data != null ? target.Data.heroName : target.name;
-
-        synthConfirmMessage.text = string.Format(
-            LocalizationManager.Get("UI_SYNTH_CONFIRM_MSG"), fodderName, exp, targetName);
-
-        synthConfirmOverlay.SetActive(true);
-        synthConfirmOverlay.transform.SetAsLastSibling();
-    }
-
-    private void OnConfirmSynthPressed()
-    {
-        if (synthesis != null && pendingSynthTarget != null && pendingSynthFodder != null)
-            synthesis.Synthesize(pendingSynthTarget, pendingSynthFodder);
-
-        CloseSynthConfirm();
-
-        // El héroe sacrificado puede haber sido el que tenía abierta la ficha.
-        if (hero == null || hero.Data == null) Close();
-        else Rebuild();
-    }
-
-    private void OnCancelSynthPressed() => CloseSynthConfirm();
-
-    private void CloseSynthConfirm()
-    {
-        pendingSynthTarget = null;
-        pendingSynthFodder = null;
-        if (synthConfirmOverlay != null) synthConfirmOverlay.SetActive(false);
     }
 
     private void Build()
@@ -388,18 +302,14 @@ public class HeroDetailModal : MonoBehaviour
         gearLabel.lineSpacing = 14f;
         AnchorTopLeft(gearLabel.rectTransform, 24f, barsY - 78f, ColLeft, 150f);
 
-        // Columna derecha: las ocho acciones, en dos columnas de cuatro.
+        // Columna derecha: las seis acciones, en dos columnas de tres.
         float rightX = ColLeft + 48f;
         btnLock = BuildActionButton(panel.transform, "Btn_Lock", rightX, 0, OnLockClicked);
         btnParty = BuildActionButton(panel.transform, "Btn_Party", rightX, 1, OnPartyClicked);
         btnEquip = BuildActionButton(panel.transform, "Btn_Equip", rightX, 2, OnEquipClicked);
         btnUnequip = BuildActionButton(panel.transform, "Btn_Unequip", rightX, 3, OnUnequipClicked);
-        btnAscend = BuildActionButton(panel.transform, "Btn_Ascend", rightX, 4, OnAscendClicked);
-        btnSynth = BuildActionButton(panel.transform, "Btn_Synth", rightX, 5, OnSynthClicked);
-        btnSubclass = BuildActionButton(panel.transform, "Btn_Subclass", rightX, 6, OnSubclassClicked);
-        btnRepair = BuildActionButton(panel.transform, "Btn_Repair", rightX, 7, OnRepairClicked);
-
-        BuildSynthConfirm();
+        btnSubclass = BuildActionButton(panel.transform, "Btn_Subclass", rightX, 4, OnSubclassClicked);
+        btnRepair = BuildActionButton(panel.transform, "Btn_Repair", rightX, 5, OnRepairClicked);
 
         panel.SetActive(false);
     }
@@ -459,33 +369,5 @@ public class HeroDetailModal : MonoBehaviour
         rt.anchorMax = new Vector2(0f, 1f);
         rt.pivot = new Vector2(0f, 1f);
         rt.anchoredPosition = new Vector2(x, y);
-    }
-
-    // Fondo oscurecido + caja centrada, montado sobre el propio panel del modal.
-    private void BuildSynthConfirm()
-    {
-        synthConfirmOverlay = new GameObject("SynthConfirmOverlay", typeof(RectTransform), typeof(Image));
-        synthConfirmOverlay.transform.SetParent(panel.transform, false);
-        UIBuild.Stretch(synthConfirmOverlay.GetComponent<RectTransform>());
-        synthConfirmOverlay.GetComponent<Image>().color = UITheme.Hex("05060A", 0.72f);
-
-        var box = UIBuild.Panel(synthConfirmOverlay.transform, "SynthConfirmBox",
-            new Vector2(460f, 260f), UITheme.BgPanel);
-
-        var titulo = UIBuild.TopLabel(box.transform, "Title", UITheme.SizeName, 30f, -20f,
-            TextAlignmentOptions.Center);
-        titulo.text = LocalizationManager.Get("UI_SYNTH_CONFIRM_TITLE");
-
-        synthConfirmMessage = UIBuild.TopLabel(box.transform, "Message", UITheme.SizeBody, 130f, -56f,
-            TextAlignmentOptions.Center);
-        synthConfirmMessage.color = UITheme.TextSoft;
-
-        UIBuild.Button(box.transform, "Btn_ConfirmSynth", LocalizationManager.Get("UI_SYNTH"),
-            UITheme.DangerSoft, new Vector2(180f, 48f), new Vector2(-100f, -200f), OnConfirmSynthPressed);
-
-        UIBuild.Button(box.transform, "Btn_CancelSynth", LocalizationManager.Get("UI_CANCEL"),
-            UITheme.Neutral, new Vector2(180f, 48f), new Vector2(100f, -200f), OnCancelSynthPressed);
-
-        synthConfirmOverlay.SetActive(false);
     }
 }

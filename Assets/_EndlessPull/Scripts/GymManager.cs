@@ -34,7 +34,19 @@ public class GymManager : MonoBehaviour
     [Tooltip("Arranca ya en modo rápido, para entrenar sin tocar nada.")]
     [SerializeField] private bool startFast;
 
+    [Tooltip("Segundos de simulación entre pulsos del decreto Reagruparse simulado, para que el " +
+             "agente aprenda a reaccionar a las órdenes del comandante igual que en combate real.")]
+    [SerializeField] private float regroupPulseInterval = 6f;
+
+    [Tooltip("Duración del pulso, mismo criterio que MasterCommander.Regroup.")]
+    [SerializeField] private float regroupPulseDuration = 4f;
+
+    [Tooltip("Retroceso instantáneo del pulso.")]
+    [SerializeField] private float regroupPulseRetreat = 1.5f;
+
     private EnemyController enemy;
+    private HeroController currentHero;
+    private float regroupPulseTimer;
     private bool fast;
     private int episodes;
 
@@ -55,6 +67,22 @@ public class GymManager : MonoBehaviour
     {
         var keyboard = Keyboard.current;
         if (keyboard != null && keyboard.fKey.wasPressedThisFrame) ToggleFastMode();
+
+        TickRegroupPulse();
+    }
+
+    // Simula el decreto Reagruparse a intervalos, para que HeroAgent entrene la penalización de
+    // desobedecerlo (ver decreeDisobeyPenalty). Time.deltaTime ya viene escalado por timeScale,
+    // así que el pulso se acelera solo junto con el resto de la simulación en modo rápido.
+    private void TickRegroupPulse()
+    {
+        if (currentHero == null || currentHero.IsDead) return;
+
+        regroupPulseTimer -= Time.deltaTime;
+        if (regroupPulseTimer > 0f) return;
+
+        regroupPulseTimer = regroupPulseInterval;
+        currentHero.ApplyDefensiveStance(regroupPulseDuration, regroupPulseRetreat);
     }
 
     public void ToggleFastMode() => SetFast(!fast);
@@ -85,6 +113,9 @@ public class GymManager : MonoBehaviour
             hero.transform.position = heroSpawn;
             hero.ResetForEpisode();
         }
+
+        currentHero = hero;
+        regroupPulseTimer = regroupPulseInterval;
 
         if (enemyPrefab == null || enemyData == null)
         {

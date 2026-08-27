@@ -28,6 +28,9 @@ public enum AudioChannel
 // suyos por código, así el juego suena desde el primer día y nunca hay referencias nulas.
 public class AudioManager : MonoBehaviour
 {
+    private const string UiVolumeKey = "EndlessPull.UiVolume";
+    private const string CombatVolumeKey = "EndlessPull.CombatVolume";
+
     // Un clip por identificador; se rellena desde el Inspector cuando haya audio de verdad.
     [System.Serializable]
     public class SfxEntry
@@ -74,6 +77,29 @@ public class AudioManager : MonoBehaviour
     public bool Muted => muted;
     public static bool IsMuted => instance != null && instance.muted;
 
+    // Volumen por canal; el slider del menú in-game los lee y escribe directamente.
+    public float UIVolume
+    {
+        get => uiVolume;
+        set
+        {
+            uiVolume = Mathf.Clamp01(value);
+            PlayerPrefs.SetFloat(UiVolumeKey, uiVolume);
+            PlayerPrefs.Save();
+        }
+    }
+
+    public float CombatVolume
+    {
+        get => combatVolume;
+        set
+        {
+            combatVolume = Mathf.Clamp01(value);
+            PlayerPrefs.SetFloat(CombatVolumeKey, combatVolume);
+            PlayerPrefs.Save();
+        }
+    }
+
     void Awake()
     {
         // Si ya había uno, este sobra: dos reservas competirían por los mismos sonidos.
@@ -84,6 +110,11 @@ public class AudioManager : MonoBehaviour
         }
 
         instance = this;
+
+        // Los volúmenes de fábrica son los del Inspector; el jugador los pisa desde el menú.
+        uiVolume = PlayerPrefs.GetFloat(UiVolumeKey, uiVolume);
+        combatVolume = PlayerPrefs.GetFloat(CombatVolumeKey, combatVolume);
+
         BuildPool();
     }
 

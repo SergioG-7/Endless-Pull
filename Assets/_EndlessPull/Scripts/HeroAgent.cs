@@ -30,6 +30,16 @@ public class HeroAgent : Agent
     [Tooltip("Escribe por consola el resultado de cada episodio.")]
     [SerializeField] private bool logEpisodes = true;
 
+    [Header("Pesos de entrenamiento (Fase 25)")]
+    [Tooltip("Multiplica hitReward y wastedSkillPenalty: cuánto se premia/castiga la agresividad de la política.")]
+    [SerializeField] private float aggressionWeight = 1f;
+
+    [Tooltip("Multiplica dodgeReward: cuánto pesa mantener la distancia de seguridad ante el golpe en área.")]
+    [SerializeField] private float safeDistanceWeight = 1f;
+
+    [Tooltip("Penalización por atacar mientras GymManager tiene activo el pulso simulado de Reagruparse.")]
+    [SerializeField] private float decreeDisobeyPenalty = 0.15f;
+
     private HeroController hero;
     private EnemyController enemy;
 
@@ -90,13 +100,17 @@ public class HeroAgent : Agent
         ResolveEpisodeEnd();
     }
 
-    // Sin política entrenada el héroe se acerca y pega: sirve para probar la arena a mano.
+    // Sin política entrenada el héroe se acerca y pega, con el mismo perfil táctico (agresividad,
+    // distancia de seguridad, umbral de habilidad) que usa en combate real: sirve para probar la
+    // arena a mano y para ver de un vistazo cómo se comportaría cada héroe según su personalidad.
     public override void Heuristic(in ActionBuffers actionsOut)
     {
         var acciones = actionsOut.DiscreteActions;
         float distancia = DistanceToEnemy();
 
-        bool peligro = enemy != null && enemy.IsWindingUp && distancia < enemy.SlamRadius;
+        // Mismo criterio que HeroController.TickCombatAttack: esquiva solo si es más prudente que agresivo.
+        bool peligro = enemy != null && enemy.IsWindingUp && distancia < enemy.SlamRadius
+                       && hero.SafeDistance > hero.Aggression;
         acciones[0] = peligro ? 2 : (distancia > hero.AttackReach ? 1 : 0);
 
         if (distancia > hero.AttackReach) acciones[1] = 0;
@@ -121,7 +135,7 @@ public class HeroAgent : Agent
             && DistanceToEnemy() > enemy.SlamRadius)
         {
             dodgeRewarded = true;
-            AddReward(dodgeReward);
+            AddReward(dodgeReward * safeDistanceWeight);
         }
     }
 
@@ -129,9 +143,12 @@ public class HeroAgent : Agent
     {
         if (combate == 0 || enemy == null) return;
 
+        // GymManager simula el decreto Reagruparse; atacar mientras está activo es desobedecerlo.
+        if (hero.IsInDefensiveStance) AddReward(-decreeDisobeyPenalty);
+
         if (combate == 1)
         {
-            if (hero.TryBasicAttack(enemy)) AddReward(hitReward);
+            if (hero.TryBasicAttack(enemy)) AddReward(hitReward * aggressionWeight);
             return;
         }
 
@@ -139,7 +156,7 @@ public class HeroAgent : Agent
         bool desperdicio = EnemyIsAlmostDead();
         if (!hero.TrySkillAttack(enemy)) return;
 
-        AddReward(desperdicio ? -wastedSkillPenalty : hitReward);
+        AddReward(desperdicio ? -wastedSkillPenalty * aggressionWeight : hitReward * aggressionWeight);
     }
 
     private void ResolveEpisodeEnd()
@@ -169,9 +186,14 @@ public class HeroAgent : Agent
         }
     }
 
+    // Umbral por héroe si hay HeroProgress (el mismo que en combate real); si no, el global del inspector.
     private bool EnemyIsAlmostDead()
-        => enemy != null && enemy.MaxHealth > 0
-           && (float)enemy.CurrentHealth / enemy.MaxHealth < residualHealthRatio;
+    {
+        if (enemy == null || enemy.MaxHealth <= 0) return false;
+
+        float ratio = hero != null ? hero.SkillThreshold : residualHealthRatio;
+        return (float)enemy.CurrentHealth / enemy.MaxHealth < ratio;
+    }
 
     private float DistanceToEnemy()
         => enemy != null ? Vector2.Distance(transform.position, enemy.transform.position) : observableDistance;

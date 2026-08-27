@@ -36,6 +36,13 @@ public static class LocalizationManager
         { "UI_LANGUAGE",     new[] { "Idioma", "Language", "言語" } },
         { "UI_MASTER_VOLUME",new[] { "Volumen general", "Master Volume", "音量" } },
         { "UI_BACK",         new[] { "Volver", "Back", "もどる" } },
+
+        // Menú de pausa in-game (InGameMenuUI).
+        { "UI_IN_GAME_MENU", new[] { "Menú", "Menu", "メニュー" } },
+        { "UI_RESUME",       new[] { "Reanudar", "Resume", "再開" } },
+        { "UI_UI_VOLUME",    new[] { "Volumen de interfaz", "UI Volume", "UI音量" } },
+        { "UI_COMBAT_VOLUME",new[] { "Volumen de combate", "Combat Volume", "戦闘音量" } },
+        { "UI_QUIT_TO_MENU", new[] { "Guardar y salir", "Save and Quit", "セーブして終了" } },
         { "UI_CLOSE",        new[] { "Cerrar", "Close", "とじる" } },
         { "UI_NO_SAVE",      new[] { "Sin partida guardada", "No saved game", "セーブデータなし" } },
 
@@ -62,6 +69,24 @@ public static class LocalizationManager
         { "UI_ASCEND",       new[] { "Ascender", "Ascend", "覚醒" } },
         { "UI_EQUIP",        new[] { "Equipar", "Equip", "装備" } },
         { "UI_UNEQUIP",      new[] { "Quitar", "Unequip", "はずす" } },
+
+        // Santuario de Ascensión y Síntesis (SanctuaryUI).
+        { "UI_SANCTUARY",         new[] { "Santuario", "Sanctuary", "聖域" } },
+        { "UI_ASCENSION_TAB",     new[] { "Ascensión", "Ascension", "覚醒" } },
+        { "UI_SYNTHESIS_TAB",     new[] { "Síntesis", "Synthesis", "合成" } },
+        { "UI_RECEIVER",          new[] { "Receptor", "Receiver", "受け手" } },
+        { "UI_SACRIFICE",         new[] { "Sacrificio", "Sacrifice", "生贄" } },
+        { "UI_SELECT_HERO",       new[] { "Selecciona un héroe de la lista", "Select a hero from the list", "リストから英雄を選んでください" } },
+        { "UI_STONE_MENOR",       new[] { "Piedra Menor", "Minor Stone", "小さな覚醒石" } },
+        { "UI_STONE_MEDIA",       new[] { "Piedra Media", "Median Stone", "中位の覚醒石" } },
+        { "UI_STONE_MAYOR",       new[] { "Piedra Mayor", "Greater Stone", "大きな覚醒石" } },
+        { "UI_STONE_LEGENDARIA",  new[] { "Piedra Legendaria", "Legendary Stone", "伝説の覚醒石" } },
+        { "UI_ASCEND_PREVIEW",    new[] { "{0}★ → {1}★  (×{2:0.00} estadísticas)",
+                                            "{0}★ → {1}★  (×{2:0.00} stats)",
+                                            "{0}★ → {1}★（ステータス×{2:0.00}）" } },
+        { "UI_ASCEND_COST",       new[] { "{0} gemas + 1 {1}", "{0} gems + 1 {1}", "ジェム{0} + {1}×1" } },
+        { "UI_ASCEND_MAX_RARITY", new[] { "Rareza máxima", "Max rarity", "最大レア度" } },
+        { "UI_ASCEND_NEED_LEVEL", new[] { "Necesita llegar a Nv. {0}", "Needs to reach Lv. {0}", "Lv.{0}が必要" } },
 
         { "UI_READY",        new[] { "¡PREPARAOS!", "READY...", "構えろ！" } },
         { "UI_ENGAGE",       new[] { "¡AL ATAQUE!", "ENGAGE!", "突撃！" } },

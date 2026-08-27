@@ -1,15 +1,33 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// Piedra de Ascensión por tier: Menor (1★→2★) hasta Legendaria (4★→5★).
+public enum AscensionStoneTier
+{
+    Menor,
+    Media,
+    Mayor,
+    Legendaria
+}
+
+public static class AscensionStoneTiers
+{
+    public static string DisplayName(AscensionStoneTier tier)
+    {
+        switch (tier)
+        {
+            case AscensionStoneTier.Menor: return LocalizationManager.Get("UI_STONE_MENOR");
+            case AscensionStoneTier.Media: return LocalizationManager.Get("UI_STONE_MEDIA");
+            case AscensionStoneTier.Mayor: return LocalizationManager.Get("UI_STONE_MAYOR");
+            case AscensionStoneTier.Legendaria: return LocalizationManager.Get("UI_STONE_LEGENDARIA");
+        }
+        return tier.ToString();
+    }
+}
+
 // Taller de Alquimia: forja piedras y armas a cambio de materiales. Las gemas no entran aquí.
 public class CraftingManager : MonoBehaviour
 {
-    [Tooltip("Madera que cuesta cada intento de crafteo.")]
-    [SerializeField] private int woodCost = 40;
-
-    [Tooltip("Hierro que cuesta cada intento de crafteo.")]
-    [SerializeField] private int ironCost = 40;
-
     [Tooltip("Probabilidad de que el intento salga bien.")]
     [Range(0f, 1f)]
     [SerializeField] private float successChance = 0.7f;
@@ -74,16 +92,21 @@ public class CraftingManager : MonoBehaviour
     [Tooltip("Economía de la que salen los materiales.")]
     [SerializeField] private EconomyManager economy;
 
-    private int ascensionStones;
+    [Tooltip("Madera que cuesta forjar cada tier de Piedra: Menor, Media, Mayor, Legendaria.")]
+    [SerializeField] private int[] stoneWoodCostByTier = { 30, 60, 120, 220 };
+
+    [Tooltip("Hierro que cuesta forjar cada tier de Piedra: Menor, Media, Mayor, Legendaria.")]
+    [SerializeField] private int[] stoneIronCostByTier = { 15, 35, 70, 140 };
+
+    private readonly int[] stoneCounts = new int[4];
     private int healingPotions;
 
-    public int AscensionStones => ascensionStones;
+    public int StoneCount(AscensionStoneTier tier) => stoneCounts[(int)tier];
+    public int[] StoneCounts => stoneCounts;
     public int HealingPotions => healingPotions;
     public float SuccessChance => successChance;
 
     // Los costes que se cobran de verdad ya llevan la rebaja de los artesanos.
-    public int WoodCost => Discounted(woodCost);
-    public int IronCost => Discounted(ironCost);
     public int WeaponWoodCost => Discounted(weaponWoodCost);
     public int WeaponIronCost => Discounted(weaponIronCost);
     public int WeaponFoodCost => Discounted(weaponFoodCost);
@@ -149,7 +172,11 @@ public class CraftingManager : MonoBehaviour
         }
     }
 
-    public bool CanAttemptCraft => economy != null && economy.CanAffordMaterials(WoodCost, IronCost);
+    public int StoneWoodCost(AscensionStoneTier tier) => Discounted(stoneWoodCostByTier[(int)tier]);
+    public int StoneIronCost(AscensionStoneTier tier) => Discounted(stoneIronCostByTier[(int)tier]);
+
+    public bool CanCraftStone(AscensionStoneTier tier) => economy != null
+        && economy.CanAffordMaterials(StoneWoodCost(tier), StoneIronCost(tier));
 
     public bool CanCraftWeapon => economy != null
         && craftableWeapons != null && craftableWeapons.Count > 0
@@ -166,8 +193,8 @@ public class CraftingManager : MonoBehaviour
     // Se dispara con (éxito, mensaje) tras cada intento.
     public event System.Action<bool, string> CraftResolved;
 
-    // Se dispara con el número de piedras cada vez que cambia.
-    public event System.Action<int> StonesChanged;
+    // Se dispara con el tier y el número de piedras de ese tier cada vez que cambia.
+    public event System.Action<AscensionStoneTier, int> StonesChanged;
 
     // Se dispara con el número de pociones cada vez que cambia.
     public event System.Action<int> PotionsChanged;
@@ -179,10 +206,10 @@ public class CraftingManager : MonoBehaviour
     }
 
     // Los materiales se cobran siempre; solo el resultado va a suerte. Las gemas no entran.
-    public bool TryCraftAscensionStone()
+    public bool TryCraftStone(AscensionStoneTier tier)
     {
-        int madera = WoodCost;
-        int hierro = IronCost;
+        int madera = StoneWoodCost(tier);
+        int hierro = StoneIronCost(tier);
 
         if (economy == null || !economy.TrySpendMaterials(madera, hierro))
         {
@@ -195,10 +222,10 @@ public class CraftingManager : MonoBehaviour
 
         if (success)
         {
-            ascensionStones++;
-            StonesChanged?.Invoke(ascensionStones);
+            stoneCounts[(int)tier]++;
+            StonesChanged?.Invoke(tier, stoneCounts[(int)tier]);
 
-            Debug.Log($"[Taller] Piedra de Ascensión forjada. Tienes {ascensionStones}.", this);
+            Debug.Log($"[Taller] Piedra {tier} forjada. Tienes {stoneCounts[(int)tier]}.", this);
             CraftResolved?.Invoke(true, LocalizationManager.Get("UI_STONE_FORGED"));
         }
         else
@@ -421,31 +448,37 @@ public class CraftingManager : MonoBehaviour
         return true;
     }
 
-    public bool HasStone => ascensionStones > 0;
+    public bool HasStone(AscensionStoneTier tier) => stoneCounts[(int)tier] > 0;
 
     // La consume la ascensión de un héroe.
-    public bool TryConsumeStone()
+    public bool TryConsumeStone(AscensionStoneTier tier)
     {
-        if (ascensionStones <= 0) return false;
+        if (stoneCounts[(int)tier] <= 0) return false;
 
-        ascensionStones--;
-        StonesChanged?.Invoke(ascensionStones);
+        stoneCounts[(int)tier]--;
+        StonesChanged?.Invoke(tier, stoneCounts[(int)tier]);
         return true;
     }
 
-    public void AddStones(int amount)
+    public void AddStones(AscensionStoneTier tier, int amount)
     {
         if (amount <= 0) return;
 
-        ascensionStones += amount;
-        StonesChanged?.Invoke(ascensionStones);
+        stoneCounts[(int)tier] += amount;
+        StonesChanged?.Invoke(tier, stoneCounts[(int)tier]);
     }
 
-    // La usa el SaveManager al cargar.
-    public void LoadStones(int saved)
+    // La usa el SaveManager al cargar. `savedMenor` absorbe también el zurrón genérico de saves
+    // anteriores a los tiers (ver SaveManager.Load), así no se pierde progreso ya guardado.
+    public void LoadStones(int savedMenor, int savedMedia, int savedMayor, int savedLegendaria)
     {
-        ascensionStones = Mathf.Max(0, saved);
-        StonesChanged?.Invoke(ascensionStones);
+        stoneCounts[(int)AscensionStoneTier.Menor] = Mathf.Max(0, savedMenor);
+        stoneCounts[(int)AscensionStoneTier.Media] = Mathf.Max(0, savedMedia);
+        stoneCounts[(int)AscensionStoneTier.Mayor] = Mathf.Max(0, savedMayor);
+        stoneCounts[(int)AscensionStoneTier.Legendaria] = Mathf.Max(0, savedLegendaria);
+
+        for (int i = 0; i < stoneCounts.Length; i++)
+            StonesChanged?.Invoke((AscensionStoneTier)i, stoneCounts[i]);
     }
 
     // La usa el SaveManager al cargar.

@@ -25,14 +25,33 @@ public class HeroProgress : MonoBehaviour
     [Tooltip("Gemas que cuesta ascender según la rareza actual: índice 0 = 1★→2★ ... índice 3 = 4★→5★.")]
     [SerializeField] private int[] ascendGemCostByStar = { 100, 250, 500, 1000 };
 
-    [Tooltip("Piedras de Ascensión que cuesta subir una estrella.")]
-    [SerializeField] private int ascendStoneCost = 1;
+    // Tier de Piedra que exige cada salto, en el mismo orden: 1★→2★ Menor ... 4★→5★ Legendaria.
+    private static readonly AscensionStoneTier[] AscendStoneTierByStar =
+    {
+        AscensionStoneTier.Menor, AscensionStoneTier.Media,
+        AscensionStoneTier.Mayor, AscensionStoneTier.Legendaria
+    };
 
     [Tooltip("Factor por el que se multiplican las bases del héroe al ascender.")]
     [SerializeField] private float ascensionStatMultiplier = 1.4f;
 
+    public float AscensionStatMultiplier => ascensionStatMultiplier;
+
     [Tooltip("Etiqueta flotante que muestra el nivel sobre la barra.")]
     [SerializeField] private TMP_Text levelLabel;
+
+    [Tooltip("0 = pasivo, deja pasar el golpe en área del jefe con tal de seguir pegando. 1 = prudente, siempre esquiva.")]
+    [SerializeField, Range(0f, 1f)] private float aggression = 0.5f;
+
+    [Tooltip("0 = no esquiva ni mantiene distancia con arco/báculo. 1 = esquiva el golpe en área y kitea al máximo.")]
+    [SerializeField, Range(0f, 1f)] private float safeDistance = 0.5f;
+
+    [Tooltip("Vida restante del enemigo por debajo de la cual se guarda la habilidad para no desperdiciarla en un rematador básico.")]
+    [SerializeField, Range(0f, 1f)] private float skillThreshold = 0.15f;
+
+    public float Aggression => aggression;
+    public float SafeDistance => safeDistance;
+    public float SkillThreshold => skillThreshold;
 
     private int currentEXP;
     private HeroController hero;
@@ -47,7 +66,9 @@ public class HeroProgress : MonoBehaviour
 
     // Sube con la rareza: 1★→2★ es barato, 4★→5★ cuesta el doble que 3★→4★.
     public int AscendGemCost => CostForStar(hero != null ? hero.StarRank : 1);
-    public int AscendStoneCost => ascendStoneCost;
+
+    // La Piedra que exige el salto actual: 1★→2★ Menor ... 4★→5★ Legendaria.
+    public AscensionStoneTier AscendStoneTier => TierForStar(hero != null ? hero.StarRank : 1);
 
     private int CostForStar(int starRank)
     {
@@ -55,12 +76,18 @@ public class HeroProgress : MonoBehaviour
         return ascendGemCostByStar[index];
     }
 
-    // Solo se asciende a tope de nivel, por debajo de 5★ y con gemas y piedra en mano.
+    private static AscensionStoneTier TierForStar(int starRank)
+    {
+        int index = Mathf.Clamp(starRank - 1, 0, AscendStoneTierByStar.Length - 1);
+        return AscendStoneTierByStar[index];
+    }
+
+    // Solo se asciende a tope de nivel, por debajo de 5★ y con gemas y piedra del tier exacto en mano.
     public bool CanAscend(EconomyManager economy, CraftingManager crafting)
         => IsMaxLevel
            && hero != null && hero.StarRank < 5
            && economy != null && economy.CanAfford(AscendGemCost)
-           && crafting != null && crafting.AscensionStones >= ascendStoneCost;
+           && crafting != null && crafting.HasStone(AscendStoneTier);
 
     // Color por rareza del rótulo flotante: 1* gris, 2* verde, 3* azul, 4* morado, 5* dorado.
     public static Color RarityColor(int starRank) => UITheme.Rarity(starRank);
@@ -94,6 +121,21 @@ public class HeroProgress : MonoBehaviour
         RefreshLabel();
         LevelChanged?.Invoke(level);
         EXPChanged?.Invoke(currentEXP, MaxEXP);
+    }
+
+    // La usa el SaveManager; separado de LoadState para no tocar la firma que ya usan los saves viejos.
+    public void LoadTactics(float savedAggression, float savedSafeDistance, float savedSkillThreshold)
+    {
+        aggression = Mathf.Clamp01(savedAggression);
+        safeDistance = Mathf.Clamp01(savedSafeDistance);
+        skillThreshold = Mathf.Clamp01(savedSkillThreshold);
+    }
+
+    // Desde el roster/ficha: el jugador ajusta la personalidad de combate del héroe.
+    public void SetTactics(float newAggression, float newSafeDistance, float newSkillThreshold)
+    {
+        LoadTactics(newAggression, newSafeDistance, newSkillThreshold);
+        SaveManager.RequestSave();
     }
 
     public void AddEXP(int amount)
@@ -134,12 +176,12 @@ public class HeroProgress : MonoBehaviour
         if (!CanAscend(economy, crafting))
         {
             Debug.LogWarning($"[Ascensión] Faltan recursos: {AscendGemCost} gemas " +
-                             $"y {ascendStoneCost} Piedra(s) de Ascensión.", this);
+                             $"y 1 Piedra {AscendStoneTier}.", this);
             return false;
         }
 
         economy.TrySpend(AscendGemCost);
-        for (int i = 0; i < ascendStoneCost; i++) crafting.TryConsumeStone();
+        crafting.TryConsumeStone(AscendStoneTier);
 
         hero.ApplyAscension(ascensionStatMultiplier);
         GrantSubclassIfDue();

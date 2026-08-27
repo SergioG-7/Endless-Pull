@@ -27,6 +27,11 @@ public class HeroSaveData
     public int subclass;
     public string assignedBuilding = string.Empty;
 
+    // Personalidad de combate: agresividad, distancia de seguridad, umbral de habilidad.
+    public float aggression = 0.5f;
+    public float safeDistance = 0.5f;
+    public float skillThreshold = 0.15f;
+
     // Los enums van como int: es lo único que JsonUtility garantiza dentro de una lista.
     public List<int> passives = new List<int>();
     public List<MasterySaveData> mastery = new List<MasterySaveData>();
@@ -79,7 +84,13 @@ public class GameSaveData
     public int food;
     public int currentFloor = 1;
     public int highestClearedFloor;
+
+    // Zurrón de piedras de saves anteriores a los tiers; se migra a Menor al cargar (ver Load).
     public int ascensionStones;
+
+    // Piedras por tier: [0]=Menor [1]=Media [2]=Mayor [3]=Legendaria.
+    public int[] ascensionStoneCounts;
+
     public int healingPotions;
 
     // Expedición de recursos en curso, si la había al guardar (WS3: cooldown real + reclamo manual).
@@ -212,7 +223,7 @@ public class SaveManager : MonoBehaviour
             save.food = economy.Food;
         }
 
-        if (crafting != null) save.ascensionStones = crafting.AscensionStones;
+        if (crafting != null) save.ascensionStoneCounts = (int[])crafting.StoneCounts.Clone();
         if (crafting != null) save.healingPotions = crafting.HealingPotions;
 
         if (expeditions != null)
@@ -258,6 +269,9 @@ public class SaveManager : MonoBehaviour
                 trait = hero.Trait,
                 isLocked = hero.IsLocked,
                 subclass = (int)hero.Subclass,
+                aggression = progress != null ? progress.Aggression : 0.5f,
+                safeDistance = progress != null ? progress.SafeDistance : 0.5f,
+                skillThreshold = progress != null ? progress.SkillThreshold : 0.15f,
                 assignedBuilding = hero.AssignedBuilding != null ? hero.AssignedBuilding.SaveId : string.Empty,
                 shieldAssetName = AssetNameOf(hero.Shield),
                 weaponDurability = hero.DurabilityOf(EquipmentSlot.Weapon),
@@ -314,9 +328,13 @@ public class SaveManager : MonoBehaviour
             return;
         }
 
+        int totalPiedras = 0;
+        if (save.ascensionStoneCounts != null)
+            foreach (int n in save.ascensionStoneCounts) totalPiedras += n;
+
         Debug.Log($"[Guardado] {save.heroes.Count} héroe(s), piso {save.currentFloor}, " +
                   $"{save.gems} gemas, {save.wood}M/{save.iron}H/{save.food}C, " +
-                  $"{save.ascensionStones} piedra(s) -> {SavePath}", this);
+                  $"{totalPiedras} piedra(s) -> {SavePath}", this);
     }
 
     public void Load()
@@ -351,7 +369,19 @@ public class SaveManager : MonoBehaviour
             save.highestClearedFloor = Mathf.Max(0, save.currentFloor - 1);
 
         if (waves != null) waves.LoadProgress(save.currentFloor, save.highestClearedFloor);
-        if (crafting != null) crafting.LoadStones(save.ascensionStones);
+
+        if (crafting != null)
+        {
+            // Un save de antes de los tiers no trae ascensionStoneCounts: su zurrón genérico
+            // se conserva entero como Piedra Menor, para no perder progreso ya guardado.
+            var counts = save.ascensionStoneCounts;
+            int menor = (counts != null && counts.Length > 0) ? counts[0] : save.ascensionStones;
+            int media = (counts != null && counts.Length > 1) ? counts[1] : 0;
+            int mayor = (counts != null && counts.Length > 2) ? counts[2] : 0;
+            int legendaria = (counts != null && counts.Length > 3) ? counts[3] : 0;
+            crafting.LoadStones(menor, media, mayor, legendaria);
+        }
+
         if (crafting != null) crafting.LoadPotions(save.healingPotions);
 
         if (expeditions != null)
@@ -491,7 +521,11 @@ public class SaveManager : MonoBehaviour
 
             // El nivel después: aplica los bonus y deja la vida al máximo, que luego se pisa.
             var progress = hero.GetComponent<HeroProgress>();
-            if (progress != null) progress.LoadState(entry.level, entry.currentExp);
+            if (progress != null)
+            {
+                progress.LoadState(entry.level, entry.currentExp);
+                progress.LoadTactics(entry.aggression, entry.safeDistance, entry.skillThreshold);
+            }
 
             hero.LoadVitals(entry.currentHealth, entry.currentMP, entry.fatigue, entry.morale);
             hero.SetLocked(entry.isLocked);

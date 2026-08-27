@@ -174,6 +174,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
     private float attackTimer;
     private float scanTimer;
     private EnemyController target;
+    private HeroProgress progress;
 
     // Maná, fatiga y moral van en float para que los cambios por segundo no se pierdan entre frames.
     private float currentMP;
@@ -285,6 +286,11 @@ public class HeroController : MonoBehaviour, IHealthOwner
            || HeroSubclasses.ArchetypeOf(subclass) == WeaponType.Staff;
 
     public float EffectiveAttackRange => IsRanged ? rangedAttackRange : attackRange;
+
+    // Personalidad de combate; sin HeroProgress (agentes de prueba) se queda en los valores neutros.
+    public float Aggression => progress != null ? progress.Aggression : 0.5f;
+    public float SafeDistance => progress != null ? progress.SafeDistance : 0.5f;
+    public float SkillThreshold => progress != null ? progress.SkillThreshold : 0.15f;
 
     public float AttackReach => EffectiveAttackRange;
     public float DetectionReach => EffectiveDetectionRange;
@@ -560,6 +566,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
         animator = GetComponent<LPCAnimator>();
         body = GetComponent<SpriteRenderer>();
+        progress = GetComponent<HeroProgress>();
         morale = startingMorale;
 
         if (data != null)
@@ -605,7 +612,9 @@ public class HeroController : MonoBehaviour, IHealthOwner
     }
 
     // La llama el WaveManager al mandar o retirar la escuadra de la torre.
-    public void SetDeployed(bool value)
+    // viaGateway: aterriza en el Portal de Torre en vez de dispersarse directo por la base
+    // (el WaveManager lo limita a un puñado de la escuadra para no amontonar la plaza).
+    public void SetDeployed(bool value, bool viaGateway = false)
     {
         deployed = value;
 
@@ -614,7 +623,8 @@ public class HeroController : MonoBehaviour, IHealthOwner
             forcedTarget = null;
             target = null;
             defensiveTimer = 0f;
-            TeleportToBaseArea();
+            if (viaGateway) TeleportToGateway();
+            else TeleportToBaseArea();
             EnterBaseWander();
         }
     }
@@ -626,6 +636,12 @@ public class HeroController : MonoBehaviour, IHealthOwner
         transform.position = baseAreaCenter + new Vector2(
             UnityEngine.Random.Range(-half.x, half.x),
             UnityEngine.Random.Range(-half.y, half.y));
+    }
+
+    // Aterriza en el punto de encuentro del Portal, con un scatter pequeño para no apilar sprites.
+    private void TeleportToGateway()
+    {
+        transform.position = TowerGateway.Position + UnityEngine.Random.insideUnitCircle * 0.6f;
     }
 
     // Asignar subclase cambia también la habilidad activa por la exclusiva del arquetipo.
@@ -1057,9 +1073,19 @@ public class HeroController : MonoBehaviour, IHealthOwner
             return;
         }
 
+        // Golpe en área del jefe cargando: los tanques aguantan la línea a propósito (mismo
+        // criterio que TriggerMicroStep); el resto esquiva solo si es más prudente que agresivo.
+        if (!IsTank && target.IsWindingUp && distancia < target.SlamRadius && SafeDistance > Aggression)
+        {
+            MoveAwayFrom(target.transform.position);
+            return;
+        }
+
         // El rango no se deja alcanzar: si el objetivo entra demasiado cerca, se reposiciona
-        // mientras sigue disparando, en vez de plantarse a pegar cuerpo a cuerpo.
-        if (IsRanged && distancia < EffectiveAttackRange * rangedSafeDistanceRatio)
+        // mientras sigue disparando, en vez de plantarse a pegar cuerpo a cuerpo. La distancia de
+        // seguridad del héroe estira o encoge ese colchón sobre la ratio base del arma.
+        float kiteRatio = rangedSafeDistanceRatio * Mathf.Lerp(0.6f, 1.4f, SafeDistance);
+        if (IsRanged && distancia < EffectiveAttackRange * kiteRatio)
             MoveAwayFrom(target.transform.position);
 
         attackTimer -= Time.deltaTime;
@@ -1067,8 +1093,11 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
         attackTimer = EffectiveAttackCooldown;
 
-        // Si llega el maná y la habilidad está lista, el golpe especial sustituye al básico.
-        if (!IsSupport && skill != null && skill.CanCast(CurrentMP))
+        // Si llega el maná y la habilidad está lista, el golpe especial sustituye al básico, salvo
+        // que el enemigo esté ya por debajo del umbral del héroe: rematar con la habilidad es tirarla.
+        bool targetAlmostDead = target.MaxHealth > 0
+            && (float)target.CurrentHealth / target.MaxHealth < SkillThreshold;
+        if (!IsSupport && !targetAlmostDead && skill != null && skill.CanCast(CurrentMP))
         {
             CastCombatSkill(target);
             return;
