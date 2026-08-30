@@ -15,9 +15,9 @@ MonoBehaviour:
   heroName: Zephyr
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: "El nombre de Zephyr circula entre las tropas como sinónimo de victoria. Prefiere el choque frontal: acercarse, golpear y no dejar que el rival respire."
-  bioEn: "Zephyr's name circulates among the troops as a byword for victory. Fights hand to hand without hesitation, always hunting the enemy's weak point."
-  bioJa: "Zephyrの名は勝利の代名詞として兵士たちの間で語られている。迷わず接近戦を挑み、常に敵の弱点を探る。"
+  bio: "Zephyr dejó atrás a una partida de asaltantes el doble de numerosa antes de que la mayoría hubiera desenvainado, y volvió a por el resto. En la frontera ya nadie duda de su velocidad."
+  bioEn: "Zephyr outran a raiding party twice his number before most of them had even drawn steel, then came back for the rest. Nobody on the frontier doubts his speed anymore."
+  bioJa: "自分の倍の人数の襲撃者を、大半が剣を抜く前に振り切ったゼファーは、そのまま残りを迎え撃ちに戻った。国境ではもう誰もその速さを疑わない。"
   bodySprite: {fileID: 7797416449044405194, guid: 5ac84c3d3d7a5d04dbd4487c084b8274, type: 3}
   walkFrames:
   - {fileID: 2199607713635570114, guid: 5ac84c3d3d7a5d04dbd4487c084b8274, type: 3}

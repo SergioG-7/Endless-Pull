@@ -15,9 +15,9 @@ MonoBehaviour:
   heroName: Darian
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: "Darian carga con más batallas de las que se pueden contar con los dedos de una mano. Prefiere el choque frontal: acercarse, golpear y no dejar que el rival respire."
-  bioEn: "Darian carries more battles than can be counted on one hand. Prefers the head-on clash: close in, strike, and give the enemy no room to breathe."
-  bioJa: "Darianは数えきれないほどの戦いを重ねてきた古参兵だ。迷わず接近戦を挑み、常に敵の弱点を探る。"
+  bio: "Darian dirigió la milicia de su aldea antes de que la Torre reclamara sus servicios a tiempo completo. Todavía manda como si tuviera un pueblo entero a su espalda."
+  bioEn: "Darian led his village militia before the Tower claimed his services full-time. He still commands like he's got an entire village at his back."
+  bioJa: "塔に本採用される前は村の民兵を率いていたダリアン。今でも村ひとつを背負っているかのように指揮を執る。"
   bodySprite: {fileID: -8449178597520688327, guid: 39f80dde0e17d6940b5499c6f2828288, type: 3}
   walkFrames:
   - {fileID: 3962814023620503394, guid: 39f80dde0e17d6940b5499c6f2828288, type: 3}

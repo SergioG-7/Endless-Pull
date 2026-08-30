@@ -15,9 +15,9 @@ MonoBehaviour:
   heroName: Iselia
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: "El nombre de Iselia circula entre las tropas como sinónimo de victoria. Prefiere el choque frontal: acercarse, golpear y no dejar que el rival respire."
-  bioEn: "Iselia's name circulates among the troops as a byword for victory. Closes into direct combat, blow after blow, until one side falls."
-  bioJa: "Iseliaの名は勝利の代名詞として兵士たちの間で語られている。迷わず接近戦を挑み、常に敵の弱点を探る。"
+  bio: "Iselia dirigió la defensa de un pueblo fronterizo contra un asalto que nadie esperaba que sobreviviera, y lo consiguió sin perder una sola casa. En los cuarteles todavía brindan por ella."
+  bioEn: "Iselia led the defense of a border town against a raid nobody expected it to survive, and pulled it off without losing a single house. Soldiers still raise a toast to her in the barracks."
+  bioJa: "誰も生き残れないと思われた襲撃から国境の町を守り抜いたイセリアは、家一軒も失わなかった。兵舎では今でも彼女に乾杯する。"
   bodySprite: {fileID: 5841573359959852688, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
   walkFrames:
   - {fileID: 3386263520470008282, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}

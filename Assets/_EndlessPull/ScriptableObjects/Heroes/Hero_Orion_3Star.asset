@@ -15,9 +15,9 @@ MonoBehaviour:
   heroName: Orion
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: "Orion carga con más batallas de las que se pueden contar con los dedos de una mano. Se planta en primera línea y absorbe los golpes que el resto no podría soportar."
-  bioEn: "Orion carries more battles than can be counted on one hand. Never gives an inch: the wall that shields the whole squad."
-  bioJa: "Orionは数えきれないほどの戦いを重ねてきた古参兵だ。前線を支え、仲間が背後から攻撃できるようにする。"
+  bio: "Orion tomó la lanza de su padre, capitán de un fuerte fronterizo caído, y juró que no volvería a caer en su guardia. Pelea con la disciplina de quien no se permite fallar dos veces."
+  bioEn: "Orion took up the spear of his father, a border captain who fell defending his post, and swore it would never fall again on his watch. He fights with the discipline of someone who won't allow himself to fail twice."
+  bioJa: "陥落した国境砦の隊長だった父の槍を受け継いだオリオンは、二度と同じ轍を踏まないと誓った。二度の失敗を自分に許さない者の規律で戦う。"
   bodySprite: {fileID: 661127049300003630, guid: 1296ce6dafbf81a4a9bdc1f213e3963f, type: 3}
   walkFrames:
   - {fileID: -7281105593194768842, guid: 1296ce6dafbf81a4a9bdc1f213e3963f, type: 3}

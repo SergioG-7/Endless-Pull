@@ -15,9 +15,9 @@ MonoBehaviour:
   heroName: Gork
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: "Gork acaba de sumarse a las filas de la torre, con más ganas que experiencia. No retrocede ni un paso: es el muro que protege a toda la escuadra."
-  bioEn: "Gork has just joined the tower's ranks, more eager than experienced. Holds the battle line while allies strike from behind."
-  bioJa: "Gorkは塔に加わったばかりの新兵で、経験より意気込みが先立つ。前線に立ち、他の誰も耐えられない攻撃を一身に受け止める。"
+  bio: "Gork picaba mineral en las minas fronterizas hasta que el filón se secó y la Torre empezó a pagar mejor. Carga como si aún llevara el pico: sin técnica, pero sin cansancio."
+  bioEn: "Gork used to swing a pick in the frontier mines until the vein ran dry and the Tower started paying better. He charges like he's still holding that pick: no technique, but no fatigue either."
+  bioJa: "辺境の鉱山でつるはしを振っていたゴークは、鉱脈が尽きると同時に塔の高給に飛びついた。今もつるはしを握っているかのように突っ込む。技はないが、疲れも知らない。"
   bodySprite: {fileID: 347763781467424086, guid: 9d9f775849c58144db3c2c162aad2a81, type: 3}
   walkFrames:
   - {fileID: 4281889531816272552, guid: 9d9f775849c58144db3c2c162aad2a81, type: 3}

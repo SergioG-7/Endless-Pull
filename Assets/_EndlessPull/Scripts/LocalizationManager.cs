@@ -97,6 +97,10 @@ public static class LocalizationManager
         { "UI_REPEAT",       new[] { "Repetición", "Repeat", "周回" } },
         { "UI_LOCKED_FLOOR", new[] { "Bloqueado", "Locked", "未開放" } },
 
+        // Cuadrantes direccionales bloqueados de la base (QuadrantController).
+        { "UI_QUADRANT_FLOOR_LABEL", new[] { "Piso {0}", "Floor {0}", "{0}階" } },
+        { "UI_QUADRANT_LOCKED_TAP",  new[] { "Desbloquea en Piso {0}", "Unlocks at Floor {0}", "{0}階で解放" } },
+
         // Estados de combate/expedición mostrados en el HUD (WaveManager.Report).
         { "UI_STATUS_ASSIGN_HEROES", new[] { "Asigna héroes a la escuadra", "Assign heroes to the party", "部隊に英雄を配置してください" } },
         { "UI_STATUS_FLOOR_START",   new[] { "Piso {0}: {1} enemigos{2} (x{3:0.00}){4}  Escuadra {5}/{6}",
@@ -235,6 +239,7 @@ public static class LocalizationManager
         { "BLD_FARM",        new[] { "Granja", "Farm", "農場" } },
         { "BLD_ALTAR",       new[] { "Altar de Invocación", "Summoning Gate", "召喚の祭壇" } },
         { "BLD_WORKSHOP",    new[] { "Taller de Alquimia", "Alchemy Workshop", "錬金工房" } },
+        { "BLD_RESTAREA",    new[] { "Zona de Descanso", "Rest Area", "休憩所" } },
 
         // Decretos del Maestro y avisos de combate.
         { "DEC_HEAL",        new[] { "Curar Escuadra", "Heal Party", "部隊回復" } },
@@ -371,12 +376,12 @@ public static class LocalizationManager
         { "UI_CLAIM",        new[] { "Reclamar", "Claim", "受け取る" } },
         { "UI_CLAIMED",      new[] { "Reclamada", "Claimed", "受取済" } },
         { "UI_REWARD",       new[] { "Recompensa", "Reward", "報酬" } },
-        { "Q_FLOOR",         new[] { "Supera el piso {0} de la Torre", "Clear floor {0} of the Tower", "塔の{0}階を突破" } },
-        { "Q_LEVEL",         new[] { "Alcanza el nivel {0} con un héroe", "Reach level {0} with a hero", "ヒーローをレベル{0}に" } },
-        { "Q_ASCEND",        new[] { "Asciende un héroe a {0}★", "Ascend a hero to {0}★", "ヒーローを{0}★に覚醒" } },
-        { "Q_WORKERS",       new[] { "Asigna {0} trabajadores", "Assign {0} workers", "作業員を{0}人配置" } },
-        { "Q_REPAIR",        new[] { "Repara {0} piezas de equipo", "Repair {0} pieces of gear", "装備を{0}点修理" } },
-        { "Q_RESTED",        new[] { "Cura la fatiga de {0} héroe(s)", "Cure fatigue on {0} hero(es)", "ヒーロー{0}人の疲労を回復" } },
+        { "Q_FLOOR",         new[] { "Asalto a la Cima: que la Torre note tu paso hasta el piso {0}.", "Assault on the Peak: make the Tower notice you at floor {0}.", "頂への挑戦：{0}階まで塔に爪痕を残せ。" } },
+        { "Q_LEVEL",         new[] { "Forja de Veteranos: entrena a un héroe hasta el nivel {0}.", "Forging Veterans: train a hero up to level {0}.", "戦士の鍛錬：ヒーローをレベル{0}まで鍛え上げろ。" } },
+        { "Q_ASCEND",        new[] { "Rito de Ascensión: consagra a un héroe hasta {0}★.", "Rite of Ascension: consecrate a hero to {0}★.", "覚醒の儀：ヒーローを{0}★へ覚醒させろ。" } },
+        { "Q_WORKERS",       new[] { "Manos a la Obra: pon a {0} trabajadores en sus puestos.", "All Hands on Deck: put {0} workers to their posts.", "人手を配せ：{0}人の作業員を持ち場につかせろ。" } },
+        { "Q_REPAIR",        new[] { "Yunque y Fuelle: repara {0} piezas de equipo.", "Anvil and Bellows: repair {0} pieces of gear.", "金床と鞴：装備を{0}点修理せよ。" } },
+        { "Q_RESTED",        new[] { "Descanso Merecido: cura la fatiga de {0} héroe(s).", "A Well-Earned Rest: cure the fatigue of {0} hero(es).", "束の間の休息：ヒーロー{0}人の疲労を癒せ。" } },
 
         // Puestos: un héroe solo puede ocupar uno a la vez.
         { "UI_DUTY_FREE",       new[] { "Libre", "Idle", "待機" } },

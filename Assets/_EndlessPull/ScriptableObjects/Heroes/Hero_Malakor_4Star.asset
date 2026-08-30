@@ -15,9 +15,9 @@ MonoBehaviour:
   heroName: Malakor
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: "El nombre de Malakor circula entre las tropas como sinónimo de victoria. Aguanta el frente de batalla mientras sus compañeros golpean desde atrás."
-  bioEn: "Malakor's name circulates among the troops as a byword for victory. Holds the front line and soaks up the hits the rest of the squad could not survive."
-  bioJa: "Malakorの名は勝利の代名詞として兵士たちの間で語られている。前線を支え、仲間が背後から攻撃できるようにする。"
+  bio: "Malakor rompió una formación enemiga a mano limpia durante las escaramuzas fronterizas, y la historia ha crecido cada año desde entonces. Pega como si todavía tuviera algo que demostrar, aunque ya no lo tenga."
+  bioEn: "Malakor broke an enemy formation with his bare hands during the border skirmishes, and the story's grown every year since. He hits like he's still got something to prove, though he doesn't anymore."
+  bioJa: "国境の戦いで敵陣を素手で突き崩したマラコアの話は、年を追うごとに大きくなっている。もう証明する必要などないのに、今も何かを証明するように殴りかかる。"
   bodySprite: {fileID: -672808676215049941, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
   walkFrames:
   - {fileID: 4790201261077115631, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}

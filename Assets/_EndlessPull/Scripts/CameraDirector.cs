@@ -18,9 +18,18 @@ public class CameraDirector : MonoBehaviour
     [Tooltip("Segundos que tarda el viaje entre base y arena.")]
     [SerializeField] private float travelSeconds = 1.1f;
 
+    [Tooltip("Tamaño ortográfico en la vista de base; crece para que quepan el hub y los 3 cuadrantes.")]
+    [SerializeField] private float baseOrthographicSize = 12f;
+
+    [Tooltip("Tamaño ortográfico en la vista de arena; se mantiene el encuadre de combate actual.")]
+    [SerializeField] private float arenaOrthographicSize = 8.5f;
+
     private Vector2 origin;
     private Vector2 destination;
     private float travelTimer;
+
+    private float sizeOrigin;
+    private float sizeDestination;
 
     void Awake()
     {
@@ -44,7 +53,7 @@ public class CameraDirector : MonoBehaviour
 
     void Start()
     {
-        SnapTo(baseView);
+        SnapTo(baseView, baseOrthographicSize);
     }
 
     void LateUpdate()
@@ -57,6 +66,8 @@ public class CameraDirector : MonoBehaviour
         float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(travelTimer / travelSeconds));
         Vector2 pos = Vector2.Lerp(origin, destination, t);
         target.transform.position = new Vector3(pos.x, pos.y, target.transform.position.z);
+
+        if (target.orthographic) target.orthographicSize = Mathf.Lerp(sizeOrigin, sizeDestination, t);
     }
 
     public bool IsTravelling => travelTimer < travelSeconds;
@@ -64,8 +75,8 @@ public class CameraDirector : MonoBehaviour
     // Lo manda el WaveManager para que la cámara no acabe encuadrando una arena vacía.
     private Vector2 ArenaPoint => waves != null ? waves.ArenaFocus : arenaView;
 
-    public void GoToArena() => TravelTo(ArenaPoint);
-    public void GoToBase() => TravelTo(baseView);
+    public void GoToArena() => TravelTo(ArenaPoint, arenaOrthographicSize);
+    public void GoToBase() => TravelTo(baseView, baseOrthographicSize);
 
     private void OnExpeditionChanged(ExpeditionState state, string message)
     {
@@ -73,22 +84,28 @@ public class CameraDirector : MonoBehaviour
         else GoToBase();
     }
 
-    private void TravelTo(Vector2 point)
+    private void TravelTo(Vector2 point, float size)
     {
         if (target == null) return;
 
         origin = target.transform.position;
         destination = point;
+        sizeOrigin = target.orthographic ? target.orthographicSize : size;
+        sizeDestination = size;
         travelTimer = 0f;
     }
 
-    private void SnapTo(Vector2 point)
+    private void SnapTo(Vector2 point, float size)
     {
         if (target == null) return;
 
         target.transform.position = new Vector3(point.x, point.y, target.transform.position.z);
+        if (target.orthographic) target.orthographicSize = size;
+
         origin = point;
         destination = point;
+        sizeOrigin = size;
+        sizeDestination = size;
         travelTimer = travelSeconds;
     }
 }

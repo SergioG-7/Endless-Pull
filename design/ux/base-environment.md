@@ -218,7 +218,7 @@ no simula ese arte con un "difuminado" prematuro.
   aparece hasta el desbloqueo.
 - **Icono de candado**: glifo geométrico plano (cuerpo redondeado + arco de
   grillete), tintado en runtime a `UITheme.TextSoft` (`#E9E9ED` @ 70%) sobre
-  el `GlassDeep` — contraste >10:1.
+  el `GlassDeep` — contraste >7:1 (AAA).
 - **Etiqueta "Piso N"**: TMP existente (`MainFont SDF`), `UITheme.SizeLabel`
   (15), `UITheme.Text`. Sin asset nuevo.
 
@@ -249,10 +249,14 @@ color de estado.
 | Sur | 10 | Minas (pisos 6-10) | `#8C5A3A` — óxido/cobre desaturado (no reskinea `Building_Farm2`, que conserva su verde) |
 | Oeste | 15 | Cripta (pisos 11-15) | `#52625F` — pizarra-verdiazul desaturado |
 
-Deliberadamente menos saturados que la paleta de Decretos (`DecreeHeal
-#43A65F`, `DecreeFocus #DF911A`, `DecreeRegroup #2A92BB`) para que un jugador
-en combate nunca confunda un flash ambiental de base con una señal de decreto
-accionable.
+Contexto de uso deliberadamente distinto al de la paleta de Decretos
+(`DecreeHeal #43A65F`, `DecreeFocus #DF911A`, `DecreeRegroup #2A92BB`,
+`DecreeRetreat #972527`): destello ambiental de un solo disparo en el mundo
+de la base frente a un HUD de combate persistente y accionable — nunca
+coinciden en pantalla. Adicionalmente, Este y Oeste están claramente
+desaturados frente a cualquier color de Decreto; Sur (`#8C5A3A`, óxido) es
+el caso más próximo en tono/saturación a `DecreeRetreat`, pero al no
+coincidir nunca en pantalla el riesgo de confusión es igualmente bajo.
 
 ### Verificación — independencia del color (estado bloqueado)
 
@@ -425,10 +429,16 @@ gamepad.
 
 - Mapa de journey del jugador no existe (`design/player-journey.md`) — spec
   diseñada sin él, asumiendo contexto razonable.
-- Contenido exacto del Cuadrante Este (piso 5) y Oeste (piso 15) — qué
-  edificio(s) van ahí — pendiente de decisión de game-design/
-  systems-designer; esta spec solo fija la forma (silueta→desbloqueo), no
-  el contenido.
+- ~~Contenido exacto del Cuadrante Este (piso 5) y Oeste (piso 15)~~ —
+  **resuelto**: Este → `Building_RestArea` (`BuildingType.RestArea`, "Zona
+  de Descanso"; tipo ya implementado en `BaseBuilding.cs`, sin instancia en
+  escena hasta ahora — cierra el hueco entre el tick de código y el mundo).
+  Oeste → `Building_TrainingDummy2` ("Campo de Entrenamiento Avanzado"),
+  segundo Campo de Entrenamiento: alivia la contención de jerarquía social
+  entre los rasgos Diligente/Feroz, que ya compiten por el único campo
+  existente. Ninguno de los dos requirió tocar `BaseBuilding.cs` — ambos
+  son instancias nuevas de tipos ya existentes, mismo patrón que
+  `Building_Farm2` en el cuadrante Sur.
 - Cuadrante Norte queda reservado sin uso en esta spec — abierto para una
   futura expansión más allá de piso 15 si hiciera falta.
 - Dónde/cómo se representa visualmente la escuadra mientras dura una

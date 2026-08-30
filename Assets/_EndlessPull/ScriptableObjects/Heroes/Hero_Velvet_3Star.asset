@@ -15,9 +15,9 @@ MonoBehaviour:
   heroName: Velvet
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: "Velvet carga con más batallas de las que se pueden contar con los dedos de una mano. Combate cuerpo a cuerpo sin dudar, buscando siempre el punto débil del enemigo."
-  bioEn: "Velvet carries more battles than can be counted on one hand. Closes into direct combat, blow after blow, until one side falls."
-  bioJa: "Velvetは数えきれないほどの戦いを重ねてきた古参兵だ。正面からの激突を好み、近づいて叩き、敵に息をつかせない。"
+  bio: "Velvet era la campeona invicta de los torneos de duelo fronterizos hasta que la Torre le ofreció un adversario que de verdad valiera la pena. Sigue sin perder, solo que ahora nadie lleva la cuenta."
+  bioEn: "Velvet was the undefeated champion of the frontier dueling circuit until the Tower offered her an opponent actually worth her time. She's still unbeaten, only now nobody's keeping score."
+  bioJa: "国境の決闘大会で無敗を誇っていたヴェルヴェットだったが、塔はようやく歯ごたえのある相手を用意した。今も無敗のままだが、もう誰も勝敗を数えていない。"
   bodySprite: {fileID: -5377984356645680581, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
   walkFrames:
   - {fileID: -5847817129920232263, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}

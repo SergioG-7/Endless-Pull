@@ -1,0 +1,154 @@
+using System.Collections;
+using System.Collections.Generic;
+using TMPro;
+using UnityEngine;
+
+// Identidad de cada cuadrante direccional de la base; casa con los flags del save.
+public enum QuadrantId
+{
+    East,
+    South,
+    West
+}
+
+// Zona de la base bloqueada hasta cierto piso: silueta con candado que se revela una sola vez.
+public class QuadrantController : MonoBehaviour
+{
+    [Tooltip("Identidad del cuadrante; enlaza con el flag persistente en el save.")]
+    [SerializeField] private QuadrantId id;
+
+    [Tooltip("Piso de torre a partir del cual se desbloquea este cuadrante.")]
+    [SerializeField] private int requiredFloor;
+
+    [Tooltip("Edificios reales de este cuadrante; vacío mientras no haya contenido asignado.")]
+    [SerializeField] private BaseBuilding[] buildings = new BaseBuilding[0];
+
+    [Tooltip("Silueta oscurecida que cubre el cuadrante mientras está bloqueado.")]
+    [SerializeField] private SpriteRenderer veil;
+
+    [Tooltip("Icono de candado, hijo del veil.")]
+    [SerializeField] private SpriteRenderer lockIcon;
+
+    [Tooltip("Etiqueta 'Piso N' flotante sobre el candado.")]
+    [SerializeField] private TextMeshPro floorLabel;
+
+    [Tooltip("Segundos del pop de revelado (mismo criterio sin tweening que TowerRewardUI).")]
+    [SerializeField] private float revealPopSeconds = 0.35f;
+
+    // Registro estático: el WorldInteractionManager recorre esta lista, igual que BaseBuilding.All.
+    private static readonly List<QuadrantController> all = new List<QuadrantController>();
+    public static IReadOnlyList<QuadrantController> All => all;
+
+    private WaveManager waves;
+
+    // Ya se reprodujo el pop de revelado alguna vez; evita repetirlo en cargas posteriores.
+    private bool revealed;
+
+    public QuadrantId Id => id;
+    public int RequiredFloor => requiredFloor;
+    public bool Revealed => revealed;
+
+    // Reutiliza el piso que ya publica BaseBuilding; el cuadrante no lleva su propio estado de piso.
+    public bool IsUnlocked => BaseBuilding.TowerFloor >= requiredFloor;
+
+    void Awake()
+    {
+        waves = UnityEngine.Object.FindFirstObjectByType<WaveManager>();
+    }
+
+    void OnEnable()
+    {
+        all.Add(this);
+        if (waves != null) waves.FloorCleared += OnFloorCleared;
+    }
+
+    void OnDisable()
+    {
+        all.Remove(this);
+        if (waves != null) waves.FloorCleared -= OnFloorCleared;
+    }
+
+    void Start()
+    {
+        // Tokens de arte aprobados: GlassDeep para el cuerpo, TextSoft para el candado y el texto.
+        if (veil != null) veil.color = UITheme.GlassDeep;
+        if (lockIcon != null) lockIcon.color = UITheme.TextSoft;
+
+        if (floorLabel != null)
+        {
+            floorLabel.color = UITheme.Text;
+            floorLabel.text = string.Format(LocalizationManager.Get("UI_QUADRANT_FLOOR_LABEL"), requiredFloor);
+        }
+
+        RefreshVisual();
+    }
+
+    // Activa o apaga silueta/candado/etiqueta según el piso; nunca toca los edificios reales.
+    public void RefreshVisual()
+    {
+        bool locked = !IsUnlocked;
+
+        if (veil != null) veil.gameObject.SetActive(locked);
+        if (lockIcon != null) lockIcon.gameObject.SetActive(locked);
+        if (floorLabel != null) floorLabel.gameObject.SetActive(locked);
+    }
+
+    // Bounds reales del veil; si está inactivo (cuadrante ya desbloqueado) no hay nada que tocar.
+    public bool ContainsPoint(Vector2 point)
+        => veil != null && veil.gameObject.activeInHierarchy && veil.bounds.Contains(point);
+
+    // La usa el SaveManager al cargar la partida, cotejando por QuadrantId.
+    public void LoadRevealed(bool alreadyRevealed)
+    {
+        revealed = alreadyRevealed;
+        RefreshVisual();
+    }
+
+    public static QuadrantController Find(QuadrantId quadrantId)
+    {
+        foreach (var q in all)
+            if (q != null && q.id == quadrantId) return q;
+
+        return null;
+    }
+
+    private void OnFloorCleared(FloorRewardInfo info)
+    {
+        if (revealed || !info.firstClear || info.floor != requiredFloor) return;
+
+        StopAllCoroutines();
+        StartCoroutine(RevealRoutine());
+    }
+
+    // Pop de escala 0.4->1.08->1.0, mismo criterio sin librería de tweening que TowerRewardUI.PopChest.
+    private IEnumerator RevealRoutine()
+    {
+        var targets = new List<Transform> { transform };
+        foreach (var building in buildings)
+            if (building != null) targets.Add(building.transform);
+
+        var originalScales = new Vector3[targets.Count];
+        for (int i = 0; i < targets.Count; i++) originalScales[i] = targets[i].localScale;
+
+        float elapsed = 0f;
+        while (elapsed < revealPopSeconds)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / revealPopSeconds);
+
+            float overshoot = Mathf.Sin(t * Mathf.PI * 0.5f);
+            float scale = Mathf.Lerp(0.4f, 1.08f, overshoot) - (t >= 1f ? 0.08f : 0f);
+
+            for (int i = 0; i < targets.Count; i++)
+                targets[i].localScale = originalScales[i] * scale;
+
+            yield return null;
+        }
+
+        for (int i = 0; i < targets.Count; i++) targets[i].localScale = originalScales[i];
+
+        revealed = true;
+        RefreshVisual();
+        SaveManager.RequestSave();
+    }
+}

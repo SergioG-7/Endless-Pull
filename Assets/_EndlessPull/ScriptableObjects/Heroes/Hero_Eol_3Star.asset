@@ -15,9 +15,9 @@ MonoBehaviour:
   heroName: Eol
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: "Eol carga con más batallas de las que se pueden contar con los dedos de una mano. Mantiene las distancias y dispara con precisión mientras otros cubren el frente."
-  bioEn: "Eol carries more battles than can be counted on one hand. Keeps their distance and fires with precision while others hold the line."
-  bioJa: "Eolは数えきれないほどの戦いを重ねてきた古参兵だ。距離を保ちながら、味方が前線を支える間に正確に狙い撃つ。"
+  bio: "Eol pasó años rastreando bandas de asaltantes por la frontera antes de que alguien pensara en pagarle por ello. Conoce sus tácticas mejor que las suyas propias."
+  bioEn: "Eol spent years tracking raider bands across the frontier before anyone thought to pay him for it. He knows their tactics better than he knows his own."
+  bioJa: "誰かに報酬をもらう発想が浮かぶ前から、何年も国境の賊の集団を追い続けてきたエオル。自分の戦術よりも敵の戦術に詳しいほどだ。"
   bodySprite: {fileID: -207816850111704284, guid: 63c41bfaea45d724d87a8ed0937711c8, type: 3}
   walkFrames:
   - {fileID: -8772815690323321541, guid: 63c41bfaea45d724d87a8ed0937711c8, type: 3}

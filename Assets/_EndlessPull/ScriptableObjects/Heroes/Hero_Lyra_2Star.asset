@@ -15,9 +15,9 @@ MonoBehaviour:
   heroName: Lyra
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: "Lyra ha superado ya varios combates y empieza a ganarse un nombre en la torre. Entra en combate directo, golpe tras golpe, hasta que uno de los dos cae."
-  bioEn: "Lyra has already come through several fights and is starting to make a name in the tower. Prefers the head-on clash: close in, strike, and give the enemy no room to breathe."
-  bioJa: "Lyraはすでにいくつもの戦いをくぐり抜け、塔の中で名を上げ始めている。正面からの激突を好み、近づいて叩き、敵に息をつかせない。"
+  bio: "Lyra rastreó ella sola a la partida de asaltantes que había atacado su granja, y los encontró antes que la guardia. La Torre decidió que era mejor tenerla de su lado."
+  bioEn: "Lyra tracked down the raiding party that hit her farm all on her own, and found them before the guard did. The Tower decided it was better to have her on its side."
+  bioJa: "農場を襲った賊の一団を単身で追ったリラは、衛兵より先に彼らを見つけ出した。塔は、味方につけておくほうが得策だと判断した。"
   bodySprite: {fileID: -7347157047065141778, guid: cba4253e59d70e043b1e9775a246ddab, type: 3}
   walkFrames:
   - {fileID: -5621590288284169058, guid: cba4253e59d70e043b1e9775a246ddab, type: 3}

@@ -15,9 +15,9 @@ MonoBehaviour:
   heroName: Miko
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: "Miko acaba de sumarse a las filas de la torre, con más ganas que experiencia. No retrocede ni un paso: es el muro que protege a toda la escuadra."
-  bioEn: "Miko has just joined the tower's ranks, more eager than experienced. Holds the front line and soaks up the hits the rest of the squad could not survive."
-  bioJa: "Mikoは塔に加わったばかりの新兵で、経験より意気込みが先立つ。一歩も引かず、部隊全体を守る盾となる。"
+  bio: "Miko heredó el taller de curtidor de su padre y con él una mano firme para el cuchillo. Corta con la misma precisión con la que antes trabajaba el cuero."
+  bioEn: "Miko inherited her father's tannery and, with it, a steady hand for the knife. She cuts with the same precision she once used on leather."
+  bioJa: "父の革なめし工房を継いだミコは、そのまま刃物を扱う確かな手も受け継いだ。かつて革を仕立てたのと同じ正確さで斬りつける。"
   bodySprite: {fileID: 3784304678136605315, guid: 7f0a9beded1079d42babd0b380a13382, type: 3}
   walkFrames:
   - {fileID: -5258788679262437922, guid: 7f0a9beded1079d42babd0b380a13382, type: 3}

@@ -2,29 +2,7 @@
 
 ## Fase 0 Saneamiento de Infraestructura y Hooks
 
-- Fix de rutas en hooks corregir resolucion de paths en claude hooks para eliminar fallos en validate commit validate push y session stop
-- Permisos y normalizacion POSIX asegurar compatibilidad en Git Bash Windows macOS y salida limpia
 - Ejecutar comando /skill-test
-
-## Fase 24 Cierre de UX UI Santuario y Portal de Retorno
-
-- Checkpoints 1 a 3 completados
-- Checkpoint 4 Portal y Retorno Base conectar TowerGateway en escena para RecallParty y limitar a 6 u 8 heroes visibles en plaza
-- Checkpoint 5 Santuario de Ascension y Sintesis crear SanctuaryUI desacoplado de Roster panel ascension con piedras por tier menor media mayor legendaria y panel sintesis dos columnas con confirmacion
-- Checkpoint 6 Menu In Game conectar boton Menu a InGameMenuUI con reanudar sliders audio selector ES EN JA y salir guardando
-
-## Fase 25 Gimnasio de IA de Heroes Gym Combat y Comportamiento
-
-- Entorno simulacion 10x integrar Gym Combat a Time timeScale 10
-- Personalizacion de tacticas prioridades por heroe
-- Entrenamiento de pesos de IA balance de agresividad distancia de seguridad y decretos
-
-## Fase 26 UI y Entorno de Base
-
-- Ejecutar comando /team-ui
-- Fondo visual de la base mapa pixel art estructurado con zonas
-- Desbloqueo de cuadrantes pisos 5 10 15 expansion visual y funcional segun piso superado
-- Consistencia UI HUD estandarizar marcos tipografias contraste y Safe Area
 
 ## Fase 27 Narrativa Lore y Localizacion
 

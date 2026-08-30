@@ -15,9 +15,9 @@ MonoBehaviour:
   heroName: Sylas
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: "Sylas ha superado ya varios combates y empieza a ganarse un nombre en la torre. Prefiere el choque frontal: acercarse, golpear y no dejar que el rival respire."
-  bioEn: "Sylas has already come through several fights and is starting to make a name in the tower. Closes into direct combat, blow after blow, until one side falls."
-  bioJa: "Sylasはすでにいくつもの戦いをくぐり抜け、塔の中で名を上げ始めている。正面からの激突を好み、近づいて叩き、敵に息をつかせない。"
+  bio: "Sylas se curtió escoltando caravanas de mercaderes por caminos que ya no eran seguros. Cobra por proteger, y protege con la seriedad de quien ya ha perdido una carga."
+  bioEn: "Sylas cut his teeth escorting merchant caravans down roads that had stopped being safe. He's paid to protect, and protects with the seriousness of someone who's already lost a shipment."
+  bioJa: "商隊の護衛として、もはや安全とは言えない道を渡り歩いてきたシラス。金で守りを請け負う身だが、一度荷を失った者らしい真剣さで守る。"
   bodySprite: {fileID: -7322985971413935403, guid: eb65e0ab20ebbe6489f868bacfe6fcf8, type: 3}
   walkFrames:
   - {fileID: -4821397991083008215, guid: eb65e0ab20ebbe6489f868bacfe6fcf8, type: 3}

@@ -52,7 +52,19 @@ public class WorldInteractionManager : MonoBehaviour
         }
 
         var building = BuildingAt(punto);
-        if (building != null && buildingCard != null) buildingCard.Show(building);
+        if (building != null)
+        {
+            if (buildingCard != null) buildingCard.Show(building);
+            return;
+        }
+
+        // Zona bloqueada: feedback informativo, sin abrir ningún panel.
+        var quadrant = QuadrantAt(punto);
+        if (quadrant != null)
+        {
+            string texto = string.Format(LocalizationManager.Get("UI_QUADRANT_LOCKED_TAP"), quadrant.RequiredFloor);
+            DamageTextManager.Show(punto, texto, UITheme.TextSoft);
+        }
     }
 
     // Un solo punto para ratón y dedo; el proyecto usa solo el Input System nuevo.
@@ -103,6 +115,17 @@ public class WorldInteractionManager : MonoBehaviour
         {
             if (building == null || !building.IsUnlocked) continue;
             if (building.IsInside(point)) return building;
+        }
+
+        return null;
+    }
+
+    private QuadrantController QuadrantAt(Vector2 point)
+    {
+        foreach (var quadrant in QuadrantController.All)
+        {
+            if (quadrant == null) continue;
+            if (quadrant.ContainsPoint(point)) return quadrant;
         }
 
         return null;

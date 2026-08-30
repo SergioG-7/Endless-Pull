@@ -15,9 +15,9 @@ MonoBehaviour:
   heroName: Bruno
   title: Muro de la Puerta Vieja
   origin: Reino Fronterizo
-  bio: "Bruno acaba de sumarse a las filas de la torre, con más ganas que experiencia. Aguanta el frente de batalla mientras sus compañeros golpean desde atrás."
-  bioEn: "Bruno has just joined the tower's ranks, more eager than experienced. Holds the battle line while allies strike from behind."
-  bioJa: "Brunoは塔に加わったばかりの新兵で、経験より意気込みが先立つ。前線を支え、仲間が背後から攻撃できるようにする。"
+  bio: "Bruno cerró la fragua del pueblo cuando la clientela se mudó a la sombra de la Torre, y trajo el martillo con él. Golpea fuerte y sin prisa, como quien forja en lugar de pelear."
+  bioEn: "Bruno shut down the village forge when his customers moved into the Tower's shadow, and brought his hammer along. He hits hard and unhurried, like a man forging rather than fighting."
+  bioJa: "村の鍛冶場を畳んだブルーノは、客が塔の麓へ移ったのを機にハンマーを担いで来た。急がず、まるで鍛えるように重い一撃を放つ。"
   bodySprite: {fileID: -3909910242700766556, guid: b924408405d786d47b782c45617bdfdd, type: 3}
   walkFrames:
   - {fileID: -3346887454132151732, guid: b924408405d786d47b782c45617bdfdd, type: 3}

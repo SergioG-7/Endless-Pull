@@ -15,9 +15,9 @@ MonoBehaviour:
   heroName: Vesper
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: "Vesper ha superado ya varios combates y empieza a ganarse un nombre en la torre. Golpea desde la distancia, castigando al enemigo antes de que pueda acercarse."
-  bioEn: "Vesper has already come through several fights and is starting to make a name in the tower. Prefers to wound from afar, choosing the exact moment to strike."
-  bioJa: "Vesperはすでにいくつもの戦いをくぐり抜け、塔の中で名を上げ始めている。遠距離から攻撃し、敵が近づく前に打ち倒す。"
+  bio: "Vesper se ofreció voluntaria para la ronda nocturna cuando nadie más quería el turno, y ahí aprendió a pelear a ciegas antes que a plena luz. Ve en la oscuridad lo que otros ni intuyen."
+  bioEn: "Vesper volunteered for the night watch when nobody else wanted the shift, and there she learned to fight blind before she ever learned to fight in daylight. She sees in the dark what others can't even sense."
+  bioJa: "誰もやりたがらない夜警を買って出たヴェスパーは、昼間より先に暗闇での戦い方を身につけた。他人が気配すら感じ取れない闇の中を見通す。"
   bodySprite: {fileID: 1661115143844579839, guid: 3f7fad40aceef0447b2c662f7c1adb73, type: 3}
   walkFrames:
   - {fileID: 420150082997369852, guid: 3f7fad40aceef0447b2c662f7c1adb73, type: 3}

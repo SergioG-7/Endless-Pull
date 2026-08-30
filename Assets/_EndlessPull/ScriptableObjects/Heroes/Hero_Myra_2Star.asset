@@ -15,9 +15,9 @@ MonoBehaviour:
   heroName: Myra
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: "Myra ha superado ya varios combates y empieza a ganarse un nombre en la torre. Golpea desde la distancia, castigando al enemigo antes de que pueda acercarse."
-  bioEn: "Myra has already come through several fights and is starting to make a name in the tower. Keeps their distance and fires with precision while others hold the line."
-  bioJa: "Myraはすでにいくつもの戦いをくぐり抜け、塔の中で名を上げ始めている。遠距離から攻撃し、敵が近づく前に打ち倒す。"
+  bio: "Myra defendió la bodega familiar de unos saqueadores con lo primero que encontró a mano: los aros de un barril. Sigue prefiriendo lo improvisado a lo elegante."
+  bioEn: "Myra defended the family cellar from looters with the first thing she could grab: a barrel's iron hoops. She still prefers improvised over elegant."
+  bioJa: "略奪者から家の貯蔵庫を守ったマイラは、手近にあった樽の鉄輪を武器にした。今でも洗練よりも即興を好む。"
   bodySprite: {fileID: -532101233180905481, guid: db469286ceb595c4cb8940bc5bdbd5df, type: 3}
   walkFrames:
   - {fileID: -145011434034316316, guid: db469286ceb595c4cb8940bc5bdbd5df, type: 3}

@@ -15,9 +15,9 @@ MonoBehaviour:
   heroName: Nix
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: "Nix ha superado ya varios combates y empieza a ganarse un nombre en la torre. Se planta en primera línea y absorbe los golpes que el resto no podría soportar."
-  bioEn: "Nix has already come through several fights and is starting to make a name in the tower. Holds the front line and soaks up the hits the rest of the squad could not survive."
-  bioJa: "Nixはすでにいくつもの戦いをくぐり抜け、塔の中で名を上げ始めている。一歩も引かず、部隊全体を守る盾となる。"
+  bio: "Nix creció en la guarnición fronteriza y ha visto más escaramuzas que soldados el doble de mayores que ella. Se mueve entre el caos como quien nunca ha conocido otra cosa."
+  bioEn: "Nix grew up in the frontier garrison and has seen more skirmishes than soldiers twice her age. She moves through chaos like she's never known anything else."
+  bioJa: "国境の駐屯地で育ったニクスは、倍の年齢の兵士より多くの小競り合いを見てきた。混乱の中を、まるでそれしか知らないかのように進む。"
   bodySprite: {fileID: 7263084624513942294, guid: 9e9b1dce767a92d4487643fa4b609d00, type: 3}
   walkFrames:
   - {fileID: -1849560826736374102, guid: 9e9b1dce767a92d4487643fa4b609d00, type: 3}

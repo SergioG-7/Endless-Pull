@@ -15,9 +15,9 @@ MonoBehaviour:
   heroName: Nyx
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: "Nyx carga con más batallas de las que se pueden contar con los dedos de una mano. Golpea desde la distancia, castigando al enemigo antes de que pueda acercarse."
-  bioEn: "Nyx carries more battles than can be counted on one hand. Prefers to wound from afar, choosing the exact moment to strike."
-  bioJa: "Nyxは数えきれないほどの戦いを重ねてきた古参兵だ。距離を保ちながら、味方が前線を支える間に正確に狙い撃つ。"
+  bio: "Nyx ha cartografiado más frontera a pie que los propios cartógrafos del Maestro desde sus mesas. Sabe leer el terreno como otros leen un libro."
+  bioEn: "Nyx has mapped more of the frontier on foot than the Master's own cartographers ever have from their desks. She reads terrain the way others read a book."
+  bioJa: "机の上でしか働かないマスター専属の測量士より、ニクスは自分の足で国境をずっと多く歩いてきた。地形を読む力は、まるで本を読むかのようだ。"
   bodySprite: {fileID: -3135972766220646385, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
   walkFrames:
   - {fileID: 8142597483174917156, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}

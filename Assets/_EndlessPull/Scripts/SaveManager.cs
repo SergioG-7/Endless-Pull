@@ -99,6 +99,11 @@ public class GameSaveData
     public int expeditionHeroesSent;
     public bool expeditionReadyToClaim;
 
+    // Animación de revelado de cuadrante ya reproducida; evita repetirla en cargas posteriores.
+    public bool quadrantEastRevealed;
+    public bool quadrantSouthRevealed;
+    public bool quadrantWestRevealed;
+
     // Identidad de cada héroe de la escuadra; no depende del orden del array.
     public List<string> party = new List<string>();
     public List<string> expeditionSquad = new List<string>();
@@ -240,6 +245,10 @@ public class SaveManager : MonoBehaviour
             save.highestClearedFloor = waves.HighestClearedFloor;
         }
 
+        save.quadrantEastRevealed = QuadrantController.Find(QuadrantId.East)?.Revealed ?? false;
+        save.quadrantSouthRevealed = QuadrantController.Find(QuadrantId.South)?.Revealed ?? false;
+        save.quadrantWestRevealed = QuadrantController.Find(QuadrantId.West)?.Revealed ?? false;
+
         foreach (var building in BaseBuilding.All)
         {
             if (building == null) continue;
@@ -369,6 +378,11 @@ public class SaveManager : MonoBehaviour
             save.highestClearedFloor = Mathf.Max(0, save.currentFloor - 1);
 
         if (waves != null) waves.LoadProgress(save.currentFloor, save.highestClearedFloor);
+
+        // El piso ya está publicado en BaseBuilding.TowerFloor: los cuadrantes pueden calcular su IsUnlocked.
+        QuadrantController.Find(QuadrantId.East)?.LoadRevealed(save.quadrantEastRevealed);
+        QuadrantController.Find(QuadrantId.South)?.LoadRevealed(save.quadrantSouthRevealed);
+        QuadrantController.Find(QuadrantId.West)?.LoadRevealed(save.quadrantWestRevealed);
 
         if (crafting != null)
         {

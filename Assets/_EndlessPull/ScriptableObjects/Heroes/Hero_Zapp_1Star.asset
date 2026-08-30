@@ -15,9 +15,9 @@ MonoBehaviour:
   heroName: Zapp
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: "Zapp acaba de sumarse a las filas de la torre, con más ganas que experiencia. Golpea desde la distancia, castigando al enemigo antes de que pueda acercarse."
-  bioEn: "Zapp has just joined the tower's ranks, more eager than experienced. Keeps their distance and fires with precision while others hold the line."
-  bioJa: "Zappは塔に加わったばかりの新兵で、経験より意気込みが先立つ。距離を保ちながら、味方が前線を支える間に正確に狙い撃つ。"
+  bio: "Zapp corre hacia la pelea antes de que nadie más haya terminado de desenvainar, y luego se pregunta por qué siempre llega solo. Su velocidad compensa lo que le falta de paciencia."
+  bioEn: "Zapp sprints into a fight before anyone else has finished drawing their weapon, then wonders why he always arrives alone. His speed makes up for what he lacks in patience."
+  bioJa: "ザップは誰も剣を抜き終わらないうちに突っ込んでいき、なぜいつも一人で戦っているのか首をかしげる。忍耐の足りなさは、その速さで補っている。"
   bodySprite: {fileID: -7022705497193458277, guid: 348c0668a0a0a7343be290f7d5be02ed, type: 3}
   walkFrames:
   - {fileID: 2944258182246854386, guid: 348c0668a0a0a7343be290f7d5be02ed, type: 3}

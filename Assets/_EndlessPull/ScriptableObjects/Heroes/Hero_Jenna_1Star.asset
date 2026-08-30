@@ -15,9 +15,9 @@ MonoBehaviour:
   heroName: Jenna
   title: Novato de la Vanguardia
   origin: Reino Fronterizo
-  bio: "Jenna acaba de sumarse a las filas de la torre, con más ganas que experiencia. Prefiere herir desde lejos, eligiendo el momento exacto para atacar."
-  bioEn: "Jenna has just joined the tower's ranks, more eager than experienced. Prefers to wound from afar, choosing the exact moment to strike."
-  bioJa: "Jennaは塔に加わったばかりの新兵で、経験より意気込みが先立つ。距離を保ちながら、味方が前線を支える間に正確に狙い撃つ。"
+  bio: "Jenna se alistó para pagar las deudas de la posada de su madre, y todavía manda parte de la paga a casa cada mes. Pelea con la cabeza fría de quien sabe exactamente por qué está ahí."
+  bioEn: "Jenna signed up to pay off her mother's inn debts, and still sends part of her wages home every month. She fights with the cool head of someone who knows exactly why she's there."
+  bioJa: "ジェナは母の宿の借金を返すために志願し、今も毎月給金の一部を実家へ送っている。自分がここにいる理由を知る者らしく、頭を冷やして戦う。"
   bodySprite: {fileID: 1348145604099744802, guid: cd86ec4d446584b4e8811ba4c427ebe9, type: 3}
   walkFrames:
   - {fileID: -768354131081340927, guid: cd86ec4d446584b4e8811ba4c427ebe9, type: 3}
