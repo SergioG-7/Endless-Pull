@@ -31,6 +31,14 @@ public class CameraDirector : MonoBehaviour
     private float sizeOrigin;
     private float sizeDestination;
 
+    // Posición "real" de la cámara sin el temblor; el temblor se suma encima solo al escribir el transform.
+    private Vector2 basePosition;
+    private float shakeTimer;
+    private float shakeDurationTotal;
+    private float shakeMagnitude;
+
+    private static CameraDirector instance;
+
     void Awake()
     {
         if (target == null) target = Camera.main;
@@ -38,7 +46,41 @@ public class CameraDirector : MonoBehaviour
 
         destination = baseView;
         origin = baseView;
+        basePosition = baseView;
         travelTimer = travelSeconds;
+
+        instance = this;
+    }
+
+    void OnDestroy()
+    {
+        if (instance == this) instance = null;
+    }
+
+    // Punto de entrada estático: el combate dispara el temblor sin necesitar referencia a la cámara.
+    public static void Shake(float duration, float magnitude)
+    {
+        if (instance != null) instance.TriggerShake(duration, magnitude);
+    }
+
+    private void TriggerShake(float duration, float magnitude)
+    {
+        // Un golpe flojo no pisa a uno fuerte que ya estuviera temblando.
+        if (shakeTimer > 0f && magnitude < shakeMagnitude) return;
+
+        shakeTimer = duration;
+        shakeDurationTotal = duration;
+        shakeMagnitude = Mathf.Clamp(magnitude, 0f, 1f);
+    }
+
+    // Decaimiento lineal con tiempo real: se nota el temblor incluso durante el hitstop.
+    private Vector2 TickShake()
+    {
+        if (shakeTimer <= 0f) return Vector2.zero;
+
+        shakeTimer -= Time.unscaledDeltaTime;
+        float t = shakeDurationTotal > 0f ? Mathf.Clamp01(shakeTimer / shakeDurationTotal) : 0f;
+        return UnityEngine.Random.insideUnitCircle * shakeMagnitude * t;
     }
 
     void OnEnable()
@@ -58,16 +100,23 @@ public class CameraDirector : MonoBehaviour
 
     void LateUpdate()
     {
-        if (target == null || travelTimer >= travelSeconds) return;
+        if (target == null) return;
 
-        travelTimer += Time.deltaTime;
+        if (travelTimer < travelSeconds)
+        {
+            travelTimer += Time.deltaTime;
 
-        // SmoothStep para que arranque y frene suave en vez de a tirones.
-        float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(travelTimer / travelSeconds));
-        Vector2 pos = Vector2.Lerp(origin, destination, t);
-        target.transform.position = new Vector3(pos.x, pos.y, target.transform.position.z);
+            // SmoothStep para que arranque y frene suave en vez de a tirones.
+            float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(travelTimer / travelSeconds));
+            basePosition = Vector2.Lerp(origin, destination, t);
 
-        if (target.orthographic) target.orthographicSize = Mathf.Lerp(sizeOrigin, sizeDestination, t);
+            if (target.orthographic) target.orthographicSize = Mathf.Lerp(sizeOrigin, sizeDestination, t);
+        }
+
+        // El temblor se aplica siempre encima de basePosition, viajando o parada la cámara.
+        Vector2 shakeOffset = TickShake();
+        target.transform.position = new Vector3(
+            basePosition.x + shakeOffset.x, basePosition.y + shakeOffset.y, target.transform.position.z);
     }
 
     public bool IsTravelling => travelTimer < travelSeconds;
@@ -88,7 +137,8 @@ public class CameraDirector : MonoBehaviour
     {
         if (target == null) return;
 
-        origin = target.transform.position;
+        // Se parte de basePosition, no del transform: así un temblor en curso no se cuela como origen.
+        origin = basePosition;
         destination = point;
         sizeOrigin = target.orthographic ? target.orthographicSize : size;
         sizeDestination = size;
@@ -99,6 +149,7 @@ public class CameraDirector : MonoBehaviour
     {
         if (target == null) return;
 
+        basePosition = point;
         target.transform.position = new Vector3(point.x, point.y, target.transform.position.z);
         if (target.orthographic) target.orthographicSize = size;
 

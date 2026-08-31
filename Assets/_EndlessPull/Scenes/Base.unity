@@ -883,7 +883,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -1235,7 +1235,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -8593,7 +8593,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -12390,7 +12390,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4293781993
   m_fontColor: {r: 0.9137255, g: 0.9137255, b: 0.92941177, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -12403,7 +12403,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -14216,7 +14216,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -14478,7 +14478,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4293781993
   m_fontColor: {r: 0.9137255, g: 0.9137255, b: 0.92941177, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -14491,7 +14491,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -16335,7 +16335,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3808d8cf24f094e4ba5593f9b8e7a2b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MasterCommander
-  quickHealAmount: 25
+  healPercent: 0.08
   party: {fileID: 1930413723}
   healCooldown: 10
   focusFireCooldown: 8
@@ -16472,7 +16472,7 @@ MonoBehaviour:
   retreatMoraleLoss: 10
   bossEveryFloors: 5
   bossScale: 1.8
-  bossStatMultiplier: 1
+  bossCalibrationFloor: 5
   foodPerExpedition: 10
   malnutritionMoraleLoss: 15
   bossChestGems: 300
@@ -17109,6 +17109,14 @@ MonoBehaviour:
   muted: 0
   minInterval: 0.04
   sampleRate: 44100
+  mixer: {fileID: 24100000, guid: 5ce230544fcade94882b4dddc924c27b, type: 2}
+  decreesGroup: {fileID: -1515277836669581083, guid: 5ce230544fcade94882b4dddc924c27b, type: 2}
+  combatGroup: {fileID: -7398783932200228804, guid: 5ce230544fcade94882b4dddc924c27b, type: 2}
+  uiGroup: {fileID: -130996396280122903, guid: 5ce230544fcade94882b4dddc924c27b, type: 2}
+  decreeDuckDb: -8
+  decreeDuckTiming: {x: 0.05, y: 0.2, z: 0.3}
+  bossDuckDb: -6
+  bossDuckTiming: {x: 0.1, y: 0.6, z: 1}
 --- !u!114 &1930413748
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18469,7 +18477,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2

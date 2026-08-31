@@ -182,6 +182,7 @@ public class HeroProgress : MonoBehaviour
 
         economy.TrySpend(AscendGemCost);
         crafting.TryConsumeStone(AscendStoneTier);
+        AudioManager.Play(SfxId.Ascension);
 
         hero.ApplyAscension(ascensionStatMultiplier);
         GrantSubclassIfDue();

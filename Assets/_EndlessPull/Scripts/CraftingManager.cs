@@ -203,6 +203,25 @@ public class CraftingManager : MonoBehaviour
     {
         if (economy == null) economy = UnityEngine.Object.FindFirstObjectByType<EconomyManager>();
         if (shop == null) shop = UnityEngine.Object.FindFirstObjectByType<ShopManager>();
+
+        CraftResolved += OnCraftResolved;
+    }
+
+    void OnDestroy() => CraftResolved -= OnCraftResolved;
+
+    // Chispazo de partículas en el Taller cada vez que un crafteo sale bien (piedra, arma, poción, reparación...).
+    private void OnCraftResolved(bool success, string message)
+    {
+        if (success) VfxManager.Play(VfxId.CraftSuccess, WorkshopPosition());
+    }
+
+    // Posición del primer Taller construido; sin ninguno en la base cae al origen del mundo.
+    private Vector3 WorkshopPosition()
+    {
+        foreach (var b in BaseBuilding.All)
+            if (b != null && b.Type == BuildingType.Workshop) return b.transform.position;
+
+        return Vector3.zero;
     }
 
     // Los materiales se cobran siempre; solo el resultado va a suerte. Las gemas no entran.
@@ -227,6 +246,7 @@ public class CraftingManager : MonoBehaviour
 
             Debug.Log($"[Taller] Piedra {tier} forjada. Tienes {stoneCounts[(int)tier]}.", this);
             CraftResolved?.Invoke(true, LocalizationManager.Get("UI_STONE_FORGED"));
+            AudioManager.Play(SfxId.CraftSuccess);
         }
         else
         {

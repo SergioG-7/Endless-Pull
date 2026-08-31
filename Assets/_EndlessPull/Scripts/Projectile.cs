@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 // Proyectil de las unidades a distancia: viaja hasta el objetivo y allí aplica el daño.
+// Se reutiliza mediante una reserva estática (mismo patrón que AudioManager) en vez de destruirse.
 public class Projectile : MonoBehaviour
 {
     [Tooltip("Unidades por segundo a las que vuela.")]
@@ -22,6 +24,15 @@ public class Projectile : MonoBehaviour
     private EnemyController enemyVictim;
 
     private static Sprite sharedSprite;
+
+    // Reserva de proyectiles; crece bajo demanda y nunca se destruye (evita GC churn).
+    private static readonly List<Projectile> pool = new List<Projectile>();
+    private static int nextPoolIndex;
+
+    // Valor de fábrica de lifetime, capturado antes de que Update() empiece a descontarlo.
+    private float lifetimeDefault;
+
+    void Awake() => lifetimeDefault = lifetime;
 
     // Disparo contra un enemigo; lo usan arqueros y magos del jugador.
     public static void Fire(Vector2 origin, EnemyController victim, int damage, Color color,
@@ -57,7 +68,7 @@ public class Projectile : MonoBehaviour
         // Si el objetivo cae antes de llegar, el proyectil se apaga sin hacer nada.
         if (target == null || lifetime <= 0f)
         {
-            Destroy(gameObject);
+            gameObject.SetActive(false);
             return;
         }
 
@@ -92,23 +103,56 @@ public class Projectile : MonoBehaviour
             else if (heroVictim != null) heroVictim.TakeDamage(damage, ignoresDefense);
         }
 
-        Destroy(gameObject);
+        gameObject.SetActive(false);
     }
 
     private static Projectile Create(Vector2 origin, Color color, bool magic = false)
     {
         AudioManager.PlayAt(magic ? SfxId.MagicBolt : SfxId.ArrowShot, origin);
 
-        var go = new GameObject("Projectile", typeof(SpriteRenderer), typeof(Projectile));
-        go.transform.position = origin;
-        go.transform.localScale = new Vector3(0.55f, 0.18f, 1f);
+        var p = GetFromPool();
 
-        var sr = go.GetComponent<SpriteRenderer>();
+        // Estado limpio: evita arrastrar objetivo/daño de un uso anterior de la reserva.
+        p.target = null;
+        p.heroVictim = null;
+        p.enemyVictim = null;
+        p.shooter = null;
+        p.damage = 0;
+        p.ignoresDefense = false;
+        p.lifetime = p.lifetimeDefault;
+
+        var t = p.transform;
+        t.position = origin;
+        t.rotation = Quaternion.identity;
+        t.localScale = new Vector3(0.55f, 0.18f, 1f);
+
+        var sr = p.GetComponent<SpriteRenderer>();
         sr.sprite = Dart();
         sr.color = color;
         sr.sortingOrder = 30;
 
-        return go.GetComponent<Projectile>();
+        p.gameObject.SetActive(true);
+        return p;
+    }
+
+    // Busca un proyectil libre en la reserva; si todos están en uso crea uno nuevo y lo añade.
+    private static Projectile GetFromPool()
+    {
+        for (int i = 0; i < pool.Count; i++)
+        {
+            int idx = (nextPoolIndex + i) % pool.Count;
+            var candidato = pool[idx];
+            if (candidato != null && !candidato.gameObject.activeSelf)
+            {
+                nextPoolIndex = (idx + 1) % pool.Count;
+                return candidato;
+            }
+        }
+
+        var go = new GameObject("Projectile", typeof(SpriteRenderer), typeof(Projectile));
+        var proj = go.GetComponent<Projectile>();
+        pool.Add(proj);
+        return proj;
     }
 
     // El proyecto no trae sprite de proyectil; se genera uno blanco y se tiñe al disparar.

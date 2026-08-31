@@ -5,8 +5,8 @@ using UnityEngine.InputSystem;
 // El Maestro: intervenciones puntuales del jugador sobre los héroes en escena.
 public class MasterCommander : MonoBehaviour
 {
-    [Tooltip("Vida que restaura la curación rápida de Espacio.")]
-    [SerializeField] private int quickHealAmount = 25;
+    [Tooltip("Porcentaje de vida máxima que restaura la curación rápida de Espacio, por héroe.")]
+    [Range(0.05f, 0.10f)] [SerializeField] private float healPercent = 0.08f;
 
     [Tooltip("Escuadra sobre la que actúan los decretos.")]
     [SerializeField] private PartyManager party;
@@ -62,6 +62,7 @@ public class MasterCommander : MonoBehaviour
             DamageTextManager.Show(hero.transform.position,
                 LocalizationManager.Get("UI_RETREAT"), new Color(0.9f, 0.8f, 0.4f));
 
+        AudioManager.Play(SfxId.DecreeRetreat);
         return waves.RetreatExpedition();
     }
 
@@ -107,7 +108,9 @@ public class MasterCommander : MonoBehaviour
         if (count == 0) return false;
 
         focusFireTimer = focusFireCooldown;
+        AudioManager.Play(SfxId.DecreeFocusFire);
         DamageTextManager.Show(prey.transform.position, "¡ENFOCAR!", new Color(1f, 0.55f, 0.2f));
+        VfxManager.Play(VfxId.DecreeCast, prey.transform.position);
         Debug.Log($"[Decreto] Enfocar Objetivo: {count} héroe(s) sobre {prey.Data.enemyName} " +
                   $"({prey.CurrentHealth} PV).", this);
         return true;
@@ -130,6 +133,7 @@ public class MasterCommander : MonoBehaviour
             hero.SetForcedTarget(null);
             hero.ApplyDefensiveStance(regroupDuration, regroupRetreat);
             DamageTextManager.Show(hero.transform.position, "¡DEFENSA!", new Color(0.6f, 0.8f, 1f));
+            VfxManager.Play(VfxId.DecreeCast, hero.transform.position);
             count++;
         }
 
@@ -186,13 +190,13 @@ public class MasterCommander : MonoBehaviour
         var objetivos = DeployedOrParty();
         if (objetivos.Count == 0)
         {
-            HealAllHeroes(quickHealAmount);
+            HealAllHeroes();
             healTimer = healCooldown;
             return true;
         }
 
         int total = 0;
-        foreach (var hero in objetivos) total += HealHero(hero, quickHealAmount);
+        foreach (var hero in objetivos) total += HealHero(hero);
 
         AudioManager.Play(SfxId.DecreeHeal);
         healTimer = healCooldown;
@@ -216,23 +220,27 @@ public class MasterCommander : MonoBehaviour
     }
 
     // Cura a todos los héroes vivos de la escena.
-    public void HealAllHeroes(int amount)
+    // El parámetro se ignora: solo existe por compatibilidad con el OnClick serializado en escena.
+    public void HealAllHeroes(int legacyUnused = 0)
     {
         var heroes = Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None);
         int totalHealed = 0;
 
         foreach (var hero in heroes)
         {
-            totalHealed += HealHero(hero, amount);
+            totalHealed += HealHero(hero);
         }
 
         Debug.Log($"[Maestro] Curación en masa: +{totalHealed} PV repartidos entre {heroes.Length} héroe(s).", this);
     }
 
     // Curación dirigida a un héroe concreto; devuelve la vida realmente restaurada.
-    public int HealHero(HeroController hero, int amount)
+    public int HealHero(HeroController hero)
     {
         if (hero == null) return 0;
-        return hero.Heal(amount);
+
+        int healed = hero.Heal(Mathf.RoundToInt(healPercent * hero.MaxHealth));
+        if (healed > 0) VfxManager.Play(VfxId.Heal, hero.transform.position);
+        return healed;
     }
 }

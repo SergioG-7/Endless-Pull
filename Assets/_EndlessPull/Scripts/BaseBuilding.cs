@@ -18,11 +18,11 @@ public static class BuildingTypes
     {
         switch (type)
         {
-            case BuildingType.TrainingDummy: return "Campo de Entrenamiento";
-            case BuildingType.Canteen: return "Cantina";
-            case BuildingType.RestArea: return "Zona de Descanso";
-            case BuildingType.Farm: return "Granja";
-            case BuildingType.Workshop: return "Taller";
+            case BuildingType.TrainingDummy: return LocalizationManager.Get("BLD_TRAINING");
+            case BuildingType.Canteen: return LocalizationManager.Get("BLD_CANTEEN");
+            case BuildingType.RestArea: return LocalizationManager.Get("BLD_RESTAREA");
+            case BuildingType.Farm: return LocalizationManager.Get("BLD_FARM");
+            case BuildingType.Workshop: return LocalizationManager.Get("BLD_WORKSHOP");
         }
         return type.ToString();
     }

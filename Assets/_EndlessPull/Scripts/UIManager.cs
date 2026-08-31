@@ -25,6 +25,10 @@ public class UIManager : MonoBehaviour
     {
         instance = this;
         if (actionBarLogic == null) actionBarLogic = UnityEngine.Object.FindFirstObjectByType<MasterActionBar>();
+
+        // Los paneles montados a mano en el Inspector también entran en la animación de apertura.
+        foreach (var p in panels)
+            if (p != null && p.GetComponent<UIModalAnimator>() == null) p.AddComponent<UIModalAnimator>();
     }
 
     // La barra sale solo si no hay modal delante y además hay escuadra desplegada.
@@ -89,7 +93,10 @@ public class UIManager : MonoBehaviour
     // Registra un panel montado en tiempo de ejecución.
     public void Register(GameObject panel)
     {
-        if (panel != null && !panels.Contains(panel)) panels.Add(panel);
+        if (panel == null || panels.Contains(panel)) return;
+
+        panels.Add(panel);
+        if (panel.GetComponent<UIModalAnimator>() == null) panel.AddComponent<UIModalAnimator>();
     }
 
     private void ShowOnly(GameObject panel)

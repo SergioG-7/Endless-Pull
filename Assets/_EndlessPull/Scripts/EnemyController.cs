@@ -483,6 +483,7 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         }
 
         if (animator != null) animator.PlayAttackLunge(target.transform.position);
+        if (isBoss) CombatFeelManager.OnBossImpact();
         target.TakeDamage(Attack, data.magicAttack);
     }
 

@@ -1,7 +1,8 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
-// Textos flotantes de combate: se crean, suben, se desvanecen y se destruyen.
+// Textos flotantes de combate: se reutilizan mediante una reserva (mismo patrón que AudioManager).
 public class DamageTextManager : MonoBehaviour
 {
     [Tooltip("Segundos que dura cada texto en pantalla.")]
@@ -20,6 +21,10 @@ public class DamageTextManager : MonoBehaviour
     [SerializeField] private float verticalOffset = 0.9f;
 
     private static DamageTextManager instance;
+
+    // Reserva de textos flotantes; crece bajo demanda y nunca se destruye (evita GC churn).
+    private readonly List<FloatingText> pool = new List<FloatingText>();
+    private int nextPoolIndex;
 
     void Awake() => instance = this;
 
@@ -45,10 +50,11 @@ public class DamageTextManager : MonoBehaviour
 
     private void Spawn(Vector3 worldPosition, string text, Color color)
     {
-        var go = new GameObject("DamageText", typeof(TextMeshPro));
-        go.transform.SetParent(transform, false);
+        var floater = GetFromPool();
+        var go = floater.gameObject;
         go.transform.position = worldPosition
             + new Vector3(Random.Range(-horizontalJitter, horizontalJitter), verticalOffset, 0f);
+        go.SetActive(true);
 
         var tmp = go.GetComponent<TextMeshPro>();
         tmp.text = text;
@@ -57,12 +63,33 @@ public class DamageTextManager : MonoBehaviour
         tmp.alignment = TextAlignmentOptions.Center;
         tmp.sortingOrder = 100;
 
-        var floater = go.AddComponent<FloatingText>();
         floater.Initialize(lifetime, riseDistance);
+    }
+
+    // Busca un texto libre en la reserva; si todos están en uso crea uno nuevo y lo añade.
+    private FloatingText GetFromPool()
+    {
+        for (int i = 0; i < pool.Count; i++)
+        {
+            int idx = (nextPoolIndex + i) % pool.Count;
+            var candidato = pool[idx];
+            if (candidato != null && !candidato.gameObject.activeSelf)
+            {
+                nextPoolIndex = (idx + 1) % pool.Count;
+                return candidato;
+            }
+        }
+
+        var go = new GameObject("DamageText", typeof(TextMeshPro));
+        go.transform.SetParent(transform, false);
+
+        var floater = go.AddComponent<FloatingText>();
+        pool.Add(floater);
+        return floater;
     }
 }
 
-// Movimiento y desvanecido de un solo texto; se destruye al terminar.
+// Movimiento y desvanecido de un solo texto; al terminar se desactiva y vuelve a la reserva.
 public class FloatingText : MonoBehaviour
 {
     private TextMeshPro label;
@@ -77,6 +104,7 @@ public class FloatingText : MonoBehaviour
         origin = transform.position;
         duration = Mathf.Max(0.05f, lifetime);
         rise = riseDistance;
+        elapsed = 0f; // reinicio necesario: la instancia se reutiliza desde la reserva.
     }
 
     void Update()
@@ -93,6 +121,6 @@ public class FloatingText : MonoBehaviour
             label.color = c;
         }
 
-        if (t >= 1f) Destroy(gameObject);
+        if (t >= 1f) gameObject.SetActive(false);
     }
 }

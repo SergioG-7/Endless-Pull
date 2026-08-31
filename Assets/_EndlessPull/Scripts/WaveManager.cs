@@ -103,8 +103,8 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Escala visual del jefe frente a un enemigo normal.")]
     [SerializeField] private float bossScale = 1.8f;
 
-    [Tooltip("Multiplicador sobre las stats del asset del jefe; a 1 manda el asset tal cual.")]
-    [SerializeField] private float bossStatMultiplier = 1f;
+    [Tooltip("Piso al que están calibradas las stats base del jefe; ahí sus multiplicadores valen 1.")]
+    [Min(1)] [SerializeField] private int bossCalibrationFloor = 5;
 
     [Tooltip("Comida que consume cada expedición.")]
     [SerializeField] private int foodPerExpedition = 10;
@@ -185,14 +185,16 @@ public class WaveManager : MonoBehaviour
     public ExpeditionState State => state;
     public int EnemyCountForFloor => baseEnemyCount + (currentFloor - 1);
     public bool IsBossFloor => bossEveryFloors > 0 && currentFloor % bossEveryFloors == 0;
-    public float StatMultiplierForFloor => 1f + statGrowthPerFloor * (currentFloor - 1)
-                                            + hardHealthGrowth * HardFloors;
+    public float StatMultiplierForFloor(int floor) => 1f + statGrowthPerFloor * (floor - 1)
+                                            + hardHealthGrowth * HardFloorsFor(floor);
 
     // Pisos por encima del umbral duro; a partir de ahí el rusheo automático deja de valer.
-    public int HardFloors => Mathf.Max(0, currentFloor - hardFloorFrom + 1);
+    public int HardFloors => HardFloorsFor(currentFloor);
+
+    private int HardFloorsFor(int floor) => Mathf.Max(0, floor - hardFloorFrom + 1);
 
     // El ataque sube más deprisa que la vida: obliga a provocar, curar y retirarse a tiempo.
-    public float AttackMultiplierForFloor => 1f + hardAttackGrowth * HardFloors;
+    public float AttackMultiplierForFloor(int floor) => 1f + hardAttackGrowth * HardFloorsFor(floor);
 
     // Punto medio entre la línea de la escuadra y la de los enemigos; ahí encuadra la cámara.
     public Vector2 ArenaFocus => arenaCenter + new Vector2(spawnAreaCenter.x * 0.5f, spawnAreaCenter.y);
@@ -226,6 +228,18 @@ public class WaveManager : MonoBehaviour
 
     // Se dispara al superar un piso, con el desglose exacto del botín; lo consume el modal de cofre.
     public event System.Action<FloorRewardInfo> FloorCleared;
+
+    // Se dispara al aparecer un jefe (true) y al resolverse su piso (false); lo usa AudioManager
+    // para el stem musical aditivo y el ducking de aviso de jefe (design/audio/audio-torre-dinamica.md §8.3).
+    public event System.Action<bool> BossStateChanged;
+
+    // Solo invoca el evento en una transición real; evita disparos duplicados.
+    private void SetBossFloor(bool value)
+    {
+        if (bossFloor == value) return;
+        bossFloor = value;
+        BossStateChanged?.Invoke(bossFloor);
+    }
 
     // La usa el SaveManager al cargar una partida.
     public void LoadProgress(int savedFloor, int savedHighest)
@@ -293,8 +307,8 @@ public class WaveManager : MonoBehaviour
         DeployParty();
 
         int count = EnemyCountForFloor;
-        float mult = StatMultiplierForFloor;
-        float atk = AttackMultiplierForFloor;
+        float mult = StatMultiplierForFloor(currentFloor);
+        float atk = AttackMultiplierForFloor(currentFloor);
 
         for (int i = 0; i < count; i++)
         {
@@ -316,7 +330,7 @@ public class WaveManager : MonoBehaviour
             wave.Add(enemy);
         }
 
-        // El jefe se suma a la oleada normal del piso.
+        // El jefe se suma a la oleada normal del piso; el evento se dispara dentro de SpawnBoss().
         bossFloor = IsBossFloor && bossData != null;
         if (bossFloor) SpawnBoss();
 
@@ -483,7 +497,7 @@ public class WaveManager : MonoBehaviour
 
         DespawnWave();
         RecallParty();
-        bossFloor = false;
+        SetBossFloor(false);
         countdownTimer = 0f;
 
         Report(ExpeditionState.Idle, string.Format(
@@ -520,20 +534,27 @@ public class WaveManager : MonoBehaviour
         ActiveSynergyCount = 0;
     }
 
-    // El jefe no escala con el piso: sus números son los del asset, para poder ajustarlo a mano.
+    // El jefe escala igual que el relleno, pero ancla sus proporciones al piso de calibración.
     private void SpawnBoss()
     {
         var go = Instantiate(enemyPrefab, arenaCenter + spawnAreaCenter + new Vector2(1.5f, 0f), Quaternion.identity);
         go.name = $"Enemy_Boss_F{currentFloor}";
 
+        // Los multiplicadores del jefe son relativos a su piso de calibración: mantiene fijas
+        // sus proporciones de vida/ataque respecto al relleno, sin importar cuánto suba el piso.
+        float bossHpMult = StatMultiplierForFloor(currentFloor) / StatMultiplierForFloor(bossCalibrationFloor);
+        float bossAtkMult = AttackMultiplierForFloor(currentFloor) / AttackMultiplierForFloor(bossCalibrationFloor);
+
         var boss = go.GetComponent<EnemyController>();
-        boss.Initialize(bossData, bossStatMultiplier);
+        boss.Initialize(bossData, bossHpMult, bossAtkMult);
         boss.MakeBoss(bossScale);
         wave.Add(boss);
         currentBoss = boss;
 
         Debug.Log($"[Jefe] {bossData.enemyName} aparece en el piso {currentFloor} " +
                   $"con {boss.MaxHealth} PV.", this);
+
+        BossStateChanged?.Invoke(true);
     }
 
     // Botín garantizado por tumbar al jefe: gemas, materiales y una Piedra de Ascensión cuyo
@@ -545,6 +566,8 @@ public class WaveManager : MonoBehaviour
 
         var tier = StoneTierForFloor(floor);
         crafting?.AddStones(tier, 1);
+
+        VfxManager.Play(VfxId.VictoryChest, (Vector3)ArenaFocus);
 
         Debug.Log($"[Cofre] Botín del jefe: +{bossChestGems} gemas, " +
                   $"+{bossChestMaterials} madera, +{bossChestMaterials} hierro y +1 Piedra {tier}.", this);
@@ -634,7 +657,7 @@ public class WaveManager : MonoBehaviour
 
             Report(ExpeditionState.Won, string.Format(
                 LocalizationManager.Get("UI_STATUS_WON"), cleared, modo, gemGain, woodGain, ironGain));
-            bossFloor = false;
+            SetBossFloor(false);
             return;
         }
 
@@ -643,7 +666,7 @@ public class WaveManager : MonoBehaviour
         {
             DespawnWave();
             RecallParty();
-            bossFloor = false;
+            SetBossFloor(false);
             countdownTimer = 0f;
             AudioManager.Play(SfxId.Defeat);
             Report(ExpeditionState.Lost, string.Format(

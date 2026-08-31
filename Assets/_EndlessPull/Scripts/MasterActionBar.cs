@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -5,6 +6,12 @@ using UnityEngine.UI;
 // Barra de decretos del Maestro: pensada para tocar en móvil, sin depender del teclado.
 public class MasterActionBar : MonoBehaviour
 {
+    // Botones de decreto de la barra activa; AudioManager los consulta para no duplicar
+    // SfxId.UiClick sobre un decreto que ya suena con su propio SfxId (gap 7, Fase 30 Audio).
+    private static readonly HashSet<Button> DecreeButtons = new HashSet<Button>();
+
+    public static bool IsDecreeButton(Button button) => button != null && DecreeButtons.Contains(button);
+
     [Tooltip("Comandante que ejecuta los decretos.")]
     [SerializeField] private MasterCommander commander;
 
@@ -71,12 +78,24 @@ public class MasterActionBar : MonoBehaviour
     // Monta los discos; se puede llamar desde el editor para que la escena coincida con el juego.
     public void BuildChrome()
     {
+        RegisterDecreeButtons();
+
         heal = BuildDisc(healButton, 0, "✚");
         focus = BuildDisc(focusButton, 1, "◎");
         regroup = BuildDisc(regroupButton, 2, "◆");
         retreat = BuildDisc(retreatButton, 3, "←");
 
         BuildSynergyTag();
+    }
+
+    // Registra los 4 botones de decreto; se limpia antes por si la barra se reconstruye en editor.
+    private void RegisterDecreeButtons()
+    {
+        DecreeButtons.Clear();
+        if (healButton != null) DecreeButtons.Add(healButton);
+        if (focusButton != null) DecreeButtons.Add(focusButton);
+        if (regroupButton != null) DecreeButtons.Add(regroupButton);
+        if (retreatButton != null) DecreeButtons.Add(retreatButton);
     }
 
     // Rótulo de sinergia sobre los discos; solo sale si la escuadra la tiene activa.

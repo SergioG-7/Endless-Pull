@@ -13698,7 +13698,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3808d8cf24f094e4ba5593f9b8e7a2b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MasterCommander
-  quickHealAmount: 25
+  healPercent: 0.08
   party: {fileID: 1930413723}
   healCooldown: 10
   focusFireCooldown: 8
@@ -13830,15 +13830,20 @@ MonoBehaviour:
   tankHealthThreshold: 70
   originSynergyBonus: 0.05
   wearPerExpedition: 1
+  gatewayVisibleCap: 6
   archerEveryNth: 3
   retreatMoraleLoss: 10
   bossEveryFloors: 5
   bossScale: 1.8
-  bossStatMultiplier: 1
+  bossCalibrationFloor: 5
   foodPerExpedition: 10
   malnutritionMoraleLoss: 15
   bossChestGems: 300
   bossChestMaterials: 60
+  crafting: {fileID: 0}
+  stoneTierFloorCap: 050000000a0000000f000000
+  bossArrivalPause: 0.5
+  bossArrivalBannerSeconds: 1.2
   arenaCenter: {x: 40, y: 0}
   currentFloor: 1
   baseEnemyCount: 2
@@ -13885,9 +13890,6 @@ MonoBehaviour:
   floorLabel: {fileID: 615985993}
   statusLabel: {fileID: 1971030847}
   pullButton: {fileID: 1310601120}
-  party: {fileID: 1930413723}
-  energyLabel: {fileID: 1910196531}
-  energyRefillButton: {fileID: 669187185}
 --- !u!114 &1930413718
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13904,12 +13906,7 @@ MonoBehaviour:
   content: {fileID: 415016184}
   emptyLabel: {fileID: 155399286}
   refreshInterval: 0.5
-  shop: {fileID: 1930413722}
-  economy: {fileID: 1930413716}
-  crafting: {fileID: 1930413724}
-  party: {fileID: 1930413723}
-  synthesis: {fileID: 1930413721}
-  equipModal: {fileID: 1930413744}
+  detailModal: {fileID: 0}
 --- !u!114 &1930413720
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13929,6 +13926,7 @@ MonoBehaviour:
   shop: {fileID: 1930413722}
   crafting: {fileID: 1930413724}
   party: {fileID: 1930413723}
+  expeditions: {fileID: 0}
   prettyPrint: 1
   loadOnStart: 0
 --- !u!114 &1930413721
@@ -13978,15 +13976,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PartyManager
   maxPartySize: 4
   maxExpeditionSize: 4
-  maxEnergy: 5
-  energyRechargeSeconds: 300
-  energyRefillCost: 50
   formationSlots:
   - {x: 3.5, y: 0}
   - {x: 2.5, y: 0.8}
   - {x: 1.8, y: -0.8}
   - {x: 1, y: 0}
-  economy: {fileID: 1930413716}
 --- !u!114 &1930413724
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13999,8 +13993,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1168f00745dc62648bbcce5580a9435c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CraftingManager
-  woodCost: 40
-  ironCost: 40
   successChance: 0.7
   repairWoodCost: 15
   repairIronCost: 15
@@ -14013,11 +14005,20 @@ MonoBehaviour:
   weaponWoodCost: 60
   weaponIronCost: 45
   weaponFoodCost: 20
+  potionFoodCost: 20
+  potionWoodCost: 10
+  upgradeWoodCost: 50
+  upgradeIronCost: 50
+  upgradeFoodCost: 30
+  upgradeAttackBonus: 3
+  upgradeDefenseBonus: 2
   artisanDiscount: 0.05
   artisanLevelDiscount: 0.005
   artisanSuccessBonus: 0.03
   shop: {fileID: 1930413722}
   economy: {fileID: 1930413716}
+  stoneWoodCostByTier: 1e0000003c00000078000000dc000000
+  stoneIronCostByTier: 0f00000023000000460000008c000000
 --- !u!114 &1930413725
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14130,7 +14131,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ResourceExpeditionManager
   durationSeconds: 20
   rewardPerHero: 15
-  energyCost: 1
   economy: {fileID: 1930413716}
   party: {fileID: 1930413723}
 --- !u!114 &1930413731
@@ -14150,6 +14150,8 @@ MonoBehaviour:
   baseView: {x: 0, y: 0}
   arenaView: {x: 40, y: 0}
   travelSeconds: 1.1
+  baseOrthographicSize: 12
+  arenaOrthographicSize: 8.5
 --- !u!114 &1930413732
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14165,6 +14167,7 @@ MonoBehaviour:
   canvas: {fileID: 1301986964}
   expeditions: {fileID: 1930413730}
   party: {fileID: 1930413723}
+  squadUI: {fileID: 0}
   readyColor: {r: 0.25, g: 0.45, b: 0.35, a: 1}
   busyColor: {r: 0.28, g: 0.28, b: 0.32, a: 1}
 --- !u!114 &1930413733
@@ -14182,6 +14185,7 @@ MonoBehaviour:
   canvas: {fileID: 1301986964}
   waves: {fileID: 1930413715}
   party: {fileID: 1930413723}
+  squadUI: {fileID: 0}
   rowHeight: 64
   clearedColor: {r: 0.22, g: 0.42, b: 0.3, a: 1}
   freshColor: {r: 0.55, g: 0.42, b: 0.15, a: 1}
@@ -14304,6 +14308,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HeroQuickCardUI
   canvas: {fileID: 1301986964}
   roster: {fileID: 1930413718}
+  crafting: {fileID: 0}
   size: {x: 760, y: 620}
 --- !u!114 &1930413741
 MonoBehaviour:
@@ -14467,6 +14472,14 @@ MonoBehaviour:
   muted: 0
   minInterval: 0.04
   sampleRate: 44100
+  mixer: {fileID: 24100000, guid: 5ce230544fcade94882b4dddc924c27b, type: 2}
+  decreesGroup: {fileID: -1515277836669581083, guid: 5ce230544fcade94882b4dddc924c27b, type: 2}
+  combatGroup: {fileID: -7398783932200228804, guid: 5ce230544fcade94882b4dddc924c27b, type: 2}
+  uiGroup: {fileID: -130996396280122903, guid: 5ce230544fcade94882b4dddc924c27b, type: 2}
+  decreeDuckDb: -8
+  decreeDuckTiming: {x: 0.05, y: 0.2, z: 0.3}
+  bossDuckDb: -6
+  bossDuckTiming: {x: 0.1, y: 0.6, z: 1}
 --- !u!1 &1949064881
 GameObject:
   m_ObjectHideFlags: 0

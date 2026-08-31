@@ -412,6 +412,8 @@ public class HeroController : MonoBehaviour, IHealthOwner
         enemy.TakeDamage(damage, ignoresDefense, ArmorPierce);
 
         if (critico) DamageTextManager.Show(enemy.transform.position, "¡CRÍTICO!", UITheme.BarMorale);
+        if (critico) AudioManager.Play(SfxId.Critical);
+        if (critico) CombatFeelManager.OnCriticalHit();
 
         StealLife(antes - enemy.CurrentHealth);
     }
@@ -1163,6 +1165,8 @@ public class HeroController : MonoBehaviour, IHealthOwner
         // El crítico se tira una vez para toda la habilidad; las 18 ramas usan este daño.
         int damage = RollStrike(skill.DamageFrom(Attack), out bool critico);
         if (critico) DamageTextManager.Show(transform.position, "¡CRÍTICO!", UITheme.BarMorale);
+        if (critico) AudioManager.Play(SfxId.Critical);
+        if (critico) CombatFeelManager.OnCriticalHit();
 
         int vidaVictima = victim != null ? victim.CurrentHealth : 0;
         int veneno = Mathf.Max(1, Mathf.RoundToInt(Attack * 0.15f));
