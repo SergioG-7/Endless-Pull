@@ -39,6 +39,9 @@ public class HeroController : MonoBehaviour, IHealthOwner
     [Tooltip("Distancia del micro-paso de retirada tras encajar daño o esquivar (los tanques no lo dan).")]
     [SerializeField] private float microStepDistance = 0.4f;
 
+    [Tooltip("Segundos que tarda el paseo entre el Portal de la Torre y el puesto final, al salir o volver.")]
+    [SerializeField] private float gatewayTravelSeconds = 0.4f;
+
     [Tooltip("Segundos de inactividad tras los que un héroe menor cae en apatía.")]
     [SerializeField] private float apathyAfterSeconds = 90f;
 
@@ -205,6 +208,10 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
     // Congelado durante la cuenta atrás de combate: ni FSM ni maná ni estados corren.
     private bool frozen;
+
+    // En marcha por el paseo del Portal (entrada o salida): bloquea la FSM sin tocar "frozen",
+    // que es de la cuenta atrás y no debe levantarse antes de tiempo.
+    private bool traveling;
 
     // Subclase elegida al ascender; manda sobre la habilidad activa.
     private HeroSubclass subclass = HeroSubclass.None;
@@ -625,10 +632,21 @@ public class HeroController : MonoBehaviour, IHealthOwner
             forcedTarget = null;
             target = null;
             defensiveTimer = 0f;
-            if (viaGateway) TeleportToGateway();
+            if (viaGateway) EnterViaGatewayAnimated();
             else TeleportToBaseArea();
             EnterBaseWander();
         }
+    }
+
+    // La llama el WaveManager al desplegar: sale por el Portal de la Torre y camina hasta su
+    // puesto en formación, en vez de aparecer ya puesto en la arena de golpe.
+    public void DeployViaGateway(Vector2 destination)
+    {
+        deployed = true;
+        forcedTarget = null;
+        target = null;
+        TeleportToGateway();
+        StartCoroutine(TravelRoutine(destination, gatewayTravelSeconds));
     }
 
     // La arena está a decenas de unidades: volver andando serían medio minuto de paseo.
@@ -644,6 +662,34 @@ public class HeroController : MonoBehaviour, IHealthOwner
     private void TeleportToGateway()
     {
         transform.position = TowerGateway.Position + UnityEngine.Random.insideUnitCircle * 0.6f;
+    }
+
+    // Aparece justo en el centro del Portal y se aparta caminando hasta el punto de dispersión:
+    // se ve el paso de "salir por el Portal" en vez de aparecer ya disperso de golpe.
+    private void EnterViaGatewayAnimated()
+    {
+        transform.position = TowerGateway.Position;
+        Vector2 scatterPoint = TowerGateway.Position + UnityEngine.Random.insideUnitCircle * 0.6f;
+        StartCoroutine(TravelRoutine(scatterPoint, gatewayTravelSeconds));
+    }
+
+    // Paseo lineal corto e independiente de la FSM (usa "traveling", no "frozen"): así no se pisa
+    // con TickBaseWander/TickCombatApproach mientras dura, y no altera la cuenta atrás externa.
+    private IEnumerator TravelRoutine(Vector2 destination, float duration)
+    {
+        traveling = true;
+        Vector2 start = transform.position;
+        float t = 0f;
+
+        while (duration > 0f && t < duration)
+        {
+            t += Time.deltaTime;
+            transform.position = Vector2.Lerp(start, destination, t / duration);
+            yield return null;
+        }
+
+        transform.position = destination;
+        traveling = false;
     }
 
     // Asignar subclase cambia también la habilidad activa por la exclusiva del arquetipo.
@@ -846,8 +892,9 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
     void Update()
     {
-        // La cuenta atrás previa al combate lo congela todo, igual que a los enemigos.
-        if (frozen) return;
+        // La cuenta atrás previa al combate lo congela todo, igual que a los enemigos; el paseo de
+        // entrada/salida del Portal también frena la FSM para no pelearse por la posición.
+        if (frozen || traveling) return;
 
         if (defensiveTimer > 0f) defensiveTimer -= Time.deltaTime;
 
@@ -1415,10 +1462,30 @@ public class HeroController : MonoBehaviour, IHealthOwner
             }
         }
 
+        // Reintenta unas cuantas veces para no caer dentro de un cuadrante todavía bloqueado;
+        // si no encuentra hueco libre, se queda en el centro de la base (fuera de cualquier veil).
         Vector2 half = baseAreaSize * 0.5f;
-        wanderTarget = baseAreaCenter + new Vector2(
-            UnityEngine.Random.Range(-half.x, half.x),
-            UnityEngine.Random.Range(-half.y, half.y));
+        Vector2 candidate = baseAreaCenter;
+        bool found = false;
+        for (int i = 0; i < 8; i++)
+        {
+            candidate = baseAreaCenter + new Vector2(
+                UnityEngine.Random.Range(-half.x, half.x),
+                UnityEngine.Random.Range(-half.y, half.y));
+
+            if (!IsInsideLockedQuadrant(candidate)) { found = true; break; }
+        }
+
+        wanderTarget = found ? candidate : baseAreaCenter;
+    }
+
+    // Un cuadrante bloqueado (veil con candado activo) nunca es destino de vagabundeo válido.
+    private static bool IsInsideLockedQuadrant(Vector2 point)
+    {
+        foreach (var quadrant in QuadrantController.All)
+            if (quadrant != null && quadrant.ContainsPoint(point)) return true;
+
+        return false;
     }
 
     // Sorteo ponderado: cada rasgo tira más hacia unos edificios que hacia otros.
@@ -1644,6 +1711,14 @@ public class HeroController : MonoBehaviour, IHealthOwner
         }
 
         return healed;
+    }
+
+    // Restaura maná sin pasarse del máximo; admite fracciones para la regeneración pasiva del Pozo de Maná.
+    public void RestoreMP(float amount)
+    {
+        if (amount <= 0f || data == null) return;
+
+        currentMP = Mathf.Min(MaxMP, currentMP + amount);
     }
 
     void OnDrawGizmosSelected()

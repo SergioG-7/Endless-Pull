@@ -36,9 +36,23 @@ public class MasterCommander : MonoBehaviour
     public bool HealReady => healTimer <= 0f;
     public bool FocusFireReady => focusFireTimer <= 0f;
     public bool RegroupReady => regroupTimer <= 0f;
-    public float HealCooldown => healCooldown;
-    public float FocusFireCooldown => focusFireCooldown;
-    public float RegroupCooldown => regroupCooldown;
+
+    // La Sala de Guerra recorta el enfriamiento de los tres decretos: 4% por nivel, tope 50%.
+    private float WarRoomCooldownFactor
+    {
+        get
+        {
+            float reduction = 0f;
+            foreach (var b in BaseBuilding.All)
+                if (b != null && b.IsUnlocked && b.Type == BuildingType.WarRoom) reduction += 0.04f * b.Level;
+
+            return Mathf.Clamp(1f - reduction, 0.5f, 1f);
+        }
+    }
+
+    public float HealCooldown => healCooldown * WarRoomCooldownFactor;
+    public float FocusFireCooldown => focusFireCooldown * WarRoomCooldownFactor;
+    public float RegroupCooldown => regroupCooldown * WarRoomCooldownFactor;
     public float HealCooldownLeft => Mathf.Max(0f, healTimer);
     public float FocusFireCooldownLeft => Mathf.Max(0f, focusFireTimer);
     public float RegroupCooldownLeft => Mathf.Max(0f, regroupTimer);
@@ -107,7 +121,7 @@ public class MasterCommander : MonoBehaviour
 
         if (count == 0) return false;
 
-        focusFireTimer = focusFireCooldown;
+        focusFireTimer = FocusFireCooldown;
         AudioManager.Play(SfxId.DecreeFocusFire);
         DamageTextManager.Show(prey.transform.position, "¡ENFOCAR!", new Color(1f, 0.55f, 0.2f));
         VfxManager.Play(VfxId.DecreeCast, prey.transform.position);
@@ -143,7 +157,7 @@ public class MasterCommander : MonoBehaviour
             return false;
         }
 
-        regroupTimer = regroupCooldown;
+        regroupTimer = RegroupCooldown;
         Debug.Log($"[Decreto] Reagruparse: {count} héroe(s) retroceden {regroupRetreat} unidades " +
                   $"durante {regroupDuration}s.", this);
         return true;
@@ -191,7 +205,7 @@ public class MasterCommander : MonoBehaviour
         if (objetivos.Count == 0)
         {
             HealAllHeroes();
-            healTimer = healCooldown;
+            healTimer = HealCooldown;
             return true;
         }
 
@@ -199,7 +213,7 @@ public class MasterCommander : MonoBehaviour
         foreach (var hero in objetivos) total += HealHero(hero);
 
         AudioManager.Play(SfxId.DecreeHeal);
-        healTimer = healCooldown;
+        healTimer = HealCooldown;
         Debug.Log($"[Decreto] Curar Escuadra: +{total} PV entre {objetivos.Count} héroe(s).", this);
         return true;
     }

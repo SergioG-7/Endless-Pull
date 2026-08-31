@@ -115,6 +115,19 @@ public class CombatHUD : MonoBehaviour
         RefreshAutoRetreatLook();
     }
 
+    // La TopBar (SideMenuUI) recalcula su alto/posición real en su propio Awake; aquí se lee
+    // ya resuelta porque Start() de todos los scripts corre después de todos los Awake().
+    void Start()
+    {
+        if (canvas == null || root == null) return;
+
+        var topBar = canvas.transform.Find("TopBar") as RectTransform;
+        if (topBar == null) return;
+
+        const float gapBelowTopBar = 12f;
+        root.anchoredPosition = new Vector2(panelPosition.x, topBar.offsetMin.y - gapBelowTopBar);
+    }
+
     private void ToggleSpeed()
     {
         fast = !fast;

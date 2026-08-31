@@ -47,6 +47,8 @@ public static class LocalizationManager
         { "UI_NO_SAVE",      new[] { "Sin partida guardada", "No saved game", "セーブデータなし" } },
 
         { "UI_ROSTER",       new[] { "Roster", "Roster", "編成" } },
+        { "UI_VIEW_HEROES",  new[] { "Ver Héroes", "View Heroes", "英雄一覧" } },
+        { "UI_HEAL_ALL",     new[] { "Curar Todos", "Heal All", "全員回復" } },
         { "UI_TOWER",        new[] { "Torre", "Tower", "塔" } },
         { "UI_SHOP",         new[] { "Tienda", "Shop", "店" } },
         { "UI_CRAFT",        new[] { "Taller", "Workshop", "工房" } },
@@ -240,6 +242,28 @@ public static class LocalizationManager
         { "BLD_ALTAR",       new[] { "Altar de Invocación", "Summoning Gate", "召喚の祭壇" } },
         { "BLD_WORKSHOP",    new[] { "Taller de Alquimia", "Alchemy Workshop", "錬金工房" } },
         { "BLD_RESTAREA",    new[] { "Zona de Descanso", "Rest Area", "休憩所" } },
+        { "BLD_MANAWELL",    new[] { "Pozo de Maná", "Mana Well", "魔力の泉" } },
+        { "BLD_FORGE",       new[] { "Forja", "Forge", "鍛冶場" } },
+        { "BLD_WARROOM",     new[] { "Sala de Guerra", "War Room", "作戦室" } },
+        { "BLD_ARCHIVE",     new[] { "Archivo del Santuario", "Sanctuary Archive", "聖域の記録庫" } },
+
+        // Forja: mejora de equipo, gateada tras la Forja construida (CraftingManager.ForgeUnlocked).
+        { "UI_FORGE_LOCKED", new[] { "Requiere la Forja construida", "Requires the Forge built",
+                                      "鍛冶場の建設が必要" } },
+
+        // Archivo del Santuario: hitos de ascensión y lore ya desbloqueado por piso.
+        { "UI_ARCHIVE_TITLE",      new[] { "Archivo del Santuario", "Sanctuary Archive", "聖域の記録庫" } },
+        { "UI_ARCHIVE_MILESTONES", new[] { "Hitos de Ascensión", "Ascension Milestones", "昇格の記録" } },
+        { "UI_ARCHIVE_LORE",       new[] { "Crónicas Desbloqueadas", "Unlocked Lore", "解放された記録" } },
+        { "UI_ARCHIVE_HINT",       new[] { "Registro de hitos y crónicas de la Torre", "Log of milestones and Tower lore",
+                                              "塔の記録と昇格の歴史" } },
+        { "UI_ARCHIVE_NO_MILESTONES", new[] { "Aún no hay ascensiones registradas",
+                                              "No ascensions recorded yet", "まだ昇格の記録はありません" } },
+
+        { "ARCHIVE_LORE_TOWER",     new[] { "La Torre", "The Tower", "塔" } },
+        { "ARCHIVE_LORE_DECREES",   new[] { "Decretos del Maestro", "Decrees of the Master", "師の勅令" } },
+        { "ARCHIVE_LORE_HIERARCHY", new[] { "La Ley del Rango", "The Law of Rank", "序列の掟" } },
+        { "ARCHIVE_LORE_FACTIONS",  new[] { "Facciones y Orígenes", "Factions and Origins", "派閥と出自" } },
 
         // Decretos del Maestro y avisos de combate.
         { "DEC_HEAL",        new[] { "Curar Escuadra", "Heal Party", "部隊回復" } },

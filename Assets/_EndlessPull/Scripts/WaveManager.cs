@@ -433,9 +433,9 @@ public class WaveManager : MonoBehaviour
         {
             if (hero == null) continue;
 
-            // Cada puesto tiene su sitio: apilados, el golpe circular del jefe se los lleva a todos.
-            hero.transform.position = arenaCenter + party.FormationSlot(slot);
-            hero.SetDeployed(true);
+            // Sale por el Portal de la Torre y camina hasta su puesto en formación; cada puesto
+            // tiene su sitio: apilados, el golpe circular del jefe se los lleva a todos.
+            hero.DeployViaGateway(arenaCenter + party.FormationSlot(slot));
             deployed.Add(hero);
             slot++;
         }

@@ -30,8 +30,12 @@ public class BuildingInspectUI : MonoBehaviour
 
     private Button botonMejora;
     private Button botonReparar;
+    private Button botonAbrir;
     private TMP_Text etiquetaReparar;
     private TMP_Text etiquetaMejora;
+
+    private SquadManagementUI squadUI;
+    private SanctuaryArchiveUI archiveUI;
 
     public bool IsOpen => panel != null && panel.activeSelf;
 
@@ -99,7 +103,42 @@ public class BuildingInspectUI : MonoBehaviour
             building.NextWoodCost, building.NextIronCost);
 
         RefreshMaintenance();
+        RefreshOpenButton();
         RebuildWorkerList();
+    }
+
+    // Sala de Guerra y Archivo abren su propio panel dedicado en vez de solo mostrar texto.
+    private void RefreshOpenButton()
+    {
+        if (botonAbrir == null) return;
+
+        bool esSalaDeGuerra = building.Type == BuildingType.WarRoom;
+        bool esArchivo = building.Type == BuildingType.Archive;
+        bool visible = esSalaDeGuerra || esArchivo;
+
+        if (botonAbrir.gameObject.activeSelf != visible) botonAbrir.gameObject.SetActive(visible);
+        if (!visible) return;
+
+        var etiqueta = botonAbrir.GetComponentInChildren<TMP_Text>();
+        etiqueta.text = esSalaDeGuerra
+            ? LocalizationManager.Get("UI_SQUADS")
+            : LocalizationManager.Get("UI_ARCHIVE_TITLE");
+    }
+
+    public void OnOpenPressed()
+    {
+        if (building == null) return;
+
+        if (building.Type == BuildingType.WarRoom)
+        {
+            if (squadUI == null) squadUI = UnityEngine.Object.FindFirstObjectByType<SquadManagementUI>();
+            squadUI?.Open();
+        }
+        else if (building.Type == BuildingType.Archive)
+        {
+            if (archiveUI == null) archiveUI = UnityEngine.Object.FindFirstObjectByType<SanctuaryArchiveUI>();
+            archiveUI?.Show();
+        }
     }
 
     // Sección "Mantenimiento de Equipo": el coste sube con el desgaste acumulado.
@@ -153,6 +192,18 @@ public class BuildingInspectUI : MonoBehaviour
                        "(+50 % por trabajador)";
             case BuildingType.Workshop:
                 return $"+{building.Level * 5} % de éxito en la forja";
+            case BuildingType.ManaWell:
+                return $"{building.ManaPerVisitTick} MP cada {building.TickInterval:0.#}s " +
+                       $"(+{building.PassiveManaPerSecond:0.#} MP/s a trabajadores)";
+            case BuildingType.Forge:
+                if (crafting == null) crafting = UnityEngine.Object.FindFirstObjectByType<CraftingManager>();
+                return crafting != null && crafting.ForgeUnlocked
+                    ? $"-{crafting.ForgeDiscount * 100f:0}% coste de mejora de equipo"
+                    : LocalizationManager.Get("UI_FORGE_LOCKED");
+            case BuildingType.WarRoom:
+                return $"-{Mathf.Min(building.Level * 4f, 50f):0}% cooldown de decretos";
+            case BuildingType.Archive:
+                return LocalizationManager.Get("UI_ARCHIVE_HINT");
         }
         return "-";
     }
@@ -215,6 +266,11 @@ public class BuildingInspectUI : MonoBehaviour
             UITheme.AccentSoft, new Vector2(size.x - 40f, 56f), new Vector2(0f, -200f),
             OnRepairAllPressed);
         etiquetaReparar = botonReparar.GetComponentInChildren<TMP_Text>();
+
+        // Sala de Guerra/Archivo: abre su propio panel en vez del texto de mantenimiento.
+        botonAbrir = UIBuild.Button(panel.transform, "Btn_OpenBuilding", string.Empty,
+            UITheme.AccentSoft, new Vector2(size.x - 40f, 56f), new Vector2(0f, -200f),
+            OnOpenPressed);
 
         // Lista de asignación con scroll: el roster puede ser largo.
         var viewport = new GameObject("Viewport", typeof(RectTransform), typeof(Image),

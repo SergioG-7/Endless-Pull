@@ -47,12 +47,29 @@ public class SideMenuUI : MonoBehaviour
         ("UI_SECTION_FACILITIES", new[] { "Btn_Craft_Open", "Btn_Shop_Open", "Btn_Sanctuary_Open" })
     };
 
+    // Los botones venían con el texto en español fijo en el prefab: aquí se cablean a sus claves.
+    private static readonly Dictionary<string, string> ButtonLabelKeys = new Dictionary<string, string>
+    {
+        { "Btn_Tower_Open", "UI_TOWER" },
+        { "Btn_Squads", "UI_SQUADS" },
+        { "Btn_Expeditions_Open", "UI_EXPEDITIONS" },
+        { "Btn_Quests", "UI_QUESTS" },
+        { "Btn_Roster", "UI_VIEW_HEROES" },
+        { "Btn_Pull", "UI_SUMMON" },
+        { "Btn_HealAll", "UI_HEAL_ALL" },
+        { "Btn_Craft_Open", "UI_CRAFT" },
+        { "Btn_Shop_Open", "UI_SHOP" },
+        { "Btn_Sanctuary_Open", "UI_SANCTUARY" }
+    };
+
     private GameObject body;
     private RectTransform viewport;
     private Button toggleButton;
     private TMP_Text toggleLabel;
     private readonly List<TMP_Text> headers = new List<TMP_Text>();
     private readonly List<string> headerKeys = new List<string>();
+    private readonly List<TMP_Text> buttonLabels = new List<TMP_Text>();
+    private readonly List<string> buttonLabelKeys = new List<string>();
     private bool open;
 
     public bool IsOpen => open;
@@ -111,6 +128,9 @@ public class SideMenuUI : MonoBehaviour
 
         for (int i = 0; i < headers.Count; i++)
             headers[i].text = LocalizationManager.Get(headerKeys[i]).ToUpperInvariant();
+
+        for (int i = 0; i < buttonLabels.Count; i++)
+            buttonLabels[i].text = LocalizationManager.Get(buttonLabelKeys[i]);
     }
 
     // Reordena lo que ya hay: el botón de abrir arriba y los existentes bajo su sección.
@@ -137,6 +157,14 @@ public class SideMenuUI : MonoBehaviour
             float derecha = safeMargin + (Screen.width - segura.xMax) / escala;
             topBar.offsetMin = new Vector2(izquierda + drawerWidth + topBarGap, -arriba - topBarHeight);
             topBar.offsetMax = new Vector2(-derecha, -arriba);
+
+            // En pantallas muy estrechas (móvil vertical) no cabe el chip de materiales: se esconde
+            // para que Gemas y Piso no se corten ni se solapen. El ancho real de una barra estirada
+            // (anchors 0-1) es el ancho del canvas menos los márgenes izquierdo y derecho.
+            float anchoCanvas = Screen.width / escala;
+            float anchoTopBar = anchoCanvas - derecha - (izquierda + drawerWidth + topBarGap);
+            var materiales = topBar.Find("Txt_Materials");
+            if (materiales != null) materiales.gameObject.SetActive(anchoTopBar >= 900f);
         }
 
         // El botón se ancla arriba del todo; el cajón cuelga justo debajo.
@@ -202,6 +230,16 @@ public class SideMenuUI : MonoBehaviour
                 boton.SetParent(grupo, false);
                 boton.SetAsLastSibling();
                 StyleItem(boton);
+
+                if (ButtonLabelKeys.TryGetValue(nombre, out string labelKey))
+                {
+                    var label = boton.GetComponentInChildren<TMP_Text>(true);
+                    if (label != null)
+                    {
+                        buttonLabels.Add(label);
+                        buttonLabelKeys.Add(labelKey);
+                    }
+                }
             }
         }
 

@@ -453,7 +453,7 @@ public class SanctuaryUI : MonoBehaviour
         titulo.text = LocalizationManager.Get("UI_SANCTUARY");
 
         var closeBtn = UIBuild.Button(panel.transform, "Btn_CloseSanctuary", "×", Color.clear,
-            new Vector2(36f, 36f), new Vector2(-24f, -20f), Close);
+            new Vector2(44f, 44f), new Vector2(-24f, -20f), Close);
         var crt = closeBtn.GetComponent<RectTransform>();
         crt.anchorMin = new Vector2(1f, 1f);
         crt.anchorMax = new Vector2(1f, 1f);

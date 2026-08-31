@@ -124,7 +124,10 @@ public class SummonAltarUI : MonoBehaviour
     {
         if (gacha == null || economy == null) return;
 
-        // Una tanda sin resolver se acepta primero: si no, se perderían esos héroes.
+        // Con cartas boca abajo en la mesa no se permite otra tirada: se saltaría su animación.
+        if (HasPending && !AllRevealed) return;
+
+        // Una tanda ya revelada pero sin aceptar se acepta primero: si no, se perderían esos héroes.
         if (HasPending) Accept();
 
         if (!gacha.HasAvailableHeroes())
@@ -324,8 +327,10 @@ public class SummonAltarUI : MonoBehaviour
         etiquetaAceptar.text = LocalizationManager.Get("UI_ACCEPT");
         etiquetaCerrar.text = LocalizationManager.Get("UI_CLOSE");
 
-        bool puedeSimple = economy != null && economy.CanAfford(singleCost);
-        bool puedeMultiple = economy != null && economy.CanAfford(multiCost);
+        // Con cartas boca abajo esperando revelación, los botones de tirada se bloquean del todo.
+        bool bloqueadoPorRevelar = HasPending && !AllRevealed;
+        bool puedeSimple = economy != null && economy.CanAfford(singleCost) && !bloqueadoPorRevelar;
+        bool puedeMultiple = economy != null && economy.CanAfford(multiCost) && !bloqueadoPorRevelar;
 
         botonSimple.interactable = puedeSimple;
         botonMultiple.interactable = puedeMultiple;

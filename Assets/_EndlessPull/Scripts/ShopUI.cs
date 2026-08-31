@@ -106,10 +106,24 @@ public class ShopUI : MonoBehaviour
                                     $"{LocalizationManager.Get("UI_GEMS")}</color> <b>{economy.Gems}</b>"
                                   : string.Empty);
 
-        if (inventoryLabel != null) inventoryLabel.text = DescribeInventory();
+        if (inventoryLabel != null)
+        {
+            inventoryLabel.text = DescribeInventory();
+            GrowToFitContent(inventoryLabel);
+        }
 
         if (buyButton != null)
             buyButton.interactable = economy != null && economy.CanAfford(shop.EquipmentPullCost);
+    }
+
+    // Fija en la escena, alto 260: con almacén lleno el texto se salía del recuadro y quedaba
+    // tapado por lo que hay debajo. Nunca encoge, solo crece si el contenido lo necesita.
+    private static void GrowToFitContent(TMP_Text label)
+    {
+        label.ForceMeshUpdate();
+        var rt = label.rectTransform;
+        float necesaria = label.preferredHeight;
+        if (necesaria > rt.sizeDelta.y) rt.sizeDelta = new Vector2(rt.sizeDelta.x, necesaria);
     }
 
     // Agrupa las piezas repetidas para no listar veinte líneas iguales.

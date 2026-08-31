@@ -8,7 +8,11 @@ public enum BuildingType
     Canteen,
     RestArea,
     Farm,
-    Workshop
+    Workshop,
+    ManaWell,
+    Forge,
+    WarRoom,
+    Archive
 }
 
 // Nombres visibles de los tipos de edificio.
@@ -23,6 +27,10 @@ public static class BuildingTypes
             case BuildingType.RestArea: return LocalizationManager.Get("BLD_RESTAREA");
             case BuildingType.Farm: return LocalizationManager.Get("BLD_FARM");
             case BuildingType.Workshop: return LocalizationManager.Get("BLD_WORKSHOP");
+            case BuildingType.ManaWell: return LocalizationManager.Get("BLD_MANAWELL");
+            case BuildingType.Forge: return LocalizationManager.Get("BLD_FORGE");
+            case BuildingType.WarRoom: return LocalizationManager.Get("BLD_WARROOM");
+            case BuildingType.Archive: return LocalizationManager.Get("BLD_ARCHIVE");
         }
         return type.ToString();
     }
@@ -79,6 +87,12 @@ public class BaseBuilding : MonoBehaviour
     [Tooltip("Segundos entre cosechas de la granja.")]
     [SerializeField] private float harvestInterval = 10f;
 
+    [Tooltip("MP que restaura el Pozo de Maná a quien lo visita, en nivel 1.")]
+    [SerializeField] private int manaPerVisitTick = 8;
+
+    [Tooltip("MP por segundo que el Pozo de Maná regenera a sus trabajadores fijos sin necesidad de visita.")]
+    [SerializeField] private float passiveManaPerSecond = 1f;
+
     [Tooltip("Piso de torre a partir del cual existe este edificio; 0 = desde el principio.")]
     [SerializeField] private int requiredFloor;
 
@@ -110,6 +124,8 @@ public class BaseBuilding : MonoBehaviour
     public int ExpPerTick => Mathf.RoundToInt(expPerTick * LevelFactor);
     public int FoodPerHarvest => Mathf.RoundToInt(foodPerHarvest * LevelFactor);
     public float HarvestInterval => harvestInterval;
+    public int ManaPerVisitTick => Mathf.RoundToInt(manaPerVisitTick * LevelFactor);
+    public float PassiveManaPerSecond => passiveManaPerSecond * LevelFactor;
     public int HealPerTick => Mathf.RoundToInt(healPerTick * LevelFactor);
     public float MoralePerTick => moralePerTick;
     public int NextWoodCost => woodCostPerLevel * level;
@@ -273,11 +289,17 @@ public class BaseBuilding : MonoBehaviour
         }
     }
 
-    // La granja produce sola, sin que nadie la visite.
     void Update()
     {
-        if (type != BuildingType.Farm || economy == null || !IsUnlocked) return;
+        if (!IsUnlocked) return;
 
+        if (type == BuildingType.Farm && economy != null) TickFarm();
+        else if (type == BuildingType.ManaWell) TickManaWell();
+    }
+
+    // La granja produce sola, sin que nadie la visite.
+    private void TickFarm()
+    {
         harvestTimer -= Time.deltaTime;
         if (harvestTimer > 0f) return;
 
@@ -287,6 +309,16 @@ public class BaseBuilding : MonoBehaviour
         PruneWorkers();
         float factor = 1f + workers.Count * 0.5f;
         economy.AddFood(Mathf.RoundToInt(FoodPerHarvest * factor));
+    }
+
+    // El Pozo de Maná recarga a sus trabajadores fijos aunque nadie lo esté visitando ahora mismo.
+    private void TickManaWell()
+    {
+        if (workers.Count == 0) return;
+
+        PruneWorkers();
+        foreach (var worker in workers)
+            if (worker != null) worker.RestoreMP(PassiveManaPerSecond * Time.deltaTime);
     }
 
     void OnEnable() => all.Add(this);
@@ -388,6 +420,11 @@ public class BaseBuilding : MonoBehaviour
                 // El glotón saca un 50% más de la cantina.
                 int heal = Mathf.RoundToInt(HealPerTick * HeroTraits.HealMultiplier(hero.Trait, type));
                 hero.Heal(heal);
+                return true;
+
+            case BuildingType.ManaWell:
+                // Visita puntual: restaura MP igual que la cantina restaura vida.
+                hero.RestoreMP(ManaPerVisitTick);
                 return true;
         }
 

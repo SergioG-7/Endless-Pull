@@ -112,9 +112,36 @@ public class CraftingManager : MonoBehaviour
     public int WeaponFoodCost => Discounted(weaponFoodCost);
     public int PotionWoodCost => Discounted(potionWoodCost);
     public int PotionFoodCost => Discounted(potionFoodCost);
-    public int UpgradeWoodCost => Discounted(upgradeWoodCost);
-    public int UpgradeIronCost => Discounted(upgradeIronCost);
-    public int UpgradeFoodCost => Discounted(upgradeFoodCost);
+    public int UpgradeWoodCost => ForgeDiscounted(upgradeWoodCost);
+    public int UpgradeIronCost => ForgeDiscounted(upgradeIronCost);
+    public int UpgradeFoodCost => ForgeDiscounted(upgradeFoodCost);
+
+    // La Forja es la que desbloquea la mejora de equipo del roster; sin ella construida, no se puede mejorar.
+    public bool ForgeUnlocked
+    {
+        get
+        {
+            foreach (var b in BaseBuilding.All)
+                if (b != null && b.IsUnlocked && b.Type == BuildingType.Forge) return true;
+
+            return false;
+        }
+    }
+
+    // Rebaja propia de la Forja sobre el coste de mejora de equipo, aparte del descuento de artesanos.
+    public float ForgeDiscount
+    {
+        get
+        {
+            float bonus = 0f;
+            foreach (var b in BaseBuilding.All)
+                if (b != null && b.IsUnlocked && b.Type == BuildingType.Forge) bonus += 0.05f * b.Level;
+
+            return Mathf.Clamp01(bonus);
+        }
+    }
+
+    private int ForgeDiscounted(int baseCost) => Mathf.CeilToInt(Discounted(baseCost) * (1f - ForgeDiscount));
 
     // Héroes asignados a un Taller; de ahí salen la rebaja y la probabilidad extra.
     public int Artisans
@@ -186,7 +213,7 @@ public class CraftingManager : MonoBehaviour
     public bool CanCraftPotion => economy != null
         && economy.CanAffordMaterials(PotionWoodCost, 0) && economy.CanAffordFood(PotionFoodCost);
 
-    public bool CanUpgradeGear => economy != null
+    public bool CanUpgradeGear => ForgeUnlocked && economy != null
         && economy.CanAffordMaterials(UpgradeWoodCost, UpgradeIronCost)
         && economy.CanAffordFood(UpgradeFoodCost);
 
@@ -339,6 +366,13 @@ public class CraftingManager : MonoBehaviour
     // así la tarjeta del Taller no necesita un selector de héroe.
     public bool TryUpgradeAllGear()
     {
+        if (!ForgeUnlocked)
+        {
+            Debug.LogWarning("[Forja] Aún no está construida.", this);
+            CraftResolved?.Invoke(false, LocalizationManager.Get("UI_FORGE_LOCKED"));
+            return false;
+        }
+
         int madera = UpgradeWoodCost;
         int hierro = UpgradeIronCost;
         int comida = UpgradeFoodCost;

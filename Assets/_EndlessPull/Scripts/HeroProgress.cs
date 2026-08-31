@@ -95,6 +95,9 @@ public class HeroProgress : MonoBehaviour
     public event System.Action<int> LevelChanged;
     public event System.Action<int, int> EXPChanged;
 
+    // Se dispara al completar una ascensión; lo escucha el Archivo del Santuario.
+    public static event System.Action<HeroController, int> HeroAscended;
+
     void Awake()
     {
         hero = GetComponent<HeroController>();
@@ -186,6 +189,7 @@ public class HeroProgress : MonoBehaviour
 
         hero.ApplyAscension(ascensionStatMultiplier);
         GrantSubclassIfDue();
+        HeroAscended?.Invoke(hero, hero.StarRank);
 
         level = 1;
         currentEXP = 0;

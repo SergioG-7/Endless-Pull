@@ -267,7 +267,7 @@ public class HeroDetailModal : MonoBehaviour
         panel = UIBuild.Panel(canvas.transform, "HeroDetailPanel", size, UITheme.Bg);
 
         var closeBtn = UIBuild.Button(panel.transform, "Btn_CloseDetail", "×", Color.clear,
-            new Vector2(36f, 36f), new Vector2(-24f, -20f), Close);
+            new Vector2(44f, 44f), new Vector2(-24f, -20f), Close);
         var crt = closeBtn.GetComponent<RectTransform>();
         crt.anchorMin = new Vector2(1f, 1f);
         crt.anchorMax = new Vector2(1f, 1f);
@@ -297,6 +297,11 @@ public class HeroDetailModal : MonoBehaviour
             new Vector2(24f, barsY - 48f), UITheme.BarMorale, out moraleLabel);
         AnchorBarLeft(moraleFill, 24f, barsY - 48f);
 
+        // El relleno dorado deja el texto claro casi ilegible: un contorno oscuro lo salva.
+        var moraleOutline = moraleLabel.gameObject.AddComponent<Outline>();
+        moraleOutline.effectColor = new Color(0f, 0f, 0f, 0.85f);
+        moraleOutline.effectDistance = new Vector2(1f, -1f);
+
         gearLabel = UIBuild.Label(panel.transform, "Gear", UITheme.SizeSmall, TextAlignmentOptions.TopLeft);
         gearLabel.color = UITheme.TextSoft;
         gearLabel.lineSpacing = 14f;
@@ -310,6 +315,9 @@ public class HeroDetailModal : MonoBehaviour
         btnUnequip = BuildActionButton(panel.transform, "Btn_Unequip", rightX, 3, OnUnequipClicked);
         btnSubclass = BuildActionButton(panel.transform, "Btn_Subclass", rightX, 4, OnSubclassClicked);
         btnRepair = BuildActionButton(panel.transform, "Btn_Repair", rightX, 5, OnRepairClicked);
+
+        // Las acciones se crean después: sin esto quedaban por encima y tapaban el cierre.
+        closeBtn.transform.SetAsLastSibling();
 
         panel.SetActive(false);
     }
