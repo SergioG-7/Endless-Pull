@@ -30,6 +30,9 @@ public class GachaManager : MonoBehaviour
     [Tooltip("Economía de la que se descuenta el coste.")]
     [SerializeField] private EconomyManager economy;
 
+    // Reparte a los héroes entre el hub y los cuadrantes desbloqueados, en vez de amontonarlos todos en el centro.
+    private int nextWanderZone;
+
     public int PullCost => pullCost;
     public EquipmentData StarterWeapon => starterWeapon;
 
@@ -97,8 +100,23 @@ public class GachaManager : MonoBehaviour
 
         // Initialize corre tras Awake y antes del primer Start, así la barra ya lee bien.
         var hero = go.GetComponent<HeroController>();
-        hero.Initialize(heroData, heroTrait, spawnCenter, wanderSize);
+        var zone = NextWanderZone();
+        hero.Initialize(heroData, heroTrait, zone.center, zone.size);
         return hero;
+    }
+
+    // Reparte por turnos entre el hub y los cuadrantes ya desbloqueados; los bloqueados no reciben héroes.
+    private (Vector2 center, Vector2 size) NextWanderZone()
+    {
+        var zones = new List<(Vector2 center, Vector2 size)> { (spawnCenter, wanderSize) };
+
+        foreach (var quadrant in QuadrantController.All)
+            if (quadrant != null && quadrant.IsUnlocked)
+                zones.Add((quadrant.transform.position, quadrant.WanderSize));
+
+        var zone = zones[nextWanderZone % zones.Count];
+        nextWanderZone++;
+        return zone;
     }
 
     // Nombres de los héroes que ya están en la base; el catálogo no puede repetirlos.

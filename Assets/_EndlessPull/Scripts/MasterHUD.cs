@@ -14,11 +14,8 @@ public class MasterHUD : MonoBehaviour
     [Tooltip("Gestor de oleadas, para el piso y el feedback.")]
     [SerializeField] private WaveManager waves;
 
-    [Tooltip("Texto del contador de gemas.")]
-    [SerializeField] private TextMeshProUGUI gemsLabel;
-
-    [Tooltip("Texto de madera y hierro.")]
-    [SerializeField] private TextMeshProUGUI materialsLabel;
+    [Tooltip("Chip compacto con Gemas, Madera, Hierro y Comida agrupados en la esquina.")]
+    [SerializeField] private TextMeshProUGUI resourcesLabel;
 
     [Tooltip("Texto del piso actual.")]
     [SerializeField] private TextMeshProUGUI floorLabel;
@@ -63,41 +60,38 @@ public class MasterHUD : MonoBehaviour
     {
         if (statusLabel != null) statusLabel.text = string.Empty;
 
-        if (economy != null)
-        {
-            OnGemsChanged(economy.Gems);
-            RefreshMaterials();
-        }
+        if (economy != null) RefreshResources();
 
         RefreshFloor();
     }
 
-    // Madera, hierro y comida comparten etiqueta; se repinta con lo que haya en economía.
-    private void OnMaterialsChanged(int wood, int iron) => RefreshMaterials();
-    private void OnFoodChanged(int food) => RefreshMaterials();
+    // Gemas, madera, hierro y comida comparten un único chip compacto en la esquina.
+    private void OnMaterialsChanged(int wood, int iron) => RefreshResources();
+    private void OnFoodChanged(int food) => RefreshResources();
 
-    private void RefreshMaterials()
+    private void RefreshResources()
     {
-        if (materialsLabel == null || economy == null) return;
+        if (resourcesLabel == null || economy == null) return;
 
-        materialsLabel.text = Inline("MADERA", economy.Wood.ToString(), UITheme.Hex("A8895C")) + "   " +
-                              Inline("HIERRO", economy.Iron.ToString(), UITheme.Hex("9397AB")) + "   " +
-                              Inline("COMIDA", economy.Food.ToString(), UITheme.Hex("8FBF5A"));
+        resourcesLabel.text =
+            Inline("◆", LocalizationManager.Get("UI_GEMS").ToUpperInvariant(), economy.Gems.ToString(), UITheme.Cyan) + "  " +
+            Inline("■", LocalizationManager.Get("UI_WOOD").ToUpperInvariant(), economy.Wood.ToString(), UITheme.Hex("A8895C")) + "  " +
+            Inline("■", LocalizationManager.Get("UI_IRON").ToUpperInvariant(), economy.Iron.ToString(), UITheme.Hex("9397AB")) + "  " +
+            Inline("■", LocalizationManager.Get("UI_FOOD").ToUpperInvariant(), economy.Food.ToString(), UITheme.Hex("8FBF5A"));
     }
 
     // Rótulo pequeño en mayúsculas sobre la cifra, como los bloques del mockup.
     private static string Chip(string caption, string value)
         => $"<size={UITheme.SizeCaption}><color={UITheme.Tag(UITheme.TextMuted)}>{caption}</color></size>\n<b>{value}</b>";
 
-    // Chip de recurso en una línea: punto de color, rótulo apagado y cifra grande.
-    private static string Inline(string caption, string value, Color dot)
-        => $"<size={UITheme.SizeCaption}><color={UITheme.Tag(dot)}>■</color> " +
+    // Chip de recurso en una línea: icono de color, rótulo apagado y cifra grande.
+    private static string Inline(string icon, string caption, string value, Color dot)
+        => $"<size={UITheme.SizeCaption}><color={UITheme.Tag(dot)}>{icon}</color> " +
            $"<color={UITheme.Tag(UITheme.TextFaint)}>{caption}</color></size> <b>{value}</b>";
 
     private void OnGemsChanged(int gems)
     {
-        if (gemsLabel != null)
-            gemsLabel.text = $"<color={UITheme.Tag(UITheme.Cyan)}>◆</color> <b>{gems}</b>";
+        RefreshResources();
 
         // El botón de tirada se apaga solo cuando no llega el saldo.
         if (pullButton != null && gacha != null)
@@ -114,7 +108,9 @@ public class MasterHUD : MonoBehaviour
 
     private void RefreshFloor()
     {
-        if (floorLabel != null && waves != null)
-            floorLabel.text = Chip("TORRE", $"Piso {waves.CurrentFloor}");
+        if (floorLabel == null || waves == null) return;
+
+        string piso = string.Format(LocalizationManager.Get("UI_QUADRANT_FLOOR_LABEL"), waves.CurrentFloor);
+        floorLabel.text = Chip(LocalizationManager.Get("UI_TOWER").ToUpperInvariant(), piso);
     }
 }

@@ -77,10 +77,12 @@ public class SquadManagementUI : MonoBehaviour
         if (panel != null) panel.SetActive(false);
     }
 
-    // La cuenta atrás de la recolección corre sola: el bloqueo tiene que reflejarse.
+    // Solo refresca con expedición corriendo (la cuenta atrás); si no, rehacía filas cada
+    // 0.5s sin necesidad y parpadeaba.
     void Update()
     {
         if (!IsOpen) return;
+        if (expeditions == null || !expeditions.IsRunning) return;
 
         refreshTimer -= Time.unscaledDeltaTime;
         if (refreshTimer > 0f) return;

@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 
 // Lleva la cámara de la base a la arena y de vuelta, sin cortes bruscos.
 public class CameraDirector : MonoBehaviour
@@ -24,6 +26,23 @@ public class CameraDirector : MonoBehaviour
     [Tooltip("Tamaño ortográfico en la vista de arena; se mantiene el encuadre de combate actual.")]
     [SerializeField] private float arenaOrthographicSize = 8.5f;
 
+    [Tooltip("Centro y tamaño del hub central; siempre entra en el límite de cámara aunque no haya cuadrantes desbloqueados.")]
+    [SerializeField] private Vector2 hubBoundsCenter = new Vector2(0f, -1.6f);
+    [SerializeField] private Vector2 hubBoundsSize = new Vector2(10.4f, 8.6f);
+
+    [Tooltip("Zoom ortográfico mínimo y máximo permitido al manipular la vista de base.")]
+    [SerializeField] private float minZoom = 6f;
+    [SerializeField] private float maxZoom = 18f;
+
+    [Tooltip("Sensibilidad de la rueda del ratón al hacer zoom en la vista de base.")]
+    [SerializeField] private float mouseZoomSpeed = 0.01f;
+
+    [Tooltip("Sensibilidad del pellizco táctil al hacer zoom en la vista de base.")]
+    [SerializeField] private float pinchZoomSpeed = 0.02f;
+
+    [Tooltip("Píxeles de arrastre antes de considerar el gesto un paneo y no un toque/clic corto.")]
+    [SerializeField] private float dragScreenDeadzone = 8f;
+
     private Vector2 origin;
     private Vector2 destination;
     private float travelTimer;
@@ -37,6 +56,16 @@ public class CameraDirector : MonoBehaviour
     private float shakeDurationTotal;
     private float shakeMagnitude;
 
+    // Solo se admite zoom/paneo manual mientras el jugador está viendo la base, quieta y sin viajar.
+    private bool inBaseView = true;
+    private bool dragActive;
+    private Vector2 dragStartScreen;
+    private Vector2 lastDragScreen;
+    private float previousPinchDistance;
+
+    // Color de fondo de la base; se restaura al volver de la arena tras el tinte de bioma.
+    private Color baseBackgroundColor;
+
     private static CameraDirector instance;
 
     void Awake()
@@ -48,6 +77,8 @@ public class CameraDirector : MonoBehaviour
         origin = baseView;
         basePosition = baseView;
         travelTimer = travelSeconds;
+
+        if (target != null) baseBackgroundColor = target.backgroundColor;
 
         instance = this;
     }
@@ -98,6 +129,11 @@ public class CameraDirector : MonoBehaviour
         SnapTo(baseView, baseOrthographicSize);
     }
 
+    void Update()
+    {
+        HandleBaseViewControls();
+    }
+
     void LateUpdate()
     {
         if (target == null) return;
@@ -129,8 +165,153 @@ public class CameraDirector : MonoBehaviour
 
     private void OnExpeditionChanged(ExpeditionState state, string message)
     {
-        if (state == ExpeditionState.InProgress) GoToArena();
-        else GoToBase();
+        inBaseView = state != ExpeditionState.InProgress;
+
+        if (state == ExpeditionState.InProgress)
+        {
+            GoToArena();
+            ApplyBiomeTint();
+        }
+        else
+        {
+            GoToBase();
+            if (target != null) target.backgroundColor = baseBackgroundColor;
+        }
+    }
+
+    // Placeholder sin arte final (ver decisión de diseño): tiñe el fondo de cámara según TowerBiome.IndexForFloor.
+    private void ApplyBiomeTint()
+    {
+        if (target == null || waves == null) return;
+
+        int biomeIndex = TowerBiome.IndexForFloor(waves.CurrentFloor);
+        if (biomeIndex >= 0 && biomeIndex < TowerBiome.Tint.Length)
+            target.backgroundColor = TowerBiome.Tint[biomeIndex];
+    }
+
+    // Zoom (rueda/pellizco) y paneo (arrastre) manuales; solo activos en la vista de base, quieta y sin viajar.
+    private void HandleBaseViewControls()
+    {
+        if (target == null || !inBaseView || IsTravelling) return;
+
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+        {
+            dragActive = false;
+            return;
+        }
+
+        bool changed = false;
+
+        float sizeDelta = ReadOrthoSizeDelta();
+        if (Mathf.Abs(sizeDelta) > 0.0001f)
+        {
+            target.orthographicSize = Mathf.Clamp(target.orthographicSize + sizeDelta, minZoom, maxZoom);
+            changed = true;
+        }
+
+        if (HandleDragPan()) changed = true;
+
+        if (changed) ClampToUnlockedBounds();
+    }
+
+    private float ReadOrthoSizeDelta()
+    {
+        float sizeDelta = 0f;
+
+        // Rueda del ratón: hacia arriba acerca (tamaño ortográfico menor).
+        if (Mouse.current != null)
+            sizeDelta -= Mouse.current.scroll.ReadValue().y * mouseZoomSpeed;
+
+        var touch = Touchscreen.current;
+        if (touch != null && touch.touches.Count >= 2
+            && touch.touches[0].press.isPressed && touch.touches[1].press.isPressed)
+        {
+            float distance = Vector2.Distance(touch.touches[0].position.ReadValue(), touch.touches[1].position.ReadValue());
+            if (previousPinchDistance > 0f) sizeDelta -= (distance - previousPinchDistance) * pinchZoomSpeed;
+            previousPinchDistance = distance;
+        }
+        else
+        {
+            previousPinchDistance = 0f;
+        }
+
+        return sizeDelta;
+    }
+
+    // Arrastre con un dedo o botón izquierdo; devuelve true si movió la cámara este frame.
+    private bool HandleDragPan()
+    {
+        Vector2 screenPos;
+        bool pressed, pressedThisFrame;
+
+        var touch = Touchscreen.current;
+        bool singleTouch = touch != null && touch.touches.Count == 1 && touch.primaryTouch.press.isPressed;
+
+        if (singleTouch)
+        {
+            screenPos = touch.primaryTouch.position.ReadValue();
+            pressed = true;
+            pressedThisFrame = touch.primaryTouch.press.wasPressedThisFrame;
+        }
+        else if (Mouse.current != null && Mouse.current.leftButton.isPressed)
+        {
+            screenPos = Mouse.current.position.ReadValue();
+            pressed = true;
+            pressedThisFrame = Mouse.current.leftButton.wasPressedThisFrame;
+        }
+        else
+        {
+            dragActive = false;
+            return false;
+        }
+
+        if (pressedThisFrame)
+        {
+            dragStartScreen = screenPos;
+            lastDragScreen = screenPos;
+            dragActive = false;
+            return false;
+        }
+
+        if (!pressed) return false;
+
+        // Por debajo del deadzone se trata como un tap/clic corto, no como paneo.
+        if (!dragActive && Vector2.Distance(screenPos, dragStartScreen) < dragScreenDeadzone) return false;
+
+        dragActive = true;
+
+        Vector2 worldNow = target.ScreenToWorldPoint(screenPos);
+        Vector2 worldLast = target.ScreenToWorldPoint(lastDragScreen);
+        basePosition -= worldNow - worldLast;
+        origin = basePosition;
+        destination = basePosition;
+        lastDragScreen = screenPos;
+        return true;
+    }
+
+    // Restringe basePosition a los límites del hub más los cuadrantes ya desbloqueados (decisión de diseño).
+    private void ClampToUnlockedBounds()
+    {
+        var bounds = new Bounds(hubBoundsCenter, new Vector3(hubBoundsSize.x, hubBoundsSize.y, 0f));
+        foreach (var quadrant in QuadrantController.All)
+            if (quadrant != null && quadrant.IsUnlocked)
+                bounds.Encapsulate(quadrant.ZoneBounds);
+
+        float halfHeight = target.orthographicSize;
+        float halfWidth = halfHeight * target.aspect;
+
+        float minX = bounds.min.x + halfWidth;
+        float maxX = bounds.max.x - halfWidth;
+        float minY = bounds.min.y + halfHeight;
+        float maxY = bounds.max.y - halfHeight;
+
+        // Si el encuadre es más grande que la zona desbloqueada, se centra en vez de forzar límites cruzados.
+        float clampedX = minX <= maxX ? Mathf.Clamp(basePosition.x, minX, maxX) : bounds.center.x;
+        float clampedY = minY <= maxY ? Mathf.Clamp(basePosition.y, minY, maxY) : bounds.center.y;
+
+        basePosition = new Vector2(clampedX, clampedY);
+        origin = basePosition;
+        destination = basePosition;
     }
 
     private void TravelTo(Vector2 point, float size)

@@ -103,6 +103,7 @@ public class GameSaveData
     public bool quadrantEastRevealed;
     public bool quadrantSouthRevealed;
     public bool quadrantWestRevealed;
+    public bool quadrantNorthRevealed;
 
     // Identidad de cada héroe de la escuadra; no depende del orden del array.
     public List<string> party = new List<string>();
@@ -248,6 +249,7 @@ public class SaveManager : MonoBehaviour
         save.quadrantEastRevealed = QuadrantController.Find(QuadrantId.East)?.Revealed ?? false;
         save.quadrantSouthRevealed = QuadrantController.Find(QuadrantId.South)?.Revealed ?? false;
         save.quadrantWestRevealed = QuadrantController.Find(QuadrantId.West)?.Revealed ?? false;
+        save.quadrantNorthRevealed = QuadrantController.Find(QuadrantId.North)?.Revealed ?? false;
 
         foreach (var building in BaseBuilding.All)
         {
@@ -383,6 +385,7 @@ public class SaveManager : MonoBehaviour
         QuadrantController.Find(QuadrantId.East)?.LoadRevealed(save.quadrantEastRevealed);
         QuadrantController.Find(QuadrantId.South)?.LoadRevealed(save.quadrantSouthRevealed);
         QuadrantController.Find(QuadrantId.West)?.LoadRevealed(save.quadrantWestRevealed);
+        QuadrantController.Find(QuadrantId.North)?.LoadRevealed(save.quadrantNorthRevealed);
 
         if (crafting != null)
         {

@@ -11,6 +11,9 @@ public class MasterCommander : MonoBehaviour
     [Tooltip("Escuadra sobre la que actúan los decretos.")]
     [SerializeField] private PartyManager party;
 
+    [Tooltip("Taller del que salen las pociones que gasta Curar Todos.")]
+    [SerializeField] private CraftingManager crafting;
+
     [Tooltip("Segundos de espera entre usos de Curar Escuadra.")]
     [SerializeField] private float healCooldown = 10f;
 
@@ -61,6 +64,7 @@ public class MasterCommander : MonoBehaviour
     {
         if (party == null) party = Object.FindFirstObjectByType<PartyManager>();
         if (waves == null) waves = Object.FindFirstObjectByType<WaveManager>();
+        if (crafting == null) crafting = Object.FindFirstObjectByType<CraftingManager>();
     }
 
     // Decreto de Retirada: se abandona el piso, pero nadie se queda atrás.
@@ -233,19 +237,42 @@ public class MasterCommander : MonoBehaviour
         return lista;
     }
 
-    // Cura a todos los héroes vivos de la escena.
+    // Cura a heridos gastando 1 poción cada uno, igual que la curación manual; para al agotarlas.
     // El parámetro se ignora: solo existe por compatibilidad con el OnClick serializado en escena.
     public void HealAllHeroes(int legacyUnused = 0)
     {
+        if (crafting == null)
+        {
+            Debug.LogWarning("[Maestro] Curar Todos necesita CraftingManager para gastar pociones.", this);
+            return;
+        }
+
         var heroes = Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None);
-        int totalHealed = 0;
+
+        // Si nadie está herido no se gasta ni una poción: solo un aviso en pantalla.
+        bool hayHeridos = false;
+        foreach (var hero in heroes)
+            if (hero != null && hero.CurrentHealth < hero.MaxHealth) { hayHeridos = true; break; }
+
+        if (!hayHeridos)
+        {
+            ScreenBanner.Show(LocalizationManager.Get("UI_ALL_HEALED"), 2f, UITheme.DecreeHeal);
+            AudioManager.Play(SfxId.UiClick);
+            return;
+        }
+
+        int curados = 0;
 
         foreach (var hero in heroes)
         {
-            totalHealed += HealHero(hero);
+            if (hero == null || hero.CurrentHealth >= hero.MaxHealth) continue;
+            if (!crafting.TryUseHealingPotion(hero)) break;
+
+            VfxManager.Play(VfxId.Heal, hero.transform.position);
+            curados++;
         }
 
-        Debug.Log($"[Maestro] Curación en masa: +{totalHealed} PV repartidos entre {heroes.Length} héroe(s).", this);
+        Debug.Log($"[Maestro] Curación en masa: {curados} héroe(s) curados con pociones.", this);
     }
 
     // Curación dirigida a un héroe concreto; devuelve la vida realmente restaurada.

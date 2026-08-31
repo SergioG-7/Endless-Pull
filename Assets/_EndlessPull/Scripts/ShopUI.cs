@@ -20,6 +20,9 @@ public class ShopUI : MonoBehaviour
     [Tooltip("Texto con lo que hay en el almacén.")]
     [SerializeField] private TMP_Text inventoryLabel;
 
+    [Tooltip("Scroll que envuelve el texto del almacén; opcional, se resetea arriba en cada refresh.")]
+    [SerializeField] private ScrollRect inventoryScroll;
+
     [Tooltip("Botón que compra una pieza al azar.")]
     [SerializeField] private Button buyButton;
 
@@ -29,6 +32,8 @@ public class ShopUI : MonoBehaviour
     {
         if (shop == null) shop = UnityEngine.Object.FindFirstObjectByType<ShopManager>();
         if (economy == null) economy = UnityEngine.Object.FindFirstObjectByType<EconomyManager>();
+        if (inventoryScroll == null && inventoryLabel != null)
+            inventoryScroll = inventoryLabel.GetComponentInParent<ScrollRect>();
     }
 
     void OnEnable()
@@ -46,8 +51,11 @@ public class ShopUI : MonoBehaviour
         if (panel != null) panel.SetActive(false);
 
         // Los rótulos vienen de la escena con el tamaño viejo: se suben al mínimo legible.
-        Style(priceLabel, UITheme.SizeValue);
         Style(inventoryLabel, UITheme.SizeBody);
+
+        // El equipo ya no se compra con gemas: solo se obtiene por crafteo y recompensas.
+        if (priceLabel != null) priceLabel.gameObject.SetActive(false);
+        if (buyButton != null) buyButton.gameObject.SetActive(false);
 
         Refresh();
     }
@@ -87,43 +95,23 @@ public class ShopUI : MonoBehaviour
         if (panel != null) panel.SetActive(false);
     }
 
-    // Enganchado al onClick del botón de compra.
+    // Enganchado al onClick del botón de compra en la escena; se deja vacío (el botón está
+    // oculto) para no dejar una referencia colgante en el binding de Base.unity.
     public void OnBuyPressed()
     {
-        if (shop != null) shop.PullEquipment();
-        Refresh();
     }
 
     private void Refresh()
     {
         if (shop == null) return;
 
-        if (priceLabel != null)
-            priceLabel.text = $"<b>{LocalizationManager.Get("UI_RANDOM_PIECE")}</b>  " +
-                              $"<color={UITheme.Tag(UITheme.Cyan)}>◆</color> {shop.EquipmentPullCost}" +
-                              (economy != null
-                                  ? $"     <color={UITheme.Tag(UITheme.TextMuted)}>" +
-                                    $"{LocalizationManager.Get("UI_GEMS")}</color> <b>{economy.Gems}</b>"
-                                  : string.Empty);
-
         if (inventoryLabel != null)
         {
             inventoryLabel.text = DescribeInventory();
-            GrowToFitContent(inventoryLabel);
+            // El ContentSizeFitter del propio label ajusta la altura; el ScrollRect/RectMask2D
+            // del padre recorta lo que no cabe en vez de desbordar fuera del panel.
+            if (inventoryScroll != null) inventoryScroll.verticalNormalizedPosition = 1f;
         }
-
-        if (buyButton != null)
-            buyButton.interactable = economy != null && economy.CanAfford(shop.EquipmentPullCost);
-    }
-
-    // Fija en la escena, alto 260: con almacén lleno el texto se salía del recuadro y quedaba
-    // tapado por lo que hay debajo. Nunca encoge, solo crece si el contenido lo necesita.
-    private static void GrowToFitContent(TMP_Text label)
-    {
-        label.ForceMeshUpdate();
-        var rt = label.rectTransform;
-        float necesaria = label.preferredHeight;
-        if (necesaria > rt.sizeDelta.y) rt.sizeDelta = new Vector2(rt.sizeDelta.x, necesaria);
     }
 
     // Agrupa las piezas repetidas para no listar veinte líneas iguales.

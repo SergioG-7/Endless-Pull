@@ -25,7 +25,7 @@ public class SanctuaryUI : MonoBehaviour
     [Tooltip("Taller del que salen las Piedras de Ascensión.")]
     [SerializeField] private CraftingManager crafting;
 
-    [Tooltip("Gestor de síntesis: primer clic fija el Receptor, el segundo pide confirmación.")]
+    [Tooltip("Gestor de síntesis: primer clic fija el Receptor, el segundo previsualiza el sacrificio.")]
     [SerializeField] private SynthesisManager synthesis;
 
     [Tooltip("Tamaño del modal.")]
@@ -52,8 +52,14 @@ public class SanctuaryUI : MonoBehaviour
     private TMP_Text previewActionLabel;
     private TMP_Text previewHint;
 
+    // Miniatura del héroe elegido como sacrificio en Síntesis; solo visible tras el segundo clic.
+    private Image previewFodderPortrait;
+
     private SanctuaryTab activeTab = SanctuaryTab.Ascension;
     private HeroController selectedAscendHero;
+
+    // Sacrificio elegido en Síntesis, pendiente de confirmar en el overlay (no muta nada aún).
+    private HeroController previewFodder;
     private float refreshTimer;
 
     private class RowWidgets
@@ -118,6 +124,7 @@ public class SanctuaryUI : MonoBehaviour
     public void Close()
     {
         if (panel != null) panel.SetActive(false);
+        previewFodder = null;
         CloseSynthConfirm();
     }
 
@@ -127,6 +134,8 @@ public class SanctuaryUI : MonoBehaviour
     private void SetTab(SanctuaryTab tab)
     {
         activeTab = tab;
+        previewFodder = null;
+        previewFodderPortrait.gameObject.SetActive(false);
         RefreshTabs();
         RefreshRightPanel();
     }
@@ -191,7 +200,8 @@ public class SanctuaryUI : MonoBehaviour
 
         var row = new RowWidgets { root = go };
 
-        row.portraitFrame = BuildRowPortrait(go.transform, 10f);
+        // 14px de margen (igual que RosterUI.CardPadX) para que el retrato no quede pegado al aro de la card.
+        row.portraitFrame = BuildRowPortrait(go.transform, 14f);
 
         row.info = new GameObject("Info", typeof(RectTransform), typeof(TextMeshProUGUI)).GetComponent<TMP_Text>();
         row.info.transform.SetParent(go.transform, false);
@@ -199,7 +209,7 @@ public class SanctuaryUI : MonoBehaviour
         irt.anchorMin = new Vector2(0f, 0f);
         irt.anchorMax = new Vector2(1f, 1f);
         irt.pivot = new Vector2(0f, 0.5f);
-        irt.offsetMin = new Vector2(10f + RowHeight - 12f, 4f);
+        irt.offsetMin = new Vector2(14f + RowHeight - 12f, 4f);
         irt.offsetMax = new Vector2(-10f, -4f);
         row.info.fontSize = UITheme.SizeSmall;
         row.info.alignment = TextAlignmentOptions.Left;
@@ -274,15 +284,19 @@ public class SanctuaryUI : MonoBehaviour
             return;
         }
 
-        // Síntesis: primer clic fija el Receptor; el segundo, sobre otro héroe libre, confirma.
+        // Síntesis: primer clic fija el Receptor; el segundo, sobre otro héroe libre, lo
+        // previsualiza en el panel derecho (la confirmación final vive en el overlay).
         if (synthesis == null) return;
 
         if (synthesis.HasTarget && synthesis.Target != hero && !hero.IsLocked)
         {
-            ShowSynthConfirm(synthesis.Target, hero);
+            previewFodder = hero;
+            RefreshList();
+            RefreshRightPanel();
             return;
         }
 
+        previewFodder = null;
         synthesis.SelectHero(hero);
         RefreshList();
         RefreshRightPanel();
@@ -345,8 +359,10 @@ public class SanctuaryUI : MonoBehaviour
         var target = synthesis != null ? synthesis.Target : null;
         if (target == null || target.Data == null)
         {
+            previewFodder = null;
             previewHint.gameObject.SetActive(false);
             previewPortrait.gameObject.SetActive(false);
+            previewFodderPortrait.gameObject.SetActive(false);
             previewName.text = string.Empty;
             previewBody.text = LocalizationManager.Get("UI_SELECT_HERO");
             SetPreviewAction(LocalizationManager.Get("UI_CANCEL"), false);
@@ -360,15 +376,37 @@ public class SanctuaryUI : MonoBehaviour
         previewName.text = $"<color={UITheme.Tag(UITheme.Amber)}>{LocalizationManager.Get("UI_RECEIVER")}</color>  " +
                            $"<color={UITheme.Tag(rareza)}>{target.Data.heroName}</color>";
 
-        previewBody.text = $"<color={UITheme.Tag(UITheme.TextFaint)}>{LocalizationManager.Get("UI_SACRIFICE")}</color>\n" +
-                           LocalizationManager.Get("UI_SELECT_HERO");
+        // Sin sacrificio elegido todavía: solo el hueco a la espera del segundo clic.
+        if (previewFodder == null || previewFodder.Data == null)
+        {
+            previewFodderPortrait.gameObject.SetActive(false);
+            previewBody.text = $"<color={UITheme.Tag(UITheme.TextFaint)}>{LocalizationManager.Get("UI_SACRIFICE")}</color>\n" +
+                               LocalizationManager.Get("UI_SELECT_HERO");
+            SetPreviewAction(LocalizationManager.Get("UI_CANCEL"), true);
+            return;
+        }
 
-        SetPreviewAction(LocalizationManager.Get("UI_CANCEL"), true);
+        // Sacrificio elegido: se muestran ambos héroes y el EXP exacto antes de pedir confirmación.
+        previewFodderPortrait.gameObject.SetActive(true);
+        UIBuild.HeroArt(previewFodderPortrait.transform, previewFodder.Data.bodySprite, 44f);
+
+        var fodderRareza = HeroProgress.RarityColor(previewFodder.StarRank);
+        var fodderStars = new StringBuilder();
+        for (int i = 0; i < previewFodder.StarRank; i++) fodderStars.Append('★');
+
+        int exp = synthesis.ExpFrom(previewFodder);
+        previewBody.text = $"<color={UITheme.Tag(UITheme.TextFaint)}>{LocalizationManager.Get("UI_SACRIFICE")}</color>\n" +
+                           $"<color={UITheme.Tag(fodderRareza)}><b>{fodderStars}</b></color>  {previewFodder.Data.heroName}\n" +
+                           $"<size={UITheme.SizeSmall}><color={UITheme.Tag(UITheme.Amber)}>+{exp} " +
+                           $"{LocalizationManager.Get("UI_EXP_GAINED")}</color></size>";
+
+        SetPreviewAction(LocalizationManager.Get("UI_SYNTH"), true);
     }
 
     private void SetPreviewEmpty(string hint)
     {
         previewPortrait.gameObject.SetActive(false);
+        previewFodderPortrait.gameObject.SetActive(false);
         previewName.text = string.Empty;
         previewBody.text = string.Empty;
         previewHint.text = hint;
@@ -400,6 +438,15 @@ public class SanctuaryUI : MonoBehaviour
             return;
         }
 
+        // Con sacrificio ya previsualizado, este botón abre el overlay de confirmación final;
+        // sin sacrificio elegido, cancela por completo la selección del receptor.
+        if (previewFodder != null && synthesis != null && synthesis.HasTarget)
+        {
+            ShowSynthConfirm(synthesis.Target, previewFodder);
+            return;
+        }
+
+        previewFodder = null;
         synthesis?.ClearTarget();
         RefreshList();
         RefreshRightPanel();
@@ -428,6 +475,7 @@ public class SanctuaryUI : MonoBehaviour
         if (synthesis != null && pendingSynthTarget != null && pendingSynthFodder != null)
             synthesis.Synthesize(pendingSynthTarget, pendingSynthFodder);
 
+        previewFodder = null;
         CloseSynthConfirm();
         RefreshList();
         RefreshRightPanel();
@@ -550,6 +598,19 @@ public class SanctuaryUI : MonoBehaviour
         frt.anchoredPosition = new Vector2(x, -112f);
         previewPortrait = UITheme.Surface(frame, UITheme.Hex("262838"), UITheme.BorderSoft, UITheme.RadiusCard);
         previewPortrait.raycastTarget = false;
+
+        // Miniatura del sacrificio en Síntesis: alineada a la derecha de la columna, oculta hasta el 2º clic.
+        var fodderFrame = new GameObject("FodderPortrait", typeof(RectTransform), typeof(Image));
+        fodderFrame.transform.SetParent(panel.transform, false);
+        var ffrt = fodderFrame.GetComponent<RectTransform>();
+        ffrt.anchorMin = new Vector2(0f, 1f);
+        ffrt.anchorMax = new Vector2(0f, 1f);
+        ffrt.pivot = new Vector2(0f, 1f);
+        ffrt.sizeDelta = new Vector2(64f, 64f);
+        ffrt.anchoredPosition = new Vector2(size.x - 24f - 64f, -112f);
+        previewFodderPortrait = UITheme.Surface(fodderFrame, UITheme.Hex("262838"), UITheme.DangerLight, UITheme.RadiusCard);
+        previewFodderPortrait.raycastTarget = false;
+        previewFodderPortrait.gameObject.SetActive(false);
 
         previewName = UIBuild.Label(panel.transform, "PreviewName", UITheme.SizeName, TextAlignmentOptions.Left);
         AnchorTopLeft(previewName.rectTransform, x + 112f, -112f, size.x - RightX - 112f - 24f, 40f);

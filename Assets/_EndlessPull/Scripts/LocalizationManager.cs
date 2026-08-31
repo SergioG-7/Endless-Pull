@@ -46,9 +46,10 @@ public static class LocalizationManager
         { "UI_CLOSE",        new[] { "Cerrar", "Close", "とじる" } },
         { "UI_NO_SAVE",      new[] { "Sin partida guardada", "No saved game", "セーブデータなし" } },
 
-        { "UI_ROSTER",       new[] { "Roster", "Roster", "編成" } },
         { "UI_VIEW_HEROES",  new[] { "Ver Héroes", "View Heroes", "英雄一覧" } },
         { "UI_HEAL_ALL",     new[] { "Curar Todos", "Heal All", "全員回復" } },
+        { "UI_ALL_HEALED",   new[] { "Todos los héroes ya están al máximo de salud",
+                                       "All heroes are already at full health", "全員すでに満タンです" } },
         { "UI_TOWER",        new[] { "Torre", "Tower", "塔" } },
         { "UI_SHOP",         new[] { "Tienda", "Shop", "店" } },
         { "UI_CRAFT",        new[] { "Taller", "Workshop", "工房" } },
@@ -62,7 +63,6 @@ public static class LocalizationManager
         { "UI_LOCK",         new[] { "BLOQ", "LOCK", "ロック" } },
         { "UI_UNLOCK",       new[] { "LIBRE", "FREE", "かいじょ" } },
         { "UI_SYNTH",        new[] { "Sintetizar", "Synthesize", "合成" } },
-        { "UI_SYNTH_TARGET", new[] { "OBJETIVO", "TARGET", "対象" } },
         { "UI_SYNTH_CONFIRM_TITLE", new[] { "¿Sacrificar héroe?", "Sacrifice hero?", "英雄を生贄にする？" } },
         { "UI_SYNTH_CONFIRM_MSG",   new[] { "{0} se sacrificará para dar {1} EXP a {2}. Esta acción no se puede deshacer.",
                                               "{0} will be sacrificed to give {1} EXP to {2}. This cannot be undone.",
@@ -97,8 +97,6 @@ public static class LocalizationManager
         { "UI_FLOOR",        new[] { "Piso", "Floor", "階" } },
         { "UI_FIRST_CLEAR",  new[] { "Primera vez", "First clear", "初回" } },
         { "UI_REPEAT",       new[] { "Repetición", "Repeat", "周回" } },
-        { "UI_LOCKED_FLOOR", new[] { "Bloqueado", "Locked", "未開放" } },
-
         // Cuadrantes direccionales bloqueados de la base (QuadrantController).
         { "UI_QUADRANT_FLOOR_LABEL", new[] { "Piso {0}", "Floor {0}", "{0}階" } },
         { "UI_QUADRANT_LOCKED_TAP",  new[] { "Desbloquea en Piso {0}", "Unlocks at Floor {0}", "{0}階で解放" } },
@@ -120,7 +118,6 @@ public static class LocalizationManager
                                          "{0}階から撤退：{1}人の英雄が無事、報酬なし" } },
 
         // Acelerador de combate y retirada automática (CombatHUD).
-        { "UI_SPEED",         new[] { "Velocidad", "Speed", "速度" } },
         { "UI_AUTO_RETREAT",  new[] { "Auto-Retirada", "Auto-Retreat", "自動撤退" } },
 
         // Modal de recompensa de piso (TowerRewardUI).
@@ -229,13 +226,6 @@ public static class LocalizationManager
                                               "Assign at least one hero before confirming",
                                               "確認する前に英雄を1人以上配置してください" } },
 
-        // Cabeceras de las tarjetas de edificio en el mundo.
-        { "TAG_BARRACKS",    new[] { "BARRACONES", "BARRACKS", "兵舎" } },
-        { "TAG_MORALE",      new[] { "MORAL", "MORALE", "士気" } },
-        { "TAG_FOOD",        new[] { "COMIDA", "FOOD", "食料" } },
-        { "TAG_RITUAL",      new[] { "RITUAL", "RITUAL", "儀式" } },
-        { "TAG_WORKSHOP",    new[] { "TALLER", "WORKSHOP", "工房" } },
-
         { "BLD_TRAINING",    new[] { "Campo de Entrenamiento", "Training Field", "訓練場" } },
         { "BLD_CANTEEN",     new[] { "Cantina", "Tavern & Canteen", "食堂" } },
         { "BLD_FARM",        new[] { "Granja", "Farm", "農場" } },
@@ -246,6 +236,7 @@ public static class LocalizationManager
         { "BLD_FORGE",       new[] { "Forja", "Forge", "鍛冶場" } },
         { "BLD_WARROOM",     new[] { "Sala de Guerra", "War Room", "作戦室" } },
         { "BLD_ARCHIVE",     new[] { "Archivo del Santuario", "Sanctuary Archive", "聖域の記録庫" } },
+        { "BLD_GATEWAY",     new[] { "Portal de la Torre", "Tower Gateway", "塔の門" } },
 
         // Forja: mejora de equipo, gateada tras la Forja construida (CraftingManager.ForgeUnlocked).
         { "UI_FORGE_LOCKED", new[] { "Requiere la Forja construida", "Requires the Forge built",
@@ -389,9 +380,7 @@ public static class LocalizationManager
         { "UI_SUMMON_ALTAR", new[] { "Altar de Invocación", "Summoning Gate", "召喚の祭壇" } },
         { "UI_SUMMON_X1",    new[] { "Invocación Simple", "Single Summon", "単発召喚" } },
         { "UI_SUMMON_X10",   new[] { "Invocación Múltiple", "Ten Summon", "十連召喚" } },
-        { "UI_DISCOUNT",     new[] { "10 % de descuento", "10% off", "10%割引" } },
         { "UI_REVEAL",       new[] { "Tocar para revelar", "Tap to reveal", "タップで公開" } },
-        { "UI_SUMMON_AGAIN", new[] { "Invocar otra vez", "Summon again", "もう一度召喚" } },
         { "UI_NO_GEMS",      new[] { "Gemas insuficientes", "Not enough gems", "ジェムが足りない" } },
         { "UI_CATALOG_FULL", new[] { "Ya tienes a todos los héroes", "You own every hero", "全ヒーロー獲得済み" } },
 
@@ -424,6 +413,8 @@ public static class LocalizationManager
         { "UI_ARTISANS",     new[] { "Artesanos", "Artisans", "職人" } },
         { "UI_COST",         new[] { "Coste", "Cost", "費用" } },
         { "UI_FORGE_STONES", new[] { "Forja de Piedras", "Stone Forging", "石の錬成" } },
+        { "UI_TAB_EQUIPMENT", new[] { "Forja y Reparación", "Forge & Repair", "製作と修理" } },
+        { "UI_TAB_ALCHEMY",  new[] { "Alquimia", "Alchemy", "錬金術" } },
         { "UI_STONES_HELD",  new[] { "Piedras de Ascensión", "Ascension Stones", "覚醒石" } },
         { "UI_SUCCESS_CHANCE", new[] { "Probabilidad de éxito", "Success chance", "成功率" } },
         { "UI_FORGE",        new[] { "Forjar Piedra", "Forge Stone", "石を錬成" } },
@@ -474,12 +465,7 @@ public static class LocalizationManager
         { "AFFIX_LIFESTEAL",    new[] { "Robo de vida", "Life steal", "吸血" } },
         { "AFFIX_EVASIONBOOST", new[] { "Evasión", "Evasion", "回避" } },
         { "AFFIX_CRITDAMAGE",   new[] { "Daño crítico", "Crit damage", "会心ダメージ" } },
-        { "AFFIX_ARMORPIERCE",  new[] { "Perfora armadura", "Armor pierce", "防御貫通" } },
-
-        // Sonido.
-        { "UI_SOUND",        new[] { "Sonido", "Sound", "サウンド" } },
-        { "UI_SOUND_ON",     new[] { "Sonido: sí", "Sound: on", "サウンド：オン" } },
-        { "UI_SOUND_OFF",    new[] { "Sonido: no", "Sound: off", "サウンド：オフ" } }
+        { "AFFIX_ARMORPIERCE",  new[] { "Perfora armadura", "Armor pierce", "防御貫通" } }
     };
 
     // Nombre del idioma en su propio idioma: el selector se entiende sin saber el actual.

@@ -109,9 +109,11 @@ public class SummonAltarUI : MonoBehaviour
         UIManager.OpenExclusive(panel);
     }
 
-    // Cerrar con cartas en la mesa no tira la tirada: se acepta antes de irse.
+    // Cerrar con cartas sin revelar se saltaría la animación de revelado: hay que revelar
+    // primero. Con todo ya revelado, cerrar acepta la tirada antes de irse.
     public void Close()
     {
+        if (HasPending && !AllRevealed) return;
         if (HasPending) Accept();
         if (panel != null) panel.SetActive(false);
     }

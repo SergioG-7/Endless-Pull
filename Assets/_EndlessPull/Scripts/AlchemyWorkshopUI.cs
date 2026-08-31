@@ -3,9 +3,17 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+// Pestaña activa del Taller.
+public enum WorkshopTab
+{
+    Stones,
+    Equipment,
+    Alchemy
+}
+
 // Taller de Alquimia: tarjetas compactas para las 4 Piedras de Ascensión, armas, reparación,
 // pociones y mejora de equipo. Todo se paga con madera, hierro y comida; las gemas quedan
-// para el gacha y las recargas.
+// para el gacha y las recargas. Repartido en 3 pestañas para que ninguna tarjeta se solape.
 public class AlchemyWorkshopUI : MonoBehaviour
 {
     [Tooltip("Canvas sobre el que se monta el modal.")]
@@ -29,7 +37,8 @@ public class AlchemyWorkshopUI : MonoBehaviour
     private const float RowGap = 24f;
 
     // La tarjeta se reparte en cuatro bandas: título, cuerpo, coste y botón al pie.
-    private const float CardTop = 76f;
+    // Bajado desde 76f para dejar sitio a la fila de pestañas.
+    private const float CardTop = 120f;
     private const float ButtonHeight = 48f;
 
     // Alto que añade la segunda fila (poción + mejora) por debajo de las tres tarjetas originales.
@@ -56,8 +65,14 @@ public class AlchemyWorkshopUI : MonoBehaviour
     private readonly List<Button> stoneOptionButtons = new List<Button>();
     private readonly List<TMP_Text> stoneOptionLabels = new List<TMP_Text>();
 
+    // Pestañas: Piedras, Forja/Reparación de Equipo, Alquimia.
+    private WorkshopTab activeTab = WorkshopTab.Stones;
+    private Button tabStones, tabEquipment, tabAlchemy;
+    private TMP_Text tabStonesLabel, tabEquipmentLabel, tabAlchemyLabel;
+
     private class Ficha
     {
+        public GameObject root;
         public TMP_Text titulo;
         public TMP_Text cuerpo;
         public TMP_Text coste;
@@ -112,6 +127,7 @@ public class AlchemyWorkshopUI : MonoBehaviour
         if (feedback != null) feedback.text = string.Empty;
         CloseStoneDropdown();
         UIManager.OpenExclusive(panel);
+        RefreshTabs();
         Refresh();
     }
 
@@ -119,6 +135,40 @@ public class AlchemyWorkshopUI : MonoBehaviour
     {
         if (panel != null) panel.SetActive(false);
         CloseStoneDropdown();
+    }
+
+    private void OnStonesTabPressed() => SetTab(WorkshopTab.Stones);
+    private void OnEquipmentTabPressed() => SetTab(WorkshopTab.Equipment);
+    private void OnAlchemyTabPressed() => SetTab(WorkshopTab.Alchemy);
+
+    private void SetTab(WorkshopTab tab)
+    {
+        activeTab = tab;
+        CloseStoneDropdown();
+        RefreshTabs();
+    }
+
+    // Solo una pestaña visible a la vez: sus tarjetas se muestran, el resto se oculta.
+    private void RefreshTabs()
+    {
+        StyleTab(tabStones, tabStonesLabel, activeTab == WorkshopTab.Stones);
+        StyleTab(tabEquipment, tabEquipmentLabel, activeTab == WorkshopTab.Equipment);
+        StyleTab(tabAlchemy, tabAlchemyLabel, activeTab == WorkshopTab.Alchemy);
+
+        piedra.root.SetActive(activeTab == WorkshopTab.Stones);
+
+        bool equip = activeTab == WorkshopTab.Equipment;
+        armas.root.SetActive(equip);
+        reparar.root.SetActive(equip);
+        mejora.root.SetActive(equip);
+
+        pocion.root.SetActive(activeTab == WorkshopTab.Alchemy);
+    }
+
+    private static void StyleTab(Button tab, TMP_Text label, bool active)
+    {
+        tab.targetGraphic.color = active ? UITheme.AccentPick : Color.clear;
+        label.color = active ? UITheme.Text : UITheme.TextFaint;
     }
 
     public void OnCraftStonePressed(AscensionStoneTier tier)
@@ -291,8 +341,10 @@ public class AlchemyWorkshopUI : MonoBehaviour
     {
         if (canvas == null) return;
 
-        // El tamaño de referencia solo preveía tres tarjetas; se fuerza sitio para la fila extra.
-        var panelSize = new Vector2(size.x, Mathf.Max(size.y, 482f + RowExtra));
+        // El tamaño de referencia solo preveía tres tarjetas; se fuerza sitio para la fila extra
+        // más el espacio que ocupa la fila de pestañas (ver CardTop).
+        const float TabRowExtra = CardTop - 76f;
+        var panelSize = new Vector2(size.x, Mathf.Max(size.y, 482f + RowExtra) + TabRowExtra);
         panel = UIBuild.Panel(canvas.transform, "AlchemyWorkshopPanel", panelSize, UITheme.Bg);
 
         titulo = UIBuild.TopLabel(panel.transform, "Title", UITheme.SizeTitle, 34f, -20f,
@@ -301,6 +353,8 @@ public class AlchemyWorkshopUI : MonoBehaviour
         recursos = UIBuild.TopLabel(panel.transform, "Resources", UITheme.SizeBody, 30f, -22f,
             TextAlignmentOptions.Right);
         recursos.color = UITheme.TextSoft;
+
+        BuildTabs();
 
         float x = -(CardWidth + CardGap);
         piedra = CreateCard("Card_Stone", x, 0f, () => OnCraftStonePressed(selectedStoneTier));
@@ -321,6 +375,39 @@ public class AlchemyWorkshopUI : MonoBehaviour
         etiquetaCerrar = cerrar.GetComponentInChildren<TMP_Text>();
     }
 
+    // Tres botones de pestaña anclados arriba a la izquierda, mismo estilo que SanctuaryUI.
+    private void BuildTabs()
+    {
+        tabStones = BuildTabButton("Tab_Stones", LocalizationManager.Get("UI_FORGE_STONES"),
+            24f, 180f, OnStonesTabPressed);
+        tabStonesLabel = tabStones.GetComponentInChildren<TMP_Text>();
+
+        tabEquipment = BuildTabButton("Tab_Equipment", LocalizationManager.Get("UI_TAB_EQUIPMENT"),
+            24f + 180f + 10f, 220f, OnEquipmentTabPressed);
+        tabEquipmentLabel = tabEquipment.GetComponentInChildren<TMP_Text>();
+
+        tabAlchemy = BuildTabButton("Tab_Alchemy", LocalizationManager.Get("UI_TAB_ALCHEMY"),
+            24f + 180f + 10f + 220f + 10f, 180f, OnAlchemyTabPressed);
+        tabAlchemyLabel = tabAlchemy.GetComponentInChildren<TMP_Text>();
+    }
+
+    private Button BuildTabButton(string name, string text, float x, float width,
+                                  UnityEngine.Events.UnityAction onClick)
+    {
+        var button = UIBuild.Button(panel.transform, name, text, Color.clear,
+            new Vector2(width, 36f), new Vector2(x, -64f), onClick);
+
+        var rt = button.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0f, 1f);
+        rt.anchorMax = new Vector2(0f, 1f);
+        rt.pivot = new Vector2(0f, 1f);
+        rt.anchoredPosition = new Vector2(x, -64f);
+
+        UITheme.Surface(button.gameObject, Color.clear, UITheme.BorderStrong, UITheme.RadiusButton);
+        button.targetGraphic = button.GetComponent<Image>();
+        return button;
+    }
+
     // Botón "▾" en la ficha de piedra + lista flotante con las 4; clic fuera de la lista la cierra.
     private void BuildStoneDropdown(Ficha ficha, float cardX)
     {
@@ -333,14 +420,16 @@ public class AlchemyWorkshopUI : MonoBehaviour
         UIBuild.Stretch(catcherBtn.GetComponent<RectTransform>());
         stoneDropdownCatcher = catcherBtn.gameObject;
 
+        // Centrado en pantalla como su propio popup: anclado a la tarjeta se salía por debajo
+        // del panel (482 de alto) y tapaba la fila de pociones de abajo.
         var listGo = new GameObject("StoneDropdown_List", typeof(RectTransform));
         listGo.transform.SetParent(panel.transform, false);
         var lrt = listGo.GetComponent<RectTransform>();
-        lrt.anchorMin = new Vector2(0.5f, 1f);
-        lrt.anchorMax = new Vector2(0.5f, 1f);
-        lrt.pivot = new Vector2(0.5f, 1f);
+        lrt.anchorMin = new Vector2(0.5f, 0.5f);
+        lrt.anchorMax = new Vector2(0.5f, 0.5f);
+        lrt.pivot = new Vector2(0.5f, 0.5f);
         lrt.sizeDelta = new Vector2(CardWidth, 4f * 34f);
-        lrt.anchoredPosition = new Vector2(cardX, -(CardTop + CardHeight + 6f));
+        lrt.anchoredPosition = Vector2.zero;
         UITheme.Surface(listGo, UITheme.Card, UITheme.BorderCard, UITheme.RadiusCard);
 
         var tiers = (AscensionStoneTier[])System.Enum.GetValues(typeof(AscensionStoneTier));
@@ -398,6 +487,7 @@ public class AlchemyWorkshopUI : MonoBehaviour
 
         var ficha = new Ficha
         {
+            root = go,
             titulo = CardLabel(go.transform, "Title", UITheme.SizeValue, -14f, 26f,
                 TextAlignmentOptions.Left),
             cuerpo = CardLabel(go.transform, "Body", UITheme.SizeBody, -46f, 62f,
@@ -418,6 +508,9 @@ public class AlchemyWorkshopUI : MonoBehaviour
         ficha.etiqueta = ficha.boton.GetComponentInChildren<TMP_Text>();
         ficha.etiqueta.fontSize = UITheme.SizeBody;
         ficha.etiqueta.fontStyle = FontStyles.Bold;
+
+        // Sacude el botón si lo tocan sin fondos suficientes, en vez de no responder nada.
+        UnaffordableFeedback.Attach(ficha.boton.gameObject);
 
         return ficha;
     }

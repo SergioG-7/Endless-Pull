@@ -35,6 +35,9 @@ public class HeroDetailModal : MonoBehaviour
     private const float BtnHeight = 46f;
     private const float BtnGap = 12f;
 
+    // Deja hueco bajo el botón de cierre (ocupa y -20 a -64) para que la grilla de acciones no lo solape.
+    private const float ActionGridTop = -84f;
+
     private GameObject panel;
     private TMP_Text identityLabel;
     private TMP_Text bioLabel;
@@ -44,7 +47,8 @@ public class HeroDetailModal : MonoBehaviour
     private TMP_Text mpLabel;
     private Image moraleFill;
     private TMP_Text moraleLabel;
-    private TMP_Text gearLabel;
+    private TMP_Text gearLabelLeft;
+    private TMP_Text gearLabelRight;
     private Image portraitArt;
     private Image portraitFrame;
 
@@ -145,12 +149,14 @@ public class HeroDetailModal : MonoBehaviour
             ? $"{Key("Maestría")} {hero.Mastery.Describe()}"
             : $"{Key("Estados")} {estados}";
 
-        gearLabel.text = $"{Key("Pasivas")} {PassiveSkills.Describe(hero.Passives)}\n" +
-                         $"{Key("Arma")} {GearLabel(hero, EquipmentSlot.Weapon)}\n" +
-                         $"{Key("Escudo")} {GearLabel(hero, EquipmentSlot.Shield)}\n" +
-                         $"{Key("Armadura")} {GearLabel(hero, EquipmentSlot.Armor)}\n" +
-                         $"{Key("Accesorio")} {GearLabel(hero, EquipmentSlot.Accessory)}\n" +
-                         $"{lineaEstado}";
+        // Dos columnas para llenar el espacio inferior izquierdo en vez de una sola tira vertical.
+        gearLabelLeft.text = $"{Key("Pasivas")} {PassiveSkills.Describe(hero.Passives)}\n" +
+                             $"{Key("Arma")} {GearLabel(hero, EquipmentSlot.Weapon)}\n" +
+                             $"{Key("Escudo")} {GearLabel(hero, EquipmentSlot.Shield)}";
+
+        gearLabelRight.text = $"{Key("Armadura")} {GearLabel(hero, EquipmentSlot.Armor)}\n" +
+                              $"{Key("Accesorio")} {GearLabel(hero, EquipmentSlot.Accessory)}\n" +
+                              $"{lineaEstado}";
 
         RefreshButtons();
     }
@@ -302,10 +308,21 @@ public class HeroDetailModal : MonoBehaviour
         moraleOutline.effectColor = new Color(0f, 0f, 0f, 0.85f);
         moraleOutline.effectDistance = new Vector2(1f, -1f);
 
-        gearLabel = UIBuild.Label(panel.transform, "Gear", UITheme.SizeSmall, TextAlignmentOptions.TopLeft);
-        gearLabel.color = UITheme.TextSoft;
-        gearLabel.lineSpacing = 14f;
-        AnchorTopLeft(gearLabel.rectTransform, 24f, barsY - 78f, ColLeft, 150f);
+        // Misma franja horizontal que antes (24..24+ColLeft) partida en dos columnas con hueco entre medio.
+        const float gearGap = 16f;
+        float gearColWidth = (ColLeft - gearGap) / 2f;
+        float gearY = barsY - 78f;
+        const float gearHeight = 190f;
+
+        gearLabelLeft = UIBuild.Label(panel.transform, "GearLeft", UITheme.SizeSmall, TextAlignmentOptions.TopLeft);
+        gearLabelLeft.color = UITheme.TextSoft;
+        gearLabelLeft.lineSpacing = 14f;
+        AnchorTopLeft(gearLabelLeft.rectTransform, 24f, gearY, gearColWidth, gearHeight);
+
+        gearLabelRight = UIBuild.Label(panel.transform, "GearRight", UITheme.SizeSmall, TextAlignmentOptions.TopLeft);
+        gearLabelRight.color = UITheme.TextSoft;
+        gearLabelRight.lineSpacing = 14f;
+        AnchorTopLeft(gearLabelRight.rectTransform, 24f + gearColWidth + gearGap, gearY, gearColWidth, gearHeight);
 
         // Columna derecha: las seis acciones, en dos columnas de tres.
         float rightX = ColLeft + 48f;
@@ -330,7 +347,7 @@ public class HeroDetailModal : MonoBehaviour
         int fila = slotIndex / 2;
 
         float x = baseX + columna * (BtnWidth + BtnGap);
-        float y = -24f - fila * (BtnHeight + BtnGap);
+        float y = ActionGridTop - fila * (BtnHeight + BtnGap);
 
         var button = UIBuild.Button(parent, name, string.Empty, UITheme.Neutral,
             new Vector2(BtnWidth, BtnHeight), new Vector2(x, y), onClick);

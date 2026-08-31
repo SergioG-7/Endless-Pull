@@ -29,6 +29,17 @@ public class Projectile : MonoBehaviour
     private static readonly List<Projectile> pool = new List<Projectile>();
     private static int nextPoolIndex;
 
+    // Cuelgan de aquí en vez de la raíz de la escena, para no parecer basura sin recoger.
+    private static Transform poolRoot;
+
+    private static Transform PoolRoot()
+    {
+        if (poolRoot != null) return poolRoot;
+
+        poolRoot = new GameObject("Pool_Projectiles").transform;
+        return poolRoot;
+    }
+
     // Valor de fábrica de lifetime, capturado antes de que Update() empiece a descontarlo.
     private float lifetimeDefault;
 
@@ -150,6 +161,7 @@ public class Projectile : MonoBehaviour
         }
 
         var go = new GameObject("Projectile", typeof(SpriteRenderer), typeof(Projectile));
+        go.transform.SetParent(PoolRoot(), false);
         var proj = go.GetComponent<Projectile>();
         pool.Add(proj);
         return proj;

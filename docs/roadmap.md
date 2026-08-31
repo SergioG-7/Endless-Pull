@@ -1,42 +1,14 @@
 # Roadmap de Produccion Endless Pull
 
-## Fase 30 Audio Dinamico (COMPLETA)
+## Fase 32 Reorganización, Agrupación y Estandarización de UI (Fase de Pulido) — PENDIENTE
 
-- Ejecutar comando /team-audio
-- BGM loop base torre tension y jefes con transiciones
-- SFX combate espada impactos flechas magia criticos
-- Audio UI y base clics modales ascension crafteo victoria
-- Pendiente: AudioClip reales aplazados a etapa final del proyecto — generación IA vía
-  `Unity_AssetGeneration_GenerateAsset` no disponible (sin modelos configurados) y BGM
-  orquestal en loop generada por IA es alto riesgo de sonar mal. Usuario importará SFX/BGM
-  gratuitos 100% necesarios para gameplay manualmente. Hoy suena con el sintetizador de
-  reserva del AudioManager
-
-## Fase 31 Game Feel VFX y Pulido (COMPLETA)
-
-- Ejecutar comando /team-polish
-- Impacto hitstop screen shake iluminacion 2D
-- VFX particulas curacion decretos crafteo y cofre victoria
-- Animaciones UI transiciones modales
-- Prerrequisito: pooling de DamageTextManager/Projectile (bloqueante detectado por
-  performance-analyst, resuelto antes del VFX)
-- Iluminacion 2D sustituida por flash de sprite existente (sin infraestructura Light2D
-  en el proyecto); animacion de modal solo al abrir, no al cerrar (ver notas de sesion)
-
-## Fase 32 Reorganización, Agrupación y Estandarización de UI (Fase de Pulido) — MAYORMENTE COMPLETA:
-
-- Hecho: bug BLD_*, 2/3 bugs de gameplay, Portal unificado salida+entrada con transición,
-  5/6 puntos de UI (localización menú, HUD tapado, dropdown piedras, modal héroe, labels
-  tienda), las 4 estructuras nuevas (Pozo de Maná/Forja/Sala de Guerra/Archivo del Santuario)
-  con datos+lógica+colocación en escena+integración en BuildingInspectUI, TopBar condensado
-  y realineado (Sidebar ya cumplía el rol de Dock, no necesitó cambios).
-- Pendiente: unificar dimensiones de modales al 80% centrado (aplazado, riesgo alto sin
-  verificación visual); labels cortados fuera de la tienda (sin causa concreta localizada);
-  duplicar las 4 estructuras nuevas en `_Recovery/0.unity` si hace falta (solo se tocó
-  `Base.unity`); verificación visual real en Editor del TopBar (los cambios de layout no se
-  pudieron capturar por pantalla esta sesión, solo se verificó por consola sin errores);
-  barrido general de QA por más bugs/huecos del prototipo (pedido explícitamente por el
-  roadmap); resto de keys de idioma muertas de la auditoría (no bloqueante).
+- Unificar dimensiones de modales al 80% centrado (aplazado, riesgo alto sin
+  verificación visual).
+- Labels cortados fuera de la tienda (sin causa concreta localizada, distinto del
+  caso ya resuelto de `Txt_Inventory`).
+- Verificación visual real en Editor del TopBar (los cambios de layout no se
+  pudieron capturar por pantalla, solo se verificó por consola sin errores).
+- Barrido general de QA por más bugs/huecos del prototipo.
 
 1. Estandarización de Canvas y Modales (UIManager.cs / UITheme.cs):
 
@@ -64,3 +36,69 @@
 
 - Compila limpio vía Unity MCP.
 - Valida en Play Mode que abrir y cerrar paneles en secuencia no cause solapamientos visuales ni bloquee la entrada.
+
+## Fase 33 BUGS + FIXES (COMPLETA)
+
+Compila limpio vía Unity MCP (0 errores, solo 2 warnings cosméticos sin relación:
+pipeline server no-automated, glifo ▾ sin fallback en LiberationSans SDF). Escena
+`Base.unity` carga bien, `Quadrant_North` con veil+ground presente, sin objetos
+huérfanos. Verificado en Play Mode (arranca sin excepciones).
+
+Pendiente de verificación visual humana (no se pudo confirmar con capturas):
+posiciones/tamaños exactos del cuadrante Norte y los 4 suelos placeholder,
+sensibilidad de zoom/pan de cámara, ancho del chip de recursos fusionado
+(Gemas+Madera+Hierro+Comida, puede desbordar), reflow de las 3 tarjetas de
+Equipo en el Taller (quedaron en su posición original dentro de su pestaña,
+no en fila limpia), y si el menú "Tienda" debería renombrarse ahora que ya
+no vende equipo con gemas (solo queda el inventario/almacén).
+
+Nombres de archivo reales usados (el roadmap original citaba nombres que no
+existen en el repo): wander en `HeroController.cs` (no `HeroWanderAI.cs`),
+cuadrantes en `QuadrantController.cs` (no `BaseManager.cs`), TopBar en
+`MasterHUD.cs` (no `TopBarUI.cs`), Taller en `AlchemyWorkshopUI.cs` (no
+`WorkshopUI.cs`; `CraftingUI.cs` quedó como código muerto/legacy, sustituido
+por `AlchemyWorkshopUI` que ya redirige ahí), feedback en `MasterCommander.cs`
++ `UnaffordableFeedback.cs` nuevo (no `HUDController.cs`).
+
+Corrige en bloque los siguientes problemas visuales, de layout y ergonomía:
+
+1. Espaciado de Base, Cámara y Biomas (BaseManager.cs, HeroWanderAI.cs, CameraDirector.cs):
+
+- Separación de Edificios: Redistribuye las coordenadas (x, y) de los edificios en los 4 cuadrantes. Duplica la distancia entre ellos para que no se solapen carteles, textos ni colliders.
+- Área de Deambulación: Asigna zonas de wander independientes por cuadrante para que los 50 héroes no se agrupen en un único enjambre central.
+- Fondo/Suelo: Añade una base visual o suelo con color/malla a los cuadrantes para que la base no parezca bloques flotando en un fondo negro.
+- Control de Cámara: Implementa zoom básico (rueda del ratón / pinch táctil) y arrastre (pan) con límites (clamping) sobre los cuadrantes desbloqueados.
+- Biomas de Torre: Asegura que el fondo/iluminación del bioma correspondiente (Bosque, Minas, Cripta, Templo) se active en la arena de combate según el piso actual.
+
+2. TopBar HUD y Localización (TopBarUI.cs, MasterHUD.cs):
+
+- Compactación: Agrupa los recursos (Gemas, Madera, Hierro, Comida) en un contenedor compacto en la esquina superior derecha con icono + cifra.
+- Localización limpia: Reemplaza todos los textos hardcodeados ("MADERA", "HIERRO", "COMIDA", "TORRE", "Piso") por claves dinámicas de `LocalizationManager.cs`.
+
+3. Modal de Detalle de Héroe (HeroDetailModal.cs / Prefab):
+
+- Botón de Cierre [X]: Reubica el botón de cerrar en la esquina superior derecha del panel principal con padding suficiente, completamente separado de "EN ESCUADRA" y botones de acción.
+- Aprovechamiento del Espacio: Redistribuye las pasivas, equipo y atributos en dos columnas equilibradas para eliminar el espacio muerto inferior.
+
+4. Santuario (SanctuaryUI.cs):
+
+- Lista de Héroes: Ajusta el padding/offset del scrollview para que el avatar/foto del héroe se renderice completo y sin cortes en el borde izquierdo.
+- Previsualización de Síntesis: Muestra tanto el héroe base/sacrificio como la vista previa del héroe resultante (estrellas y stats proyectadas) en el panel derecho.
+
+5. Taller Organizado por Pestañas (WorkshopUI.cs):
+
+- Sistema de Pestañas (Tabs): Reestructura el Taller en 3 pestañas independientes para evitar paneles superpuestos:
+  - Pestaña 1: Forja de Piedras (Piedra Menor/Media/Mayor).
+  - Pestaña 2: Forja y Reparación de Equipo (Fabricar, Mejorar, Reparar).
+  - Pestaña 3: Alquimia (Pociones de Curación).
+- Limpieza de Tienda: Elimina la pestaña de compra directa de equipo con gemas en `ShopUI.cs` (el equipo se obtiene exclusivamente por crafteo y recompensas).
+
+6. Game Feel y Feedback (HUDController.cs, ShopUI.cs):
+
+- Botón "Curar Todos": Si todos los héroes ya tienen el 100% de HP, muestra un aviso flotante (Toast/Banner) tipo "Todos los héroes ya están al máximo de salud" o reproduce un sonido neutro.
+- Compra fallida / Recursos insuficientes: Muestra feedback visual (parpadeo rojo del recurso o shake leve) cuando el jugador no tenga suficientes gemas/materiales.
+
+7. Verificación:
+
+- Compila limpio vía Unity MCP (0 errores).
+- Valida en Play Mode que todos los modales abran sus pestañas sin solapamientos de capas (Z-index/Raycast).

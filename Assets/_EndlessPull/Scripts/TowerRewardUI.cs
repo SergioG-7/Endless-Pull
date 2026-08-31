@@ -14,7 +14,7 @@ public class TowerRewardUI : MonoBehaviour
     [SerializeField] private Canvas canvas;
 
     [Tooltip("Tamaño del panel del modal.")]
-    [SerializeField] private Vector2 panelSize = new Vector2(420f, 360f);
+    [SerializeField] private Vector2 panelSize = new Vector2(420f, 440f);
 
     [Tooltip("Segundos que tarda el cofre en abrirse (rebote de escala).")]
     [SerializeField] private float chestPopSeconds = 0.35f;
@@ -104,7 +104,9 @@ public class TowerRewardUI : MonoBehaviour
 
         titleLabel = UIBuild.TopLabel(panel, "Title", UITheme.SizeTitle, 32f, -16f, TextAlignmentOptions.Center);
 
-        var chestGo = new GameObject("ChestIcon", typeof(RectTransform), typeof(Image));
+        // Sin sprite de cofre real (generación IA no disponible en este proyecto): silueta
+        // armada con 3 piezas en vez del cuadrado liso de antes.
+        var chestGo = new GameObject("ChestIcon", typeof(RectTransform));
         chestGo.transform.SetParent(panel, false);
         chestIcon = chestGo.GetComponent<RectTransform>();
         chestIcon.anchorMin = new Vector2(0.5f, 0.5f);
@@ -112,11 +114,11 @@ public class TowerRewardUI : MonoBehaviour
         chestIcon.pivot = new Vector2(0.5f, 0.5f);
         chestIcon.sizeDelta = new Vector2(120f, 120f);
         chestIcon.anchoredPosition = new Vector2(0f, 48f);
-        var chestImage = chestGo.GetComponent<Image>();
-        chestImage.sprite = UITheme.Rounded;
-        chestImage.type = Image.Type.Sliced;
-        chestImage.color = UITheme.Hex("D9A441");
-        UITheme.Outline(chestIcon, UITheme.Hex("8A5A22"), UITheme.RadiusCard);
+
+        ChestPiece(chestIcon, "Body", new Vector2(110f, 70f), new Vector2(0f, -15f), UITheme.Hex("D9A441"));
+        ChestPiece(chestIcon, "Lid", new Vector2(100f, 40f), new Vector2(0f, 35f), UITheme.Hex("E8C169"));
+        ChestPiece(chestIcon, "Seam", new Vector2(114f, 8f), new Vector2(0f, 5f), UITheme.Hex("8A5A22"));
+        ChestPiece(chestIcon, "Lock", new Vector2(20f, 20f), new Vector2(0f, 5f), UITheme.Hex("5A3A1A"));
 
         gemsLine = MakeLine(panel, "GemsLine", -18f);
         materialsLine = MakeLine(panel, "MaterialsLine", -50f);
@@ -128,6 +130,24 @@ public class TowerRewardUI : MonoBehaviour
         backdrop.gameObject.SetActive(false);
     }
 
+    private static void ChestPiece(Transform parent, string name, Vector2 size, Vector2 pos, Color color)
+    {
+        var go = new GameObject(name, typeof(RectTransform), typeof(Image));
+        go.transform.SetParent(parent, false);
+
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0.5f, 0.5f);
+        rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.sizeDelta = size;
+        rt.anchoredPosition = pos;
+
+        var image = go.GetComponent<Image>();
+        image.sprite = UITheme.Rounded;
+        image.type = Image.Type.Sliced;
+        image.color = color;
+    }
+
     private static TMP_Text MakeLine(Transform parent, string name, float y)
     {
         var label = UIBuild.Label(parent, name, UITheme.SizeBody, TextAlignmentOptions.Center);
@@ -136,7 +156,9 @@ public class TowerRewardUI : MonoBehaviour
         rt.anchorMax = new Vector2(0.5f, 0f);
         rt.pivot = new Vector2(0.5f, 0f);
         rt.sizeDelta = new Vector2(380f, 28f);
-        rt.anchoredPosition = new Vector2(0f, y + 130f);
+        // +170 (antes +130): con +130 la línea de EXP quedaba con el botón Continuar, que se
+        // ancla a un offset fijo desde el borde inferior independiente del alto del panel.
+        rt.anchoredPosition = new Vector2(0f, y + 170f);
         return label;
     }
 }

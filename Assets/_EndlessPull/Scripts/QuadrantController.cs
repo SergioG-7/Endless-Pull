@@ -8,7 +8,8 @@ public enum QuadrantId
 {
     East,
     South,
-    West
+    West,
+    North
 }
 
 // Zona de la base bloqueada hasta cierto piso: silueta con candado que se revela una sola vez.
@@ -35,6 +36,9 @@ public class QuadrantController : MonoBehaviour
     [Tooltip("Segundos del pop de revelado (mismo criterio sin tweening que TowerRewardUI).")]
     [SerializeField] private float revealPopSeconds = 0.35f;
 
+    [Tooltip("Área de paseo que se asigna a los héroes repartidos en este cuadrante.")]
+    [SerializeField] private Vector2 wanderSize = new Vector2(6f, 4f);
+
     // Registro estático: el WorldInteractionManager recorre esta lista, igual que BaseBuilding.All.
     private static readonly List<QuadrantController> all = new List<QuadrantController>();
     public static IReadOnlyList<QuadrantController> All => all;
@@ -47,9 +51,13 @@ public class QuadrantController : MonoBehaviour
     public QuadrantId Id => id;
     public int RequiredFloor => requiredFloor;
     public bool Revealed => revealed;
+    public Vector2 WanderSize => wanderSize;
 
     // Reutiliza el piso que ya publica BaseBuilding; el cuadrante no lleva su propio estado de piso.
     public bool IsUnlocked => BaseBuilding.TowerFloor >= requiredFloor;
+
+    // Límites reales del cuadrante (posición del veil aunque esté desactivado); los usa CameraDirector para el clamp.
+    public Bounds ZoneBounds => veil != null ? veil.bounds : new Bounds(transform.position, Vector3.one);
 
     void Awake()
     {

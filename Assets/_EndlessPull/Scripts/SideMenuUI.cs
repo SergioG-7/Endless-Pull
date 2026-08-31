@@ -71,6 +71,7 @@ public class SideMenuUI : MonoBehaviour
     private readonly List<TMP_Text> buttonLabels = new List<TMP_Text>();
     private readonly List<string> buttonLabelKeys = new List<string>();
     private bool open;
+    private Transform materiales;
 
     public bool IsOpen => open;
 
@@ -105,6 +106,26 @@ public class SideMenuUI : MonoBehaviour
 
         bool enCombate = combatBar != null && combatBar.ShouldShow;
         if (sidebar.gameObject.activeSelf == enCombate) sidebar.gameObject.SetActive(!enCombate);
+
+        // El ancho real de ventana tarda un frame o más en estabilizarse tras cargar la escena;
+        // calcularlo solo una vez en Build() podía dejar el chip escondido para siempre con un
+        // Screen.width todavía sin asentar. Se revisa cada frame, es una comparación barata.
+        RefreshMaterialsVisibility();
+    }
+
+    private void RefreshMaterialsVisibility()
+    {
+        if (materiales == null || topBar == null) return;
+
+        var canvas = sidebar != null ? sidebar.GetComponentInParent<Canvas>() : null;
+        float escala = canvas != null && canvas.scaleFactor > 0f ? canvas.scaleFactor : 1f;
+        var segura = Screen.safeArea;
+        float izquierda = safeMargin + segura.x / escala;
+        float derecha = safeMargin + (Screen.width - segura.xMax) / escala;
+        float anchoCanvas = Screen.width / escala;
+        float anchoTopBar = anchoCanvas - derecha - (izquierda + drawerWidth + topBarGap);
+
+        materiales.gameObject.SetActive(anchoTopBar >= 900f);
     }
 
     public void Toggle() => SetOpen(!open);
@@ -158,13 +179,10 @@ public class SideMenuUI : MonoBehaviour
             topBar.offsetMin = new Vector2(izquierda + drawerWidth + topBarGap, -arriba - topBarHeight);
             topBar.offsetMax = new Vector2(-derecha, -arriba);
 
-            // En pantallas muy estrechas (móvil vertical) no cabe el chip de materiales: se esconde
-            // para que Gemas y Piso no se corten ni se solapen. El ancho real de una barra estirada
-            // (anchors 0-1) es el ancho del canvas menos los márgenes izquierdo y derecho.
-            float anchoCanvas = Screen.width / escala;
-            float anchoTopBar = anchoCanvas - derecha - (izquierda + drawerWidth + topBarGap);
-            var materiales = topBar.Find("Txt_Materials");
-            if (materiales != null) materiales.gameObject.SetActive(anchoTopBar >= 900f);
+            // En pantallas muy estrechas (móvil vertical) no cabe el chip de materiales: se
+            // esconde para que Gemas y Piso no se corten ni se solapen. Ver RefreshMaterialsVisibility,
+            // que repite este cálculo cada frame (Screen.width al arrancar puede venir stale).
+            materiales = topBar.Find("Txt_Materials");
         }
 
         // El botón se ancla arriba del todo; el cajón cuelga justo debajo.
@@ -293,7 +311,13 @@ public class SideMenuUI : MonoBehaviour
     private void StyleItem(Transform item)
     {
         var rt = item as RectTransform;
-        if (rt != null) rt.sizeDelta = new Vector2(rt.sizeDelta.x, itemHeight);
+        if (rt != null)
+        {
+            rt.sizeDelta = new Vector2(rt.sizeDelta.x, itemHeight);
+            // Un botón colocado a mano en el Editor puede traer un localScale distinto de 1
+            // (p.ej. Btn_Sanctuary_Open llegó a 1.14): fuerza que todos midan igual.
+            rt.localScale = Vector3.one;
+        }
 
         UITheme.Surface(item.gameObject, Color.clear, UITheme.Border, UITheme.RadiusItem);
 
