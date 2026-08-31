@@ -1,37 +1,13 @@
 # Roadmap de Produccion Endless Pull
 
-## Fase 0 Saneamiento de Infraestructura y Hooks
-
-- Ejecutar comando /skill-test
-
-## Fase 27 Narrativa Lore y Localizacion
-
-- Ejecutar comando /team-narrative
-- Lore de la Torre y Decretos
-- Auditoria de bios 50 heroes descripciones y personalidades en HeroData
-- Tablon de misiones contratos tematicos con recompensas
-- Localizacion ES EN JA validar todas las cadenas en LocalizationManager
-
-## Fase 28 Diseno de Niveles Biomas y Progresion
-
-- Ejecutar comando /team-level
-- Biomas fondos por pisos 1 a 5 goblin 6 a 10 minas 11 a 15 cripta 16 a 20 templo
-- Formaciones de enemigos tanques delante tiradores y chamanes detras
-- Jefes cada 5 pisos patrones unicos
-
-## Fase 29 Balance de Combate y Decretos
-
-- Ejecutar comando /team-combat
-- Balance DPS HP mitigacion simulacion numerica y curvas de escalado
-- Decretos cooldowns costes mana moral de curacion foco reagrupar retirada
-- Sinergias subclases validar 18 habilidades y maestrias
-
-## Fase 30 Audio Dinamico
+## Fase 30 Audio Dinamico (COMPLETA)
 
 - Ejecutar comando /team-audio
 - BGM loop base torre tension y jefes con transiciones
 - SFX combate espada impactos flechas magia criticos
 - Audio UI y base clics modales ascension crafteo victoria
+- Pendiente: generar los AudioClip reales (Unity_AssetGeneration_GenerateAsset), hoy suena
+  con el sintetizador de reserva del AudioManager
 
 ## Fase 31 Game Feel VFX y Pulido
 
@@ -39,10 +15,3 @@
 - Impacto hitstop screen shake iluminacion 2D
 - VFX particulas curacion decretos crafteo y cofre victoria
 - Animaciones UI transiciones modales
-
-## Fase 32 QA y Entrega
-
-- Ejecutar comando /team-qa
-- Pruebas de estres y persistencia validar savegame json
-- Deuda tecnica ejecutar /tech-debt /architecture-review /gate-check
-- Build ejecutar /release-checklist y /launch-checklist
