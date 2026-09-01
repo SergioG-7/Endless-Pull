@@ -25,6 +25,7 @@ public class BuildingInspectUI : MonoBehaviour
     private TMP_Text ocupacion;
     private TMP_Text produccion;
     private RectTransform lista;
+    private GameObject listaViewport;
     [Tooltip("Taller que repara el equipo desgastado.")]
     [SerializeField] private CraftingManager crafting;
 
@@ -104,7 +105,12 @@ public class BuildingInspectUI : MonoBehaviour
 
         RefreshMaintenance();
         RefreshOpenButton();
-        RebuildWorkerList();
+
+        // Sala de Guerra y Archivo no usan trabajadores fijos: la lista de asignación
+        // se quedaba debajo del botón de abrir panel, duplicando el acceso a Escuadras.
+        bool usaTrabajadores = building.Type != BuildingType.WarRoom && building.Type != BuildingType.Archive;
+        if (listaViewport != null) listaViewport.SetActive(usaTrabajadores);
+        if (usaTrabajadores) RebuildWorkerList();
     }
 
     // Sala de Guerra y Archivo abren su propio panel dedicado en vez de solo mostrar texto.
@@ -276,6 +282,7 @@ public class BuildingInspectUI : MonoBehaviour
         var viewport = new GameObject("Viewport", typeof(RectTransform), typeof(Image),
                                       typeof(Mask), typeof(ScrollRect));
         viewport.transform.SetParent(panel.transform, false);
+        listaViewport = viewport;
 
         var vrt = viewport.GetComponent<RectTransform>();
         vrt.anchorMin = Vector2.zero;

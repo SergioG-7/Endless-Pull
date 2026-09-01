@@ -83,6 +83,12 @@ public static class UITheme
     public const float SizeTiny = SizeMicro;
     public const float SizeChip = SizeValue;
 
+    // Tamaño estándar de modal: 80% de la resolución de referencia (1920x1080), centrado.
+    public static readonly Vector2 ModalSize = new Vector2(1536f, 864f);
+
+    // Área táctil mínima recomendada para botones de navegación, a resolución de referencia.
+    public const float MinTouchTarget = 88f;
+
     // Radios del mockup.
     public const float RadiusPill = 32f;
     public const float RadiusPanel = 16f;

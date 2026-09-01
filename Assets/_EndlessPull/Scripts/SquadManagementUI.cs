@@ -201,6 +201,11 @@ public class SquadManagementUI : MonoBehaviour
         etiquetaCerrar.text = LocalizationManager.Get("UI_CLOSE");
 
         confirmButton.gameObject.SetActive(confirmMode);
+
+        // Sin botón Confirmar al lado, Cerrar se centra abajo; con los dos, cada uno a su lado.
+        var cerrarRt = etiquetaCerrar.transform.parent.GetComponent<RectTransform>();
+        cerrarRt.anchoredPosition = new Vector2(confirmMode ? -150f : 0f, cerrarRt.anchoredPosition.y);
+
         if (confirmMode)
         {
             confirmLabel.text = LocalizationManager.Get(

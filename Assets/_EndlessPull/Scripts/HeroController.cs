@@ -13,6 +13,26 @@ public enum HeroState
     CombatAttack
 }
 
+// Estado global de alto nivel (Fase 37): en qué "modo" está el héroe, más allá de su
+// sub-estado interno de FSM. InCombat es el único que corta el vector hacia la base.
+public enum HeroGlobalState
+{
+    InBase,
+    HeadingToPortal,
+    InCombat,
+    OnExpedition
+}
+
+// Sub-estado de combate; solo tiene sentido mientras GlobalState == InCombat.
+public enum CombatState
+{
+    IdleSearching,
+    MovingToTarget,
+    InRangeAttacking,
+    Kiting,
+    Stunned
+}
+
 // Cómo está de ánimo el héroe; sale de la moral y modifica ataque, velocidad y cadencia.
 public enum MoraleState
 {
@@ -199,6 +219,22 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
     // Solo los héroes desplegados con la escuadra buscan pelea; el resto sigue en la base.
     private bool deployed;
+
+    // Puesto de formación al desplegar en la arena; limita cuánto se puede alejar al kitear
+    // para que un arquero/mago no acabe caminando fuera del combate persiguiendo distancia.
+    private Vector2 combatAnchor;
+
+    [Tooltip("Radio máximo de retirada (kite) respecto al puesto de formación en la arena.")]
+    [SerializeField] private float maxKiteRadius = 3.5f;
+
+    // Estado global (Fase 37): capa de alto nivel sobre la FSM interna, para que el resto del
+    // juego (animaciones, IA, HUD) pueda preguntar "en qué modo está" sin conocer HeroState.
+    private HeroGlobalState globalState = HeroGlobalState.InBase;
+    public HeroGlobalState GlobalState => globalState;
+
+    // Sub-estado de combate; solo se actualiza mientras GlobalState == InCombat.
+    private CombatState combatState = CombatState.IdleSearching;
+    public CombatState CombatSubState => combatState;
 
     // Candado del roster: un héroe bloqueado no se puede sacrificar por accidente.
     private bool isLocked;
@@ -632,6 +668,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
             forcedTarget = null;
             target = null;
             defensiveTimer = 0f;
+            globalState = HeroGlobalState.HeadingToPortal;
             if (viaGateway) EnterViaGatewayAnimated();
             else TeleportToBaseArea();
             EnterBaseWander();
@@ -645,6 +682,9 @@ public class HeroController : MonoBehaviour, IHealthOwner
         deployed = true;
         forcedTarget = null;
         target = null;
+        combatAnchor = destination;
+        globalState = HeroGlobalState.HeadingToPortal;
+        combatState = CombatState.IdleSearching;
         TeleportToGateway();
         StartCoroutine(TravelRoutine(destination, gatewayTravelSeconds));
     }
@@ -690,6 +730,10 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
         transform.position = destination;
         traveling = false;
+
+        // Fin del paso por el Portal: desplegado va a InCombat (a buscar objetivo en la arena),
+        // de vuelta va a InBase (EnterBaseWander, llamado por el propio SetDeployed, lo confirma).
+        globalState = deployed ? HeroGlobalState.InCombat : HeroGlobalState.InBase;
     }
 
     // Asignar subclase cambia también la habilidad activa por la exclusiva del arquetipo.
@@ -907,7 +951,11 @@ public class HeroController : MonoBehaviour, IHealthOwner
         if (externalControl) return;
 
         // Aturdido no piensa ni se mueve, pero el maná y los estados siguen corriendo.
-        if (Status.IsStunned) return;
+        if (Status.IsStunned)
+        {
+            if (IsInCombat()) combatState = CombatState.Stunned;
+            return;
+        }
 
         ScanForEnemies();
 
@@ -984,23 +1032,21 @@ public class HeroController : MonoBehaviour, IHealthOwner
             return;
         }
 
-        EnemyController nearest = FindNearestEnemy();
+        // Ya en combate con un objetivo vivo: manda hasta que muera. Que el enemigo quede fuera
+        // del rango de detección al kitear no debe arrancar al héroe de vuelta a la base.
+        if (IsInCombat() && target != null) return;
 
-        if (nearest != null && target == null)
-        {
-            // El combate interrumpe cualquier actividad de base, entrenamiento incluido.
-            currentBuilding = null;
-            target = nearest;
-            state = HeroState.CombatApproach;
-        }
-        else if (nearest == null && IsInCombat())
-        {
-            EnterBaseWander();
-        }
-        else if (nearest != null)
-        {
-            target = nearest;
-        }
+        EnemyController nearest = FindNearestEnemy();
+        if (nearest == null) return;
+
+        // El combate interrumpe cualquier actividad de base, entrenamiento incluido. Si ya
+        // estaba IsInCombat() con el objetivo muerto (IdleSearching), esto solo lo reengancha
+        // en el sitio donde estaba de guardia, sin pasar por la base.
+        currentBuilding = null;
+        target = nearest;
+        globalState = HeroGlobalState.InCombat;
+        combatState = CombatState.MovingToTarget;
+        state = HeroState.CombatApproach;
     }
 
     private EnemyController FindNearestEnemy()
@@ -1095,8 +1141,16 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
     private void TickCombatApproach()
     {
-        if (target == null) { EnterBaseWander(); return; }
+        if (target == null)
+        {
+            // IdleSearching: el objetivo murió o salió de rango; se queda de guardia en su sitio
+            // de la arena. PROHIBIDO calcular ruta a la base — ScanForEnemies reengancha cuando
+            // encuentre un objetivo nuevo, sin moverse mientras tanto.
+            combatState = CombatState.IdleSearching;
+            return;
+        }
 
+        combatState = CombatState.MovingToTarget;
         MoveTowards(target.transform.position);
 
         // Correr detrás del enemigo cansa; pararse a golpear, no.
@@ -1111,7 +1165,13 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
     private void TickCombatAttack()
     {
-        if (target == null) { EnterBaseWander(); return; }
+        if (target == null)
+        {
+            // Mismo criterio que TickCombatApproach: guardia en sitio, sin ruta a base.
+            state = HeroState.CombatApproach;
+            combatState = CombatState.IdleSearching;
+            return;
+        }
 
         float distancia = Vector2.Distance(transform.position, target.transform.position);
 
@@ -1122,10 +1182,13 @@ public class HeroController : MonoBehaviour, IHealthOwner
             return;
         }
 
+        combatState = CombatState.InRangeAttacking;
+
         // Golpe en área del jefe cargando: los tanques aguantan la línea a propósito (mismo
         // criterio que TriggerMicroStep); el resto esquiva solo si es más prudente que agresivo.
         if (!IsTank && target.IsWindingUp && distancia < target.SlamRadius && SafeDistance > Aggression)
         {
+            combatState = CombatState.Kiting;
             MoveAwayFrom(target.transform.position);
             return;
         }
@@ -1135,7 +1198,10 @@ public class HeroController : MonoBehaviour, IHealthOwner
         // seguridad del héroe estira o encoge ese colchón sobre la ratio base del arma.
         float kiteRatio = rangedSafeDistanceRatio * Mathf.Lerp(0.6f, 1.4f, SafeDistance);
         if (IsRanged && distancia < EffectiveAttackRange * kiteRatio)
+        {
+            combatState = CombatState.Kiting;
             MoveAwayFrom(target.transform.position);
+        }
 
         attackTimer -= Time.deltaTime;
         if (attackTimer > 0f) return;
@@ -1427,6 +1493,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
     private void EnterBaseWander()
     {
         target = null;
+        globalState = HeroGlobalState.InBase;
 
         // Al soltar el edificio hay que devolver el punto de llegada que tenía reservado.
         BaseBuilding.ReleaseSlotEverywhere(this);
@@ -1473,7 +1540,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
                 UnityEngine.Random.Range(-half.x, half.x),
                 UnityEngine.Random.Range(-half.y, half.y));
 
-            if (!IsInsideLockedQuadrant(candidate)) { found = true; break; }
+            if (!IsInsideLockedQuadrant(candidate) && !IsNearGateway(candidate)) { found = true; break; }
         }
 
         wanderTarget = found ? candidate : baseAreaCenter;
@@ -1487,6 +1554,10 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
         return false;
     }
+
+    // El Portal es solo para entrar/salir de la Torre en formación: el paseo común lo evita.
+    private static bool IsNearGateway(Vector2 point)
+        => Vector2.Distance(TowerGateway.Position, point) <= 1.3f;
 
     // Sorteo ponderado: cada rasgo tira más hacia unos edificios que hacia otros.
     private BaseBuilding PickRandomBuilding()
@@ -1523,10 +1594,21 @@ public class HeroController : MonoBehaviour, IHealthOwner
     private void MoveAwayFrom(Vector2 origin)
     {
         Vector2 aqui = transform.position;
+
+        // Ya está en el borde de su radio de kite: no sigue huyendo, se queda a tiro para golpear.
+        if (Vector2.Distance(aqui, combatAnchor) >= maxKiteRadius) return;
+
         Vector2 direccion = (aqui - origin).normalized;
         if (direccion == Vector2.zero) direccion = UnityEngine.Random.insideUnitCircle.normalized;
 
-        transform.position = aqui + direccion * (EffectiveMoveSpeed * Time.deltaTime);
+        Vector2 destino = aqui + direccion * (EffectiveMoveSpeed * Time.deltaTime);
+
+        // Kiting: en el eje X, nunca más atrás que la línea trasera de la formación aliada
+        // (el puesto de despliegue menos el radio de kite) — un arquero/mago no cruza detrás
+        // de su propia escuadra por perseguir distancia.
+        destino.x = Mathf.Clamp(destino.x, combatAnchor.x - maxKiteRadius, combatAnchor.x + maxKiteRadius);
+
+        transform.position = destino;
     }
 
     // Paso corto e instantáneo lejos del objetivo tras encajar un golpe o esquivar uno: da la

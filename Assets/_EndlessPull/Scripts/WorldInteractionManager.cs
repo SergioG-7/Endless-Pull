@@ -23,12 +23,19 @@ public class WorldInteractionManager : MonoBehaviour
     [Tooltip("Radio de toque del Altar de Invocación.")]
     [SerializeField] private float altarTouchRadius = 2f;
 
+    [Tooltip("Panel de Torre que abre el Portal de la base.")]
+    [SerializeField] private TowerPanelUI towerCard;
+
+    [Tooltip("Radio de toque del Portal de la Torre.")]
+    [SerializeField] private float gatewayTouchRadius = 1.1f;
+
     void Awake()
     {
         if (worldCamera == null) worldCamera = Camera.main;
         if (heroCard == null) heroCard = UnityEngine.Object.FindFirstObjectByType<HeroQuickCardUI>();
         if (buildingCard == null) buildingCard = UnityEngine.Object.FindFirstObjectByType<BuildingInspectUI>();
         if (summonCard == null) summonCard = UnityEngine.Object.FindFirstObjectByType<SummonAltarUI>();
+        if (towerCard == null) towerCard = UnityEngine.Object.FindFirstObjectByType<TowerPanelUI>();
     }
 
     void Update()
@@ -48,6 +55,13 @@ public class WorldInteractionManager : MonoBehaviour
             && Vector2.Distance(SummonAltar.AltarPosition, punto) <= altarTouchRadius)
         {
             summonCard.Open();
+            return;
+        }
+
+        // Portal de la Torre: abre la selección de piso/expedición, igual que el botón del sidebar.
+        if (towerCard != null && Vector2.Distance(TowerGateway.Position, punto) <= gatewayTouchRadius)
+        {
+            towerCard.Open();
             return;
         }
 

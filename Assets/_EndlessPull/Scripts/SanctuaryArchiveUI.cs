@@ -87,7 +87,13 @@ public class SanctuaryArchiveUI : MonoBehaviour
     {
         var label = MakeLabel("Row", text, UIBuild.BodySize, color, y);
         label.enableWordWrapping = true;
-        return y - 46f;
+
+        // Alto real del texto ya envuelto: una crónica larga no debe solaparse con la fila siguiente.
+        float ancho = Mathf.Max(100f, lista.rect.width - 16f);
+        float alto = Mathf.Max(40f, label.GetPreferredValues(text, ancho, 0f).y);
+        label.rectTransform.sizeDelta = new Vector2(-16f, alto);
+
+        return y - alto - 6f;
     }
 
     private TMP_Text MakeLabel(string name, string text, float size, Color color, float y)

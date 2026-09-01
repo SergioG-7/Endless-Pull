@@ -57,15 +57,24 @@ public class InGameMenuUI : MonoBehaviour
     {
         if (panel == null || mainMenu != null && mainMenu.IsOpen) return;
 
+        // Fase 37: abrir el menú (ajustes de idioma/volumen) ya NO pausa por sí solo — solo lo
+        // hace el botón Pausar/Reanudar explícito de dentro, para poder mirar ajustes en vivo.
         UIManager.OpenExclusive(panel);
-        Time.timeScale = 0f;
         RefreshTexts();
     }
 
+    // Cierra el panel y garantiza que el tiempo quede corriendo, se hubiera pausado o no
+    // desde dentro (ver OnPausePressed) — nunca deja el juego colgado en pausa sin panel.
     public void OnResumePressed()
     {
         if (panel != null) panel.SetActive(false);
         Time.timeScale = 1f;
+    }
+
+    // Pausa explícita desde dentro del menú, sin cerrarlo; abrir el panel ya no la fuerza.
+    public void OnPausePressed()
+    {
+        Time.timeScale = 0f;
     }
 
     // Guarda de inmediato y vuelve al título; el título deja el juego en pausa igual que este menú.
@@ -126,8 +135,10 @@ public class InGameMenuUI : MonoBehaviour
         titulo = UIBuild.TopLabel(panel.transform, "Title", UITheme.SizeTitle, 40f, -24f,
             TextAlignmentOptions.Center);
 
+        UIBuild.Button(panel.transform, "Btn_Pause", LocalizationManager.Get("UI_PAUSE"),
+            UITheme.Neutral, new Vector2(172f, 64f), new Vector2(-96f, -100f), OnPausePressed);
         UIBuild.Button(panel.transform, "Btn_Resume", LocalizationManager.Get("UI_RESUME"),
-            UITheme.Amber, new Vector2(360f, 64f), new Vector2(0f, -100f), OnResumePressed);
+            UITheme.Amber, new Vector2(172f, 64f), new Vector2(96f, -100f), OnResumePressed);
 
         float volumeY = -200f;
         uiVolumeLabel = UIBuild.TopLabel(panel.transform, "UiVolumeLabel", UITheme.SizeBody, 26f,

@@ -17,8 +17,8 @@ public class TowerPanelUI : MonoBehaviour
     [Tooltip("Modal de escuadra: confirma quién sube antes de arrancar el piso.")]
     [SerializeField] private SquadManagementUI squadUI;
 
-    [Tooltip("Alto de cada fila de piso, en píxeles de UI.")]
-    [SerializeField] private float rowHeight = 64f;
+    [Tooltip("Alto de cada fila de piso, en píxeles de UI (min. área táctil ~88px a 1920 de referencia).")]
+    [SerializeField] private float rowHeight = UITheme.MinTouchTarget;
 
     [Tooltip("Color de un piso ya superado, que solo se puede repetir.")]
     [SerializeField] private Color clearedColor = new Color(0.22f, 0.42f, 0.30f);
@@ -164,7 +164,7 @@ public class TowerPanelUI : MonoBehaviour
         prt.anchorMin = new Vector2(0.5f, 0.5f);
         prt.anchorMax = new Vector2(0.5f, 0.5f);
         prt.pivot = new Vector2(0.5f, 0.5f);
-        prt.sizeDelta = new Vector2(900f, 640f);
+        prt.sizeDelta = UITheme.ModalSize;
         prt.anchoredPosition = Vector2.zero;
         panel.GetComponent<Image>().color = new Color(0.10f, 0.10f, 0.16f, 0.98f);
 
@@ -188,7 +188,7 @@ public class TowerPanelUI : MonoBehaviour
         var vrt = viewport.GetComponent<RectTransform>();
         vrt.anchorMin = new Vector2(0f, 0f);
         vrt.anchorMax = new Vector2(1f, 1f);
-        vrt.offsetMin = new Vector2(12f, 90f);
+        vrt.offsetMin = new Vector2(12f, 112f);
         vrt.offsetMax = new Vector2(-12f, -114f);
         viewport.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.25f);
         viewport.GetComponent<Mask>().showMaskGraphic = true;
@@ -220,7 +220,7 @@ public class TowerPanelUI : MonoBehaviour
         crt.anchorMin = new Vector2(0.5f, 0f);
         crt.anchorMax = new Vector2(0.5f, 0f);
         crt.pivot = new Vector2(0.5f, 0f);
-        crt.sizeDelta = new Vector2(280f, 66f);
+        crt.sizeDelta = new Vector2(280f, UITheme.MinTouchTarget);
         crt.anchoredPosition = new Vector2(0f, 12f);
         close.GetComponent<Image>().color = new Color(0.32f, 0.28f, 0.36f);
 

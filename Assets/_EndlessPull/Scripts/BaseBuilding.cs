@@ -34,6 +34,25 @@ public static class BuildingTypes
         }
         return type.ToString();
     }
+
+    // Tinte del sprite por tipo: todos comparten el mismo sprite genérico (UI_Rounded),
+    // sin esto se ven como cajas idénticas y confunden Taller/Forja o Descanso/Pozo de Maná.
+    public static Color AccentColor(BuildingType type)
+    {
+        switch (type)
+        {
+            case BuildingType.TrainingDummy: return new Color(0.75f, 0.35f, 0.30f);
+            case BuildingType.Canteen: return new Color(0.85f, 0.55f, 0.25f);
+            case BuildingType.RestArea: return new Color(0.35f, 0.65f, 0.55f);
+            case BuildingType.Farm: return new Color(0.40f, 0.65f, 0.35f);
+            case BuildingType.Workshop: return new Color(0.45f, 0.55f, 0.70f);
+            case BuildingType.ManaWell: return new Color(0.30f, 0.55f, 0.85f);
+            case BuildingType.Forge: return new Color(0.80f, 0.40f, 0.20f);
+            case BuildingType.WarRoom: return new Color(0.70f, 0.25f, 0.30f);
+            case BuildingType.Archive: return new Color(0.55f, 0.50f, 0.60f);
+        }
+        return Color.white;
+    }
 }
 
 public class BaseBuilding : MonoBehaviour
@@ -276,6 +295,12 @@ public class BaseBuilding : MonoBehaviour
     {
         level = Mathf.Max(1, savedLevel);
         LevelChanged?.Invoke(level);
+    }
+
+    void Awake()
+    {
+        var sr = GetComponent<SpriteRenderer>();
+        if (sr != null) sr.color = BuildingTypes.AccentColor(type);
     }
 
     void Start()

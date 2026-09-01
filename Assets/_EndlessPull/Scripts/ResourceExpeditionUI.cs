@@ -65,6 +65,15 @@ public class ResourceExpeditionUI : MonoBehaviour
     {
         if (panel == null) return;
 
+        // Sin nadie asignado a recolección, ir directo a la asignación de escuadra en vez de
+        // enseñar una lista de destinos que no se puede usar todavía.
+        var party = UnityEngine.Object.FindFirstObjectByType<PartyManager>();
+        if (party != null && party.ExpeditionSquad.Count == 0 && squadUI != null)
+        {
+            squadUI.OpenForConfirm(false, null);
+            return;
+        }
+
         UIManager.OpenExclusive(panel);
         Refresh();
     }

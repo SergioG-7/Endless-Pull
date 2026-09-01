@@ -40,6 +40,7 @@ public static class LocalizationManager
         // Menú de pausa in-game (InGameMenuUI).
         { "UI_IN_GAME_MENU", new[] { "Menú", "Menu", "メニュー" } },
         { "UI_RESUME",       new[] { "Reanudar", "Resume", "再開" } },
+        { "UI_PAUSE",        new[] { "Pausar", "Pause", "一時停止" } },
         { "UI_UI_VOLUME",    new[] { "Volumen de interfaz", "UI Volume", "UI音量" } },
         { "UI_COMBAT_VOLUME",new[] { "Volumen de combate", "Combat Volume", "戦闘音量" } },
         { "UI_QUIT_TO_MENU", new[] { "Guardar y salir", "Save and Quit", "セーブして終了" } },
@@ -51,9 +52,16 @@ public static class LocalizationManager
         { "UI_ALL_HEALED",   new[] { "Todos los héroes ya están al máximo de salud",
                                        "All heroes are already at full health", "全員すでに満タンです" } },
         { "UI_TOWER",        new[] { "Torre", "Tower", "塔" } },
-        { "UI_SHOP",         new[] { "Tienda", "Shop", "店" } },
+        { "UI_SHOP",         new[] { "Almacén", "Storage", "倉庫" } },
         { "UI_CRAFT",        new[] { "Taller", "Workshop", "工房" } },
         { "UI_EXPEDITIONS",  new[] { "Expediciones", "Expeditions", "遠征" } },
+
+        // Kickers de categoría sobre los edificios de la base (LocalizedText en Base.unity).
+        { "TAG_BARRACKS",    new[] { "BARRACONES", "BARRACKS", "兵舎" } },
+        { "TAG_MORALE",      new[] { "MORAL", "MORALE", "士気" } },
+        { "TAG_FOOD",        new[] { "COMIDA", "FOOD", "食料" } },
+        { "TAG_RITUAL",      new[] { "RITUAL", "RITUAL", "儀式" } },
+        { "TAG_WORKSHOP",    new[] { "TALLER", "WORKSHOP", "工房" } },
 
         { "UI_ALL",          new[] { "Todos", "All", "すべて" } },
         { "UI_PARTY",        new[] { "Escuadra", "Party", "部隊" } },
@@ -193,6 +201,8 @@ public static class LocalizationManager
         { "UI_GEAR_PIECE",       new[] { "{0} ({1}/{2})", "{0} ({1}/{2})", "{0} ({1}/{2})" } },
         { "UI_GEAR_PIECE_BROKEN",new[] { "{0} [ROTO]", "{0} [BROKEN]", "{0}［破損］" } },
         { "UI_GEAR_EMPTY",       new[] { "-", "-", "-" } },
+        { "UI_USE_POTION",       new[] { "Usar Poción ({0})", "Use Potion ({0})", "ポーションを使う（{0}）" } },
+        { "UI_SEE_ROSTER",       new[] { "Ver en Roster", "View in Roster", "名簿で見る" } },
         { "UI_APATHETIC",        new[] { "   ·   APÁTICO (candidato a síntesis)",
                                           "   ·   APATHETIC (synthesis candidate)",
                                           "　・　無気力（合成候補）" } },
@@ -215,6 +225,9 @@ public static class LocalizationManager
                                              "{0}：部隊が帰還しました。報酬を受け取ってください。" } },
         { "UI_EXPEDITION_CLAIMED", new[] { "Vuelta de {0}: +{1} {2}.", "Back from {0}: +{1} {2}.",
                                              "{0}から帰還：+{1} {2}。" } },
+        { "UI_EXPEDITION_SUMMARY_TOAST", new[] { "Expedición Completada: +{0} {1}",
+                                             "Expedition Complete: +{0} {1}",
+                                             "遠征完了：+{0} {1}" } },
         { "UI_CLAIM_REWARD",       new[] { "Reclamar", "Claim", "受け取る" } },
 
         // Confirmación de escuadra previa a combate/expedición (SquadManagementUI en modo confirmar).
@@ -227,6 +240,7 @@ public static class LocalizationManager
                                               "確認する前に英雄を1人以上配置してください" } },
 
         { "BLD_TRAINING",    new[] { "Campo de Entrenamiento", "Training Field", "訓練場" } },
+        { "BLD_TRAINING_ADVANCED", new[] { "Campo de Entrenamiento Avanzado", "Advanced Training Field", "上級訓練場" } },
         { "BLD_CANTEEN",     new[] { "Cantina", "Tavern & Canteen", "食堂" } },
         { "BLD_FARM",        new[] { "Granja", "Farm", "農場" } },
         { "BLD_ALTAR",       new[] { "Altar de Invocación", "Summoning Gate", "召喚の祭壇" } },
@@ -444,6 +458,10 @@ public static class LocalizationManager
         { "UI_AUTO_EQUIP",   new[] { "Auto-equipar", "Auto-equip", "自動装備" } },
         { "UI_STORAGE",      new[] { "Almacén", "Storage", "倉庫" } },
         { "UI_EMPTY_STORAGE", new[] { "Almacén vacío", "Storage is empty", "倉庫は空" } },
+        { "UI_SECTION_MATERIALS", new[] { "Materiales", "Materials", "素材" } },
+        { "UI_SECTION_STONES",    new[] { "Piedras de Ascensión", "Ascension Stones", "昇格石" } },
+        { "UI_SECTION_POTIONS",   new[] { "Pociones", "Potions", "ポーション" } },
+        { "UI_SECTION_EQUIPMENT", new[] { "Equipo", "Equipment", "装備" } },
         { "UI_RANDOM_PIECE", new[] { "Pieza al azar", "Random piece", "ランダム装備" } },
         { "UI_DURABILITY",   new[] { "Durabilidad", "Durability", "耐久" } },
         { "UI_SLOT_TAKEN",   new[] { "sustituye a la actual", "replaces current", "現在の装備と交換" } },

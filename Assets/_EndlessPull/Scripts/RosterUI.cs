@@ -23,8 +23,8 @@ public enum RosterSort
 }
 
 // Panel modal que lista los héroes vivos de la base. Cada tarjeta es solo lectura:
-// retrato, nombre, estrellas, nivel, subclase, vida y estado. Un clic abre HeroDetailModal,
-// donde viven las acciones (bloquear, escuadra, equipo, ascender, sintetizar, subclase, reparar).
+// retrato, nombre, estrellas, nivel, subclase, vida y estado. Un clic abre la ficha única
+// HeroQuickCardUI, donde viven las acciones (bloquear, escuadra, equipo, subclase, reparar).
 public class RosterUI : MonoBehaviour
 {
     [Tooltip("Raíz del panel; se activa y desactiva al abrir y cerrar.")]
@@ -39,8 +39,8 @@ public class RosterUI : MonoBehaviour
     [Tooltip("Segundos entre refrescos mientras el panel está abierto.")]
     [SerializeField] private float refreshInterval = 0.5f;
 
-    [Tooltip("Ficha de detalle que abre un clic sobre la tarjeta; ahí viven las acciones.")]
-    [SerializeField] private HeroDetailModal detailModal;
+    [Tooltip("Ficha única que abre un clic sobre la tarjeta; ahí viven las acciones.")]
+    [SerializeField] private HeroQuickCardUI quickCard;
 
     // Métricas de la tarjeta compacta.
     private const float HeaderHeight = 80f;
@@ -83,7 +83,7 @@ public class RosterUI : MonoBehaviour
 
     void Awake()
     {
-        if (detailModal == null) detailModal = UnityEngine.Object.FindFirstObjectByType<HeroDetailModal>();
+        if (quickCard == null) quickCard = UnityEngine.Object.FindFirstObjectByType<HeroQuickCardUI>();
     }
 
     void Start()
@@ -377,7 +377,7 @@ public class RosterUI : MonoBehaviour
 
     private void OnCardClicked(HeroController hero)
     {
-        if (detailModal != null) detailModal.Open(hero);
+        if (quickCard != null) quickCard.Show(hero);
     }
 
     // Cuadro con las esquinas redondeadas, el borde del color de la rareza y dentro

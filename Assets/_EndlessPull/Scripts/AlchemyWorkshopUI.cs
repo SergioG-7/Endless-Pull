@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -51,19 +50,15 @@ public class AlchemyWorkshopUI : MonoBehaviour
     private TMP_Text etiquetaCerrar;
 
     // Una ficha por operación: cuerpo con el detalle, coste y su botón.
-    private Ficha piedra;
+    // Fase 37: las 4 piedras van cada una en su propia tarjeta, sin desplegable.
+    private readonly Ficha[] piedras = new Ficha[4];
+    private const float StoneCardWidth = 226f;
+    private const float StoneCardGap = 16f;
+
     private Ficha armas;
     private Ficha reparar;
     private Ficha pocion;
     private Ficha mejora;
-
-    // Las 4 piedras se agrupan en un desplegable en vez de una tarjeta cada una.
-    private AscensionStoneTier selectedStoneTier = AscensionStoneTier.Menor;
-    private Button stoneDropdownTrigger;
-    private GameObject stoneDropdownList;
-    private GameObject stoneDropdownCatcher;
-    private readonly List<Button> stoneOptionButtons = new List<Button>();
-    private readonly List<TMP_Text> stoneOptionLabels = new List<TMP_Text>();
 
     // Pestañas: Piedras, Forja/Reparación de Equipo, Alquimia.
     private WorkshopTab activeTab = WorkshopTab.Stones;
@@ -125,7 +120,6 @@ public class AlchemyWorkshopUI : MonoBehaviour
         if (panel == null) return;
 
         if (feedback != null) feedback.text = string.Empty;
-        CloseStoneDropdown();
         UIManager.OpenExclusive(panel);
         RefreshTabs();
         Refresh();
@@ -134,7 +128,6 @@ public class AlchemyWorkshopUI : MonoBehaviour
     public void Close()
     {
         if (panel != null) panel.SetActive(false);
-        CloseStoneDropdown();
     }
 
     private void OnStonesTabPressed() => SetTab(WorkshopTab.Stones);
@@ -144,7 +137,6 @@ public class AlchemyWorkshopUI : MonoBehaviour
     private void SetTab(WorkshopTab tab)
     {
         activeTab = tab;
-        CloseStoneDropdown();
         RefreshTabs();
     }
 
@@ -155,7 +147,7 @@ public class AlchemyWorkshopUI : MonoBehaviour
         StyleTab(tabEquipment, tabEquipmentLabel, activeTab == WorkshopTab.Equipment);
         StyleTab(tabAlchemy, tabAlchemyLabel, activeTab == WorkshopTab.Alchemy);
 
-        piedra.root.SetActive(activeTab == WorkshopTab.Stones);
+        foreach (var ficha in piedras) ficha.root.SetActive(activeTab == WorkshopTab.Stones);
 
         bool equip = activeTab == WorkshopTab.Equipment;
         armas.root.SetActive(equip);
@@ -228,9 +220,10 @@ public class AlchemyWorkshopUI : MonoBehaviour
               $"{LocalizationManager.Get("UI_FOOD")} <b>{economy.Food}</b>{rebaja}"
             : string.Empty;
 
-        // Forja de Piedras: una sola ficha con la piedra elegida en el desplegable.
-        RefreshStoneCard(piedra, selectedStoneTier);
-        RefreshStoneDropdown();
+        // Forja de Piedras: las 4 tarjetas directas, sin desplegable (Fase 37).
+        var tiers = (AscensionStoneTier[])System.Enum.GetValues(typeof(AscensionStoneTier));
+        for (int i = 0; i < tiers.Length && i < piedras.Length; i++)
+            RefreshStoneCard(piedras[i], tiers[i]);
 
         // Fabricación de Armas
         armas.titulo.text = LocalizationManager.Get("UI_FORGE_WEAPONS");
@@ -279,43 +272,6 @@ public class AlchemyWorkshopUI : MonoBehaviour
         SetButton(ficha, LocalizationManager.Get("UI_FORGE"), crafting.CanCraftStone(tier), UITheme.Amber);
     }
 
-    // Repinta el disparador del desplegable y resalta la piedra elegida en la lista.
-    private void RefreshStoneDropdown()
-    {
-        if (stoneDropdownTrigger == null) return;
-
-        for (int i = 0; i < stoneOptionLabels.Count; i++)
-            stoneOptionLabels[i].color = (AscensionStoneTier)i == selectedStoneTier ? UITheme.Amber : UITheme.Text;
-    }
-
-    private void ToggleStoneDropdown()
-    {
-        if (stoneDropdownList == null) return;
-
-        if (stoneDropdownList.activeSelf) CloseStoneDropdown();
-        else OpenStoneDropdown();
-    }
-
-    private void OpenStoneDropdown()
-    {
-        if (stoneDropdownList != null) stoneDropdownList.SetActive(true);
-        if (stoneDropdownCatcher != null) stoneDropdownCatcher.SetActive(true);
-    }
-
-    // La llama también el catcher a pantalla completa: clic fuera de la lista la cierra.
-    private void CloseStoneDropdown()
-    {
-        if (stoneDropdownList != null) stoneDropdownList.SetActive(false);
-        if (stoneDropdownCatcher != null) stoneDropdownCatcher.SetActive(false);
-    }
-
-    private void SelectStoneTier(AscensionStoneTier tier)
-    {
-        selectedStoneTier = tier;
-        CloseStoneDropdown();
-        Refresh();
-    }
-
     // Coste en columnas: el recurso a la izquierda y la cifra siempre en la misma tabulación.
     private static string Cost(int wood, int iron, int food)
     {
@@ -356,9 +312,18 @@ public class AlchemyWorkshopUI : MonoBehaviour
 
         BuildTabs();
 
+        // Las 4 piedras en su propia fila de tarjetas angostas, sin desplegable (Fase 37).
+        var tiers = (AscensionStoneTier[])System.Enum.GetValues(typeof(AscensionStoneTier));
+        float stoneStep = StoneCardWidth + StoneCardGap;
+        float stoneStart = -1.5f * stoneStep;
+        for (int i = 0; i < tiers.Length && i < piedras.Length; i++)
+        {
+            var tier = tiers[i];
+            piedras[i] = CreateCard("Card_Stone_" + tier, stoneStart + i * stoneStep, 0f,
+                StoneCardWidth, () => OnCraftStonePressed(tier));
+        }
+
         float x = -(CardWidth + CardGap);
-        piedra = CreateCard("Card_Stone", x, 0f, () => OnCraftStonePressed(selectedStoneTier));
-        BuildStoneDropdown(piedra, x);
         armas = CreateCard("Card_Weapons", 0f, 0f, OnCraftWeaponPressed);
         reparar = CreateCard("Card_Repair", -x, 0f, OnRepairAllPressed);
 
@@ -408,70 +373,13 @@ public class AlchemyWorkshopUI : MonoBehaviour
         return button;
     }
 
-    // Botón "▾" en la ficha de piedra + lista flotante con las 4; clic fuera de la lista la cierra.
-    private void BuildStoneDropdown(Ficha ficha, float cardX)
-    {
-        stoneDropdownTrigger = UIBuild.Button(ficha.titulo.transform.parent, "Btn_StoneTierToggle", "▾",
-            UITheme.Neutral, new Vector2(28f, 22f), new Vector2(CardWidth * 0.5f - 24f, -12f), ToggleStoneDropdown);
-
-        // Catcher a pantalla completa, igual que el fondo de un modal: cierra si se toca fuera.
-        var catcherBtn = UIBuild.Button(panel.transform, "StoneDropdown_Catcher", string.Empty,
-            Color.clear, Vector2.zero, Vector2.zero, CloseStoneDropdown);
-        UIBuild.Stretch(catcherBtn.GetComponent<RectTransform>());
-        stoneDropdownCatcher = catcherBtn.gameObject;
-
-        // Centrado en pantalla como su propio popup: anclado a la tarjeta se salía por debajo
-        // del panel (482 de alto) y tapaba la fila de pociones de abajo.
-        var listGo = new GameObject("StoneDropdown_List", typeof(RectTransform));
-        listGo.transform.SetParent(panel.transform, false);
-        var lrt = listGo.GetComponent<RectTransform>();
-        lrt.anchorMin = new Vector2(0.5f, 0.5f);
-        lrt.anchorMax = new Vector2(0.5f, 0.5f);
-        lrt.pivot = new Vector2(0.5f, 0.5f);
-        lrt.sizeDelta = new Vector2(CardWidth, 4f * 34f);
-        lrt.anchoredPosition = Vector2.zero;
-        UITheme.Surface(listGo, UITheme.Card, UITheme.BorderCard, UITheme.RadiusCard);
-
-        var tiers = (AscensionStoneTier[])System.Enum.GetValues(typeof(AscensionStoneTier));
-        for (int i = 0; i < tiers.Length; i++)
-        {
-            var tier = tiers[i];
-            var optGo = new GameObject("Option_" + tier, typeof(RectTransform), typeof(Image), typeof(Button));
-            optGo.transform.SetParent(listGo.transform, false);
-            var ort = optGo.GetComponent<RectTransform>();
-            ort.anchorMin = new Vector2(0f, 1f);
-            ort.anchorMax = new Vector2(1f, 1f);
-            ort.pivot = new Vector2(0.5f, 1f);
-            ort.sizeDelta = new Vector2(0f, 34f);
-            ort.anchoredPosition = new Vector2(0f, -i * 34f);
-
-            var img = UITheme.Surface(optGo, Color.clear, Color.clear, UITheme.RadiusItem);
-            var optLabel = UIBuild.Label(optGo.transform, "Label", UITheme.SizeBody, TextAlignmentOptions.Left);
-            UIBuild.Stretch(optLabel.rectTransform);
-            optLabel.rectTransform.offsetMin = new Vector2(12f, 0f);
-            optLabel.text = AscensionStoneTiers.DisplayName(tier);
-
-            var optBtn = optGo.GetComponent<Button>();
-            optBtn.targetGraphic = img;
-            optBtn.onClick.AddListener(() => AudioManager.Play(SfxId.UiClick));
-            optBtn.onClick.AddListener(() => SelectStoneTier(tier));
-
-            stoneOptionButtons.Add(optBtn);
-            stoneOptionLabels.Add(optLabel);
-        }
-
-        stoneDropdownList = listGo;
-
-        // Encima de cualquier otra tarjeta, para que ninguna la tape.
-        stoneDropdownCatcher.transform.SetAsLastSibling();
-        stoneDropdownList.transform.SetAsLastSibling();
-
-        stoneDropdownCatcher.SetActive(false);
-        stoneDropdownList.SetActive(false);
-    }
-
     // Tarjeta compacta: título arriba, cuerpo, coste pegado al botón y botón al pie.
     private Ficha CreateCard(string name, float x, float yOffset, UnityEngine.Events.UnityAction onClick)
+        => CreateCard(name, x, yOffset, CardWidth, onClick);
+
+    // Sobrecarga con ancho propio: la usan las 4 tarjetas de piedra, más angostas que el resto.
+    private Ficha CreateCard(string name, float x, float yOffset, float width,
+                             UnityEngine.Events.UnityAction onClick)
     {
         var go = new GameObject(name, typeof(RectTransform), typeof(Image));
         go.transform.SetParent(panel.transform, false);
@@ -480,7 +388,7 @@ public class AlchemyWorkshopUI : MonoBehaviour
         rt.anchorMin = new Vector2(0.5f, 1f);
         rt.anchorMax = new Vector2(0.5f, 1f);
         rt.pivot = new Vector2(0.5f, 1f);
-        rt.sizeDelta = new Vector2(CardWidth, CardHeight);
+        rt.sizeDelta = new Vector2(width, CardHeight);
         rt.anchoredPosition = new Vector2(x, -CardTop - yOffset);
 
         UITheme.Surface(go, UITheme.Card, UITheme.BorderCard, UITheme.RadiusCard);
@@ -503,7 +411,7 @@ public class AlchemyWorkshopUI : MonoBehaviour
 
         // El botón se ancla al pie de la tarjeta, dentro de su borde.
         ficha.boton = UIBuild.Button(go.transform, "Btn_Action", string.Empty, UITheme.Amber,
-            new Vector2(CardWidth - 32f, ButtonHeight),
+            new Vector2(width - 32f, ButtonHeight),
             new Vector2(0f, -(CardHeight - 14f - ButtonHeight)), onClick);
         ficha.etiqueta = ficha.boton.GetComponentInChildren<TMP_Text>();
         ficha.etiqueta.fontSize = UITheme.SizeBody;

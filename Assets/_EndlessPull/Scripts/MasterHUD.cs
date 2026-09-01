@@ -60,9 +60,25 @@ public class MasterHUD : MonoBehaviour
     {
         if (statusLabel != null) statusLabel.text = string.Empty;
 
+        // Que ninguno de los tres textos de la TopBar se corte en 16:9 estrecho o en móvil.
+        ConfigureNoClip(resourcesLabel);
+        ConfigureNoClip(floorLabel);
+        ConfigureNoClip(statusLabel);
+
         if (economy != null) RefreshResources();
 
         RefreshFloor();
+    }
+
+    // Encoge el texto en vez de cortarlo cuando la TopBar no tiene ancho suficiente.
+    private static void ConfigureNoClip(TextMeshProUGUI label)
+    {
+        if (label == null) return;
+
+        label.enableAutoSizing = true;
+        label.fontSizeMin = label.fontSize * 0.6f;
+        label.fontSizeMax = label.fontSize;
+        label.overflowMode = TextOverflowModes.Ellipsis;
     }
 
     // Gemas, madera, hierro y comida comparten un único chip compacto en la esquina.
@@ -110,7 +126,10 @@ public class MasterHUD : MonoBehaviour
     {
         if (floorLabel == null || waves == null) return;
 
-        string piso = string.Format(LocalizationManager.Get("UI_QUADRANT_FLOOR_LABEL"), waves.CurrentFloor);
+        // Repetir un piso inferior no debe hacer bajar el HUD: siempre el mayor entre el piso
+        // actual y el techo ya superado (highestClearedFloor es inmutable a la baja).
+        int pisoMostrado = Mathf.Max(waves.CurrentFloor, waves.HighestClearedFloor);
+        string piso = string.Format(LocalizationManager.Get("UI_QUADRANT_FLOOR_LABEL"), pisoMostrado);
         floorLabel.text = Chip(LocalizationManager.Get("UI_TOWER").ToUpperInvariant(), piso);
     }
 }

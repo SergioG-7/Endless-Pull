@@ -11,8 +11,14 @@ public class ShopUI : MonoBehaviour
     [Tooltip("Tienda que cobra y suelta las piezas.")]
     [SerializeField] private ShopManager shop;
 
-    [Tooltip("Economía de la que salen las gemas.")]
+    [Tooltip("Economía de la que salen las gemas y materiales.")]
     [SerializeField] private EconomyManager economy;
+
+    [Tooltip("Taller del que salen piedras y pociones guardadas.")]
+    [SerializeField] private CraftingManager crafting;
+
+    [Tooltip("Título del panel; antes venía fijo en la escena sin traducir.")]
+    [SerializeField] private TMP_Text titleLabel;
 
     [Tooltip("Texto con el precio de la tirada de equipo.")]
     [SerializeField] private TMP_Text priceLabel;
@@ -32,6 +38,7 @@ public class ShopUI : MonoBehaviour
     {
         if (shop == null) shop = UnityEngine.Object.FindFirstObjectByType<ShopManager>();
         if (economy == null) economy = UnityEngine.Object.FindFirstObjectByType<EconomyManager>();
+        if (crafting == null) crafting = UnityEngine.Object.FindFirstObjectByType<CraftingManager>();
         if (inventoryScroll == null && inventoryLabel != null)
             inventoryScroll = inventoryLabel.GetComponentInParent<ScrollRect>();
     }
@@ -52,6 +59,10 @@ public class ShopUI : MonoBehaviour
 
         // Los rótulos vienen de la escena con el tamaño viejo: se suben al mínimo legible.
         Style(inventoryLabel, UITheme.SizeBody);
+
+        // El título venía fijo en la escena ("TIENDA DE EQUIPO"), sin traducir ni actualizar
+        // tras el cambio de rol a Almacén.
+        if (titleLabel != null) titleLabel.text = LocalizationManager.Get("UI_STORAGE");
 
         // El equipo ya no se compra con gemas: solo se obtiene por crafteo y recompensas.
         if (priceLabel != null) priceLabel.gameObject.SetActive(false);
@@ -114,10 +125,46 @@ public class ShopUI : MonoBehaviour
         }
     }
 
-    // Agrupa las piezas repetidas para no listar veinte líneas iguales.
+    // Almacén completo: materiales, piedras, pociones y equipo, cada uno en su bloque.
     private string DescribeInventory()
     {
-        if (shop.Inventory.Count == 0) return LocalizationManager.Get("UI_EMPTY_STORAGE");
+        var bloques = new System.Collections.Generic.List<string>();
+
+        if (economy != null)
+        {
+            bloques.Add($"<b>{LocalizationManager.Get("UI_SECTION_MATERIALS")}</b>\n" +
+                $"{LocalizationManager.Get("UI_GEMS")}  <color={UITheme.Tag(UITheme.Cyan)}>{economy.Gems}</color>\n" +
+                $"{LocalizationManager.Get("UI_WOOD")}  <color={UITheme.Tag(UITheme.Cyan)}>{economy.Wood}</color>\n" +
+                $"{LocalizationManager.Get("UI_IRON")}  <color={UITheme.Tag(UITheme.Cyan)}>{economy.Iron}</color>\n" +
+                $"{LocalizationManager.Get("UI_FOOD")}  <color={UITheme.Tag(UITheme.Cyan)}>{economy.Food}</color>");
+        }
+
+        if (crafting != null)
+        {
+            var piedras = new System.Collections.Generic.List<string>();
+            foreach (AscensionStoneTier tier in System.Enum.GetValues(typeof(AscensionStoneTier)))
+                piedras.Add($"{AscensionStoneTiers.DisplayName(tier)}  " +
+                            $"<color={UITheme.Tag(UITheme.Cyan)}>{crafting.StoneCount(tier)}</color>");
+
+            bloques.Add($"<b>{LocalizationManager.Get("UI_SECTION_STONES")}</b>\n" + string.Join("\n", piedras));
+
+            bloques.Add($"<b>{LocalizationManager.Get("UI_SECTION_POTIONS")}</b>\n" +
+                $"{LocalizationManager.Get("UI_POTIONS_HELD")}  " +
+                $"<color={UITheme.Tag(UITheme.Cyan)}>{crafting.HealingPotions}</color>");
+        }
+
+        bloques.Add(DescribeEquipment());
+
+        return string.Join("\n\n", bloques);
+    }
+
+    // Agrupa las piezas repetidas para no listar veinte líneas iguales.
+    private string DescribeEquipment()
+    {
+        string titulo = $"<b>{LocalizationManager.Get("UI_SECTION_EQUIPMENT")}</b>";
+
+        if (shop == null || shop.Inventory.Count == 0)
+            return $"{titulo}\n<color={UITheme.Tag(UITheme.TextFaint)}>{LocalizationManager.Get("UI_EMPTY_STORAGE")}</color>";
 
         var conteo = new System.Collections.Generic.Dictionary<string, int>();
         foreach (var item in shop.Inventory)
@@ -130,7 +177,6 @@ public class ShopUI : MonoBehaviour
         foreach (var par in conteo)
             lineas.Add($"{par.Key}  <color={UITheme.Tag(UITheme.Cyan)}>x{par.Value}</color>");
 
-        return $"<b>{LocalizationManager.Get("UI_STORAGE")} ({shop.Inventory.Count})</b>\n"
-               + string.Join("\n", lineas);
+        return $"{titulo}\n" + string.Join("\n", lineas);
     }
 }

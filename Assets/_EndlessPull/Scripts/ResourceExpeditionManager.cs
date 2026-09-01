@@ -117,6 +117,12 @@ public class ResourceExpeditionManager : MonoBehaviour
 
         int amount = rewardPerHero * Mathf.Max(1, heroesSent);
 
+        // Toast de resumen antes de sumar el material: el jugador ve exactamente qué ganó,
+        // no solo el número final del recurso ya actualizado en el TopBar.
+        string resumen = string.Format(LocalizationManager.Get("UI_EXPEDITION_SUMMARY_TOAST"),
+            amount, RewardName(currentType));
+        ScreenBanner.Show(resumen, 2.2f, new Color(0.55f, 0.85f, 0.55f));
+
         switch (currentType)
         {
             case ResourceExpeditionType.Forest: economy.AddMaterials(amount, 0); break;

@@ -27,18 +27,20 @@ public class CameraDirector : MonoBehaviour
     [SerializeField] private float arenaOrthographicSize = 8.5f;
 
     [Tooltip("Centro y tamaño del hub central; siempre entra en el límite de cámara aunque no haya cuadrantes desbloqueados.")]
-    [SerializeField] private Vector2 hubBoundsCenter = new Vector2(0f, -1.6f);
-    [SerializeField] private Vector2 hubBoundsSize = new Vector2(10.4f, 8.6f);
+    [SerializeField] private Vector2 hubBoundsCenter = new Vector2(0f, -1f);
+    [SerializeField] private Vector2 hubBoundsSize = new Vector2(12f, 14f);
 
+    // Muralla perimetral a ±20u del centro (Fase 37): el máximo deja ver la base entera sin salirse del suelo.
     [Tooltip("Zoom ortográfico mínimo y máximo permitido al manipular la vista de base.")]
-    [SerializeField] private float minZoom = 6f;
-    [SerializeField] private float maxZoom = 18f;
+    [SerializeField] private float minZoom = 5f;
+    [SerializeField] private float maxZoom = 26f;
 
+    // x3 respecto al valor original: la rueda apenas movía el zoom antes del ajuste de sensibilidad.
     [Tooltip("Sensibilidad de la rueda del ratón al hacer zoom en la vista de base.")]
-    [SerializeField] private float mouseZoomSpeed = 0.01f;
+    [SerializeField] private float mouseZoomSpeed = 0.03f;
 
     [Tooltip("Sensibilidad del pellizco táctil al hacer zoom en la vista de base.")]
-    [SerializeField] private float pinchZoomSpeed = 0.02f;
+    [SerializeField] private float pinchZoomSpeed = 0.06f;
 
     [Tooltip("Píxeles de arrastre antes de considerar el gesto un paneo y no un toque/clic corto.")]
     [SerializeField] private float dragScreenDeadzone = 8f;
@@ -160,6 +162,9 @@ public class CameraDirector : MonoBehaviour
     // Lo manda el WaveManager para que la cámara no acabe encuadrando una arena vacía.
     private Vector2 ArenaPoint => waves != null ? waves.ArenaFocus : arenaView;
 
+    [Tooltip("Suelo de la arena de combate; se tiñe con TowerBiome.Tint y se apaga en la vista de base.")]
+    [SerializeField] private SpriteRenderer arenaGround;
+
     public void GoToArena() => TravelTo(ArenaPoint, arenaOrthographicSize);
     public void GoToBase() => TravelTo(baseView, baseOrthographicSize);
 
@@ -171,22 +176,30 @@ public class CameraDirector : MonoBehaviour
         {
             GoToArena();
             ApplyBiomeTint();
+            if (arenaGround != null) arenaGround.gameObject.SetActive(true);
         }
         else
         {
             GoToBase();
             if (target != null) target.backgroundColor = baseBackgroundColor;
+            if (arenaGround != null) arenaGround.gameObject.SetActive(false);
         }
     }
 
-    // Placeholder sin arte final (ver decisión de diseño): tiñe el fondo de cámara según TowerBiome.IndexForFloor.
+    // Placeholder sin arte final (ver decisión de diseño): tiñe el fondo de cámara y el suelo de
+    // la arena según TowerBiome.IndexForFloor, en vez de dejar solo el color de fondo plano.
     private void ApplyBiomeTint()
     {
         if (target == null || waves == null) return;
 
         int biomeIndex = TowerBiome.IndexForFloor(waves.CurrentFloor);
-        if (biomeIndex >= 0 && biomeIndex < TowerBiome.Tint.Length)
-            target.backgroundColor = TowerBiome.Tint[biomeIndex];
+        if (biomeIndex < 0 || biomeIndex >= TowerBiome.Tint.Length) return;
+
+        target.backgroundColor = TowerBiome.Tint[biomeIndex];
+
+        // El suelo va un punto más claro que el fondo para que se note como superficie, no como vacío.
+        if (arenaGround != null)
+            arenaGround.color = TowerBiome.Tint[biomeIndex] + new Color(0.06f, 0.06f, 0.06f);
     }
 
     // Zoom (rueda/pellizco) y paneo (arrastre) manuales; solo activos en la vista de base, quieta y sin viajar.

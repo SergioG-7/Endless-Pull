@@ -216,6 +216,11 @@ public class SanctuaryUI : MonoBehaviour
         row.info.color = UITheme.Text;
         row.info.raycastTarget = false;
 
+        // Nombres largos o idiomas con más caracteres no deben cortarse en la fila fija de 60px.
+        row.info.enableAutoSizing = true;
+        row.info.fontSizeMin = UITheme.SizeSmall * 0.75f;
+        row.info.fontSizeMax = UITheme.SizeSmall;
+
         row.button = go.GetComponent<Button>();
         row.button.targetGraphic = cardImage;
 
@@ -388,7 +393,7 @@ public class SanctuaryUI : MonoBehaviour
 
         // Sacrificio elegido: se muestran ambos héroes y el EXP exacto antes de pedir confirmación.
         previewFodderPortrait.gameObject.SetActive(true);
-        UIBuild.HeroArt(previewFodderPortrait.transform, previewFodder.Data.bodySprite, 44f);
+        UIBuild.HeroArt(previewFodderPortrait.transform, previewFodder.Data.bodySprite, 88f);
 
         var fodderRareza = HeroProgress.RarityColor(previewFodder.StarRank);
         var fodderStars = new StringBuilder();
@@ -575,7 +580,9 @@ public class SanctuaryUI : MonoBehaviour
         scroll.scrollSensitivity = 30f;
 
         var layout = bodyGo.AddComponent<VerticalLayoutGroup>();
-        layout.padding = new RectOffset(6, 6, 6, 6);
+        // Más margen a los lados que arriba/abajo: el aro de la lista recortaba el borde
+        // izquierdo del retrato de la fila cuando el hueco era el mismo en las 4 direcciones.
+        layout.padding = new RectOffset(10, 10, 6, 6);
         layout.spacing = 6f;
         layout.childControlWidth = true;
         layout.childForceExpandWidth = true;
@@ -599,26 +606,29 @@ public class SanctuaryUI : MonoBehaviour
         previewPortrait = UITheme.Surface(frame, UITheme.Hex("262838"), UITheme.BorderSoft, UITheme.RadiusCard);
         previewPortrait.raycastTarget = false;
 
-        // Miniatura del sacrificio en Síntesis: alineada a la derecha de la columna, oculta hasta el 2º clic.
+        // Miniatura del sacrificio en Síntesis: misma tarjeta que el Receptor (tamaño y anclaje),
+        // justo a su lado, para que ambos lean como el mismo tipo de ficha. Oculta hasta el 2º clic.
         var fodderFrame = new GameObject("FodderPortrait", typeof(RectTransform), typeof(Image));
         fodderFrame.transform.SetParent(panel.transform, false);
         var ffrt = fodderFrame.GetComponent<RectTransform>();
         ffrt.anchorMin = new Vector2(0f, 1f);
         ffrt.anchorMax = new Vector2(0f, 1f);
         ffrt.pivot = new Vector2(0f, 1f);
-        ffrt.sizeDelta = new Vector2(64f, 64f);
-        ffrt.anchoredPosition = new Vector2(size.x - 24f - 64f, -112f);
+        ffrt.sizeDelta = new Vector2(96f, 96f);
+        ffrt.anchoredPosition = new Vector2(x + 96f + 12f, -112f);
         previewFodderPortrait = UITheme.Surface(fodderFrame, UITheme.Hex("262838"), UITheme.DangerLight, UITheme.RadiusCard);
         previewFodderPortrait.raycastTarget = false;
         previewFodderPortrait.gameObject.SetActive(false);
 
+        // Debajo de las dos tarjetas (Receptor + Sacrificio, 96px cada una): así el nombre nunca
+        // queda detrás de la tarjeta del sacrificio, que ahora ocupa el mismo ancho que antes.
         previewName = UIBuild.Label(panel.transform, "PreviewName", UITheme.SizeName, TextAlignmentOptions.Left);
-        AnchorTopLeft(previewName.rectTransform, x + 112f, -112f, size.x - RightX - 112f - 24f, 40f);
+        AnchorTopLeft(previewName.rectTransform, x, -220f, size.x - RightX - 24f, 32f);
 
         previewBody = UIBuild.Label(panel.transform, "PreviewBody", UITheme.SizeBody, TextAlignmentOptions.TopLeft);
         previewBody.color = UITheme.TextSoft;
         previewBody.lineSpacing = 12f;
-        AnchorTopLeft(previewBody.rectTransform, x, -224f, size.x - RightX - 24f, 220f);
+        AnchorTopLeft(previewBody.rectTransform, x, -256f, size.x - RightX - 24f, 188f);
 
         previewHint = UIBuild.Label(panel.transform, "PreviewHint", UITheme.SizeBody, TextAlignmentOptions.TopLeft);
         previewHint.color = UITheme.TextFaint;
