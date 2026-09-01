@@ -104,6 +104,16 @@ public class ResourceExpeditionManager : MonoBehaviour
         remaining = durationSeconds;
         readyToClaim = false;
 
+        foreach (var hero in party.ExpeditionSquad)
+        {
+            if (hero == null) continue;
+
+            // Desacoplado de Fase 39: si estaba currando en un edificio, se desasigna solo al
+            // salir de verdad, sin bloquear antes al meterlo en la escuadra.
+            if (hero.AssignedBuilding != null) hero.AssignedBuilding.ToggleWorker(hero);
+            hero.SendOnExpedition();
+        }
+
         Report(string.Format(LocalizationManager.Get("UI_EXPEDITION_SENT"),
             heroesSent, DisplayName(type), durationSeconds));
         return true;
@@ -122,6 +132,7 @@ public class ResourceExpeditionManager : MonoBehaviour
         string resumen = string.Format(LocalizationManager.Get("UI_EXPEDITION_SUMMARY_TOAST"),
             amount, RewardName(currentType));
         ScreenBanner.Show(resumen, 2.2f, new Color(0.55f, 0.85f, 0.55f));
+        AudioManager.Play(SfxId.Reward);
 
         switch (currentType)
         {
@@ -136,9 +147,11 @@ public class ResourceExpeditionManager : MonoBehaviour
         readyToClaim = false;
         heroesSent = 0;
 
-        // Al reclamar, la escuadra de recolección queda libre de golpe: no hace falta
-        // que el jugador la desmarque a mano héroe por héroe.
-        if (party != null) party.ClearExpedition();
+        // La escuadra se mantiene asignada tras reclamar: vuelve visible por el Portal y
+        // queda lista para la siguiente ronda sin que el jugador tenga que reasignarla.
+        if (party != null)
+            foreach (var hero in party.ExpeditionSquad)
+                if (hero != null) hero.ReturnFromExpedition();
 
         SaveManager.RequestSave();
         return true;

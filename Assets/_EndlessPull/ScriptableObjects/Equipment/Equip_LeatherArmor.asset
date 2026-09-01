@@ -13,10 +13,12 @@ MonoBehaviour:
   m_Name: Equip_LeatherArmor
   m_EditorClassIdentifier: Assembly-CSharp::EquipmentData
   equipName: Armadura de Cuero
+  nameKey: EQUIP_LEATHER_ARMOR
   slotType: 1
   weaponType: 5
   bonusATK: 0
   bonusDEF: 0
   bonusHP: 40
+  maxDurability: 10
   passiveTrait: 1
-  passiveValue: 8.0
+  passiveValue: 8

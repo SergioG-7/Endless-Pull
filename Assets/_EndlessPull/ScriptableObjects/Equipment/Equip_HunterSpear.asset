@@ -13,10 +13,12 @@ MonoBehaviour:
   m_Name: Equip_HunterSpear
   m_EditorClassIdentifier: Assembly-CSharp::EquipmentData
   equipName: Lanza de Cazador
+  nameKey: EQUIP_HUNTER_SPEAR
   slotType: 0
   weaponType: 2
   bonusATK: 10
   bonusDEF: 0
   bonusHP: 0
+  maxDurability: 10
   passiveTrait: 4
-  passiveValue: 20.0
+  passiveValue: 20

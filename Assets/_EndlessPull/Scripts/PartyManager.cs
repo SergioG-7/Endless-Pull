@@ -66,7 +66,8 @@ public class PartyManager : MonoBehaviour
             return false;
         }
 
-        // Un puesto por héroe: si ya curra en un edificio o está de expedición, no sube a la torre.
+        // Un puesto por héroe: si ya está de expedición, no sube a la torre (un edificio de
+        // entrenamiento ya no bloquea, se desasigna solo al desplegar de verdad, ver WaveManager). a la torre.
         if (HeroAssignment.IsBusyElsewhere(hero, HeroDuty.TowerSquad))
         {
             Debug.LogWarning("[Escuadra] " + HeroAssignment.BusyWarning(hero), this);

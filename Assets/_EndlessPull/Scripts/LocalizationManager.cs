@@ -107,7 +107,26 @@ public static class LocalizationManager
         { "UI_REPEAT",       new[] { "Repetición", "Repeat", "周回" } },
         // Cuadrantes direccionales bloqueados de la base (QuadrantController).
         { "UI_QUADRANT_FLOOR_LABEL", new[] { "Piso {0}", "Floor {0}", "{0}階" } },
-        { "UI_QUADRANT_LOCKED_TAP",  new[] { "Desbloquea en Piso {0}", "Unlocks at Floor {0}", "{0}階で解放" } },
+        
+
+        // Nombres de piezas de equipo (Fase 39): claves opcionales via EquipmentData.nameKey.
+        { "EQUIP_WOODEN_SWORD",  new[] { "Espada de Madera", "Wooden Sword", "木の剣" } },
+        { "EQUIP_IRON_SWORD",    new[] { "Espada de Hierro", "Iron Sword", "鉄の剣" } },
+        { "EQUIP_OAK_SHIELD",    new[] { "Escudo de Roble", "Oak Shield", "オークの盾" } },
+        { "EQUIP_IRON_SHIELD",   new[] { "Escudo de Hierro", "Iron Shield", "鉄の盾" } },
+        { "EQUIP_HUNTER_SPEAR",  new[] { "Lanza de Cazador", "Hunter's Spear", "狩人の槍" } },
+        { "EQUIP_LEATHER_ARMOR", new[] { "Armadura de Cuero", "Leather Armor", "革の鶯" } },
+        { "EQUIP_IRON_ARMOR",    new[] { "Armadura de Hierro", "Iron Armor", "鉄の鶯" } },
+        
+
+        // Filtro por tipo del modal de equipamiento (Fase 39).
+        { "UI_FILTER_ALL",         new[] { "Todos", "All", "すべて" } },
+        { "UI_FILTER_WEAPONS",     new[] { "Armas", "Weapons", "武器" } },
+        { "UI_FILTER_SHIELDS",     new[] { "Escudos", "Shields", "盾" } },
+        { "UI_FILTER_ARMORS",      new[] { "Armaduras", "Armor", "鶯" } },
+        { "UI_FILTER_ACCESSORIES", new[] { "Accesorios", "Accessories", "アクセサリー" } },
+{ "EQUIP_HUNTER_RING",   new[] { "Anillo del Cazador", "Hunter's Ring", "狩人の指輪" } },
+{ "UI_QUADRANT_LOCKED_TAP",  new[] { "Desbloquea en Piso {0}", "Unlocks at Floor {0}", "{0}階で解放" } },
 
         // Estados de combate/expedición mostrados en el HUD (WaveManager.Report).
         { "UI_STATUS_ASSIGN_HEROES", new[] { "Asigna héroes a la escuadra", "Assign heroes to the party", "部隊に英雄を配置してください" } },
@@ -127,6 +146,7 @@ public static class LocalizationManager
 
         // Acelerador de combate y retirada automática (CombatHUD).
         { "UI_AUTO_RETREAT",  new[] { "Auto-Retirada", "Auto-Retreat", "自動撤退" } },
+        { "UI_RETREAT_NOW",  new[] { "Retirarse", "Retreat", "撤退" } },
 
         // Modal de recompensa de piso (TowerRewardUI).
         { "UI_CHEST_TITLE",      new[] { "¡Piso superado!", "Floor cleared!", "階クリア！" } },
@@ -202,6 +222,10 @@ public static class LocalizationManager
         { "UI_GEAR_PIECE_BROKEN",new[] { "{0} [ROTO]", "{0} [BROKEN]", "{0}［破損］" } },
         { "UI_GEAR_EMPTY",       new[] { "-", "-", "-" } },
         { "UI_USE_POTION",       new[] { "Usar Poción ({0})", "Use Potion ({0})", "ポーションを使う（{0}）" } },
+        { "UI_USE_MANA_POTION",  new[] { "Usar Poción de Maná ({0})", "Use Mana Potion ({0})", "マナポーションを使う（{0}）" } },
+        { "UI_POTION_HP",        new[] { "Curación", "Healing", "回復" } },
+        { "UI_NO_SUBCLASS",      new[] { "Sin subclase", "No subclass", "サブクラスなし" } },
+        { "UI_POTION_MP",        new[] { "Maná", "Mana", "マナ" } },
         { "UI_SEE_ROSTER",       new[] { "Ver en Roster", "View in Roster", "名簿で見る" } },
         { "UI_APATHETIC",        new[] { "   ·   APÁTICO (candidato a síntesis)",
                                           "   ·   APATHETIC (synthesis candidate)",
@@ -418,6 +442,23 @@ public static class LocalizationManager
         { "UI_ALREADY_ASSIGNED", new[] { "{0} ya está en: {1}", "{0} is already at: {1}", "{0}はすでに{1}に配属" } },
         { "UI_LOCKED",          new[] { "bloqueado", "locked", "ロック中" } },
 
+        // Personalidades (HeroTraits.DisplayName) y estados de moral (HeroController.MoodName).
+        { "HERO_TRAIT_DILIGENT", new[] { "Trabajador", "Diligent", "勤勉" } },
+        { "HERO_TRAIT_GLUTTON",  new[] { "Glotón", "Glutton", "大食い" } },
+        { "HERO_TRAIT_SLACKER",  new[] { "Perezoso", "Slacker", "怠け者" } },
+        { "HERO_TRAIT_FIERCE",   new[] { "Feroz", "Fierce", "獰猛" } },
+
+        // Orígenes de héroe (HeroData.origin, texto ES en el propio asset -- ver GetOrigin()).
+        { "ORIGIN_FRONTIER_REALM", new[] { "Reino Fronterizo", "Frontier Realm", "辺境の王国" } },
+        { "ORIGIN_SALT_ABBEY",     new[] { "Abadia de Sal", "Salt Abbey", "塩の修道院" } },
+        { "ORIGIN_ALDER_FOREST",   new[] { "Bosque de Alder", "Alder Forest", "アルダーの森" } },
+        { "ORIGIN_LOWTOWN",        new[] { "Ciudad Baja", "Lowtown", "下町" } },
+        { "ORIGIN_NORTH_FJORDS",   new[] { "Fiordos del Norte", "Northern Fjords", "北の フィヨルド" } },
+        { "ORIGIN_BURNT_MARCH",    new[] { "Marca Quemada", "Burnt March", "焼けた辺境" } },
+        { "ORIGIN_IVORY_TOWER",    new[] { "Torre de Marfil", "Ivory Tower", "象牙の塔" } },
+        { "UI_MOOD_INSPIRED",    new[] { "Inspirado", "Inspired", "鼓舞" } },
+        { "UI_MOOD_DEMORALIZED", new[] { "Desmoralizado", "Demoralized", "士気低下" } },
+
         // Altar de invocación.
         { "UI_REVEAL_ALL",   new[] { "Revelar Todo", "Reveal All", "すべて公開" } },
         { "UI_ACCEPT",       new[] { "Aceptar", "Accept", "決定" } },
@@ -436,7 +477,7 @@ public static class LocalizationManager
         { "UI_FORGE_WEAPONS_HELP", new[] { "Sale un arma al azar del recetario y va al almacén.",
                                            "A random weapon from the recipe book goes to storage.",
                                            "レシピからランダムな武器が倉庫に入る。" } },
-        { "UI_CRAFT_WEAPON", new[] { "Fabricar Arma", "Craft Weapon", "武器を作る" } },
+        { "UI_CRAFT_EQUIPMENT", new[] { "Fabricar Equipo", "Craft Equipment", "装備を作る" } },
         { "UI_REPAIR_GEAR",  new[] { "Reparación de Equipo", "Gear Repair", "装備の修理" } },
         { "UI_TOTAL_WEAR",   new[] { "Desgaste acumulado", "Total wear", "累積損耗" } },
         { "UI_NO_MATERIALS", new[] { "Faltan materiales", "Not enough materials", "素材が足りない" } },
@@ -444,9 +485,13 @@ public static class LocalizationManager
         { "UI_STONE_FORGED", new[] { "¡Piedra forjada!", "Stone forged!", "石を錬成した！" } },
         { "UI_CRAFT_FAILED", new[] { "¡FALLO DE FORJA!", "FORGING FAILED!", "錬成失敗！" } },
         { "UI_FORGE_POTIONS", new[] { "Pociones de Curación", "Healing Potions", "回復薬の調合" } },
+        { "UI_FORGE_MANA_POTIONS", new[] { "Pociones de Maná", "Mana Potions", "マナポーションの調合" } },
         { "UI_POTIONS_HELD",  new[] { "Pociones", "Potions", "回復薬" } },
+        { "UI_MANA_POTIONS_HELD", new[] { "Pociones de Maná", "Mana Potions", "マナポーション" } },
         { "UI_CRAFT_POTION",  new[] { "Fabricar Poción", "Craft Potion", "回復薬を作る" } },
+        { "UI_CRAFT_MANA_POTION", new[] { "Fabricar Poción de Maná", "Craft Mana Potion", "マナポーションを作る" } },
         { "UI_POTION_CRAFTED", new[] { "¡Poción lista!", "Potion ready!", "回復薬が完成した！" } },
+        { "UI_MANA_POTION_CRAFTED", new[] { "¡Poción de maná lista!", "Mana potion ready!", "マナポーションが完成した！" } },
         { "UI_UPGRADE_GEAR",  new[] { "Mejora de Equipo", "Gear Upgrade", "装備強化" } },
         { "UI_UPGRADE_GEAR_HELP", new[] { "Bonus plano de ataque y defensa para el héroe elegido.",
                                           "Flat attack and defense bonus for the chosen hero.",
@@ -508,6 +553,22 @@ public static class LocalizationManager
 
         return forms[0];
     }
+
+    // HeroData.origin guarda el texto ES tal cual (dato de diseño, no una clave) -- se traduce
+    // buscando esa cadena entre los 7 orígenes conocidos; si no coincide, se enseña sin traducir.
+    private static readonly Dictionary<string, string> OriginKeys = new Dictionary<string, string>
+    {
+        { "Reino Fronterizo", "ORIGIN_FRONTIER_REALM" },
+        { "Abadia de Sal", "ORIGIN_SALT_ABBEY" },
+        { "Bosque de Alder", "ORIGIN_ALDER_FOREST" },
+        { "Ciudad Baja", "ORIGIN_LOWTOWN" },
+        { "Fiordos del Norte", "ORIGIN_NORTH_FJORDS" },
+        { "Marca Quemada", "ORIGIN_BURNT_MARCH" },
+        { "Torre de Marfil", "ORIGIN_IVORY_TOWER" },
+    };
+
+    public static string GetOrigin(string origin)
+        => !string.IsNullOrEmpty(origin) && OriginKeys.TryGetValue(origin, out var key) ? Get(key) : origin;
 
     public static void SetLanguage(GameLanguage language)
     {

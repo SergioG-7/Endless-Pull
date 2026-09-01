@@ -41,9 +41,17 @@ public static class HeroAssignment
     }
 
     // true si el héroe ya ocupa otro puesto distinto del que se le quiere dar.
+// true si el héroe ya ocupa otro puesto distinto del que se le quiere dar. Un edificio de
+    // entrenamiento nunca bloquea ni se ve bloqueado por una escuadra (Fase 39): un héroe puede
+    // estar asignado a un edificio Y en una escuadra a la vez; al desplegar esa escuadra de
+    // verdad es cuando se le desasigna del edificio (ver WaveManager/ResourceExpeditionManager).
     public static bool IsBusyElsewhere(HeroController hero, HeroDuty wanted)
     {
+        if (wanted == HeroDuty.Building) return false;
+
         var duty = DutyOf(hero);
+        if (duty == HeroDuty.Building) return false;
+
         return duty != HeroDuty.Free && duty != wanted;
     }
 

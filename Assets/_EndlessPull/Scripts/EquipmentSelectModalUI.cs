@@ -29,6 +29,11 @@ public class EquipmentSelectModalUI : MonoBehaviour
 
     private HeroController hero;
 
+    // Filtro de la lista por tipo de hueco; null = Todos.
+    private EquipmentSlot? filterSlot;
+    private Button[] filterButtons;
+
+
     public bool IsOpen => panel != null && panel.activeSelf;
     public HeroController CurrentHero => hero;
 
@@ -82,6 +87,38 @@ public class EquipmentSelectModalUI : MonoBehaviour
         Rebuild();
     }
 
+
+    private void OnUnequipPressed(EquipmentSlot slot)
+    {
+        if (shop == null || hero == null) return;
+
+        shop.UnequipToInventory(hero, slot);
+        Rebuild();
+    }
+
+    // Botón de filtro de la cabecera; null = Todos.
+    private void SetFilter(EquipmentSlot? slot)
+    {
+        filterSlot = slot;
+        Rebuild();
+    }
+
+
+    // Resalta el botón del filtro activo entre los 5 (Todos/Armas/Escudos/Armaduras/Accesorios).
+    private void RefreshFilterButtons()
+    {
+        if (filterButtons == null) return;
+
+        EquipmentSlot?[] valores = { null, EquipmentSlot.Weapon, EquipmentSlot.Shield, EquipmentSlot.Armor, EquipmentSlot.Accessory };
+        for (int i = 0; i < filterButtons.Length && i < valores.Length; i++)
+        {
+            if (filterButtons[i] == null) continue;
+            filterButtons[i].targetGraphic.color = filterSlot == valores[i] ? UITheme.Teal : UITheme.Neutral;
+        }
+    }
+
+
+
     private void OnPiecePressed(EquipmentData item)
     {
         if (shop == null || hero == null || item == null) return;
@@ -90,7 +127,7 @@ public class EquipmentSelectModalUI : MonoBehaviour
         Rebuild();
     }
 
-    private void Rebuild()
+private void Rebuild()
     {
         if (lista == null) return;
 
@@ -104,17 +141,21 @@ public class EquipmentSelectModalUI : MonoBehaviour
         etiquetaAuto.text = LocalizationManager.Get("UI_AUTO_EQUIP");
         etiquetaCerrar.text = LocalizationManager.Get("UI_CLOSE");
 
-        bool hayAlgo = shop != null && shop.Inventory.Count > 0;
-        vacio.gameObject.SetActive(!hayAlgo);
+        RefreshFilterButtons();
+
+        var filtrado = new System.Collections.Generic.List<EquipmentData>();
+        if (shop != null)
+            foreach (var item in shop.Inventory)
+                if (item != null && (!filterSlot.HasValue || item.slotType == filterSlot.Value))
+                    filtrado.Add(item);
+
+        vacio.gameObject.SetActive(filtrado.Count == 0);
         vacio.text = LocalizationManager.Get("UI_EMPTY_STORAGE");
 
-        botonAuto.interactable = hayAlgo && hero != null;
+        botonAuto.interactable = shop != null && shop.Inventory.Count > 0 && hero != null;
         botonAuto.targetGraphic.color = botonAuto.interactable ? UITheme.Neutral : UITheme.Neutral;
 
-        if (!hayAlgo) return;
-
-        foreach (var item in shop.Inventory)
-            if (item != null) CreateRow(item);
+        foreach (var item in filtrado) CreateRow(item);
     }
 
     // Lo que lleva puesto ahora, hueco a hueco, con su desgaste.
@@ -151,29 +192,30 @@ public class EquipmentSelectModalUI : MonoBehaviour
         return "\n<size=" + UITheme.SizeCaption + ">" + string.Join("   ", partes) + "</size>";
     }
 
-    private string Worn(EquipmentSlot slot)
+private string Worn(EquipmentSlot slot)
     {
         var item = hero.GetEquipped(slot);
         if (item == null) return "-";
 
         return hero.IsBroken(slot)
-            ? $"{item.equipName} [{LocalizationManager.Get("UI_BROKEN")}]"
-            : $"{item.equipName} ({hero.DurabilityOf(slot)}/{item.maxDurability})";
+            ? $"{item.LocalizedName()} [{LocalizationManager.Get("UI_BROKEN")}]"
+            : $"{item.LocalizedName()} ({hero.DurabilityOf(slot)}/{item.maxDurability})";
     }
 
     // Una fila por pieza: nombre y tipo a la izquierda, cifras en medio, botón a la derecha.
-    private void CreateRow(EquipmentData item)
+private void CreateRow(EquipmentData item)
     {
         var go = new GameObject($"Row_{item.name}", typeof(RectTransform), typeof(Image));
         go.transform.SetParent(lista, false);
         go.GetComponent<RectTransform>().sizeDelta = new Vector2(0f, rowHeight);
         UITheme.Surface(go, UITheme.Card, UITheme.BorderSoft, UITheme.RadiusItem);
 
+        bool estaEquipada = hero != null && hero.GetEquipped(item.slotType) == item;
         bool ocupado = hero != null && hero.GetEquipped(item.slotType) != null;
 
         var nombre = RowLabel(go.transform, "Name", 16f, 300f, UITheme.SizeName,
             TextAlignmentOptions.Left);
-        nombre.text = $"<b>{item.equipName}</b>\n" +
+        nombre.text = $"<b>{item.LocalizedName()}</b>\n" +
                       $"<size={UITheme.SizeCaption}><color={UITheme.Tag(UITheme.TextMuted)}>" +
                       $"{WeaponTypes.DisplayName(item.weaponType)}" +
                       (ocupado ? $" · {LocalizationManager.Get("UI_SLOT_TAKEN")}" : string.Empty) +
@@ -196,8 +238,14 @@ public class EquipmentSelectModalUI : MonoBehaviour
                       $"{LocalizationManager.Get("UI_DURABILITY")}</color> {item.maxDurability}" +
                       afijo;
 
-        var boton = UIBuild.Button(go.transform, "Btn_Pick", LocalizationManager.Get("UI_EQUIP"),
-            UITheme.Teal, new Vector2(140f, 42f), Vector2.zero, () => OnPiecePressed(item));
+        // La pieza puesta ahora mismo se puede desequipar desde aquí; el resto se equipa.
+        string textoBoton = estaEquipada ? LocalizationManager.Get("UI_UNEQUIP") : LocalizationManager.Get("UI_EQUIP");
+        Color colorBoton = estaEquipada ? UITheme.DangerSoft : UITheme.Teal;
+        UnityEngine.Events.UnityAction accion = estaEquipada
+            ? (UnityEngine.Events.UnityAction)(() => OnUnequipPressed(item.slotType))
+            : (() => OnPiecePressed(item));
+
+        var boton = UIBuild.Button(go.transform, "Btn_Pick", textoBoton, colorBoton, new Vector2(140f, 42f), Vector2.zero, accion);
 
         var brt = boton.GetComponent<RectTransform>();
         brt.anchorMin = new Vector2(1f, 0.5f);
@@ -221,7 +269,7 @@ public class EquipmentSelectModalUI : MonoBehaviour
         return tmp;
     }
 
-    private void Build()
+private void Build()
     {
         if (canvas == null) return;
 
@@ -233,6 +281,34 @@ public class EquipmentSelectModalUI : MonoBehaviour
         equipado = UIBuild.TopLabel(panel.transform, "Equipped", UITheme.SizeBody, 50f, -56f,
             TextAlignmentOptions.TopLeft);
         equipado.color = UITheme.TextSoft;
+
+        // Filtro por tipo: Todos/Armas/Escudos/Armaduras/Accesorios, justo encima del listado.
+        string[] etiquetasFiltro = {
+            LocalizationManager.Get("UI_FILTER_ALL"),
+            LocalizationManager.Get("UI_FILTER_WEAPONS"),
+            LocalizationManager.Get("UI_FILTER_SHIELDS"),
+            LocalizationManager.Get("UI_FILTER_ARMORS"),
+            LocalizationManager.Get("UI_FILTER_ACCESSORIES")
+        };
+        EquipmentSlot?[] valoresFiltro = { null, EquipmentSlot.Weapon, EquipmentSlot.Shield, EquipmentSlot.Armor, EquipmentSlot.Accessory };
+
+        filterButtons = new Button[5];
+        const float filterBtnWidth = 150f;
+        const float filterBtnGap = 8f;
+        for (int i = 0; i < 5; i++)
+        {
+            float x = 20f + i * (filterBtnWidth + filterBtnGap);
+            var slotCapturado = valoresFiltro[i];
+            var btnFiltro = UIBuild.Button(panel.transform, $"Btn_Filter_{i}", etiquetasFiltro[i],
+                UITheme.Neutral, new Vector2(filterBtnWidth, 34f), Vector2.zero, () => SetFilter(slotCapturado));
+
+            var frt = btnFiltro.GetComponent<RectTransform>();
+            frt.anchorMin = new Vector2(0f, 1f);
+            frt.anchorMax = new Vector2(0f, 1f);
+            frt.pivot = new Vector2(0f, 1f);
+            frt.anchoredPosition = new Vector2(x, -110f);
+            filterButtons[i] = btnFiltro;
+        }
 
         // Viewport con scroll: el almacén puede pasar de diez piezas sin problema.
         var viewGo = new GameObject("Viewport", typeof(RectTransform), typeof(Image),
@@ -247,8 +323,8 @@ public class EquipmentSelectModalUI : MonoBehaviour
         vrt.pivot = new Vector2(0.5f, 1f);
         vrt.offsetMin = new Vector2(20f, 0f);
         vrt.offsetMax = new Vector2(-20f, 0f);
-        vrt.sizeDelta = new Vector2(-40f, size.y - 112f - 90f);
-        vrt.anchoredPosition = new Vector2(0f, -112f);
+        vrt.sizeDelta = new Vector2(-40f, size.y - 156f - 90f);
+        vrt.anchoredPosition = new Vector2(0f, -156f);
 
         var contenido = new GameObject("Content", typeof(RectTransform));
         contenido.transform.SetParent(viewGo.transform, false);

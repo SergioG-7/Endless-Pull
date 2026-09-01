@@ -76,11 +76,12 @@ public class QuadrantController : MonoBehaviour
         if (waves != null) waves.FloorCleared -= OnFloorCleared;
     }
 
-    void Start()
+void Start()
     {
-        // Tokens de arte aprobados: GlassDeep para el cuerpo, TextSoft para el candado y el texto.
-        if (veil != null) veil.color = UITheme.GlassDeep;
-        if (lockIcon != null) lockIcon.color = UITheme.TextSoft;
+        // El veil/lockIcon ya no se pintan (Fase 39: cada edificio muestra su propio candado);
+        // se dejan invisibles pero activos para que ContainsPoint siga detectando el toque.
+        if (veil != null) veil.enabled = false;
+        if (lockIcon != null) lockIcon.enabled = false;
 
         if (floorLabel != null)
         {
@@ -92,18 +93,19 @@ public class QuadrantController : MonoBehaviour
     }
 
     // Activa o apaga silueta/candado/etiqueta según el piso; nunca toca los edificios reales.
+// Activa o apaga solo la etiqueta según el piso; el veil/lockIcon quedan siempre invisibles
+    // (Fase 39: la sombra de zona y el candado flotante se sustituyeron por el candado por edificio).
     public void RefreshVisual()
     {
         bool locked = !IsUnlocked;
 
-        if (veil != null) veil.gameObject.SetActive(locked);
-        if (lockIcon != null) lockIcon.gameObject.SetActive(locked);
         if (floorLabel != null) floorLabel.gameObject.SetActive(locked);
     }
 
     // Bounds reales del veil; si está inactivo (cuadrante ya desbloqueado) no hay nada que tocar.
+// Usa los bounds del veil (invisible pero activo) solo mientras el cuadrante siga bloqueado.
     public bool ContainsPoint(Vector2 point)
-        => veil != null && veil.gameObject.activeInHierarchy && veil.bounds.Contains(point);
+        => veil != null && !IsUnlocked && veil.bounds.Contains(point);
 
     // La usa el SaveManager al cargar la partida, cotejando por QuadrantId.
     public void LoadRevealed(bool alreadyRevealed)

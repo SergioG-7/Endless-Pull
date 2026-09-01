@@ -33,21 +33,16 @@ public class AlchemyWorkshopUI : MonoBehaviour
     private const float CardWidth = 300f;
     private const float CardHeight = 268f;
     private const float CardGap = 20f;
-    private const float RowGap = 24f;
 
     // La tarjeta se reparte en cuatro bandas: título, cuerpo, coste y botón al pie.
     // Bajado desde 76f para dejar sitio a la fila de pestañas.
     private const float CardTop = 120f;
     private const float ButtonHeight = 48f;
 
-    // Alto que añade la segunda fila (poción + mejora) por debajo de las tres tarjetas originales.
-    private const float RowExtra = CardHeight + RowGap;
-
     private GameObject panel;
     private TMP_Text titulo;
-    private TMP_Text recursos;
+    private TMP_Text artesanos;
     private TMP_Text feedback;
-    private TMP_Text etiquetaCerrar;
 
     // Una ficha por operación: cuerpo con el detalle, coste y su botón.
     // Fase 37: las 4 piedras van cada una en su propia tarjeta, sin desplegable.
@@ -57,8 +52,9 @@ public class AlchemyWorkshopUI : MonoBehaviour
 
     private Ficha armas;
     private Ficha reparar;
-    private Ficha pocion;
     private Ficha mejora;
+    private Ficha pocion;
+    private Ficha pocionMana;
 
     // Pestañas: Piedras, Forja/Reparación de Equipo, Alquimia.
     private WorkshopTab activeTab = WorkshopTab.Stones;
@@ -154,7 +150,9 @@ public class AlchemyWorkshopUI : MonoBehaviour
         reparar.root.SetActive(equip);
         mejora.root.SetActive(equip);
 
-        pocion.root.SetActive(activeTab == WorkshopTab.Alchemy);
+        bool alchemy = activeTab == WorkshopTab.Alchemy;
+        pocion.root.SetActive(alchemy);
+        pocionMana.root.SetActive(alchemy);
     }
 
     private static void StyleTab(Button tab, TMP_Text label, bool active)
@@ -187,6 +185,12 @@ public class AlchemyWorkshopUI : MonoBehaviour
         Refresh();
     }
 
+    public void OnCraftManaPotionPressed()
+    {
+        if (crafting != null) crafting.TryCraftManaPotion();
+        Refresh();
+    }
+
     public void OnUpgradeGearPressed()
     {
         if (crafting != null) crafting.TryUpgradeAllGear();
@@ -207,17 +211,12 @@ public class AlchemyWorkshopUI : MonoBehaviour
 
         titulo.text = LocalizationManager.Get("UI_WORKSHOP");
 
-        int artesanos = crafting.Artisans;
-        string rebaja = artesanos > 0
-            ? $"   <color={UITheme.Tag(UITheme.Cyan)}>" +
-              $"{LocalizationManager.Get("UI_ARTISANS")} {artesanos} " +
-              $"(-{Mathf.RoundToInt((1f - crafting.CostFactor) * 100f)}%)</color>"
-            : string.Empty;
-
-        recursos.text = economy != null
-            ? $"{LocalizationManager.Get("UI_WOOD")} <b>{economy.Wood}</b>   " +
-              $"{LocalizationManager.Get("UI_IRON")} <b>{economy.Iron}</b>   " +
-              $"{LocalizationManager.Get("UI_FOOD")} <b>{economy.Food}</b>{rebaja}"
+        // Los materiales ya se ven en el TopBar de fondo (Fase 38): solo queda aquí el
+        // descuento de los artesanos, que es información propia del Taller.
+        int numArtesanos = crafting.Artisans;
+        artesanos.text = numArtesanos > 0
+            ? $"<color={UITheme.Tag(UITheme.Cyan)}>{LocalizationManager.Get("UI_ARTISANS")} " +
+              $"{numArtesanos} (-{Mathf.RoundToInt((1f - crafting.CostFactor) * 100f)}%)</color>"
             : string.Empty;
 
         // Forja de Piedras: las 4 tarjetas directas, sin desplegable (Fase 37).
@@ -229,7 +228,7 @@ public class AlchemyWorkshopUI : MonoBehaviour
         armas.titulo.text = LocalizationManager.Get("UI_FORGE_WEAPONS");
         armas.cuerpo.text = LocalizationManager.Get("UI_FORGE_WEAPONS_HELP");
         armas.coste.text = Cost(crafting.WeaponWoodCost, crafting.WeaponIronCost, crafting.WeaponFoodCost);
-        SetButton(armas, LocalizationManager.Get("UI_CRAFT_WEAPON"), crafting.CanCraftWeapon, UITheme.Teal);
+        SetButton(armas, LocalizationManager.Get("UI_CRAFT_EQUIPMENT"), crafting.CanCraftWeapon, UITheme.Teal);
 
         // Reparación de Equipo
         int desgaste = crafting.TotalWear();
@@ -250,6 +249,14 @@ public class AlchemyWorkshopUI : MonoBehaviour
         pocion.coste.text = Cost(crafting.PotionWoodCost, 0, crafting.PotionFoodCost);
         SetButton(pocion, LocalizationManager.Get("UI_CRAFT_POTION"), crafting.CanCraftPotion, UITheme.Cyan);
 
+        // Pociones de Maná
+        pocionMana.titulo.text = LocalizationManager.Get("UI_FORGE_MANA_POTIONS");
+        pocionMana.cuerpo.text = $"{LocalizationManager.Get("UI_MANA_POTIONS_HELD")} <b>{crafting.ManaPotions}</b>";
+        pocionMana.coste.text = Cost(crafting.ManaPotionWoodCost, 0, crafting.ManaPotionFoodCost);
+        bool puedeManaPotion = economy != null
+            && economy.CanAffordMaterials(crafting.ManaPotionWoodCost, 0) && economy.CanAffordFood(crafting.ManaPotionFoodCost);
+        SetButton(pocionMana, LocalizationManager.Get("UI_CRAFT_MANA_POTION"), puedeManaPotion, UITheme.Cyan);
+
         // Mejora de Equipo
         mejora.titulo.text = LocalizationManager.Get("UI_UPGRADE_GEAR");
         mejora.cuerpo.text = LocalizationManager.Get("UI_UPGRADE_GEAR_HELP");
@@ -257,8 +264,6 @@ public class AlchemyWorkshopUI : MonoBehaviour
             ? Cost(crafting.UpgradeWoodCost, crafting.UpgradeIronCost, crafting.UpgradeFoodCost)
             : $"<color={UITheme.Tag(UITheme.TextFaint)}>{LocalizationManager.Get("UI_FORGE_LOCKED")}</color>";
         SetButton(mejora, LocalizationManager.Get("UI_UPGRADE_BUTTON"), crafting.CanUpgradeGear, UITheme.Teal);
-
-        etiquetaCerrar.text = LocalizationManager.Get("UI_CLOSE");
     }
 
     private void RefreshStoneCard(Ficha ficha, AscensionStoneTier tier)
@@ -297,18 +302,24 @@ public class AlchemyWorkshopUI : MonoBehaviour
     {
         if (canvas == null) return;
 
-        // El tamaño de referencia solo preveía tres tarjetas; se fuerza sitio para la fila extra
-        // más el espacio que ocupa la fila de pestañas (ver CardTop).
+        // El tamaño de referencia solo preveía tres tarjetas en una fila; ahora las 3 pestañas
+        // (Piedras, Forja/Reparación, Alquimia) muestran cada una una única fila pareja de
+        // tarjetas del mismo alto — ya no hace falta una segunda fila.
         const float TabRowExtra = CardTop - 76f;
-        var panelSize = new Vector2(size.x, Mathf.Max(size.y, 482f + RowExtra) + TabRowExtra);
+        var panelSize = new Vector2(size.x, Mathf.Max(size.y, CardTop + CardHeight + 60f) + TabRowExtra);
         panel = UIBuild.Panel(canvas.transform, "AlchemyWorkshopPanel", panelSize, UITheme.Bg);
+
+        UIBuild.CloseButtonTopRight(panel.transform, Close);
 
         titulo = UIBuild.TopLabel(panel.transform, "Title", UITheme.SizeTitle, 34f, -20f,
             TextAlignmentOptions.Left);
+        // Deja sitio al botón [X] (48px + 16px de margen) para que el título no quede debajo.
+        titulo.rectTransform.offsetMax = new Vector2(-72f, titulo.rectTransform.offsetMax.y);
 
-        recursos = UIBuild.TopLabel(panel.transform, "Resources", UITheme.SizeBody, 30f, -22f,
+        artesanos = UIBuild.TopLabel(panel.transform, "Artisans", UITheme.SizeBody, 30f, -22f,
             TextAlignmentOptions.Right);
-        recursos.color = UITheme.TextSoft;
+        artesanos.color = UITheme.TextSoft;
+        artesanos.rectTransform.offsetMax = new Vector2(-72f, artesanos.rectTransform.offsetMax.y);
 
         BuildTabs();
 
@@ -323,21 +334,20 @@ public class AlchemyWorkshopUI : MonoBehaviour
                 StoneCardWidth, () => OnCraftStonePressed(tier));
         }
 
-        float x = -(CardWidth + CardGap);
-        armas = CreateCard("Card_Weapons", 0f, 0f, OnCraftWeaponPressed);
-        reparar = CreateCard("Card_Repair", -x, 0f, OnRepairAllPressed);
+        // Forja/Reparación: 3 tarjetas en una sola fila (Armas, Mejora, Reparar), mismo criterio
+        // de grilla que la fila de Piedras.
+        float step3 = CardWidth + CardGap;
+        armas = CreateCard("Card_Weapons", -step3, 0f, OnCraftWeaponPressed);
+        mejora = CreateCard("Card_Upgrade", 0f, 0f, OnUpgradeGearPressed);
+        reparar = CreateCard("Card_Repair", step3, 0f, OnRepairAllPressed);
 
-        // Segunda fila, centrada bajo las tres tarjetas originales.
-        float xPar = -(CardWidth + CardGap) * 0.5f;
-        pocion = CreateCard("Card_Potion", xPar, RowExtra, OnCraftPotionPressed);
-        mejora = CreateCard("Card_Upgrade", -xPar, RowExtra, OnUpgradeGearPressed);
+        // Alquimia: pociones de Curación y de Maná, una fila de 2 tarjetas centradas.
+        float xPar = (CardWidth + CardGap) * 0.5f;
+        pocion = CreateCard("Card_Potion", -xPar, 0f, OnCraftPotionPressed);
+        pocionMana = CreateCard("Card_PotionMana", xPar, 0f, OnCraftManaPotionPressed);
 
-        feedback = UIBuild.TopLabel(panel.transform, "Feedback", UITheme.SizeBody, 26f,
-            -(CardTop + CardHeight + RowExtra + 8f), TextAlignmentOptions.Center);
-
-        var cerrar = UIBuild.Button(panel.transform, "Btn_CloseWorkshop", string.Empty,
-            Color.clear, new Vector2(240f, 46f), new Vector2(0f, -(panelSize.y - 62f)), Close);
-        etiquetaCerrar = cerrar.GetComponentInChildren<TMP_Text>();
+        feedback = UIBuild.TopLabel(panel.transform, "Feedback", UITheme.SizeTitle, 32f,
+            -(CardTop + CardHeight + 8f), TextAlignmentOptions.Center);
     }
 
     // Tres botones de pestaña anclados arriba a la izquierda, mismo estilo que SanctuaryUI.

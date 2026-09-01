@@ -53,7 +53,7 @@ public class ShopUI : MonoBehaviour
         if (shop != null) shop.InventoryChanged -= Refresh;
     }
 
-    void Start()
+void Start()
     {
         if (panel != null) panel.SetActive(false);
 
@@ -63,6 +63,13 @@ public class ShopUI : MonoBehaviour
         // El título venía fijo en la escena ("TIENDA DE EQUIPO"), sin traducir ni actualizar
         // tras el cambio de rol a Almacén.
         if (titleLabel != null) titleLabel.text = LocalizationManager.Get("UI_STORAGE");
+
+        // El botón [X] venía con "Cerrar" fijo en la escena, sin traducir (Fase 39).
+        if (panel != null)
+        {
+            var cerrarLabel = panel.transform.Find("Btn_CloseShop")?.GetComponentInChildren<TMP_Text>();
+            if (cerrarLabel != null) cerrarLabel.text = LocalizationManager.Get("UI_CLOSE");
+        }
 
         // El equipo ya no se compra con gemas: solo se obtiene por crafteo y recompensas.
         if (priceLabel != null) priceLabel.gameObject.SetActive(false);

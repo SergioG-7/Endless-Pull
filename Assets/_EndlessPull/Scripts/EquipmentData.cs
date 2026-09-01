@@ -91,6 +91,12 @@ public class EquipmentData : ScriptableObject
     [Tooltip("Nombre visible de la pieza.")]
     public string equipName = "Espada de Hierro";
 
+    [Tooltip("Clave de localización del nombre; vacío usa equipName tal cual (compatibilidad con piezas antiguas).")]
+    public string nameKey = string.Empty;
+
+    public string LocalizedName() => string.IsNullOrEmpty(nameKey) ? equipName : LocalizationManager.Get(nameKey);
+
+
     [Tooltip("Hueco del héroe en el que se coloca.")]
     public EquipmentSlot slotType = EquipmentSlot.Weapon;
 
@@ -120,7 +126,7 @@ public class EquipmentData : ScriptableObject
     public string AffixLabel() => EquipmentAffixes.Describe(passiveTrait, passiveValue);
 
     // Texto corto para el roster: nombre y lo que aporta.
-    public string ShortLabel()
+public string ShortLabel()
     {
         string bonus = string.Empty;
         if (bonusATK != 0) bonus += $" +{bonusATK}ATK";
@@ -128,6 +134,6 @@ public class EquipmentData : ScriptableObject
         if (bonusHP != 0) bonus += $" +{bonusHP}HP";
         if (HasAffix) bonus += $" [{AffixLabel()}]";
 
-        return equipName + bonus;
+        return LocalizedName() + bonus;
     }
 }

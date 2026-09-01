@@ -22,7 +22,11 @@ public enum SfxId
     DecreeRetreat,
     Critical,
     Ascension,
-    CraftSuccess
+    CraftSuccess,
+    Error,
+    Potion,
+    Reward,
+    HeroHurt
 }
 
 public enum AudioChannel
@@ -50,6 +54,7 @@ public class AudioManager : MonoBehaviour
 {
     private const string UiVolumeKey = "EndlessPull.UiVolume";
     private const string CombatVolumeKey = "EndlessPull.CombatVolume";
+    private const string BgmVolumeKey = "EndlessPull.BgmVolume";
 
     // Una entrada por variante de un mismo efecto; varias entradas con el mismo id son
     // round-robin entre sí (gap 8: evita migrar a ScriptableObject para solo 3 casos de variantes,
@@ -95,6 +100,19 @@ public class AudioManager : MonoBehaviour
     [Tooltip("Frecuencia de muestreo de los clips sintéticos.")]
     [SerializeField] private int sampleRate = 44100;
 
+    [Tooltip("Música de fondo en la base; se detecta sola por nombre de archivo (ver AutoDetectClips).")]
+    [SerializeField] private AudioClip bgmBaseClip;
+
+    [Tooltip("Música de fondo en combate; se detecta sola por nombre de archivo (ver AutoDetectClips).")]
+    [SerializeField] private AudioClip bgmCombatClip;
+
+    [Tooltip("Volumen de la música de fondo.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float bgmVolume = 0.4f;
+
+    [Tooltip("Segundos de crossfade al cambiar de música (base <-> combate).")]
+    [SerializeField] private float bgmCrossfadeSeconds = 1.5f;
+
     [Tooltip("Mixer con los grupos Decrees/BossAlert/CombatSFX/Ambience/Music/UI (Fase 30, §5.1).")]
     [SerializeField] private AudioMixer mixer;
 
@@ -106,6 +124,9 @@ public class AudioManager : MonoBehaviour
 
     [Tooltip("Grupo de salida de la interfaz.")]
     [SerializeField] private AudioMixerGroup uiGroup;
+
+    [Tooltip("Grupo de salida de la música de fondo.")]
+    [SerializeField] private AudioMixerGroup musicGroup;
 
     [Tooltip("Caída en dB de música y ambiente al disparar un decreto (techo de audibilidad, §4).")]
     [SerializeField] private float decreeDuckDb = -8f;
@@ -133,6 +154,19 @@ public class AudioManager : MonoBehaviour
     private WaveManager waves;
     private int currentBiomeIndex;
 
+    // Dos AudioSources en crossfade: mientras una suena a volumen pleno, la otra sube desde 0.
+    private AudioSource bgmSourceA;
+    private AudioSource bgmSourceB;
+    private AudioSource activeBgm;
+    private AudioClip currentBgmClip;
+    private Coroutine bgmCrossfadeRoutine;
+
+    // Efectos largos/repetitivos (ej. golpeo de yunque) se cortan con fade-out en vez de sonar enteros.
+    private static readonly Dictionary<SfxId, float> MaxDurationSeconds = new Dictionary<SfxId, float>
+    {
+        { SfxId.CraftSuccess, 3f }
+    };
+
     public bool Muted => muted;
     public static bool IsMuted => instance != null && instance.muted;
 
@@ -159,6 +193,18 @@ public class AudioManager : MonoBehaviour
         }
     }
 
+    public float BGMVolume
+    {
+        get => bgmVolume;
+        set
+        {
+            bgmVolume = Mathf.Clamp01(value);
+            PlayerPrefs.SetFloat(BgmVolumeKey, bgmVolume);
+            PlayerPrefs.Save();
+            if (activeBgm != null) activeBgm.volume = bgmVolume;
+        }
+    }
+
     void Awake()
     {
         // Si ya había uno, este sobra: dos reservas competirían por los mismos sonidos.
@@ -175,6 +221,9 @@ public class AudioManager : MonoBehaviour
         combatVolume = PlayerPrefs.GetFloat(CombatVolumeKey, combatVolume);
 
         BuildPool();
+        BuildBgmSources();
+
+        bgmVolume = PlayerPrefs.GetFloat(BgmVolumeKey, bgmVolume);
     }
 
     void OnDestroy()
@@ -185,6 +234,7 @@ public class AudioManager : MonoBehaviour
         {
             waves.FloorChanged -= OnFloorChanged;
             waves.BossStateChanged -= OnBossStateChanged;
+            waves.ExpeditionChanged -= OnExpeditionChanged;
         }
     }
 
@@ -199,8 +249,14 @@ public class AudioManager : MonoBehaviour
             currentBiomeIndex = TowerBiome.IndexForFloor(waves.CurrentFloor);
             waves.FloorChanged += OnFloorChanged;
             waves.BossStateChanged += OnBossStateChanged;
+            waves.ExpeditionChanged += OnExpeditionChanged;
         }
+
+        PlayBgm(bgmBaseClip);
     }
+
+    private void OnExpeditionChanged(ExpeditionState state, string message)
+        => PlayBgm(state == ExpeditionState.InProgress ? bgmCombatClip : bgmBaseClip);
 
     private void OnFloorChanged(int floor) => currentBiomeIndex = TowerBiome.IndexForFloor(floor);
 
@@ -242,6 +298,95 @@ public class AudioManager : MonoBehaviour
         }
     }
 
+    private void BuildBgmSources()
+    {
+        bgmSourceA = NewBgmSource("BgmSource_A");
+        bgmSourceB = NewBgmSource("BgmSource_B");
+        activeBgm = bgmSourceA;
+    }
+
+    private AudioSource NewBgmSource(string name)
+    {
+        var go = new GameObject(name);
+        go.transform.SetParent(transform, false);
+
+        var source = go.AddComponent<AudioSource>();
+        source.playOnAwake = false;
+        source.loop = true;
+        source.spatialBlend = 0f;
+        source.volume = 0f;
+        source.outputAudioMixerGroup = GroupFor(MixCategory.Music);
+        return source;
+    }
+
+    // Cambia la música de fondo con crossfade; llamar con el mismo clip o null no hace nada.
+    private void PlayBgm(AudioClip clip)
+    {
+        if (clip == null || clip == currentBgmClip) return;
+        currentBgmClip = clip;
+
+        var entrante = activeBgm == bgmSourceA ? bgmSourceB : bgmSourceA;
+        var saliente = activeBgm;
+
+        entrante.clip = clip;
+        entrante.volume = 0f;
+        entrante.Play();
+        activeBgm = entrante;
+
+        if (bgmCrossfadeRoutine != null) StopCoroutine(bgmCrossfadeRoutine);
+        bgmCrossfadeRoutine = StartCoroutine(CrossfadeBgm(entrante, saliente));
+    }
+
+    private IEnumerator CrossfadeBgm(AudioSource entrante, AudioSource saliente)
+    {
+        float t = 0f;
+        float volumenSaliente = saliente != null ? saliente.volume : 0f;
+
+        while (t < bgmCrossfadeSeconds)
+        {
+            t += Time.unscaledDeltaTime;
+            float frac = Mathf.Clamp01(t / bgmCrossfadeSeconds);
+
+            entrante.volume = Mathf.Lerp(0f, bgmVolume, frac);
+            if (saliente != null) saliente.volume = Mathf.Lerp(volumenSaliente, 0f, frac);
+            yield return null;
+        }
+
+        entrante.volume = bgmVolume;
+        if (saliente != null) { saliente.volume = 0f; saliente.Stop(); }
+        bgmCrossfadeRoutine = null;
+    }
+
+    // Efectos largos (yunque, etc.): se dejan sonar hasta maxSeconds y luego se apagan con fundido,
+    // en vez de reproducir el archivo entero.
+    private IEnumerator FadeOutAndStop(AudioSource source, AudioClip clip, float maxSeconds)
+    {
+        float startVolume = source.volume;
+
+        float t = 0f;
+        while (t < maxSeconds)
+        {
+            t += Time.unscaledDeltaTime;
+            yield return null;
+
+            // Otro sonido reutilizó esta fuente antes de tiempo: no le toques el volumen.
+            if (source.clip != clip) yield break;
+        }
+
+        float fade = 0f;
+        const float fadeSeconds = 0.3f;
+        while (fade < fadeSeconds)
+        {
+            fade += Time.unscaledDeltaTime;
+            if (source.clip != clip) yield break;
+
+            source.volume = Mathf.Lerp(startVolume, 0f, fade / fadeSeconds);
+            yield return null;
+        }
+
+        if (source.clip == clip) source.Stop();
+    }
+
     // El primero libre; si todos suenan se reutiliza el siguiente en la rueda.
     private AudioSource Next()
     {
@@ -262,7 +407,8 @@ public class AudioManager : MonoBehaviour
 
     public static AudioChannel ChannelOf(SfxId id)
         => id == SfxId.UiClick || id == SfxId.UiOpen || id == SfxId.UiClose || id == SfxId.CardReveal
-           || id == SfxId.Ascension || id == SfxId.CraftSuccess
+           || id == SfxId.Ascension || id == SfxId.CraftSuccess || id == SfxId.Error
+           || id == SfxId.Potion || id == SfxId.Reward
            ? AudioChannel.UI
            : AudioChannel.Combat;
 
@@ -282,6 +428,9 @@ public class AudioManager : MonoBehaviour
             case SfxId.CardReveal:
             case SfxId.Ascension:
             case SfxId.CraftSuccess:
+            case SfxId.Error:
+            case SfxId.Potion:
+            case SfxId.Reward:
                 return MixCategory.UI;
             default:
                 return MixCategory.Combat;
@@ -294,6 +443,7 @@ public class AudioManager : MonoBehaviour
         {
             case MixCategory.Decree: return decreesGroup;
             case MixCategory.UI: return uiGroup;
+            case MixCategory.Music: return musicGroup;
             default: return combatGroup;
         }
     }
@@ -347,6 +497,9 @@ public class AudioManager : MonoBehaviour
         source.spatialBlend = 0f;
         source.transform.position = positional ? worldPosition : transform.position;
         source.Play();
+
+        if (MaxDurationSeconds.TryGetValue(id, out float maxSeconds) && clip.length > maxSeconds)
+            StartCoroutine(FadeOutAndStop(source, clip, maxSeconds));
 
         // Ducking de decreto: música + ambiente, disparado desde el mismo Play() que ya suena
         // hoy el SfxId.DecreeX (§5.1, gap 4 eliminado: no hace falta tocar MasterCommander).
@@ -509,6 +662,18 @@ public class AudioManager : MonoBehaviour
             case SfxId.Impact:
                 duracion = 0.22f; desde = 320f; hasta = 70f; ruido = 0.7f; decaimiento = 18f; cuadrada = true;
                 break;
+            case SfxId.Error:
+                duracion = 0.22f; desde = 220f; hasta = 140f; ruido = 0.05f; decaimiento = 14f; cuadrada = true;
+                break;
+            case SfxId.Potion:
+                duracion = 0.30f; desde = 500f; hasta = 1000f; ruido = 0.04f; decaimiento = 8f; cuadrada = false;
+                break;
+            case SfxId.Reward:
+                duracion = 0.40f; desde = 700f; hasta = 1500f; ruido = 0.02f; decaimiento = 6f; cuadrada = false;
+                break;
+            case SfxId.HeroHurt:
+                duracion = 0.18f; desde = 260f; hasta = 110f; ruido = 0.4f; decaimiento = 20f; cuadrada = false;
+                break;
             default: // Defeat
                 duracion = 0.6f; desde = 400f; hasta = 70f; ruido = 0.25f; decaimiento = 6f; cuadrada = false;
                 break;
@@ -547,4 +712,68 @@ public class AudioManager : MonoBehaviour
         clip.SetData(datos, 0);
         return clip;
     }
+
+#if UNITY_EDITOR
+    // Escanea Assets/_EndlessPull/Audio y asigna cada clip por coincidencia de texto en su nombre
+    // (roadmap Fase 40 §1). Sin instalador Python/Node: solo Editor de Unity, botón del Inspector.
+    private static readonly (string[] palabras, SfxId id)[] SfxKeywordRules =
+    {
+        (new[] { "click", "tap", "button", "select", "tick" }, SfxId.UiClick),
+        (new[] { "open", "window", "popup" }, SfxId.UiOpen),
+        (new[] { "close", "dismiss", "back" }, SfxId.UiClose),
+        (new[] { "error", "deny", "locked", "cancel", "fail" }, SfxId.Error),
+        (new[] { "anvil", "craft", "forge", "hammer", "smith", "yunque", "martillo" }, SfxId.CraftSuccess),
+        (new[] { "reward", "coin", "gold", "gem", "loot" }, SfxId.Reward),
+        (new[] { "heal", "potion", "magic_heal", "recovery" }, SfxId.Potion),
+        (new[] { "summon", "ascend", "portal", "level_up", "fanfare" }, SfxId.Ascension),
+        (new[] { "hurt" }, SfxId.HeroHurt),
+        (new[] { "hit", "slash", "sword", "strike", "punch" }, SfxId.MeleeHit),
+        (new[] { "shoot", "arrow", "bow", "cast", "magic_shot" }, SfxId.ArrowShot),
+        (new[] { "victory", "win" }, SfxId.Victory),
+        // "lose" fuera de la lista a propósito: es substring de "close" (falso positivo real,
+        // ver SFX_UiOpenClose.wav) -- "defeat"/"game_over" ya cubren el grupo sin ese riesgo.
+        (new[] { "defeat", "game_over" }, SfxId.Defeat),
+    };
+
+    private static readonly string[] BgmBaseKeywords = { "base", "ambient", "peace", "village", "town" };
+    private static readonly string[] BgmCombatKeywords = { "combat", "battle", "tower", "fight", "arena" };
+
+    [ContextMenu("Auto-detectar clips de Assets/_EndlessPull/Audio")]
+    public void AutoDetectClips()
+    {
+        var guids = UnityEditor.AssetDatabase.FindAssets("t:AudioClip", new[] { "Assets/_EndlessPull/Audio" });
+        int nuevos = 0;
+
+        foreach (var guid in guids)
+        {
+            string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
+            string nombre = System.IO.Path.GetFileNameWithoutExtension(path).ToLowerInvariant();
+            var clip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(path);
+            if (clip == null) continue;
+
+            if (ContainsAny(nombre, BgmBaseKeywords)) { bgmBaseClip = clip; continue; }
+            if (ContainsAny(nombre, BgmCombatKeywords)) { bgmCombatClip = clip; continue; }
+
+            foreach (var regla in SfxKeywordRules)
+            {
+                if (!ContainsAny(nombre, regla.palabras)) continue;
+                if (clips.Exists(e => e.id == regla.id && e.clip == clip)) continue;
+
+                clips.Add(new SfxEntry { id = regla.id, biomeIndex = -1, clip = clip });
+                nuevos++;
+            }
+        }
+
+        UnityEditor.EditorUtility.SetDirty(this);
+        Debug.Log($"[AudioManager] Auto-detección: {nuevos} entrada(s) nueva(s), " +
+                  $"BGM base={bgmBaseClip}, BGM combate={bgmCombatClip}.", this);
+    }
+
+    private static bool ContainsAny(string texto, string[] palabras)
+    {
+        foreach (var palabra in palabras)
+            if (texto.Contains(palabra)) return true;
+        return false;
+    }
+#endif
 }

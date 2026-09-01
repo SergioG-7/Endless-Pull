@@ -11,44 +11,44 @@ public class HeroQuickCardUI : MonoBehaviour
     [Tooltip("Roster al que salta el botón 'Ver en Roster'.")]
     [SerializeField] private RosterUI roster;
 
-    [Tooltip("Taller del que salen las pociones de curación.")]
+    [Tooltip("Taller del que salen las pociones de curación y de maná.")]
     [SerializeField] private CraftingManager crafting;
 
-    [Tooltip("Tienda de la que salen inventario y equipo.")]
+    [Tooltip("Tienda de la que sale el equipamiento.")]
     [SerializeField] private ShopManager shop;
 
-    [Tooltip("Escuadra a la que se apunta o se saca al héroe.")]
-    [SerializeField] private PartyManager party;
-
-    [Tooltip("Modal de equipamiento manual que abre el botón Equipar.")]
+    [Tooltip("Modal de equipamiento manual que abre el botón Equipar (también permite desequipar).")]
     [SerializeField] private EquipmentSelectModalUI equipModal;
 
     [Tooltip("Tamaño de la ficha.")]
     [SerializeField] private Vector2 size = new Vector2(760f, 620f);
 
+    [Tooltip("Lado del retrato del héroe en la cabecera.")]
+    [SerializeField] private float portraitSize = 140f;
+
     private GameObject panel;
     private HeroController hero;
 
+    private GameObject portraitFrame;
     private TMP_Text titulo;
     private TMP_Text subclase;
-    private TMP_Text equipo;
     private TMP_Text bio;
+    private TMP_Text equipo;
     private TMP_Text estados;
 
-    // Alto que ocupa el bloque de bio nuevo; empuja estados y botones hacia abajo esa misma medida.
-    private const float BioBlockHeight = 78f;
+    // Alto de la cabecera (retrato + nombre/clase/bio a su lado).
+    private const float HeaderHeight = 176f;
+    private const float HeaderTextInset = 180f;
 
-    // Alto de la grilla de 6 acciones (3 filas x 2 columnas) que empuja los botones inferiores.
-    private const float ActionsBlockHeight = 182f;
     private const float ActionBtnWidth = 168f;
     private const float ActionBtnHeight = 46f;
     private const float ActionBtnGap = 12f;
 
     private Image barHp, barMp, barMoral, barFatiga;
     private TMP_Text txtHp, txtMp, txtMoral, txtFatiga;
-    private Button usePotionButton;
-    private TMP_Text usePotionLabel;
-    private Button btnLock, btnParty, btnEquip, btnUnequip, btnSubclass, btnRepair;
+    private Button usePotionHpButton, usePotionMpButton;
+    private TMP_Text potionHpLabel, potionMpLabel;
+    private Button btnLock, btnEquip, btnSubclass;
 
     public bool IsOpen => panel != null && panel.activeSelf;
 
@@ -58,7 +58,6 @@ public class HeroQuickCardUI : MonoBehaviour
         if (roster == null) roster = UnityEngine.Object.FindFirstObjectByType<RosterUI>();
         if (crafting == null) crafting = UnityEngine.Object.FindFirstObjectByType<CraftingManager>();
         if (shop == null) shop = UnityEngine.Object.FindFirstObjectByType<ShopManager>();
-        if (party == null) party = UnityEngine.Object.FindFirstObjectByType<PartyManager>();
         if (equipModal == null) equipModal = UnityEngine.Object.FindFirstObjectByType<EquipmentSelectModalUI>();
 
         Build();
@@ -99,9 +98,14 @@ public class HeroQuickCardUI : MonoBehaviour
         if (roster != null) roster.Open();
     }
 
-    public void OnUsePotionPressed()
+    public void OnUseHpPotionPressed()
     {
         if (crafting != null && hero != null) crafting.TryUseHealingPotion(hero);
+    }
+
+    public void OnUseMpPotionPressed()
+    {
+        if (crafting != null && hero != null) crafting.TryUseManaPotion(hero);
     }
 
     private void Refresh()
@@ -110,17 +114,24 @@ public class HeroQuickCardUI : MonoBehaviour
         int nivel = progress != null ? progress.Level : 1;
         int tope = progress != null ? progress.MaxLevel : 0;
 
+        var rareza = HeroProgress.RarityColor(hero.StarRank);
+        var borde = portraitFrame.transform.Find("Border");
+        if (borde != null) borde.GetComponent<Image>().color = rareza;
+        UIBuild.HeroArt(portraitFrame.transform, hero.Data.bodySprite, portraitSize - 24f);
+
         var estrellas = new System.Text.StringBuilder();
         for (int i = 0; i < hero.StarRank; i++) estrellas.Append('★');
 
         titulo.text = $"{estrellas}  {hero.Data.heroName}   Nv. {nivel}/{tope}";
-        titulo.color = HeroProgress.RarityColor(hero.StarRank);
+        titulo.color = rareza;
 
-        string oficio = hero.Subclass != HeroSubclass.None ? hero.SubclassName : "sin subclase";
+        string oficio = hero.Subclass != HeroSubclass.None ? hero.SubclassName : LocalizationManager.Get("UI_NO_SUBCLASS");
         string puesto = hero.AssignedBuilding != null
             ? $"   ·   Trabaja en {hero.AssignedBuilding.BuildingName}"
             : string.Empty;
         subclase.text = $"{oficio}   ·   {HeroTraits.DisplayName(hero.Trait)}{puesto}";
+
+        bio.text = hero.Data.GetLocalizedBio();
 
         UIBuild.SetBar(barHp, hero.MaxHealth > 0 ? (float)hero.CurrentHealth / hero.MaxHealth : 0f);
         txtHp.text = string.Format(LocalizationManager.Get("UI_QUICKCARD_HP"), hero.CurrentHealth, hero.MaxHealth);
@@ -141,12 +152,15 @@ public class HeroQuickCardUI : MonoBehaviour
             Pieza(EquipmentSlot.Weapon), Pieza(EquipmentSlot.Shield),
             Pieza(EquipmentSlot.Armor), Pieza(EquipmentSlot.Accessory));
 
-        bio.text = hero.Data.GetLocalizedBio();
+        int pocionesHp = crafting != null ? crafting.HealingPotions : 0;
+        if (usePotionHpButton != null) usePotionHpButton.interactable = pocionesHp > 0 && hero.CurrentHealth < hero.MaxHealth;
+        if (potionHpLabel != null)
+            potionHpLabel.text = string.Format(LocalizationManager.Get("UI_USE_POTION"), pocionesHp);
 
-        int pociones = crafting != null ? crafting.HealingPotions : 0;
-        if (usePotionButton != null) usePotionButton.interactable = pociones > 0 && hero.CurrentHealth < hero.MaxHealth;
-        if (usePotionLabel != null)
-            usePotionLabel.text = string.Format(LocalizationManager.Get("UI_USE_POTION"), pociones);
+        int pocionesMp = crafting != null ? crafting.ManaPotions : 0;
+        if (usePotionMpButton != null) usePotionMpButton.interactable = pocionesMp > 0 && hero.CurrentMP < hero.MaxMP;
+        if (potionMpLabel != null)
+            potionMpLabel.text = string.Format(LocalizationManager.Get("UI_USE_MANA_POTION"), pocionesMp);
 
         string activos = hero.Status.Describe();
         string apatia = hero.IsApathetic ? LocalizationManager.Get("UI_APATHETIC") : string.Empty;
@@ -157,20 +171,12 @@ public class HeroQuickCardUI : MonoBehaviour
 
     private void RefreshActionButtons()
     {
-        bool inParty = party != null && party.IsInParty(hero);
-        bool wearsGear = hero.Weapon != null || hero.Shield != null
-                         || hero.Armor != null || hero.Accessory != null;
         bool puedeSubclase = hero.StarRank >= HeroSubclasses.MinStarRank;
-        bool roto = hero.FirstBrokenSlot() != null;
 
         SetActionButton(btnLock, LocalizationManager.Get(hero.IsLocked ? "UI_LOCK" : "UI_UNLOCK"),
             hero.IsLocked ? UITheme.DangerSoft : UITheme.Neutral, true);
-        SetActionButton(btnParty, LocalizationManager.Get(inParty ? "UI_IN_PARTY" : "UI_PARTY"),
-            inParty ? UITheme.Amber : UITheme.Neutral, party != null);
-        SetActionButton(btnEquip, LocalizationManager.Get("UI_EQUIP"), UITheme.Teal, shop != null);
-        SetActionButton(btnUnequip, LocalizationManager.Get("UI_UNEQUIP"), UITheme.Teal, wearsGear);
+        SetActionButton(btnEquip, LocalizationManager.Get("UI_EQUIP"), UITheme.Teal, shop != null || equipModal != null);
         SetActionButton(btnSubclass, LocalizationManager.Get("UI_SUBCLASS"), UITheme.AccentSoft, puedeSubclase);
-        SetActionButton(btnRepair, LocalizationManager.Get("UI_REPAIR"), UITheme.DangerSoft, roto && crafting != null);
     }
 
     private static void SetActionButton(Button button, string text, Color color, bool interactable)
@@ -198,14 +204,8 @@ public class HeroQuickCardUI : MonoBehaviour
         Refresh();
     }
 
-    private void OnPartyClicked()
-    {
-        if (hero == null || party == null) return;
-
-        party.Toggle(hero);
-        Refresh();
-    }
-
+    // El modal de equipamiento maneja equipar y desequipar la pieza seleccionada: ya no hace
+    // falta un botón "Unequip" aparte en la ficha.
     private void OnEquipClicked()
     {
         if (hero == null) return;
@@ -214,18 +214,6 @@ public class HeroQuickCardUI : MonoBehaviour
         if (shop == null) return;
 
         shop.EquipFromInventory(hero, shop.FirstEquippableFor(hero));
-        Refresh();
-    }
-
-    private void OnUnequipClicked()
-    {
-        if (hero == null || shop == null) return;
-
-        if (hero.Weapon != null) shop.UnequipToInventory(hero, EquipmentSlot.Weapon);
-        else if (hero.Shield != null) shop.UnequipToInventory(hero, EquipmentSlot.Shield);
-        else if (hero.Armor != null) shop.UnequipToInventory(hero, EquipmentSlot.Armor);
-        else if (hero.Accessory != null) shop.UnequipToInventory(hero, EquipmentSlot.Accessory);
-
         Refresh();
     }
 
@@ -239,91 +227,118 @@ public class HeroQuickCardUI : MonoBehaviour
         Refresh();
     }
 
-    private void OnRepairClicked()
-    {
-        if (hero == null) return;
-
-        if (crafting != null) crafting.TryRepair(hero);
-        Refresh();
-    }
-
     private string Pieza(EquipmentSlot slot)
     {
         var item = hero.GetEquipped(slot);
         if (item == null) return LocalizationManager.Get("UI_GEAR_EMPTY");
 
         return hero.IsBroken(slot)
-            ? string.Format(LocalizationManager.Get("UI_GEAR_PIECE_BROKEN"), item.equipName)
-            : string.Format(LocalizationManager.Get("UI_GEAR_PIECE"), item.equipName,
+            ? string.Format(LocalizationManager.Get("UI_GEAR_PIECE_BROKEN"), item.LocalizedName())
+            : string.Format(LocalizationManager.Get("UI_GEAR_PIECE"), item.LocalizedName(),
                 hero.DurabilityOf(slot), item.maxDurability);
     }
 
-    private void Build()
+private void Build()
     {
         if (canvas == null) return;
 
-        // El tamaño de referencia se queda corto para el bloque de bio y la grilla de acciones; se fuerza un mínimo.
-        var panelSize = new Vector2(size.x, Mathf.Max(size.y, 620f + BioBlockHeight + ActionsBlockHeight));
+        var panelSize = new Vector2(size.x, Mathf.Max(size.y, 740f));
         panel = UIBuild.Panel(canvas.transform, "HeroQuickCard", panelSize, new Color(0.11f, 0.11f, 0.17f, 0.98f));
 
-        titulo = UIBuild.TopLabel(panel.transform, "Title", UIBuild.TitleSize, 46f, -14f,
-            TextAlignmentOptions.Left);
-        subclase = UIBuild.TopLabel(panel.transform, "Subclass", UIBuild.NameSize, 32f, -62f,
-            TextAlignmentOptions.Left);
+        UIBuild.CloseButtonTopRight(panel.transform, Close);
 
-        barHp = UIBuild.Bar(panel.transform, "Bar_HP", new Vector2(size.x - 40f, 34f), new Vector2(0f, -108f),
+        // Cabecera: retrato grande a la izquierda, nombre/clase/estrellas/nivel y bio a su lado.
+        portraitFrame = new GameObject("Portrait", typeof(RectTransform), typeof(Image));
+        portraitFrame.transform.SetParent(panel.transform, false);
+        var prt = portraitFrame.GetComponent<RectTransform>();
+        prt.anchorMin = new Vector2(0f, 1f);
+        prt.anchorMax = new Vector2(0f, 1f);
+        prt.pivot = new Vector2(0f, 1f);
+        prt.sizeDelta = new Vector2(portraitSize, portraitSize);
+        prt.anchoredPosition = new Vector2(24f, -24f);
+        UITheme.Surface(portraitFrame, UITheme.Card, UITheme.Border, UITheme.RadiusCard);
+
+        titulo = HeaderLabel("Title", UIBuild.TitleSize, -20f, 34f);
+        subclase = HeaderLabel("Subclass", UIBuild.NameSize, -56f, 26f);
+        bio = HeaderLabel("Bio", UIBuild.BodySize, -86f, 82f);
+        bio.color = UITheme.TextSoft;
+
+        barHp = UIBuild.Bar(panel.transform, "Bar_HP", new Vector2(size.x - 40f, 34f), new Vector2(0f, -(HeaderHeight)),
             new Color(0.80f, 0.25f, 0.25f), out txtHp);
-        barMp = UIBuild.Bar(panel.transform, "Bar_MP", new Vector2(size.x - 40f, 34f), new Vector2(0f, -148f),
+        barMp = UIBuild.Bar(panel.transform, "Bar_MP", new Vector2(size.x - 40f, 34f), new Vector2(0f, -(HeaderHeight + 40f)),
             new Color(0.25f, 0.45f, 0.85f), out txtMp);
-        barMoral = UIBuild.Bar(panel.transform, "Bar_Morale", new Vector2(size.x - 40f, 34f), new Vector2(0f, -188f),
+        barMoral = UIBuild.Bar(panel.transform, "Bar_Morale", new Vector2(size.x - 40f, 34f), new Vector2(0f, -(HeaderHeight + 80f)),
             new Color(0.85f, 0.70f, 0.25f), out txtMoral);
-        barFatiga = UIBuild.Bar(panel.transform, "Bar_Fatigue", new Vector2(size.x - 40f, 34f), new Vector2(0f, -228f),
+        barFatiga = UIBuild.Bar(panel.transform, "Bar_Fatigue", new Vector2(size.x - 40f, 34f), new Vector2(0f, -(HeaderHeight + 120f)),
             new Color(0.55f, 0.45f, 0.35f), out txtFatiga);
 
-        equipo = UIBuild.TopLabel(panel.transform, "Gear", UIBuild.BodySize, 160f, -280f,
-            TextAlignmentOptions.TopLeft);
-        bio = UIBuild.TopLabel(panel.transform, "Bio", UIBuild.BodySize, BioBlockHeight - 8f, -448f,
-            TextAlignmentOptions.TopLeft);
-        bio.color = UITheme.TextSoft;
-        estados = UIBuild.TopLabel(panel.transform, "Status", UIBuild.BodySize, 40f, -448f - BioBlockHeight,
-            TextAlignmentOptions.Left);
+        float gearY = -(HeaderHeight + 168f);
+        equipo = UIBuild.TopLabel(panel.transform, "Gear", UIBuild.BodySize, 90f, gearY, TextAlignmentOptions.TopLeft);
 
-        // Grilla de 6 acciones (2 columnas x 3 filas) traída de HeroDetailModal.
-        float actionsTop = -520f - BioBlockHeight;
-        btnLock = BuildActionButton(panel.transform, "Btn_Lock", actionsTop, 0, OnLockClicked);
-        btnParty = BuildActionButton(panel.transform, "Btn_Party", actionsTop, 1, OnPartyClicked);
-        btnEquip = BuildActionButton(panel.transform, "Btn_Equip", actionsTop, 2, OnEquipClicked);
-        btnUnequip = BuildActionButton(panel.transform, "Btn_Unequip", actionsTop, 3, OnUnequipClicked);
-        btnSubclass = BuildActionButton(panel.transform, "Btn_Subclass", actionsTop, 4, OnSubclassClicked);
-        btnRepair = BuildActionButton(panel.transform, "Btn_Repair", actionsTop, 5, OnRepairClicked);
+        float statusY = gearY - 98f;
+        estados = UIBuild.TopLabel(panel.transform, "Status", UIBuild.BodySize, 34f, statusY, TextAlignmentOptions.Left);
 
-        float botonesY = actionsTop - ActionsBlockHeight;
-        usePotionButton = UIBuild.Button(panel.transform, "Btn_UsePotion",
+        // Grid 3x2, los 6 botones al mismo tamaño exacto: fila 1 Bloquear/Equipar/Subclase,
+        // fila 2 Poción HP/Poción MP/Ver en Roster.
+        float row1Y = statusY - 50f;
+        float row2Y = row1Y - ActionBtnHeight - ActionBtnGap;
+
+        btnLock = BuildActionButton(panel.transform, "Btn_Lock", row1Y, 0, OnLockClicked);
+        btnEquip = BuildActionButton(panel.transform, "Btn_Equip", row1Y, 1, OnEquipClicked);
+        btnSubclass = BuildActionButton(panel.transform, "Btn_Subclass", row1Y, 2, OnSubclassClicked);
+
+        float xHp = GridX(0);
+        float xMp = GridX(1);
+        float xRoster = GridX(2);
+
+        usePotionHpButton = UIBuild.Button(panel.transform, "Btn_UsePotionHp",
             string.Format(LocalizationManager.Get("UI_USE_POTION"), 0),
-            new Color(0.30f, 0.55f, 0.35f), new Vector2(220f, 62f), new Vector2(-240f, botonesY),
-            OnUsePotionPressed);
-        usePotionLabel = usePotionButton.GetComponentInChildren<TMP_Text>();
+            new Color(0.30f, 0.55f, 0.35f), new Vector2(ActionBtnWidth, ActionBtnHeight), new Vector2(xHp, row2Y),
+            OnUseHpPotionPressed);
+        potionHpLabel = usePotionHpButton.GetComponentInChildren<TMP_Text>();
+
+        usePotionMpButton = UIBuild.Button(panel.transform, "Btn_UsePotionMp",
+            string.Format(LocalizationManager.Get("UI_USE_MANA_POTION"), 0),
+            new Color(0.25f, 0.40f, 0.60f), new Vector2(ActionBtnWidth, ActionBtnHeight), new Vector2(xMp, row2Y),
+            OnUseMpPotionPressed);
+        potionMpLabel = usePotionMpButton.GetComponentInChildren<TMP_Text>();
 
         UIBuild.Button(panel.transform, "Btn_SeeRoster", LocalizationManager.Get("UI_SEE_ROSTER"),
-            new Color(0.35f, 0.30f, 0.60f), new Vector2(220f, 62f), new Vector2(0f, botonesY),
+            new Color(0.35f, 0.30f, 0.60f), new Vector2(ActionBtnWidth, ActionBtnHeight), new Vector2(xRoster, row2Y),
             OnSeeInRosterPressed);
-
-        UIBuild.Button(panel.transform, "Btn_CloseCard", LocalizationManager.Get("UI_CLOSE"),
-            new Color(0.32f, 0.28f, 0.36f), new Vector2(220f, 62f), new Vector2(240f, botonesY),
-            Close);
     }
 
-    // Un botón por acción; dos por fila, centrados bajo el bloque de estados.
+
+    // Posición X de una columna del grid 3x2 (0=izquierda, 1=centro, 2=derecha).
+    private static float GridX(int column) => (column - 1) * (ActionBtnWidth + ActionBtnGap);
+
+
+    // Etiqueta de cabecera, con el hueco del retrato descontado por la izquierda.
+    // Margen derecho de la cabecera: deja sitio al botón [X] (48px + 16px de margen) para que
+    // Título/Subclase no se metan debajo de él.
+    private const float HeaderRightMargin = 72f;
+
+    private TMP_Text HeaderLabel(string name, float fontSize, float y, float height)
+    {
+        var tmp = UIBuild.Label(panel.transform, name, fontSize, TextAlignmentOptions.TopLeft);
+        var rt = tmp.rectTransform;
+        rt.anchorMin = new Vector2(0f, 1f);
+        rt.anchorMax = new Vector2(1f, 1f);
+        rt.pivot = new Vector2(0f, 1f);
+        // offsetMin/offsetMax bastan para un rect estirado horizontalmente (anchorMin.x != anchorMax.x):
+        // NO tocar sizeDelta.x/anchoredPosition.x después, o se pisa el ancho ya calculado aquí.
+        rt.offsetMin = new Vector2(HeaderTextInset, y - height);
+        rt.offsetMax = new Vector2(-HeaderRightMargin, y);
+        return tmp;
+    }
+
+    // Un botón por acción, en una única fila centrada.
     private Button BuildActionButton(Transform parent, string name, float topY, int slotIndex,
                                      UnityEngine.Events.UnityAction onClick)
     {
-        int columna = slotIndex % 2;
-        int fila = slotIndex / 2;
-
-        float x = (columna - 0.5f) * (ActionBtnWidth + ActionBtnGap);
-        float y = topY - fila * (ActionBtnHeight + ActionBtnGap);
+        float x = (slotIndex - 1) * (ActionBtnWidth + ActionBtnGap);
 
         return UIBuild.Button(parent, name, string.Empty, UITheme.Neutral,
-            new Vector2(ActionBtnWidth, ActionBtnHeight), new Vector2(x, y), onClick);
+            new Vector2(ActionBtnWidth, ActionBtnHeight), new Vector2(x, topY), onClick);
     }
 }

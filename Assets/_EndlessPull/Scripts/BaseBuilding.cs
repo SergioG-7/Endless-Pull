@@ -124,6 +124,11 @@ public class BaseBuilding : MonoBehaviour
     private float harvestTimer;
     private EconomyManager economy;
 
+    // Candado por edificio: null si nunca estuvo bloqueado (requiredFloor == 0).
+    private GameObject lockOverlay;
+    private TMPro.TextMeshPro lockLabel;
+
+
     // Trabajadores fijos asignados a mano desde la ficha del edificio.
     private readonly List<HeroController> workers = new List<HeroController>();
 
@@ -203,18 +208,20 @@ public class BaseBuilding : MonoBehaviour
             return false;
         }
 
-        // Un puesto por héroe: el que está en la torre o de recolección no puede currar aquí.
-        if (HeroAssignment.IsBusyElsewhere(hero, HeroDuty.Building))
-        {
-            Debug.LogWarning($"[Edificio] {HeroAssignment.BusyWarning(hero)}", this);
-            return false;
-        }
+        // Fase 39: asignar a un edificio ya no comprueba escuadra/expedición (desacoplado a
+        // propósito, ver HeroAssignment.IsBusyElsewhere) — un héroe puede currar aquí y estar en
+        // una escuadra a la vez; se desasigna solo al desplegar esa escuadra de verdad.
+
 
         if (workers.Count >= Capacity)
         {
             Debug.LogWarning($"[Edificio] {buildingName} está al completo ({workers.Count}/{Capacity}).", this);
             return false;
         }
+
+        // Unicidad de trabajador (roadmap Fase 40 §3): asignarse aquí desasigna del edificio previo.
+        if (hero.AssignedBuilding != null && hero.AssignedBuilding != this)
+            hero.AssignedBuilding.ToggleWorker(hero);
 
         workers.Add(hero);
         hero.SetAssignedBuilding(this);
@@ -278,12 +285,62 @@ public class BaseBuilding : MonoBehaviour
         return true;
     }
 
-    private void RefreshUnlock()
+private void RefreshUnlock()
     {
-        // Se apaga el renderer y el rótulo, pero el componente sigue vivo para el guardado.
-        foreach (var sr in GetComponentsInChildren<SpriteRenderer>(true)) sr.enabled = IsUnlocked;
-        foreach (var t in GetComponentsInChildren<TMPro.TextMeshPro>(true)) t.enabled = IsUnlocked;
+        bool unlocked = IsUnlocked;
+
+        // Se apaga el sprite/rótulo reales; el candado (si existe) toma su sitio.
+        foreach (var sr in GetComponentsInChildren<SpriteRenderer>(true))
+            if (lockOverlay == null || sr.gameObject != lockOverlay) sr.enabled = unlocked;
+
+        foreach (var t in GetComponentsInChildren<TMPro.TextMeshPro>(true))
+            if (t != lockLabel) t.enabled = unlocked;
+
+        if (lockOverlay != null) lockOverlay.SetActive(!unlocked);
     }
+
+
+    // Candado con "Desbloquea en Piso N" centrado en el edificio; no revela nombre ni tipo.
+    private void BuildLockOverlay()
+    {
+        var baseSr = GetComponent<SpriteRenderer>();
+        if (baseSr == null) return;
+
+        var badgeGO = new GameObject("LockBadge");
+        badgeGO.transform.SetParent(transform, false);
+        var badgeSr = badgeGO.AddComponent<SpriteRenderer>();
+        badgeSr.sprite = baseSr.sprite;
+        badgeSr.sortingLayerID = baseSr.sortingLayerID;
+        badgeSr.sortingOrder = baseSr.sortingOrder + 1;
+        badgeSr.color = UITheme.GlassDeep;
+        lockOverlay = badgeGO;
+
+        var iconGO = new GameObject("LockIcon");
+        iconGO.transform.SetParent(badgeGO.transform, false);
+        iconGO.transform.localPosition = new Vector3(0f, 0.4f, 0f);
+        iconGO.transform.localScale = Vector3.one * 0.6f;
+        var iconSr = iconGO.AddComponent<SpriteRenderer>();
+        iconSr.sprite = baseSr.sprite;
+        iconSr.sortingLayerID = baseSr.sortingLayerID;
+        iconSr.sortingOrder = badgeSr.sortingOrder + 1;
+        iconSr.color = UITheme.TextSoft;
+
+        var labelGO = new GameObject("LockLabel");
+        labelGO.transform.SetParent(badgeGO.transform, false);
+        labelGO.transform.localPosition = new Vector3(0f, -0.3f, 0f);
+        lockLabel = labelGO.AddComponent<TMPro.TextMeshPro>();
+        lockLabel.text = string.Format(LocalizationManager.Get("UI_QUADRANT_LOCKED_TAP"), requiredFloor);
+        lockLabel.alignment = TMPro.TextAlignmentOptions.Center;
+        lockLabel.enableAutoSizing = true;
+        lockLabel.fontSizeMin = 2f;
+        lockLabel.fontSizeMax = 2.4f;
+        lockLabel.color = UITheme.Text;
+        lockLabel.sortingLayerID = baseSr.sortingLayerID;
+        lockLabel.sortingOrder = iconSr.sortingOrder + 1;
+        lockLabel.enableWordWrapping = true;
+        lockLabel.rectTransform.sizeDelta = new Vector2(3.2f, 1.2f);
+    }
+
 
     // Identificador estable para el guardado: el nombre del objeto en la escena.
     public string SaveId => name;
@@ -303,8 +360,9 @@ public class BaseBuilding : MonoBehaviour
         if (sr != null) sr.color = BuildingTypes.AccentColor(type);
     }
 
-    void Start()
+void Start()
     {
+        if (requiredFloor > 0) BuildLockOverlay();
         RefreshUnlock();
 
         if (type == BuildingType.Farm)

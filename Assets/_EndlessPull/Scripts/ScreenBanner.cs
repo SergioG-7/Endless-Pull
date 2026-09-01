@@ -12,7 +12,11 @@ public class ScreenBanner : MonoBehaviour
 
     private static ScreenBanner instance;
     private TMP_Text label;
+    private TMP_Text compactLabel;
+
     private float timer;
+    private float compactTimer;
+
 
     void Awake()
     {
@@ -27,12 +31,19 @@ public class ScreenBanner : MonoBehaviour
     }
 
     // Corre con unscaledDeltaTime: el aviso tiene que verse aunque el juego esté en pausa.
-    void Update()
+void Update()
     {
-        if (timer <= 0f) return;
+        if (timer > 0f)
+        {
+            timer -= Time.unscaledDeltaTime;
+            if (timer <= 0f && label != null) label.gameObject.SetActive(false);
+        }
 
-        timer -= Time.unscaledDeltaTime;
-        if (timer <= 0f && label != null) label.gameObject.SetActive(false);
+        if (compactTimer > 0f)
+        {
+            compactTimer -= Time.unscaledDeltaTime;
+            if (compactTimer <= 0f && compactLabel != null) compactLabel.gameObject.SetActive(false);
+        }
     }
 
     public static void Show(string text, float seconds, Color color)
@@ -40,7 +51,16 @@ public class ScreenBanner : MonoBehaviour
         if (instance != null) instance.Display(text, seconds, color);
     }
 
-    private void Build()
+
+    // Aviso compacto arriba de pantalla, para mensajes largos que no caben en el rótulo
+    // dramático de combate (fuente enorme, pensada solo para "3", "¡Lucha!", etc.).
+    public static void ShowCompact(string text, float seconds, Color color)
+    {
+        if (instance != null) instance.DisplayCompact(text, seconds, color);
+    }
+
+
+private void Build()
     {
         if (canvas == null) return;
 
@@ -59,6 +79,24 @@ public class ScreenBanner : MonoBehaviour
         label.raycastTarget = false;
         label.fontStyle = FontStyles.Bold;
         go.SetActive(false);
+
+        // Banner compacto arriba de pantalla: fuente pequeña, para mensajes largos tipo toast.
+        var goCompact = new GameObject("ScreenBanner_CompactLabel", typeof(RectTransform), typeof(TextMeshProUGUI));
+        goCompact.transform.SetParent(canvas.transform, false);
+
+        var rtCompact = goCompact.GetComponent<RectTransform>();
+        rtCompact.anchorMin = new Vector2(0.5f, 1f);
+        rtCompact.anchorMax = new Vector2(0.5f, 1f);
+        rtCompact.pivot = new Vector2(0.5f, 1f);
+        rtCompact.sizeDelta = new Vector2(720f, 40f);
+        rtCompact.anchoredPosition = new Vector2(0f, -160f);
+
+        compactLabel = goCompact.GetComponent<TextMeshProUGUI>();
+        compactLabel.fontSize = fontSize * 0.28f;
+        compactLabel.alignment = TextAlignmentOptions.Center;
+        compactLabel.raycastTarget = false;
+        compactLabel.fontStyle = FontStyles.Bold;
+        goCompact.SetActive(false);
     }
 
     private void Display(string text, float seconds, Color color)
@@ -71,4 +109,17 @@ public class ScreenBanner : MonoBehaviour
         label.gameObject.SetActive(true);
         timer = Mathf.Max(0.1f, seconds);
     }
+
+
+    private void DisplayCompact(string text, float seconds, Color color)
+    {
+        if (compactLabel == null) return;
+
+        compactLabel.text = text;
+        compactLabel.color = color;
+        compactLabel.transform.SetAsLastSibling();
+        compactLabel.gameObject.SetActive(true);
+        compactTimer = Mathf.Max(0.1f, seconds);
+    }
+
 }

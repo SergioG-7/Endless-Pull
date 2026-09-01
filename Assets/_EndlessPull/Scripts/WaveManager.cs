@@ -133,6 +133,17 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Origen de la arena; la base queda lejos para que no se mezclen las dos zonas.")]
     [SerializeField] private Vector2 arenaCenter = new Vector2(40f, 0f);
 
+    [Tooltip("Desplazamiento de la formación de héroes respecto al origen de la arena; los deja en el extremo izquierdo, lejos de los enemigos, para que las unidades a distancia tengan hueco real de tiro.")]
+    [SerializeField] private Vector2 heroSpawnOffset = new Vector2(-9.5f, 0f);
+
+    [Tooltip("Medio ancho/alto del muro de la arena; cualquier proyectil que lo cruce se destruye para no escapar hacia la base.")]
+    [SerializeField] private Vector2 arenaWallHalfExtents = new Vector2(15f, 7f);
+
+    public static Vector2 ArenaWallMin { get; private set; }
+    public static Vector2 ArenaWallMax { get; private set; }
+
+
+
     [Tooltip("Piso en el que está la expedición ahora mismo.")]
     [SerializeField] private int currentFloor = 1;
 
@@ -197,7 +208,7 @@ public class WaveManager : MonoBehaviour
     public float AttackMultiplierForFloor(int floor) => 1f + hardAttackGrowth * HardFloorsFor(floor);
 
     // Punto medio entre la línea de la escuadra y la de los enemigos; ahí encuadra la cámara.
-    public Vector2 ArenaFocus => arenaCenter + new Vector2(spawnAreaCenter.x * 0.5f, spawnAreaCenter.y);
+public Vector2 ArenaFocus => arenaCenter + new Vector2((heroSpawnOffset.x + spawnAreaCenter.x) * 0.5f, spawnAreaCenter.y);
 
     public int AliveEnemies
     {
@@ -272,11 +283,34 @@ public class WaveManager : MonoBehaviour
         return true;
     }
 
-    void Awake()
+void Awake()
     {
         if (economy == null) economy = UnityEngine.Object.FindFirstObjectByType<EconomyManager>();
         if (party == null) party = UnityEngine.Object.FindFirstObjectByType<PartyManager>();
         if (crafting == null) crafting = UnityEngine.Object.FindFirstObjectByType<CraftingManager>();
+
+        ArenaWallMin = arenaCenter - arenaWallHalfExtents;
+        ArenaWallMax = arenaCenter + arenaWallHalfExtents;
+
+        DrawArenaFence();
+    }
+
+    // Valla perimetral visible: marco de piedra/madera oscura integrado con el bioma, no una
+    // línea de depuración. Marca en el suelo dónde el clamp físico detiene a las unidades.
+    private void DrawArenaFence()
+    {
+        var fenceGO = new GameObject("ArenaFence");
+        var line = fenceGO.AddComponent<LineRenderer>();
+        line.loop = true;
+        line.positionCount = 4;
+        line.useWorldSpace = true;
+        line.widthMultiplier = 0.25f;
+        line.material = new Material(Shader.Find("Sprites/Default"));
+        line.startColor = line.endColor = new Color(0.12f, 0.16f, 0.21f, 0.75f);
+        line.SetPosition(0, new Vector3(ArenaWallMin.x, ArenaWallMin.y, 0f));
+        line.SetPosition(1, new Vector3(ArenaWallMax.x, ArenaWallMin.y, 0f));
+        line.SetPosition(2, new Vector3(ArenaWallMax.x, ArenaWallMax.y, 0f));
+        line.SetPosition(3, new Vector3(ArenaWallMin.x, ArenaWallMax.y, 0f));
     }
 
     public void StartFloorExpedition()
@@ -417,14 +451,18 @@ public class WaveManager : MonoBehaviour
             if (enemy != null) enemy.SetFrozen(false);
 
         foreach (var hero in deployed)
-            if (hero != null) hero.SetFrozen(false);
+            if (hero != null)
+            {
+                hero.SetFrozen(false);
+                hero.AcquireNearestTargetNow();
+            }
 
         ScreenBanner.Show(LocalizationManager.Get("UI_ENGAGE"), 1f, new Color(1f, 0.45f, 0.30f));
         Debug.Log("[Expedición] Fin de la preparación: la oleada se mueve.", this);
     }
 
     // Solo la escuadra viaja a la torre; el resto se queda en la base.
-    private void DeployParty()
+private void DeployParty()
     {
         deployed.Clear();
 
@@ -433,9 +471,13 @@ public class WaveManager : MonoBehaviour
         {
             if (hero == null) continue;
 
+            // Desacoplado de Fase 39: si estaba currando en un edificio, se desasigna solo al
+            // desplegar de verdad, sin bloquear antes al meterlo en la escuadra de Torre.
+            if (hero.AssignedBuilding != null) hero.AssignedBuilding.ToggleWorker(hero);
+
             // Sale por el Portal de la Torre y camina hasta su puesto en formación; cada puesto
             // tiene su sitio: apilados, el golpe circular del jefe se los lleva a todos.
-            hero.DeployViaGateway(arenaCenter + party.FormationSlot(slot));
+            hero.DeployViaGateway(arenaCenter + heroSpawnOffset + party.FormationSlot(slot));
             deployed.Add(hero);
             slot++;
         }

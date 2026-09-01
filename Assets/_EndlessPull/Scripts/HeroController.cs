@@ -52,15 +52,17 @@ public class HeroController : MonoBehaviour, IHealthOwner
     [Tooltip("Alcance de ataque de arcos y báculos, que pegan sin acercarse.")]
     [SerializeField] private float rangedAttackRange = 4.5f;
 
-    [Tooltip("Fracción del alcance de rango por debajo de la cual se aleja para no dejarse alcanzar.")]
-    [Range(0.1f, 0.9f)]
-    [SerializeField] private float rangedSafeDistanceRatio = 0.55f;
+    [Tooltip("Distancia de alcance cuerpo a cuerpo bajo la que un héroe a distancia se reposiciona.")]
+    [SerializeField] private float meleeThreatRange = 2.5f;
 
     [Tooltip("Distancia del micro-paso de retirada tras encajar daño o esquivar (los tanques no lo dan).")]
     [SerializeField] private float microStepDistance = 0.4f;
 
     [Tooltip("Segundos que tarda el paseo entre el Portal de la Torre y el puesto final, al salir o volver.")]
     [SerializeField] private float gatewayTravelSeconds = 0.4f;
+
+    [Tooltip("Segundos que la escuadra se queda quieta reunida en el Portal antes de partir o de volver al Idle.")]
+    [SerializeField] private float gatewayHoldSeconds = 1.2f;
 
     [Tooltip("Segundos de inactividad tras los que un héroe menor cae en apatía.")]
     [SerializeField] private float apathyAfterSeconds = 90f;
@@ -88,7 +90,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
     [SerializeField] private float buildingVisitChance = 0.6f;
 
     [Tooltip("Radio en el que el héroe detecta enemigos y entra en combate.")]
-    [SerializeField] private float detectionRange = 6f;
+    [SerializeField] private float detectionRange = 45f;
 
     [Tooltip("Distancia a la que deja de acercarse y empieza a golpear.")]
     [SerializeField] private float attackRange = 1.2f;
@@ -301,6 +303,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
     private float buildingTickTimer;
 
     public HeroData Data => data;
+    public bool IsDeployed => deployed;
     public HeroState State => state;
     public HeroTrait Trait => trait;
     public BaseBuilding CurrentBuilding => currentBuilding;
@@ -337,7 +340,6 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
     public float AttackReach => EffectiveAttackRange;
     public float DetectionReach => EffectiveDetectionRange;
-    public bool IsDeployed => deployed;
     public bool IsInDefensiveStance => defensiveTimer > 0f;
 
     public int StarRank => data != null ? Mathf.Min(5, data.starRank + bonusStarRank) : 0;
@@ -572,8 +574,8 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
     // El estado normal no se nombra: en la UI solo interesan los extremos.
     public string MoodName
-        => Mood == MoraleState.Inspired ? "Inspirado"
-         : Mood == MoraleState.Demoralized ? "Desmoralizado"
+        => Mood == MoraleState.Inspired ? LocalizationManager.Get("UI_MOOD_INSPIRED")
+         : Mood == MoraleState.Demoralized ? LocalizationManager.Get("UI_MOOD_DEMORALIZED")
          : string.Empty;
 
     // Agotamiento y desmoralización pesan a la vez sobre llegar y golpear.
@@ -659,7 +661,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
     // La llama el WaveManager al mandar o retirar la escuadra de la torre.
     // viaGateway: aterriza en el Portal de Torre en vez de dispersarse directo por la base
     // (el WaveManager lo limita a un puñado de la escuadra para no amontonar la plaza).
-    public void SetDeployed(bool value, bool viaGateway = false)
+public void SetDeployed(bool value, bool viaGateway = false)
     {
         deployed = value;
 
@@ -669,15 +671,19 @@ public class HeroController : MonoBehaviour, IHealthOwner
             target = null;
             defensiveTimer = 0f;
             globalState = HeroGlobalState.HeadingToPortal;
+
             if (viaGateway) EnterViaGatewayAnimated();
-            else TeleportToBaseArea();
-            EnterBaseWander();
+            else
+            {
+                TeleportToBaseArea();
+                EnterBaseWander();
+            }
         }
     }
 
     // La llama el WaveManager al desplegar: sale por el Portal de la Torre y camina hasta su
     // puesto en formación, en vez de aparecer ya puesto en la arena de golpe.
-    public void DeployViaGateway(Vector2 destination)
+public void DeployViaGateway(Vector2 destination)
     {
         deployed = true;
         forcedTarget = null;
@@ -686,7 +692,16 @@ public class HeroController : MonoBehaviour, IHealthOwner
         globalState = HeroGlobalState.HeadingToPortal;
         combatState = CombatState.IdleSearching;
         TeleportToGateway();
-        StartCoroutine(TravelRoutine(destination, gatewayTravelSeconds));
+        StartCoroutine(DeployRoutine(destination));
+    }
+
+    // Se queda quieto reunido en el Portal un instante antes de partir hacia su puesto en la
+    // arena, en vez de saltar directo (lo pide la secuencia de despliegue visible).
+    private IEnumerator DeployRoutine(Vector2 destination)
+    {
+        traveling = true;
+        yield return new WaitForSeconds(gatewayHoldSeconds);
+        yield return TravelRoutine(destination, gatewayTravelSeconds);
     }
 
     // La arena está a decenas de unidades: volver andando serían medio minuto de paseo.
@@ -706,11 +721,51 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
     // Aparece justo en el centro del Portal y se aparta caminando hasta el punto de dispersión:
     // se ve el paso de "salir por el Portal" en vez de aparecer ya disperso de golpe.
+// Aparece justo en el centro del Portal, se queda un instante reunido y luego camina hasta
+    // el punto de dispersión: se ve el paso de "volver por el Portal" antes de caer en Idle.
     private void EnterViaGatewayAnimated()
     {
         transform.position = TowerGateway.Position;
         Vector2 scatterPoint = TowerGateway.Position + UnityEngine.Random.insideUnitCircle * 0.6f;
-        StartCoroutine(TravelRoutine(scatterPoint, gatewayTravelSeconds));
+        StartCoroutine(ReturnRoutine(scatterPoint));
+    }
+
+// Sale por el Portal caminando (visible) y luego se retira del mapa: se va de expedición de
+    // recursos. Nada de desaparecer de golpe desde donde estuviera vagando.
+    public void SendOnExpedition()
+    {
+        StartCoroutine(ExpeditionDepartRoutine());
+    }
+
+    private IEnumerator ExpeditionDepartRoutine()
+    {
+        traveling = true;
+        globalState = HeroGlobalState.HeadingToPortal;
+        BaseBuilding.ReleaseSlotEverywhere(this);
+        currentBuilding = null;
+
+        Vector2 gatewayPoint = TowerGateway.Position + UnityEngine.Random.insideUnitCircle * 0.5f;
+        yield return TravelRoutine(gatewayPoint, gatewayTravelSeconds);
+        yield return new WaitForSeconds(gatewayHoldSeconds);
+
+        traveling = false;
+        gameObject.SetActive(false);
+    }
+
+    // Vuelve de la expedición: reaparece en el Portal, se queda un instante y camina a su Idle.
+    public void ReturnFromExpedition()
+    {
+        gameObject.SetActive(true);
+        EnterViaGatewayAnimated();
+    }
+
+
+    private IEnumerator ReturnRoutine(Vector2 scatterPoint)
+    {
+        traveling = true;
+        yield return new WaitForSeconds(gatewayHoldSeconds);
+        yield return TravelRoutine(scatterPoint, gatewayTravelSeconds);
+        EnterBaseWander();
     }
 
     // Paseo lineal corto e independiente de la FSM (usa "traveling", no "frozen"): así no se pisa
@@ -970,6 +1025,15 @@ public class HeroController : MonoBehaviour, IHealthOwner
             case HeroState.CombatApproach: TickCombatApproach(); break;
             case HeroState.CombatAttack: TickCombatAttack(); break;
         }
+
+        // Muro físico: en la arena ninguna unidad puede salir de sus límites.
+        if (deployed)
+        {
+            Vector3 pos = transform.position;
+            pos.x = Mathf.Clamp(pos.x, WaveManager.ArenaWallMin.x, WaveManager.ArenaWallMax.x);
+            pos.y = Mathf.Clamp(pos.y, WaveManager.ArenaWallMin.y, WaveManager.ArenaWallMax.y);
+            transform.position = pos;
+        }
     }
 
     // En combate el maná entra a la mitad de ritmo: no se pueden encadenar habilidades.
@@ -1047,6 +1111,23 @@ public class HeroController : MonoBehaviour, IHealthOwner
         globalState = HeroGlobalState.InCombat;
         combatState = CombatState.MovingToTarget;
         state = HeroState.CombatApproach;
+    }
+
+    // La llama el WaveManager al soltar la oleada: engancha objetivo en el mismo frame en que
+    // arranca el combate, sin esperar al primer tick de scanInterval.
+    public void AcquireNearestTargetNow()
+    {
+        if (!deployed || frozen) return;
+
+        EnemyController nearest = FindNearestEnemy();
+        if (nearest == null) return;
+
+        currentBuilding = null;
+        target = nearest;
+        globalState = HeroGlobalState.InCombat;
+        combatState = CombatState.MovingToTarget;
+        state = HeroState.CombatApproach;
+        scanTimer = scanInterval;
     }
 
     private EnemyController FindNearestEnemy()
@@ -1143,10 +1224,10 @@ public class HeroController : MonoBehaviour, IHealthOwner
     {
         if (target == null)
         {
-            // IdleSearching: el objetivo murió o salió de rango; se queda de guardia en su sitio
-            // de la arena. PROHIBIDO calcular ruta a la base — ScanForEnemies reengancha cuando
-            // encuentre un objetivo nuevo, sin moverse mientras tanto.
+            // IdleSearching: sin objetivo visible, avanza hacia el lado enemigo (+X). PROHIBIDO
+            // calcular ruta a la base — ScanForEnemies reengancha en cuanto detecte uno nuevo.
             combatState = CombatState.IdleSearching;
+            MoveTowards(transform.position + Vector3.right * detectionRange);
             return;
         }
 
@@ -1193,11 +1274,9 @@ public class HeroController : MonoBehaviour, IHealthOwner
             return;
         }
 
-        // El rango no se deja alcanzar: si el objetivo entra demasiado cerca, se reposiciona
-        // mientras sigue disparando, en vez de plantarse a pegar cuerpo a cuerpo. La distancia de
-        // seguridad del héroe estira o encoge ese colchón sobre la ratio base del arma.
-        float kiteRatio = rangedSafeDistanceRatio * Mathf.Lerp(0.6f, 1.4f, SafeDistance);
-        if (IsRanged && distancia < EffectiveAttackRange * kiteRatio)
+        // El rango no se deja alcanzar cuerpo a cuerpo: solo se reposiciona si el objetivo entra
+        // dentro del alcance de melee. Fuera de eso se queda plantado disparando.
+        if (IsRanged && distancia < meleeThreatRange)
         {
             combatState = CombatState.Kiting;
             MoveAwayFrom(target.transform.position);
@@ -1673,6 +1752,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
         HealthChanged?.Invoke(currentHealth, MaxHealth);
 
         DamageTextManager.ShowDamage(transform.position, finalDamage);
+        AudioManager.PlayAt(SfxId.HeroHurt, transform.position);
         TriggerMicroStep();
 
         // Golpe fuerte o ráfaga (p.ej. el Pisotón del jefe): flash blanco breve.

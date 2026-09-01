@@ -13,9 +13,12 @@ MonoBehaviour:
   m_Name: Equip_WoodenSword
   m_EditorClassIdentifier: Assembly-CSharp::EquipmentData
   equipName: Espada de Madera
+  nameKey: EQUIP_WOODEN_SWORD
   slotType: 0
   weaponType: 1
   bonusATK: 3
   bonusDEF: 0
   bonusHP: 0
   maxDurability: 10
+  passiveTrait: 0
+  passiveValue: 0

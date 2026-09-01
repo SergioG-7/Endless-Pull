@@ -18,8 +18,8 @@ public class BossHealthBarUI : MonoBehaviour
     [Tooltip("Tamaño de la barra de vida en sí.")]
     [SerializeField] private Vector2 barSize = new Vector2(560f, 28f);
 
-    [Tooltip("Posición del panel, anclado arriba y centrado.")]
-    [SerializeField] private Vector2 panelPosition = new Vector2(0f, -16f);
+    [Tooltip("Posición del panel, anclado arriba y centrado. Por debajo del TopBar (que ocupa hasta y=-104) para no solaparse con los recursos ni el botón de menú.")]
+    [SerializeField] private Vector2 panelPosition = new Vector2(0f, -120f);
 
     private RectTransform root;
     private Image fill;

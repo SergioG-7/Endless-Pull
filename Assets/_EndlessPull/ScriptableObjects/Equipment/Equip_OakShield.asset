@@ -13,10 +13,12 @@ MonoBehaviour:
   m_Name: Equip_OakShield
   m_EditorClassIdentifier: Assembly-CSharp::EquipmentData
   equipName: Escudo de Roble
+  nameKey: EQUIP_OAK_SHIELD
   slotType: 3
   weaponType: 4
   bonusATK: 0
   bonusDEF: 6
   bonusHP: 0
+  maxDurability: 10
   passiveTrait: 2
-  passiveValue: 12.0
+  passiveValue: 12

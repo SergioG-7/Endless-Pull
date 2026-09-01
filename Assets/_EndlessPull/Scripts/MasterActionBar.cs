@@ -275,7 +275,7 @@ public class MasterActionBar : MonoBehaviour
         if (synergyTag.gameObject.activeSelf != activa) synergyTag.gameObject.SetActive(activa);
         if (!activa) return;
 
-        synergyTag.text = $"{LocalizationManager.Get("UI_SYNERGY")}: {waves.ActiveSynergyOrigin} " +
+        synergyTag.text = $"{LocalizationManager.Get("UI_SYNERGY")}: {LocalizationManager.GetOrigin(waves.ActiveSynergyOrigin)} " +
                           $"· +{waves.OriginSynergyBonus:P0} ATK/DEF";
     }
 

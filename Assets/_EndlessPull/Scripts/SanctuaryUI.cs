@@ -34,7 +34,7 @@ public class SanctuaryUI : MonoBehaviour
     [Tooltip("Segundos entre refrescos de la lista mientras el panel está abierto.")]
     [SerializeField] private float refreshInterval = 0.5f;
 
-    private const float ListWidth = 460f;
+    private const float ListWidth = 520f;
     private const float RowHeight = 60f;
     private const float RightX = ListWidth + 48f;
 
@@ -504,13 +504,10 @@ public class SanctuaryUI : MonoBehaviour
         titulo = UIBuild.TopLabel(panel.transform, "Title", UITheme.SizeTitle, 34f, -20f,
             TextAlignmentOptions.Left);
         titulo.text = LocalizationManager.Get("UI_SANCTUARY");
+        // Deja sitio al botón [X] (48px + 16px de margen).
+        titulo.rectTransform.offsetMax = new Vector2(-72f, titulo.rectTransform.offsetMax.y);
 
-        var closeBtn = UIBuild.Button(panel.transform, "Btn_CloseSanctuary", "×", Color.clear,
-            new Vector2(44f, 44f), new Vector2(-24f, -20f), Close);
-        var crt = closeBtn.GetComponent<RectTransform>();
-        crt.anchorMin = new Vector2(1f, 1f);
-        crt.anchorMax = new Vector2(1f, 1f);
-        crt.pivot = new Vector2(1f, 1f);
+        UIBuild.CloseButtonTopRight(panel.transform, Close);
 
         BuildTabs();
         BuildList();
@@ -582,7 +579,7 @@ public class SanctuaryUI : MonoBehaviour
         var layout = bodyGo.AddComponent<VerticalLayoutGroup>();
         // Más margen a los lados que arriba/abajo: el aro de la lista recortaba el borde
         // izquierdo del retrato de la fila cuando el hueco era el mismo en las 4 direcciones.
-        layout.padding = new RectOffset(10, 10, 6, 6);
+        layout.padding = new RectOffset(20, 10, 6, 6);
         layout.spacing = 6f;
         layout.childControlWidth = true;
         layout.childForceExpandWidth = true;

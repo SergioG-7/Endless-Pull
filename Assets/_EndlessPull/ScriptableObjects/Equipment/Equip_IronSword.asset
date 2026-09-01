@@ -13,10 +13,12 @@ MonoBehaviour:
   m_Name: Equip_IronSword
   m_EditorClassIdentifier: Assembly-CSharp::EquipmentData
   equipName: Espada de Hierro
+  nameKey: EQUIP_IRON_SWORD
   slotType: 0
   weaponType: 1
   bonusATK: 8
   bonusDEF: 0
   bonusHP: 0
+  maxDurability: 10
   passiveTrait: 3
-  passiveValue: 25.0
+  passiveValue: 25

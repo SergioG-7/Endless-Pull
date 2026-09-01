@@ -239,6 +239,12 @@ public class EnemyController : MonoBehaviour, IHealthOwner
             case EnemyState.Approach: TickApproach(); break;
             case EnemyState.Attack: TickAttack(); break;
         }
+
+        // Muro físico: en la arena ninguna unidad puede salir de sus límites.
+        Vector3 pos = transform.position;
+        pos.x = Mathf.Clamp(pos.x, WaveManager.ArenaWallMin.x, WaveManager.ArenaWallMax.x);
+        pos.y = Mathf.Clamp(pos.y, WaveManager.ArenaWallMin.y, WaveManager.ArenaWallMax.y);
+        transform.position = pos;
     }
 
     // Golpe circular: primero avisa, y solo después pega. Ese hueco es la ventana de reacción.

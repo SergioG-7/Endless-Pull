@@ -598,7 +598,7 @@ MonoBehaviour:
   arriveThreshold: 0.05
   restTimeRange: {x: 3, y: 6}
   buildingVisitChance: 0.6
-  detectionRange: 6
+  detectionRange: 45
   attackRange: 1.2
   attackCooldown: 1
   scanInterval: 0.25

@@ -169,6 +169,35 @@ public static class UIBuild
         return image;
     }
 
+    // Botón [X] estándar de cierre, anclado a la esquina superior derecha del modal que lo llama.
+    // Único punto de construcción: cualquier ficha/modal que lo use se ve y se comporta igual.
+    public static Button CloseButtonTopRight(Transform parent, UnityEngine.Events.UnityAction onClick)
+    {
+        var go = new GameObject("Btn_Close", typeof(RectTransform), typeof(Image), typeof(Button));
+        go.transform.SetParent(parent, false);
+
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(1f, 1f);
+        rt.anchorMax = new Vector2(1f, 1f);
+        rt.pivot = new Vector2(1f, 1f);
+        rt.sizeDelta = new Vector2(48f, 48f);
+        rt.anchoredPosition = new Vector2(-16f, -16f);
+
+        var image = UITheme.Surface(go, UITheme.Neutral, UITheme.BorderCard, UITheme.RadiusButton);
+
+        var label = Label(go.transform, "Label", UITheme.SizeTitle, TextAlignmentOptions.Center);
+        Stretch(label.rectTransform);
+        label.text = "×";
+        label.color = UITheme.Text;
+
+        var button = go.GetComponent<Button>();
+        button.targetGraphic = image;
+        button.onClick.AddListener(() => AudioManager.Play(SfxId.UiClick));
+        if (onClick != null) button.onClick.AddListener(onClick);
+        ButtonPressFeedback.Attach(go);
+        return button;
+    }
+
     public static void Stretch(RectTransform rt)
     {
         rt.anchorMin = Vector2.zero;

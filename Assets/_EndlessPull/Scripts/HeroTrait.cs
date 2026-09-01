@@ -27,10 +27,10 @@ public static class HeroTraits
     {
         switch (trait)
         {
-            case HeroTrait.Diligent: return "Trabajador";
-            case HeroTrait.Glutton: return "Glotón";
-            case HeroTrait.Slacker: return "Perezoso";
-            case HeroTrait.Fierce: return "Feroz";
+            case HeroTrait.Diligent: return LocalizationManager.Get("HERO_TRAIT_DILIGENT");
+            case HeroTrait.Glutton: return LocalizationManager.Get("HERO_TRAIT_GLUTTON");
+            case HeroTrait.Slacker: return LocalizationManager.Get("HERO_TRAIT_SLACKER");
+            case HeroTrait.Fierce: return LocalizationManager.Get("HERO_TRAIT_FIERCE");
         }
         return trait.ToString();
     }

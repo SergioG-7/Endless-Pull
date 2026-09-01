@@ -92,6 +92,7 @@ public class GameSaveData
     public int[] ascensionStoneCounts;
 
     public int healingPotions;
+    public int manaPotions;
 
     // Expedición de recursos en curso, si la había al guardar (WS3: cooldown real + reclamo manual).
     public int expeditionType;
@@ -157,6 +158,11 @@ public class SaveManager : MonoBehaviour
     // La pone en true/false quien muestre un menú previo a elegir partida (p.ej. MainMenuUI):
     // así SaveManager no necesita conocer ninguna clase de UI.
     public static bool SavingAllowed = true;
+
+    // Se dispara al terminar de reconstruir el roster de héroes guardado; economy.LoadState()
+    // (más arriba en Load()) ya lanza sus propios eventos antes de que existan los héroes, así
+    // que la UI que cuenta héroes (p.ej. MasterHUD) necesita esta señal aparte, no la de gemas.
+    public static event System.Action RosterLoaded;
 
     public string SavePath => Path.Combine(Application.persistentDataPath, fileName);
     public string TempSavePath => SavePath + ".tmp";
@@ -231,6 +237,7 @@ public class SaveManager : MonoBehaviour
 
         if (crafting != null) save.ascensionStoneCounts = (int[])crafting.StoneCounts.Clone();
         if (crafting != null) save.healingPotions = crafting.HealingPotions;
+        if (crafting != null) save.manaPotions = crafting.ManaPotions;
 
         if (expeditions != null)
         {
@@ -400,6 +407,7 @@ public class SaveManager : MonoBehaviour
         }
 
         if (crafting != null) crafting.LoadPotions(save.healingPotions);
+        if (crafting != null) crafting.LoadManaPotions(save.manaPotions);
 
         if (expeditions != null)
             expeditions.LoadState(save.expeditionType, save.expeditionRemaining,
@@ -552,6 +560,7 @@ public class SaveManager : MonoBehaviour
         }
 
         RestoreParty(save, spawned);
+        RosterLoaded?.Invoke();
     }
 
     // El puesto de trabajo se cotejaba por nombre de GameObject, igual que el nivel del edificio.

@@ -20,6 +20,10 @@ public class CameraDirector : MonoBehaviour
     [Tooltip("Segundos que tarda el viaje entre base y arena.")]
     [SerializeField] private float travelSeconds = 1.1f;
 
+    [Tooltip("Segundos que espera la cámara tras pulsar Empezar Torre antes de cortar a la arena, para que la escuadra llegue a pie al Portal.")]
+    [SerializeField] private float arenaEntryDelay = 1.5f;
+
+
     [Tooltip("Tamaño ortográfico en la vista de base; crece para que quepan el hub y los 3 cuadrantes.")]
     [SerializeField] private float baseOrthographicSize = 12f;
 
@@ -35,12 +39,12 @@ public class CameraDirector : MonoBehaviour
     [SerializeField] private float minZoom = 5f;
     [SerializeField] private float maxZoom = 26f;
 
-    // x3 respecto al valor original: la rueda apenas movía el zoom antes del ajuste de sensibilidad.
+    // x15 respecto al valor original: 3-4 giros de rueda deben cubrir todo el rango de zoom.
     [Tooltip("Sensibilidad de la rueda del ratón al hacer zoom en la vista de base.")]
-    [SerializeField] private float mouseZoomSpeed = 0.03f;
+    [SerializeField] private float mouseZoomSpeed = 7.5f;
 
     [Tooltip("Sensibilidad del pellizco táctil al hacer zoom en la vista de base.")]
-    [SerializeField] private float pinchZoomSpeed = 0.06f;
+    [SerializeField] private float pinchZoomSpeed = 0.1f;
 
     [Tooltip("Píxeles de arrastre antes de considerar el gesto un paneo y no un toque/clic corto.")]
     [SerializeField] private float dragScreenDeadzone = 8f;
@@ -48,6 +52,10 @@ public class CameraDirector : MonoBehaviour
     private Vector2 origin;
     private Vector2 destination;
     private float travelTimer;
+
+    // Negativo = sin cuenta atrás pendiente; cuenta en tiempo real, igual que TriggerShake.
+    private float pendingArenaDelay = -1f;
+
 
     private float sizeOrigin;
     private float sizeDestination;
@@ -131,9 +139,21 @@ public class CameraDirector : MonoBehaviour
         SnapTo(baseView, baseOrthographicSize);
     }
 
-    void Update()
+void Update()
     {
         HandleBaseViewControls();
+
+        if (pendingArenaDelay >= 0f)
+        {
+            pendingArenaDelay -= Time.unscaledDeltaTime;
+            if (pendingArenaDelay <= 0f)
+            {
+                pendingArenaDelay = -1f;
+                GoToArena();
+                ApplyBiomeTint();
+                if (arenaGround != null) arenaGround.gameObject.SetActive(true);
+            }
+        }
     }
 
     void LateUpdate()
@@ -168,18 +188,18 @@ public class CameraDirector : MonoBehaviour
     public void GoToArena() => TravelTo(ArenaPoint, arenaOrthographicSize);
     public void GoToBase() => TravelTo(baseView, baseOrthographicSize);
 
-    private void OnExpeditionChanged(ExpeditionState state, string message)
+private void OnExpeditionChanged(ExpeditionState state, string message)
     {
         inBaseView = state != ExpeditionState.InProgress;
 
         if (state == ExpeditionState.InProgress)
         {
-            GoToArena();
-            ApplyBiomeTint();
-            if (arenaGround != null) arenaGround.gameObject.SetActive(true);
+            // No cortar al instante: la escuadra aún está caminando desde sus zonas hasta el Portal.
+            pendingArenaDelay = arenaEntryDelay;
         }
         else
         {
+            pendingArenaDelay = -1f;
             GoToBase();
             if (target != null) target.backgroundColor = baseBackgroundColor;
             if (arenaGround != null) arenaGround.gameObject.SetActive(false);

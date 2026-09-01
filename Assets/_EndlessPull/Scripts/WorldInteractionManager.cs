@@ -38,7 +38,7 @@ public class WorldInteractionManager : MonoBehaviour
         if (towerCard == null) towerCard = UnityEngine.Object.FindFirstObjectByType<TowerPanelUI>();
     }
 
-    void Update()
+void Update()
     {
         if (!TryGetTouchPoint(out Vector2 punto)) return;
 
@@ -72,12 +72,23 @@ public class WorldInteractionManager : MonoBehaviour
             return;
         }
 
+        // Edificio bloqueado: mismo toast que un cuadrante bloqueado, sin abrir su ficha.
+        var lockedBuilding = LockedBuildingAt(punto);
+        if (lockedBuilding != null)
+        {
+            string textoEdificio = string.Format(LocalizationManager.Get("UI_QUADRANT_LOCKED_TAP"), lockedBuilding.RequiredFloor);
+            DamageTextManager.Show(punto, textoEdificio, UITheme.TextSoft);
+            AudioManager.Play(SfxId.Error);
+            return;
+        }
+
         // Zona bloqueada: feedback informativo, sin abrir ningún panel.
         var quadrant = QuadrantAt(punto);
         if (quadrant != null)
         {
             string texto = string.Format(LocalizationManager.Get("UI_QUADRANT_LOCKED_TAP"), quadrant.RequiredFloor);
             DamageTextManager.Show(punto, texto, UITheme.TextSoft);
+            AudioManager.Play(SfxId.Error);
         }
     }
 
@@ -133,6 +144,19 @@ public class WorldInteractionManager : MonoBehaviour
 
         return null;
     }
+
+
+    private BaseBuilding LockedBuildingAt(Vector2 point)
+    {
+        foreach (var building in BaseBuilding.All)
+        {
+            if (building == null || building.IsUnlocked) continue;
+            if (building.IsInside(point)) return building;
+        }
+
+        return null;
+    }
+
 
     private QuadrantController QuadrantAt(Vector2 point)
     {

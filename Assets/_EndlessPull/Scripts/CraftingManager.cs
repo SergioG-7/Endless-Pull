@@ -62,6 +62,12 @@ public class CraftingManager : MonoBehaviour
     [Tooltip("Madera que cuesta fabricar una poción de curación instantánea.")]
     [SerializeField] private int potionWoodCost = 10;
 
+    [Tooltip("Comida que cuesta fabricar una poción de maná instantánea.")]
+    [SerializeField] private int manaPotionFoodCost = 15;
+
+    [Tooltip("Madera que cuesta fabricar una poción de maná instantánea.")]
+    [SerializeField] private int manaPotionWoodCost = 15;
+
     [Tooltip("Madera que cuesta una mejora de equipo básico.")]
     [SerializeField] private int upgradeWoodCost = 50;
 
@@ -100,10 +106,12 @@ public class CraftingManager : MonoBehaviour
 
     private readonly int[] stoneCounts = new int[4];
     private int healingPotions;
+    private int manaPotions;
 
     public int StoneCount(AscensionStoneTier tier) => stoneCounts[(int)tier];
     public int[] StoneCounts => stoneCounts;
     public int HealingPotions => healingPotions;
+    public int ManaPotions => manaPotions;
     public float SuccessChance => successChance;
 
     // Los costes que se cobran de verdad ya llevan la rebaja de los artesanos.
@@ -112,6 +120,8 @@ public class CraftingManager : MonoBehaviour
     public int WeaponFoodCost => Discounted(weaponFoodCost);
     public int PotionWoodCost => Discounted(potionWoodCost);
     public int PotionFoodCost => Discounted(potionFoodCost);
+    public int ManaPotionWoodCost => Discounted(manaPotionWoodCost);
+    public int ManaPotionFoodCost => Discounted(manaPotionFoodCost);
     public int UpgradeWoodCost => ForgeDiscounted(upgradeWoodCost);
     public int UpgradeIronCost => ForgeDiscounted(upgradeIronCost);
     public int UpgradeFoodCost => ForgeDiscounted(upgradeFoodCost);
@@ -226,6 +236,9 @@ public class CraftingManager : MonoBehaviour
     // Se dispara con el número de pociones cada vez que cambia.
     public event System.Action<int> PotionsChanged;
 
+    // Se dispara con el número de pociones de maná cada vez que cambia.
+    public event System.Action<int> ManaPotionsChanged;
+
     void Awake()
     {
         if (economy == null) economy = UnityEngine.Object.FindFirstObjectByType<EconomyManager>();
@@ -316,7 +329,8 @@ public class CraftingManager : MonoBehaviour
 
         Debug.Log($"[Taller] Fabricada {pieza.ShortLabel()} por {madera} madera, " +
                   $"{hierro} hierro y {comida} comida.", this);
-        CraftResolved?.Invoke(true, pieza.equipName);
+        CraftResolved?.Invoke(true, pieza.LocalizedName());
+        AudioManager.Play(SfxId.CraftSuccess);
 
         SaveManager.RequestSave();
         return pieza;
@@ -357,6 +371,48 @@ public class CraftingManager : MonoBehaviour
 
         healingPotions--;
         PotionsChanged?.Invoke(healingPotions);
+        AudioManager.Play(SfxId.Potion);
+
+        SaveManager.RequestSave();
+        return true;
+    }
+
+    // La comida se cobra siempre que hay madera; fabricar una poción no falla.
+    public bool TryCraftManaPotion()
+    {
+        int madera = ManaPotionWoodCost;
+        int comida = ManaPotionFoodCost;
+
+        if (economy == null || !economy.CanAffordMaterials(madera, 0) || !economy.CanAffordFood(comida))
+        {
+            Debug.LogWarning($"[Taller] Poción de maná: hacen falta {madera} madera y {comida} comida.", this);
+            CraftResolved?.Invoke(false, LocalizationManager.Get("UI_NO_MATERIALS"));
+            return false;
+        }
+
+        economy.TrySpendMaterials(madera, 0);
+        economy.TrySpendFood(comida);
+
+        manaPotions++;
+        ManaPotionsChanged?.Invoke(manaPotions);
+
+        Debug.Log($"[Taller] Poción de maná fabricada. Tienes {manaPotions}.", this);
+        CraftResolved?.Invoke(true, LocalizationManager.Get("UI_MANA_POTION_CRAFTED"));
+
+        SaveManager.RequestSave();
+        return true;
+    }
+
+    // Restaura el MP al máximo del héroe y consume una poción del almacén.
+    public bool TryUseManaPotion(HeroController target)
+    {
+        if (target == null || manaPotions <= 0) return false;
+
+        target.RestoreMP(target.MaxMP);
+
+        manaPotions--;
+        ManaPotionsChanged?.Invoke(manaPotions);
+        AudioManager.Play(SfxId.Potion);
 
         SaveManager.RequestSave();
         return true;
@@ -399,6 +455,7 @@ public class CraftingManager : MonoBehaviour
         Debug.Log($"[Taller] Equipo mejorado para {heroes} héroe(s) (+{upgradeAttackBonus} ATQ, " +
                   $"+{upgradeDefenseBonus} DEF).", this);
         CraftResolved?.Invoke(true, LocalizationManager.Get("UI_ALL_GEAR_UPGRADED"));
+        AudioManager.Play(SfxId.CraftSuccess);
 
         SaveManager.RequestSave();
         return true;
@@ -434,7 +491,8 @@ public class CraftingManager : MonoBehaviour
         QuestManager.Report(QuestKind.RepairGear);
         Debug.Log($"[Taller] {pieza.equipName} de {hero.Data.heroName} reparada " +
                   $"({hero.DurabilityOf(slot.Value)}/{pieza.maxDurability}).", this);
-        CraftResolved?.Invoke(true, string.Format(LocalizationManager.Get("UI_PIECE_REPAIRED"), pieza.equipName));
+        CraftResolved?.Invoke(true, string.Format(LocalizationManager.Get("UI_PIECE_REPAIRED"), pieza.LocalizedName()));
+        AudioManager.Play(SfxId.CraftSuccess);
 
         SaveManager.RequestSave();
         return true;
@@ -540,5 +598,12 @@ public class CraftingManager : MonoBehaviour
     {
         healingPotions = Mathf.Max(0, saved);
         PotionsChanged?.Invoke(healingPotions);
+    }
+
+    // La usa el SaveManager al cargar; sin entrada guardada (partidas viejas) se queda en 0.
+    public void LoadManaPotions(int saved)
+    {
+        manaPotions = Mathf.Max(0, saved);
+        ManaPotionsChanged?.Invoke(manaPotions);
     }
 }

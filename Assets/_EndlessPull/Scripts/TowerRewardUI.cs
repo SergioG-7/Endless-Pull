@@ -59,6 +59,7 @@ public class TowerRewardUI : MonoBehaviour
         expLine.text = $"<color={UITheme.Tag(UITheme.Accent)}>★</color> {LocalizationManager.Get("UI_EXP_GAINED")}   <b>+{info.exp}</b>";
 
         backdrop.gameObject.SetActive(true);
+        AudioManager.Play(SfxId.Reward);
         StopAllCoroutines();
         StartCoroutine(PopChest());
     }

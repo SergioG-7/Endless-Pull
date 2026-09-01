@@ -72,12 +72,21 @@ public class Projectile : MonoBehaviour
         p.ignoresDefense = ignoresDefense;
     }
 
-    void Update()
+void Update()
     {
         lifetime -= Time.deltaTime;
 
         // Si el objetivo cae antes de llegar, el proyectil se apaga sin hacer nada.
         if (target == null || lifetime <= 0f)
+        {
+            gameObject.SetActive(false);
+            return;
+        }
+
+        // Muro de la arena: cualquier proyectil que lo cruce se destruye, no debe escapar hacia la base.
+        Vector2 aqui = transform.position;
+        if (aqui.x < WaveManager.ArenaWallMin.x || aqui.x > WaveManager.ArenaWallMax.x
+            || aqui.y < WaveManager.ArenaWallMin.y || aqui.y > WaveManager.ArenaWallMax.y)
         {
             gameObject.SetActive(false);
             return;

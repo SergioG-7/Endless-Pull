@@ -26,6 +26,11 @@ public class MasterHUD : MonoBehaviour
     [Tooltip("Botón de invocación, se deshabilita si no hay gemas.")]
     [SerializeField] private Button pullButton;
 
+    // Contador de héroes por estrellas; hueco vacío a la izquierda de la TopBar (construido por
+    // código, no viene de la escena como el resto de la barra).
+    private TMP_Text starCountLabel;
+
+
     void OnEnable()
     {
         if (economy != null)
@@ -39,6 +44,8 @@ public class MasterHUD : MonoBehaviour
             waves.ExpeditionChanged += OnExpeditionChanged;
             waves.FloorChanged += OnFloorChanged;
         }
+        HeroProgress.HeroAscended += OnHeroAscended;
+        SaveManager.RosterLoaded += RefreshStarCounts;
     }
 
     void OnDisable()
@@ -54,9 +61,13 @@ public class MasterHUD : MonoBehaviour
             waves.ExpeditionChanged -= OnExpeditionChanged;
             waves.FloorChanged -= OnFloorChanged;
         }
+        HeroProgress.HeroAscended -= OnHeroAscended;
+        SaveManager.RosterLoaded -= RefreshStarCounts;
     }
 
-    void Start()
+    private void OnHeroAscended(HeroController hero, int newStarRank) => RefreshStarCounts();
+
+void Start()
     {
         if (statusLabel != null) statusLabel.text = string.Empty;
 
@@ -65,10 +76,55 @@ public class MasterHUD : MonoBehaviour
         ConfigureNoClip(floorLabel);
         ConfigureNoClip(statusLabel);
 
+        BuildStarCountLabel();
+
         if (economy != null) RefreshResources();
 
         RefreshFloor();
+        RefreshStarCounts();
     }
+
+
+    // El hueco vacío a la izquierda de la TopBar (todo lo demás cuelga anclado a la derecha).
+    private void BuildStarCountLabel()
+    {
+        if (floorLabel == null) return;
+
+        var topBar = floorLabel.transform.parent;
+        if (topBar == null) return;
+
+        starCountLabel = UIBuild.Label(topBar, "Txt_StarCounts", UITheme.SizeCaption, TextAlignmentOptions.Left);
+        var rt = starCountLabel.rectTransform;
+        rt.anchorMin = new Vector2(0f, 0.5f);
+        rt.anchorMax = new Vector2(0f, 0.5f);
+        rt.pivot = new Vector2(0f, 0.5f);
+        rt.sizeDelta = new Vector2(320f, 34f);
+        rt.anchoredPosition = new Vector2(20f, 0f);
+
+        ConfigureNoClip((TextMeshProUGUI)starCountLabel);
+    }
+
+    // Total de héroes por rareza; se refresca con las gemas (toda tirada/ascenso gasta gemas)
+    // y con SaveManager.RosterLoaded/HeroProgress.HeroAscended para los casos sin gasto de gemas.
+    private void RefreshStarCounts()
+    {
+        if (starCountLabel == null) return;
+
+        var counts = new int[6];
+        foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None))
+            if (hero != null && hero.StarRank >= 1 && hero.StarRank <= 5) counts[hero.StarRank]++;
+
+        var sb = new System.Text.StringBuilder();
+        for (int estrellas = 1; estrellas <= 5; estrellas++)
+        {
+            if (counts[estrellas] == 0) continue;
+            if (sb.Length > 0) sb.Append("  ");
+            sb.Append($"<color={UITheme.Tag(HeroProgress.RarityColor(estrellas))}>{estrellas}★</color> <b>{counts[estrellas]}</b>");
+        }
+
+        starCountLabel.text = sb.ToString();
+    }
+
 
     // Encoge el texto en vez de cortarlo cuando la TopBar no tiene ancho suficiente.
     private static void ConfigureNoClip(TextMeshProUGUI label)
@@ -105,9 +161,10 @@ public class MasterHUD : MonoBehaviour
         => $"<size={UITheme.SizeCaption}><color={UITheme.Tag(dot)}>{icon}</color> " +
            $"<color={UITheme.Tag(UITheme.TextFaint)}>{caption}</color></size> <b>{value}</b>";
 
-    private void OnGemsChanged(int gems)
+private void OnGemsChanged(int gems)
     {
         RefreshResources();
+        RefreshStarCounts();
 
         // El botón de tirada se apaga solo cuando no llega el saldo.
         if (pullButton != null && gacha != null)
@@ -122,13 +179,17 @@ public class MasterHUD : MonoBehaviour
         RefreshFloor();
     }
 
-    private void RefreshFloor()
+private void RefreshFloor()
     {
         if (floorLabel == null || waves == null) return;
 
-        // Repetir un piso inferior no debe hacer bajar el HUD: siempre el mayor entre el piso
-        // actual y el techo ya superado (highestClearedFloor es inmutable a la baja).
-        int pisoMostrado = Mathf.Max(waves.CurrentFloor, waves.HighestClearedFloor);
+        // Piso mostrado: el que se está peleando ahora mismo, o si no hay combate en curso
+        // (recién ganado, aún sin empezar el siguiente, o piso inferior repetido) el techo ya
+        // superado — nunca el `currentFloor` que ya avanzó de fondo al ganar (Piso 7 tras ganar
+        // el 6, antes de siquiera pisarlo).
+        int pisoMostrado = waves.State == ExpeditionState.InProgress
+            ? waves.CurrentFloor
+            : Mathf.Max(1, waves.HighestClearedFloor);
         string piso = string.Format(LocalizationManager.Get("UI_QUADRANT_FLOOR_LABEL"), pisoMostrado);
         floorLabel.text = Chip(LocalizationManager.Get("UI_TOWER").ToUpperInvariant(), piso);
     }

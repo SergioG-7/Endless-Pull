@@ -256,7 +256,7 @@ public class MasterCommander : MonoBehaviour
 
         if (!hayHeridos)
         {
-            ScreenBanner.Show(LocalizationManager.Get("UI_ALL_HEALED"), 2f, UITheme.DecreeHeal);
+            ScreenBanner.ShowCompact(LocalizationManager.Get("UI_ALL_HEALED"), 2f, UITheme.DecreeHeal);
             AudioManager.Play(SfxId.UiClick);
             return;
         }

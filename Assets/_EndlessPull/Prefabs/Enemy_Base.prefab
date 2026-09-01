@@ -186,7 +186,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
   data: {fileID: 11400000, guid: 4c385b8c16dd6234d95548445e94fc5f, type: 2}
-  detectionRange: 5
+  detectionRange: 45
   attackRange: 1.1
   rangedThreshold: 3
   scanInterval: 0.25

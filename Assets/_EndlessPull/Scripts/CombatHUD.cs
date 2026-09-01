@@ -20,7 +20,7 @@ public class CombatHUD : MonoBehaviour
     [SerializeField] private float autoRetreatThreshold = 0.20f;
 
     [Tooltip("Tamaño del panel del acelerador.")]
-    [SerializeField] private Vector2 panelSize = new Vector2(260f, 64f);
+    [SerializeField] private Vector2 panelSize = new Vector2(380f, 64f);
 
     [Tooltip("Posición del panel, anclada arriba a la derecha.")]
     [SerializeField] private Vector2 panelPosition = new Vector2(-150f, -24f);
@@ -29,6 +29,7 @@ public class CombatHUD : MonoBehaviour
     private Button speedButton;
     private TMP_Text speedLabel;
     private Button autoRetreatButton;
+    private Button retreatButton;
 
     private bool fast;
     private bool autoRetreatArmed;
@@ -99,20 +100,30 @@ public class CombatHUD : MonoBehaviour
         root.sizeDelta = panelSize;
         root.anchoredPosition = panelPosition;
 
-        float buttonWidth = panelSize.x * 0.5f - 4f;
+        float buttonWidth = panelSize.x / 3f - 4f;
         var buttonSize = new Vector2(buttonWidth, panelSize.y);
 
         speedButton = UIBuild.Button(root, "SpeedButton", "x1", UITheme.Neutral, buttonSize,
-            new Vector2(-buttonSize.x * 0.5f - 2f, 0f), ToggleSpeed);
+            new Vector2(-buttonWidth - 4f, 0f), ToggleSpeed);
         speedLabel = speedButton.GetComponentInChildren<TMP_Text>();
 
         autoRetreatButton = UIBuild.Button(root, "AutoRetreatButton",
             LocalizationManager.Get("UI_AUTO_RETREAT"), UITheme.Neutral, buttonSize,
-            new Vector2(buttonSize.x * 0.5f + 2f, 0f), ToggleAutoRetreat);
+            Vector2.zero, ToggleAutoRetreat);
+
+        retreatButton = UIBuild.Button(root, "RetreatButton",
+            LocalizationManager.Get("UI_RETREAT_NOW"), UITheme.DangerSoft, buttonSize,
+            new Vector2(buttonWidth + 4f, 0f), ManualRetreat);
 
         root.gameObject.SetActive(false);
         RefreshSpeedLabel();
         RefreshAutoRetreatLook();
+    }
+
+    // Retirada inmediata a petición del jugador, sin esperar al umbral de la Auto-Retirada.
+    private void ManualRetreat()
+    {
+        if (waves != null) waves.RetreatExpedition();
     }
 
     // La TopBar (SideMenuUI) recalcula su alto/posición real en su propio Awake; aquí se lee

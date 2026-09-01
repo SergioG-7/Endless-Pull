@@ -301,7 +301,7 @@ public class SummonAltarUI : MonoBehaviour
                            $"<size={UITheme.SizeCaption}><color={UITheme.Tag(UITheme.TextSoft)}>" +
                            $"{carta.datos.title}</color></size>\n" +
                            $"<size={UITheme.SizeMicro}><color={UITheme.Tag(UITheme.TextFaint)}>" +
-                           $"{carta.datos.origin}</color></size>";
+                           $"{LocalizationManager.GetOrigin(carta.datos.origin)}</color></size>";
 
         RefreshTexts();
     }
