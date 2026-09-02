@@ -8,8 +8,6 @@
 
 **Endless Pull** es un RPG táctico gacha 2D y simulador de gestión de base inspirado en la estética y mecánicas de obras de fantasía oscura y manhwas tácticos (como *Pick Me Up*). Desarrollado en Unity (C#), el proyecto combina combate en tiempo real por escuadras, toma de decisiones estratégicas, economía persistente y experimentación con Inteligencia Artificial por Refuerzo (Unity ML-Agents).
 
-**Estado del proyecto:** Prototipo Jugable v0.1 — *Code Freeze* (Fase 47). Bucle completo jugable de punta a punta (Torre, Base, Gacha, Localización trilingüe y Audio) auditado y estable; sin directivo de desarrollo pendiente.
-
 ### 🎮 Jugar la Demo
 * Jugar en Itch.io (PC Windows / WebGL) - [https://sergiog-7.itch.io/endless-pull] (contraseña: level5)
 * Ver gameplay en YouTube - [https://youtu.be/placeholder-gameplay]
@@ -33,19 +31,11 @@
 * **Android:** APK.
 * **Itch.io:** WebGL y build de PC descargable.
 
-### ▶️ Build y Ejecución
-1. Requiere **Unity 6.5 (6000.5.8f1)** — instalable desde Unity Hub.
-2. Clona el repositorio y abre la carpeta raíz como proyecto desde Unity Hub (el propio Editor resuelve `Packages/manifest.json`).
-3. Abre la escena `Assets/_EndlessPull/Scenes/Base.unity` y pulsa Play para probar el bucle completo en el Editor.
-4. Para generar un build: `File > Build Settings`, elige la plataforma (PC/Android/WebGL) y `Build` — no requiere configuración adicional más allá del SDK de Android si se compila para APK.
-
 ---
 
 ## 🇬🇧 English
 
 **Endless Pull** is a 2D tactical gacha RPG and fortress management simulator inspired by dark fantasy tactical manhwas (such as *Pick Me Up*). Developed in Unity (C#), the project combines real-time role-based squad combat, strategic resource management, persistent economy, and Reinforcement Learning AI experimentation (Unity ML-Agents).
-
-**Project status:** Playable Prototype v0.1 — *Code Freeze* (Phase 47). Full end-to-end playable loop (Tower, Base, Gacha, trilingual localization, and audio) audited and stable; no pending development directive.
 
 ### 🎮 Play the Demo
 * Play on Itch.io (PC Windows / WebGL) - [https://sergiog-7.itch.io/endless-pull] (password: level5)
@@ -70,19 +60,11 @@
 * **Android:** APK.
 * **Itch.io:** WebGL and downloadable PC build.
 
-### ▶️ Build & Run
-1. Requires **Unity 6.5 (6000.5.8f1)** — installable via Unity Hub.
-2. Clone the repository and open the root folder as a project from Unity Hub (the Editor resolves `Packages/manifest.json` on its own).
-3. Open the scene `Assets/_EndlessPull/Scenes/Base.unity` and press Play to test the full loop in the Editor.
-4. To generate a build: `File > Build Settings`, pick the platform (PC/Android/WebGL) and `Build` — no extra setup needed beyond the Android SDK when building an APK.
-
 ---
 
 ## 🇯🇵 日本語
 
 **Endless Pull（エンドレス・プル）**は、ダークファンタジーや戦術系マンガ（『Pick Me Up』等）の世界観に着想を得た、2DタクティカルガチャRPGおよび拠点経営シミュレーションゲームです。Unity（C#）で開発され、リアルタイムの役割ベース部隊戦闘、戦略的なリソース管理、永続的な経済システム、そして強化学習AI（Unity ML-Agents）の実験的導入を統合しています。
-
-**プロジェクトの状態:** プレイ可能なプロトタイプ v0.1 ―― コードフリーズ（フェーズ47）。塔・拠点・ガチャ・3言語ローカライゼーション・音声を含む一連のゲームループを監査済み、安定稼働中。開発指示は現在保留なし。
 
 ### 🎮 デモをプレイする
 * Itch.ioでプレイ (PC Windows / WebGL) - [https://sergiog-7.itch.io/endless-pull] (パスワード：level5)
@@ -106,9 +88,3 @@
 * **スタンドアロンPC:** Windows（主要ビルド）。同じUnityパイプラインでMac/Linuxにも対応。
 * **Android:** APK。
 * **Itch.io:** WebGLおよびダウンロード可能なPCビルド。
-
-### ▶️ ビルドと実行方法
-1. **Unity 6.5 (6000.5.8f1)** が必要です（Unity Hubからインストール可能）。
-2. リポジトリをクローンし、Unity Hubからルートフォルダをプロジェクトとして開きます（`Packages/manifest.json`はエディタが自動解決します）。
-3. `Assets/_EndlessPull/Scenes/Base.unity` シーンを開き、Playを押すとエディタ上で完全なループを試せます。
-4. ビルドを生成するには `File > Build Settings` からプラットフォーム（PC/Android/WebGL）を選んで `Build` を実行します。APK出力時はAndroid SDK以外の追加設定は不要です。
