@@ -8,20 +8,36 @@
 
 **Endless Pull** es un RPG táctico gacha 2D y simulador de gestión de base inspirado en la estética y mecánicas de obras de fantasía oscura y manhwas tácticos (como *Pick Me Up*). Desarrollado en Unity (C#), el proyecto combina combate en tiempo real por escuadras, toma de decisiones estratégicas, economía persistente y experimentación con Inteligencia Artificial por Refuerzo (Unity ML-Agents).
 
+**Estado del proyecto:** Prototipo Jugable v0.1 — *Code Freeze* (Fase 47). Bucle completo jugable de punta a punta (Torre, Base, Gacha, Localización trilingüe y Audio) auditado y estable; sin directivo de desarrollo pendiente.
+
 ### 🎮 Jugar la Demo
 * Jugar en Itch.io (PC Windows / WebGL) - [https://sergiog-7.itch.io/endless-pull] (contraseña: level5)
 * Ver gameplay en YouTube - [https://youtu.be/placeholder-gameplay]
 * Ver combate y ML-Agents Gym en YouTube - [https://youtu.be/placeholder-gym]
 
+### 🧩 Características Principales
+* **Torre y Combate con IA Autónoma:** Bucle de escalada por pisos con combate en tiempo real por escuadras, gestión de amenaza (*aggro*) limitada en tanques, IA de curación prioritaria por porcentaje de salud, estados alterados y telegraphing de ataques de jefe.
+* **Gestión de Campamento:** Simulación autónoma de base con asignación de trabajadores a instalaciones — Granja, Cantina, Taller de Alquimia, Santuario de Ascensión, Sala de Guerra y más — con desgaste y forja de equipamiento, sinergias de escuadra y jerarquía social.
+* **Soporte Trilingüe Dinámico:** Español, English y 日本語 conmutables en caliente sin reiniciar ni reabrir paneles, con fuentes CJK dinámicas (*Fallback Font Assets*) para japonés sin caracteres rotos (*tofu*).
+* **Controles Unificados:** Input táctil/ratón en toda la interfaz (sin dependencias de teclado ni hover-only) y navegación modal en pila (Roster → Ficha de Héroe → Selector de Equipamiento) sin ciclos ni referencias rotas.
+* **Sistema de Audio Modular:** Tres canales independientes (Música, SFX de Combate, SFX de Interfaz) sincronizados entre el menú principal y el menú de pausa, persistentes vía `PlayerPrefs`.
+* **Arquitectura Data-Driven y Gimnasio ML-Agents:** 39 héroes únicos y 18 subclases especializadas a partir de 3★ sobre ScriptableObjects; arena desacoplada (`Gym_Combat`) con simulación acelerada (10×) y vector de 8 observaciones normalizadas para entrenamiento por refuerzo.
+
 ### 🛠️ Tecnologías y Herramientas
-* **Motor Core:** Unity (C#), uGUI, TextMeshPro
+* **Motor Core:** Unity 6.5 (6000.5.8f1) — C#, uGUI, TextMeshPro
 * **IA & Simulación:** Unity ML-Agents (Reinforcement Learning), Finite State Machines (FSM)
 * **Patrones:** Arquitectura Data-Driven (ScriptableObjects), State Machine (FSM), Observer / Event-Driven, Object Pooling, Persistencia JSON.
 
-### 🚀 Desafíos Técnicos Resueltos (Highlights)
-* **Arquitectura RPG Compleja, Simulación de Base y Diseño Data-Driven:** Sistema escalable de 39 héroes únicos y 18 subclases especializadas a partir de 3★ con habilidades activas diferenciadas, maestrías de armas y rasgos de personalidad. Simulación autónoma de base con asignación de trabajadores a instalaciones (Granja, Cantina, Taller, Campo de Entrenamiento), desgaste y forja de equipamiento, sinergias de escuadra y jerarquía social inspirada en manhwas tácticos.
-* **Combate Táctico en Tiempo Real, Aggro Dinámico y Gimnasio ML-Agents:** Sistema de combate por escuadras con gestión de amenaza (*aggro*) limitada en tanques (máximo 2 enemigos para permitir flanqueos a la retaguardia), IA de curanderos prioritaria por porcentaje de salud, estados alterados (veneno, aturdimiento, escudos) y avisos de peligro en suelo (*telegraphing* de jefes). Incluye una arena desacoplada (`Gym_Combat`) con simulación acelerada ($10\times$), vector de 8 observaciones normalizadas y funciones de recompensa para entrenamiento de agentes por refuerzo.
-* **Sistema de Localización CJK Dinámico y UI Ergonómica Multiplataforma:** Gestor de localización trilingüe (Español, Inglés y Japonés) integrado con fuentes CJK dinámicas mediante *Fallback Font Assets* en TextMeshPro para garantizar renderizado nítido sin caracteres rotos (*tofu*). Interfaz *Dark Glassmorphism* optimizada para dispositivos móviles (cajón lateral retráctil, TopBar con soporte de *Safe Area*, Roster modular en tarjetas e inspección interactiva del mundo mediante Raycast 2D).
+### 🖥️ Plataformas Objetivo
+* **Standalone PC:** Windows (build principal); Mac/Linux vía el mismo pipeline de Unity.
+* **Android:** APK.
+* **Itch.io:** WebGL y build de PC descargable.
+
+### ▶️ Build y Ejecución
+1. Requiere **Unity 6.5 (6000.5.8f1)** — instalable desde Unity Hub.
+2. Clona el repositorio y abre la carpeta raíz como proyecto desde Unity Hub (el propio Editor resuelve `Packages/manifest.json`).
+3. Abre la escena `Assets/_EndlessPull/Scenes/Base.unity` y pulsa Play para probar el bucle completo en el Editor.
+4. Para generar un build: `File > Build Settings`, elige la plataforma (PC/Android/WebGL) y `Build` — no requiere configuración adicional más allá del SDK de Android si se compila para APK.
 
 ---
 
@@ -29,20 +45,36 @@
 
 **Endless Pull** is a 2D tactical gacha RPG and fortress management simulator inspired by dark fantasy tactical manhwas (such as *Pick Me Up*). Developed in Unity (C#), the project combines real-time role-based squad combat, strategic resource management, persistent economy, and Reinforcement Learning AI experimentation (Unity ML-Agents).
 
+**Project status:** Playable Prototype v0.1 — *Code Freeze* (Phase 47). Full end-to-end playable loop (Tower, Base, Gacha, trilingual localization, and audio) audited and stable; no pending development directive.
+
 ### 🎮 Play the Demo
 * Play on Itch.io (PC Windows / WebGL) - [https://sergiog-7.itch.io/endless-pull] (password: level5)
 * Watch gameplay on YouTube - [https://youtu.be/placeholder-gameplay]
 * Watch combat & ML-Agents Gym on YouTube - [https://youtu.be/placeholder-gym]
 
+### 🧩 Key Features
+* **Tower Climb & Autonomous Combat AI:** Floor-by-floor climbing loop with real-time squad combat, capped tank threat (*aggro*) management, health-percentage priority healer AI, status effects, and boss attack telegraphing.
+* **Camp Management:** Autonomous base simulation with worker assignment across facilities — Farm, Canteen, Alchemy Workshop, Ascension Sanctuary, War Room and more — with equipment durability/crafting, squad synergies, and social hierarchy.
+* **Dynamic Trilingual Support:** Spanish, English, and 日本語, hot-swappable at runtime without reloading or reopening panels, with dynamic CJK fonts (*Fallback Font Assets*) for glyph-perfect Japanese.
+* **Unified Controls:** Touch/mouse input across the entire UI (no keyboard or hover-only dependencies) and stack-based modal navigation (Roster → Hero Card → Equipment Selector) with no cycles or broken references.
+* **Modular Audio System:** Three independent channels (Music, Combat SFX, UI SFX) synchronized between the main menu and the pause menu, persisted via `PlayerPrefs`.
+* **Data-Driven Architecture & ML-Agents Gym:** 39 unique heroes and 18 specialized subclasses from 3★ upward built on ScriptableObjects; a standalone training arena (`Gym_Combat`) running at 10× timescale with an 8-observation normalized vector for reinforcement learning.
+
 ### 🛠️ Technologies & Tools
-* **Core Engine:** Unity (C#), uGUI, TextMeshPro
+* **Core Engine:** Unity 6.5 (6000.5.8f1) — C#, uGUI, TextMeshPro
 * **AI & Simulation:** Unity ML-Agents (Reinforcement Learning), Finite State Machines (FSM)
 * **Patterns:** Data-Driven Architecture (ScriptableObjects), State Machine (FSM), Observer / Event-Driven, Object Pooling, JSON Persistence.
 
-### 🚀 Technical Highlights
-* **Complex RPG Architecture, Base Simulation & Data-Driven Design:** Scalable system featuring 39 unique heroes and 18 specialized subclasses from 3★ upwards with dedicated active skills, weapon masteries, and personality traits. Autonomous base simulation featuring facility worker assignments (Farm, Canteen, Workshop, Training Grounds), equipment durability and crafting, squad origin synergies, and a tactical manhwa-inspired social hierarchy.
-* **Real-Time Tactical Combat, Dynamic Aggro & ML-Agents Gym:** Squad combat system featuring limited tank threat management (capping at 2 enemies to allow tactical flanking to the backline), health-percentage priority support/healer AI, status effects (poison, stun, shields), and ground area telegraph warnings. Includes a standalone high-speed training arena (`Gym_Combat`, $10\times$ timescale) with an 8-observation normalized vector and shaped reward functions for Reinforcement Learning agents.
-* **Dynamic CJK Localization System & High-Performance Mobile UI:** Trilingual modular localization (Spanish, English, Japanese) integrated with dynamic CJK font assets using TextMeshPro Fallbacks to ensure crisp rendering with zero missing glyphs. Sleek *Dark Glassmorphism* interface tailored for mobile devices (collapsible drawer navigation, safe-area resource top bar, modular card roster, and seamless 2D raycast world inspection).
+### 🖥️ Target Platforms
+* **Standalone PC:** Windows (primary build); Mac/Linux via the same Unity pipeline.
+* **Android:** APK.
+* **Itch.io:** WebGL and downloadable PC build.
+
+### ▶️ Build & Run
+1. Requires **Unity 6.5 (6000.5.8f1)** — installable via Unity Hub.
+2. Clone the repository and open the root folder as a project from Unity Hub (the Editor resolves `Packages/manifest.json` on its own).
+3. Open the scene `Assets/_EndlessPull/Scenes/Base.unity` and press Play to test the full loop in the Editor.
+4. To generate a build: `File > Build Settings`, pick the platform (PC/Android/WebGL) and `Build` — no extra setup needed beyond the Android SDK when building an APK.
 
 ---
 
@@ -50,17 +82,33 @@
 
 **Endless Pull（エンドレス・プル）**は、ダークファンタジーや戦術系マンガ（『Pick Me Up』等）の世界観に着想を得た、2DタクティカルガチャRPGおよび拠点経営シミュレーションゲームです。Unity（C#）で開発され、リアルタイムの役割ベース部隊戦闘、戦略的なリソース管理、永続的な経済システム、そして強化学習AI（Unity ML-Agents）の実験的導入を統合しています。
 
+**プロジェクトの状態:** プレイ可能なプロトタイプ v0.1 ―― コードフリーズ（フェーズ47）。塔・拠点・ガチャ・3言語ローカライゼーション・音声を含む一連のゲームループを監査済み、安定稼働中。開発指示は現在保留なし。
+
 ### 🎮 デモをプレイする
 * Itch.ioでプレイ (PC Windows / WebGL) - [https://sergiog-7.itch.io/endless-pull] (パスワード：level5)
 * YouTubeでゲームプレイを見る - [https://youtu.be/placeholder-gameplay]
 * YouTubeで戦闘＆ML-Agentsジムを見る - [https://youtu.be/placeholder-gym]
 
+### 🧩 主な特徴
+* **塔の攻略と自律戦闘AI:** リアルタイム部隊戦闘によるフロア攻略ループ。タンクのヘイト上限管理、残HP比率を優先するヒーラーAI、状態異常、ボス攻撃の予兆表示を実装。
+* **拠点経営:** 農場・酒場・錬金工房・昇格の聖域・作戦室などの施設への人員配置による自律的な拠点シミュレーション。装備の耐久度・鍛造、部隊シナジー、序列システムを搭載。
+* **動的3言語対応:** スペイン語・英語・日本語をリロードやパネルの再表示なしにリアルタイムで切り替え可能。動的CJKフォント（フォールバックアセット）により文字化け（トーフ）のない日本語表示。
+* **統一された操作系:** キーボードやホバー操作に依存しない、UI全体でのタッチ／マウス入力。Roster → 英雄カード → 装備選択のスタック型モーダルナビゲーションは循環や参照切れなし。
+* **モジュール式オーディオシステム:** 音楽・戦闘SFX・UI SFXの独立した3チャンネルをメインメニューとポーズメニューで同期。`PlayerPrefs`で永続化。
+* **データドリブン設計とML-Agentsジム:** ScriptableObjectベースの39名のユニーク英雄と★3から分岐する18種類の専門クラス。10倍速で動作する独立訓練アリーナ（`Gym_Combat`）と8次元正規化観測ベクトルによる強化学習。
+
 ### 🛠️ 使用技術とツール
-* **コアエンジン:** Unity (C#), uGUI, TextMeshPro
+* **コアエンジン:** Unity 6.5 (6000.5.8f1) — C#, uGUI, TextMeshPro
 * **AI・シミュレーション:** Unity ML-Agents（強化学習）、有限ステートマシン (FSM)
 * **設計パターン:** データドリブン・アーキテクチャ (ScriptableObjects)、ステートマシン (FSM)、Observer / イベント駆動、オブジェクトプーリング、JSON永続化
 
-### 🚀 主な技術的ハイライト
-* **複雑なRPGアーキテクチャ・拠点シミュレーション・データドリブン設計:** 39名のユニークな英雄と、★3から分岐する18種類の専門上位クラス（固有アクティブスキル、武器熟練度、性格特性付き）を実装。施設への人員配置（農場、酒場、工房、訓練所）、装備の耐久度・鍛造、部隊シナジー、マンガに着想を得た序列システムを備えた自律的な拠点シミュレーション。
-* **リアルタイム戦術戦闘・動的ヘイト管理・ML-Agentsジム:** タンクのヘイト上限管理（後衛への回り込みを可能にする最大2体制限）、残HP比率を優先する支援・ヒーラーAI、状態異常（毒、スタン、シールド）、ボスの床面攻撃予兆（テレグラフ）を備えた部隊戦闘システム。8次元の正規化観測ベクトルと強化学習エージェント用の報酬設計を備えた、10倍速シミュレーション可能な独立訓練アリーナ（`Gym_Combat`）を構築。
-* **動的CJKローカライゼーションシステムと高パフォーマンスなモバイルUI:** TextMeshProのフォールバックアセットを利用した動的CJKフォント統合による、文字化け（トーフ）のないスペイン語・英語・日本語の3言語ローカライゼーション。モバイル向けに最適化されたダークグラスモーフィズムUI（折りたたみ式ドロワー、セーフエリア対応リソースバー、カード型ロスター、2Dレイキャストによる拠点・英雄の直感的なワールドインスペクション）。
+### 🖥️ 対象プラットフォーム
+* **スタンドアロンPC:** Windows（主要ビルド）。同じUnityパイプラインでMac/Linuxにも対応。
+* **Android:** APK。
+* **Itch.io:** WebGLおよびダウンロード可能なPCビルド。
+
+### ▶️ ビルドと実行方法
+1. **Unity 6.5 (6000.5.8f1)** が必要です（Unity Hubからインストール可能）。
+2. リポジトリをクローンし、Unity Hubからルートフォルダをプロジェクトとして開きます（`Packages/manifest.json`はエディタが自動解決します）。
+3. `Assets/_EndlessPull/Scenes/Base.unity` シーンを開き、Playを押すとエディタ上で完全なループを試せます。
+4. ビルドを生成するには `File > Build Settings` からプラットフォーム（PC/Android/WebGL）を選んで `Build` を実行します。APK出力時はAndroid SDK以外の追加設定は不要です。

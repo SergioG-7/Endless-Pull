@@ -93,6 +93,12 @@ Desktop.ini
 *.private.meta
 
 # ---------------------------------------------------------------
+# Guardados locales / volcados de depuración de pruebas fuera de StreamingAssets
+# ---------------------------------------------------------------
+*.save
+/[Dd]ebug[Ss]aves/
+
+# ---------------------------------------------------------------
 # Generador LPC clonado (89k ficheros de terceros, no se versiona)
 # ---------------------------------------------------------------
 /tools/LPC_Assets/
