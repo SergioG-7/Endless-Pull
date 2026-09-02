@@ -59,6 +59,7 @@ public class RosterUI : MonoBehaviour
     private RosterSort sort = RosterSort.Rarity;
 
     private readonly List<Button> tabButtons = new List<Button>();
+    private readonly List<TMP_Text> tabLabels = new List<TMP_Text>();
     private Button sortButton;
     private TMP_Text sortLabel;
 
@@ -86,10 +87,25 @@ public class RosterUI : MonoBehaviour
         if (quickCard == null) quickCard = UnityEngine.Object.FindFirstObjectByType<HeroQuickCardUI>();
     }
 
+    void OnEnable()
+    {
+        LocalizationManager.LanguageChanged += RefreshTabs;
+    }
+
+    void OnDisable()
+    {
+        LocalizationManager.LanguageChanged -= RefreshTabs;
+    }
+
     void Start()
     {
         BuildTabs();
-        if (panel != null) panel.SetActive(false);
+
+        if (panel != null)
+        {
+            UIBuild.CloseButtonTopRight(panel.transform, Close);
+            panel.SetActive(false);
+        }
     }
 
     // Filtros, orden y cierre viven en la cabecera del panel, alineados a la derecha.
@@ -107,7 +123,8 @@ public class RosterUI : MonoBehaviour
         brt.sizeDelta = new Vector2(0f, HeaderHeight);
         brt.anchoredPosition = Vector2.zero;
 
-        // El aspa de cerrar ya ocupa la esquina: los demás controles se apilan hacia la izquierda.
+        // El botón [X] de UIBuild ocupa la esquina (48px + 16px de margen): los demás
+        // controles se apilan hacia la izquierda dejándole sitio de sobra.
         float cursor = -(28f + 36f + BtnGap);
 
         sortButton = CreateBarButton(bar.transform, "Btn_Sort",
@@ -125,6 +142,7 @@ public class RosterUI : MonoBehaviour
                 ref cursor, () => OnFilterPressed(value));
 
             tabButtons.Insert(0, button);
+            tabLabels.Insert(0, button.GetComponentInChildren<TMP_Text>());
         }
 
         RefreshTabs();
@@ -201,6 +219,10 @@ public class RosterUI : MonoBehaviour
         if (sortLabel != null)
             sortLabel.text = LocalizationManager.Get(
                 sort == RosterSort.Rarity ? "UI_SORT_RARITY" : "UI_SORT_LEVEL");
+
+        // Solo la pestaña "Todos" es texto traducible; las de estrella son numéricas universales.
+        if (tabLabels.Count > 0 && tabLabels[0] != null)
+            tabLabels[0].text = LocalizationManager.Get("UI_ALL");
     }
 
     private bool PassesFilter(HeroController hero)
@@ -377,7 +399,7 @@ public class RosterUI : MonoBehaviour
 
     private void OnCardClicked(HeroController hero)
     {
-        if (quickCard != null) quickCard.Show(hero);
+        if (quickCard != null) quickCard.Show(hero, fromRoster: true);
     }
 
     // Cuadro con las esquinas redondeadas, el borde del color de la rareza y dentro

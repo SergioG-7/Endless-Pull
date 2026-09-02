@@ -58,8 +58,8 @@ public class SubclassSelectionUI : MonoBehaviour
         if (opciones.Length < 3) return false;
 
         hero = target;
-        titulo.text = $"{hero.Data.heroName} alcanza {hero.StarRank}★  ·  " +
-                      $"elige su especialidad de {WeaponTypes.DisplayName(archetype)}";
+        titulo.text = string.Format(LocalizationManager.Get("UI_SUBCLASS_OFFER_TITLE"),
+            hero.Data.heroName, hero.StarRank, WeaponTypes.DisplayName(archetype));
 
         for (int i = 0; i < 3; i++)
         {
@@ -99,19 +99,19 @@ public class SubclassSelectionUI : MonoBehaviour
             case HeroSubclass.LightPaladin:
             case HeroSubclass.Juggernaut:
             case HeroSubclass.ImmortalBastion:
-                return "Tanque";
+                return LocalizationManager.Get("ROLE_TAG_TANK");
 
             case HeroSubclass.StormPiercer:
             case HeroSubclass.VolleyShooter:
             case HeroSubclass.Chronomage:
-                return "Control";
+                return LocalizationManager.Get("ROLE_TAG_CONTROL");
 
             case HeroSubclass.HighPriest:
             case HeroSubclass.ProtectiveOracle:
             case HeroSubclass.WarCleric:
-                return "Soporte";
+                return LocalizationManager.Get("ROLE_TAG_SUPPORT");
         }
-        return "DPS";
+        return LocalizationManager.Get("ROLE_TAG_DPS");
     }
 
     // Resumen honesto de para qué sirve: sale de lo que hace su habilidad.

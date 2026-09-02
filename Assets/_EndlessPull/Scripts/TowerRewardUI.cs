@@ -26,6 +26,10 @@ public class TowerRewardUI : MonoBehaviour
     private TMP_Text gemsLine;
     private TMP_Text materialsLine;
     private TMP_Text expLine;
+    private TMP_Text continueLabel;
+
+    // Se guarda para poder re-renderizar el desglose si el idioma cambia con el modal abierto.
+    private FloorRewardInfo? lastInfo;
 
     void Awake()
     {
@@ -37,17 +41,38 @@ public class TowerRewardUI : MonoBehaviour
     void OnEnable()
     {
         if (waves != null) waves.FloorCleared += OnFloorCleared;
+        LocalizationManager.LanguageChanged += RefreshLocalizedTexts;
     }
 
     void OnDisable()
     {
         if (waves != null) waves.FloorCleared -= OnFloorCleared;
+        LocalizationManager.LanguageChanged -= RefreshLocalizedTexts;
+    }
+
+    // El botón Continuar se construía una vez en Build() y se quedaba en el idioma de entonces;
+    // el resto del desglose se recalcula del último FloorRewardInfo si el modal sigue abierto.
+    private void RefreshLocalizedTexts()
+    {
+        if (continueLabel != null) continueLabel.text = LocalizationManager.Get("UI_CHEST_CONTINUE");
+        if (backdrop != null && backdrop.gameObject.activeSelf && lastInfo.HasValue) RenderInfo(lastInfo.Value);
     }
 
     private void OnFloorCleared(FloorRewardInfo info)
     {
         if (backdrop == null) return;
 
+        lastInfo = info;
+        RenderInfo(info);
+
+        backdrop.gameObject.SetActive(true);
+        AudioManager.Play(SfxId.Reward);
+        StopAllCoroutines();
+        StartCoroutine(PopChest());
+    }
+
+    private void RenderInfo(FloorRewardInfo info)
+    {
         titleLabel.text = info.bossFloor
             ? LocalizationManager.Get("UI_BOSS_CHEST_TITLE")
             : LocalizationManager.Get("UI_CHEST_TITLE");
@@ -57,11 +82,6 @@ public class TowerRewardUI : MonoBehaviour
             $"<color={UITheme.Tag(UITheme.Hex("A8895C"))}>■</color> {LocalizationManager.Get("UI_WOOD")}   <b>+{info.wood}</b>   " +
             $"<color={UITheme.Tag(UITheme.Hex("9397AB"))}>■</color> {LocalizationManager.Get("UI_IRON")}   <b>+{info.iron}</b>";
         expLine.text = $"<color={UITheme.Tag(UITheme.Accent)}>★</color> {LocalizationManager.Get("UI_EXP_GAINED")}   <b>+{info.exp}</b>";
-
-        backdrop.gameObject.SetActive(true);
-        AudioManager.Play(SfxId.Reward);
-        StopAllCoroutines();
-        StartCoroutine(PopChest());
     }
 
     private IEnumerator PopChest()
@@ -125,8 +145,9 @@ public class TowerRewardUI : MonoBehaviour
         materialsLine = MakeLine(panel, "MaterialsLine", -50f);
         expLine = MakeLine(panel, "ExpLine", -82f);
 
-        UIBuild.Button(panel, "ContinueButton", LocalizationManager.Get("UI_CHEST_CONTINUE"),
+        var continueButton = UIBuild.Button(panel, "ContinueButton", LocalizationManager.Get("UI_CHEST_CONTINUE"),
             UITheme.Neutral, new Vector2(200f, 48f), new Vector2(0f, -panelSize.y + 64f), Close);
+        continueLabel = continueButton.GetComponentInChildren<TMP_Text>();
 
         backdrop.gameObject.SetActive(false);
     }

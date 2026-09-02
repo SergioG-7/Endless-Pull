@@ -46,7 +46,7 @@ public class DamageTextManager : MonoBehaviour
         => Show(worldPosition, "+" + amount, new Color(0.4f, 0.95f, 0.5f));
 
     public static void ShowDodge(Vector3 worldPosition)
-        => Show(worldPosition, "¡ESQUIVA!", new Color(0.6f, 0.85f, 1f));
+        => Show(worldPosition, LocalizationManager.Get("FX_DODGE"), new Color(0.6f, 0.85f, 1f));
 
     private void Spawn(Vector3 worldPosition, string text, Color color)
     {

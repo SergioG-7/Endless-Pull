@@ -97,6 +97,8 @@ public static class LocalizationManager
         { "UI_ASCEND_COST",       new[] { "{0} gemas + 1 {1}", "{0} gems + 1 {1}", "ジェム{0} + {1}×1" } },
         { "UI_ASCEND_MAX_RARITY", new[] { "Rareza máxima", "Max rarity", "最大レア度" } },
         { "UI_ASCEND_NEED_LEVEL", new[] { "Necesita llegar a Nv. {0}", "Needs to reach Lv. {0}", "Lv.{0}が必要" } },
+        { "UI_ASCEND_NEED_GEMS",  new[] { "Gemas: {0}/{1}", "Gems: {0}/{1}", "ジェム：{0}/{1}" } },
+        { "UI_ASCEND_NEED_STONE", new[] { "{0}: {1}/1", "{0}: {1}/1", "{0}：{1}/1" } },
 
         { "UI_READY",        new[] { "¡PREPARAOS!", "READY...", "構えろ！" } },
         { "UI_ENGAGE",       new[] { "¡AL ATAQUE!", "ENGAGE!", "突撃！" } },
@@ -115,16 +117,16 @@ public static class LocalizationManager
         { "EQUIP_OAK_SHIELD",    new[] { "Escudo de Roble", "Oak Shield", "オークの盾" } },
         { "EQUIP_IRON_SHIELD",   new[] { "Escudo de Hierro", "Iron Shield", "鉄の盾" } },
         { "EQUIP_HUNTER_SPEAR",  new[] { "Lanza de Cazador", "Hunter's Spear", "狩人の槍" } },
-        { "EQUIP_LEATHER_ARMOR", new[] { "Armadura de Cuero", "Leather Armor", "革の鶯" } },
-        { "EQUIP_IRON_ARMOR",    new[] { "Armadura de Hierro", "Iron Armor", "鉄の鶯" } },
+        { "EQUIP_LEATHER_ARMOR", new[] { "Armadura de Cuero", "Leather Armor", "革の鎧" } },
+        { "EQUIP_IRON_ARMOR",    new[] { "Armadura de Hierro", "Iron Armor", "鉄の鎧" } },
         
 
         // Filtro por tipo del modal de equipamiento (Fase 39).
         { "UI_FILTER_ALL",         new[] { "Todos", "All", "すべて" } },
         { "UI_FILTER_WEAPONS",     new[] { "Armas", "Weapons", "武器" } },
         { "UI_FILTER_SHIELDS",     new[] { "Escudos", "Shields", "盾" } },
-        { "UI_FILTER_ARMORS",      new[] { "Armaduras", "Armor", "鶯" } },
-        { "UI_FILTER_ACCESSORIES", new[] { "Accesorios", "Accessories", "アクセサリー" } },
+        { "UI_FILTER_ARMORS",      new[] { "Armaduras", "Armor", "防具" } },
+        { "UI_FILTER_ACCESSORIES", new[] { "Accesorios", "Accessories", "装飾品" } },
 { "EQUIP_HUNTER_RING",   new[] { "Anillo del Cazador", "Hunter's Ring", "狩人の指輪" } },
 { "UI_QUADRANT_LOCKED_TAP",  new[] { "Desbloquea en Piso {0}", "Unlocks at Floor {0}", "{0}階で解放" } },
 
@@ -194,10 +196,31 @@ public static class LocalizationManager
 
         // Panel de edificio (BuildingInspectUI).
         { "UI_BUILDING_TITLE",  new[] { "{0}   ·   Nv. {1}", "{0}   ·   Lv. {1}", "{0}　・　Lv.{1}" } },
-        { "UI_OCCUPANCY",       new[] { "Ocupación: {0}/{1} ({2})   ·   Torre: piso {3}",
-                                         "Occupancy: {0}/{1} ({2})   ·   Tower: floor {3}",
-                                         "在籍：{0}/{1}（{2}）　・　塔：{3}階" } },
+        { "UI_OCCUPANCY",       new[] { "Ocupación: {0}/{1} ({2})",
+                                         "Occupancy: {0}/{1} ({2})",
+                                         "在籍：{0}/{1}（{2}）" } },
         { "UI_PER_TICK",        new[] { "Por tick: {0}", "Per tick: {0}", "ティックごと：{0}" } },
+
+        // Ratio de producción por tipo de edificio (BuildingInspectUI.BeneficioPorTick): antes
+        // eran cadenas fijas en español que no reaccionaban al cambio de idioma.
+        { "UI_PROD_TRAINING",  new[] { "{0} EXP cada {1}s", "{0} EXP every {1}s", "{1}秒ごとに{0}EXP" } },
+        { "UI_PROD_REST",      new[] { "{0} PV y {1} moral cada {2}s", "{0} HP and {1} morale every {2}s",
+                                         "{2}秒ごとにHP{0}・士気{1}" } },
+        { "UI_PROD_FARM",      new[] { "{0} comida cada {1}s (+50% por trabajador)",
+                                         "{0} food every {1}s (+50% per worker)",
+                                         "{1}秒ごとに食料{0}（作業員ごとに+50%）" } },
+        { "UI_PROD_WORKSHOP",  new[] { "+{0}% de éxito en la forja", "+{0}% forging success",
+                                         "鍛造成功率+{0}%" } },
+        { "UI_PROD_MANAWELL",  new[] { "{0} MP cada {1}s (+{2} MP/s a trabajadores)",
+                                         "{0} MP every {1}s (+{2} MP/s to workers)",
+                                         "{1}秒ごとにMP{0}（作業員に+{2}MP/秒）" } },
+        { "UI_PROD_FORGE",     new[] { "-{0}% coste de mejora de equipo", "-{0}% gear upgrade cost",
+                                         "装備強化コスト-{0}%" } },
+        { "UI_PROD_WARROOM",   new[] { "-{0}% cooldown de decretos", "-{0}% decree cooldown",
+                                         "指令クールダウン-{0}%" } },
+        { "BTN_ASSIGN",         new[] { "ASIGNAR", "ASSIGN", "配属" } },
+        { "BTN_UNASSIGN",       new[] { "DESASIGNAR", "UNASSIGN", "配属解除" } },
+        { "UI_WORKS_AT",        new[] { "   ·   Trabaja en {0}", "   ·   Works at {0}", "　・　{0}で勤務" } },
         { "UI_UPGRADE_BUILDING",new[] { "Mejorar Edificio   ({0}M / {1}H)", "Upgrade Building   ({0}W / {1}I)",
                                          "建物を強化   （木{0} / 鉄{1}）" } },
 
@@ -266,7 +289,7 @@ public static class LocalizationManager
         { "BLD_TRAINING",    new[] { "Campo de Entrenamiento", "Training Field", "訓練場" } },
         { "BLD_TRAINING_ADVANCED", new[] { "Campo de Entrenamiento Avanzado", "Advanced Training Field", "上級訓練場" } },
         { "BLD_CANTEEN",     new[] { "Cantina", "Tavern & Canteen", "食堂" } },
-        { "BLD_FARM",        new[] { "Granja", "Farm", "農場" } },
+        { "BLD_FARM",        new[] { "Granja del Valle", "Valley Farm", "谷の農場" } },
         { "BLD_ALTAR",       new[] { "Altar de Invocación", "Summoning Gate", "召喚の祭壇" } },
         { "BLD_WORKSHOP",    new[] { "Taller de Alquimia", "Alchemy Workshop", "錬金工房" } },
         { "BLD_RESTAREA",    new[] { "Zona de Descanso", "Rest Area", "休憩所" } },
@@ -293,6 +316,25 @@ public static class LocalizationManager
         { "ARCHIVE_LORE_DECREES",   new[] { "Decretos del Maestro", "Decrees of the Master", "師の勅令" } },
         { "ARCHIVE_LORE_HIERARCHY", new[] { "La Ley del Rango", "The Law of Rank", "序列の掟" } },
         { "ARCHIVE_LORE_FACTIONS",  new[] { "Facciones y Orígenes", "Factions and Origins", "派閥と出自" } },
+        { "ARCHIVE_LORE_TOWER_BODY", new[] {
+            "La Torre es una institución de expedición reconocida en el mundo: el Maestro dirige escuadras piso a piso desde el Portal, sin entrar nunca en persona.",
+            "The Tower is an expedition institution recognised across the world: the Master directs squads floor by floor from the Portal, never setting foot inside in person.",
+            "塔は世界に認められた遠征機関である。師はポータルから階ごとに部隊を指揮し、自ら足を踏み入れることはない。" } },
+        { "ARCHIVE_LORE_DECREES_BODY", new[] {
+            "Los Decretos son la única voz de mando directa del Maestro en combate, un protocolo codificado por los eruditos de la Torre de Marfil.",
+            "Decrees are the Master's only direct voice of command in battle, a protocol codified by the scholars of the Ivory Tower.",
+            "勅令は戦闘における師の唯一の直接命令であり、象牙の塔の学者たちが体系化した手順である。" } },
+        { "ARCHIVE_LORE_HIERARCHY_BODY", new[] {
+            "La Ley del Rango reparte los cupos de cada instalación de base por mérito de expedición, no por antigüedad ni favor personal.",
+            "The Law of Rank allocates every base facility's slots by expedition merit, not by seniority or personal favour.",
+            "序列の掟は、年功や縁故ではなく遠征の功績によって拠点各施設の枠を割り振る。" } },
+        { "ARCHIVE_MILESTONE", new[] { "{0} asciende a {1}★ (Piso {2}).",
+                                        "{0} ascends to {1}★ (Floor {2}).",
+                                        "{0}が{1}★に覚醒（{2}階）。" } },
+        { "ARCHIVE_LORE_FACTIONS_BODY", new[] {
+            "Cada origen de héroe representa una facción real del mundo, con su propia razón para luchar mejor codo a codo con los suyos.",
+            "Every hero origin represents a real faction of the world, each with its own reason to fight better shoulder to shoulder with its own.",
+            "英雄の出自はそれぞれ世界の実在する派閥を表し、同郷の者と肩を並べてこそ真価を発揮する理由を持つ。" } },
 
         // Decretos del Maestro y avisos de combate.
         { "DEC_HEAL",        new[] { "Curar Escuadra", "Heal Party", "部隊回復" } },
@@ -413,6 +455,26 @@ public static class LocalizationManager
         { "ROLE_PROTECTIVEORACLE",new[] { "Escudos de absorción en área", "Absorption shields in an area", "範囲吸収シールド" } },
         { "ROLE_WARCLERIC",       new[] { "Sube la moral de la escuadra", "Raises party morale", "部隊の士気を上げる" } },
 
+        // Modal de selección de subclase (SubclassSelectionUI).
+        { "UI_SUBCLASS_OFFER_TITLE", new[] { "{0} alcanza {1}★   ·   elige su especialidad de {2}",
+                                              "{0} reaches {1}★   ·   choose a {2} specialty",
+                                              "{0}が{1}★到達　・　{2}の専門を選択" } },
+        // Texto flotante de combate (DamageTextManager.Show).
+        { "FX_SLAM_CHARGING", new[] { "¡CARGANDO PISOTÓN!", "CHARGING SLAM!", "踏みつけ準備中！" } },
+        { "FX_SLAM",          new[] { "¡PISOTÓN!", "SLAM!", "踏みつけ！" } },
+        { "FX_NEW_HERO",      new[] { "¡Nuevo Héroe Invocado!", "New Hero Summoned!", "新しい英雄召喚！" } },
+        { "FX_CRITICAL",      new[] { "¡CRÍTICO!", "CRITICAL!", "会心の一撃！" } },
+        { "FX_FOCUS_FIRE",    new[] { "¡ENFOCAR!", "FOCUS!", "集中攻撃！" } },
+        { "FX_DEFENSE",       new[] { "¡DEFENSA!", "DEFENSE!", "防御！" } },
+        { "FX_SHIELD_ABSORB", new[] { "-{0} escudo", "-{0} shield", "-{0} シールド" } },
+        { "FX_DODGE",         new[] { "¡ESQUIVA!", "DODGE!", "回避！" } },
+        { "UI_LEVEL_ABBR",    new[] { "Nv.", "Lv.", "Lv." } },
+
+        { "ROLE_TAG_TANK",    new[] { "Tanque", "Tank", "タンク" } },
+        { "ROLE_TAG_CONTROL", new[] { "Control", "Control", "コントロール" } },
+        { "ROLE_TAG_SUPPORT", new[] { "Soporte", "Support", "サポート" } },
+        { "ROLE_TAG_DPS",     new[] { "DPS", "DPS", "DPS" } },
+
         // Altar de invocación.
         { "UI_SUMMON",       new[] { "Invocar", "Summon", "召喚" } },
         { "UI_SUMMON_ALTAR", new[] { "Altar de Invocación", "Summoning Gate", "召喚の祭壇" } },
@@ -456,6 +518,28 @@ public static class LocalizationManager
         { "ORIGIN_NORTH_FJORDS",   new[] { "Fiordos del Norte", "Northern Fjords", "北の フィヨルド" } },
         { "ORIGIN_BURNT_MARCH",    new[] { "Marca Quemada", "Burnt March", "焼けた辺境" } },
         { "ORIGIN_IVORY_TOWER",    new[] { "Torre de Marfil", "Ivory Tower", "象牙の塔" } },
+
+        // Títulos de héroe (HeroData.title, texto ES en el propio asset -- ver GetTitle()).
+        { "TITLE_ROOKIE",   new[] { "Novato de la Vanguardia", "Vanguard Recruit", "先鋒の新兵" } },
+        { "TITLE_ASTRAEA",  new[] { "Saeta del Alba", "Arrow of Dawn", "暁の矢" } },
+        { "TITLE_BRUNO",    new[] { "Muro de la Puerta Vieja", "Wall of the Old Gate", "旧門の壁" } },
+        { "TITLE_CERES",    new[] { "Hermana de la Vigilia", "Sister of the Vigil", "夜警の姉妹" } },
+        { "TITLE_GARRICK",  new[] { "Sargento de Brecha", "Sergeant of the Breach", "突破の軍曹" } },
+        { "TITLE_KRAVEN",   new[] { "Verdugo del Ocaso", "Executioner of Dusk", "黄昏の処刑人" } },
+        { "TITLE_NEREZZA",  new[] { "Tejedora de Cenizas", "Weaver of Ashes", "灰の織り手" } },
+        { "TITLE_PIP",      new[] { "Ratero de los Tejados", "Rooftop Rogue", "屋根の盗人" } },
+        { "TITLE_SOLVEIG",  new[] { "Lectora de Escarcha", "Frost Reader", "霜読みの者" } },
+        { "TITLE_ULRIC",    new[] { "Yunque de Invierno", "Anvil of Winter", "冬の金床" } },
+        { "TITLE_TORVALD",  new[] { "Escudero del Risco", "Squire of the Crag", "断崖の従者" } },
+        { "TITLE_WREN",     new[] { "Ojo del Sotobosque", "Eye of the Underbrush", "下生えの目" } },
+
+        // Nombres de enemigo (EnemyData.enemyName, texto ES en el propio asset -- ver GetEnemyName()).
+        { "ENEMY_GOBLIN",        new[] { "Goblin", "Goblin", "ゴブリン" } },
+        { "ENEMY_GOBLIN_KING",   new[] { "Rey Goblin", "Goblin King", "ゴブリン王" } },
+        { "ENEMY_GOBLIN_ARCHER", new[] { "Goblin Tirador", "Goblin Archer", "ゴブリン弓兵" } },
+        { "ENEMY_ORC_BRAWLER",   new[] { "Orco Bruto", "Orc Brute", "オークの荒くれ者" } },
+        { "ENEMY_DARK_SHAMAN",   new[] { "Chaman Oscuro", "Dark Shaman", "闇のシャーマン" } },
+        { "ENEMY_SKELETON_ROGUE",new[] { "Esqueleto Pillo", "Rogue Skeleton", "盗賊スケルトン" } },
         { "UI_MOOD_INSPIRED",    new[] { "Inspirado", "Inspired", "鼓舞" } },
         { "UI_MOOD_DEMORALIZED", new[] { "Desmoralizado", "Demoralized", "士気低下" } },
 
@@ -507,6 +591,7 @@ public static class LocalizationManager
         { "UI_SECTION_STONES",    new[] { "Piedras de Ascensión", "Ascension Stones", "昇格石" } },
         { "UI_SECTION_POTIONS",   new[] { "Pociones", "Potions", "ポーション" } },
         { "UI_SECTION_EQUIPMENT", new[] { "Equipo", "Equipment", "装備" } },
+        { "UI_PAGE_INDICATOR", new[] { "Página {0}/{1}", "Page {0}/{1}", "ページ {0}/{1}" } },
         { "UI_RANDOM_PIECE", new[] { "Pieza al azar", "Random piece", "ランダム装備" } },
         { "UI_DURABILITY",   new[] { "Durabilidad", "Durability", "耐久" } },
         { "UI_SLOT_TAKEN",   new[] { "sustituye a la actual", "replaces current", "現在の装備と交換" } },
@@ -514,6 +599,17 @@ public static class LocalizationManager
         { "UI_SLOT_SHIELD",  new[] { "Escudo", "Shield", "盾" } },
         { "UI_SLOT_ARMOR",   new[] { "Armadura", "Armor", "鎧" } },
         { "UI_SLOT_ACCESSORY", new[] { "Accesorio", "Accessory", "装飾品" } },
+
+        // Tipos de arma (WeaponTypes.DisplayName).
+        { "WEAPON_SWORD",     new[] { "Espada", "Sword", "剣" } },
+        { "WEAPON_SPEAR",     new[] { "Lanza", "Spear", "槍" } },
+        { "WEAPON_BOW",       new[] { "Arco", "Bow", "弓" } },
+        { "WEAPON_SHIELD",    new[] { "Escudo", "Shield", "盾" } },
+        { "WEAPON_ARMOR",     new[] { "Armadura", "Armor", "鎧" } },
+        { "WEAPON_ACCESSORY", new[] { "Accesorio", "Accessory", "装飾品" } },
+        { "WEAPON_STAFF",     new[] { "Báculo", "Staff", "杖" } },
+        { "WEAPON_MACE",      new[] { "Maza", "Mace", "メイス" } },
+        { "WEAPON_NONE",      new[] { "Sin arma", "No weapon", "武器なし" } },
 
         // Escuadras y presets.
         { "UI_SQUADS",       new[] { "Escuadras", "Squads", "部隊編成" } },
@@ -569,6 +665,43 @@ public static class LocalizationManager
 
     public static string GetOrigin(string origin)
         => !string.IsNullOrEmpty(origin) && OriginKeys.TryGetValue(origin, out var key) ? Get(key) : origin;
+
+    // HeroData.title guarda el texto ES tal cual (dato de diseño, no una clave) -- se traduce
+    // buscando esa cadena entre los títulos conocidos; si no coincide (título nuevo sin
+    // catalogar), se enseña sin traducir en vez de romper.
+    private static readonly Dictionary<string, string> TitleKeys = new Dictionary<string, string>
+    {
+        { "Novato de la Vanguardia", "TITLE_ROOKIE" },
+        { "Saeta del Alba", "TITLE_ASTRAEA" },
+        { "Muro de la Puerta Vieja", "TITLE_BRUNO" },
+        { "Hermana de la Vigilia", "TITLE_CERES" },
+        { "Sargento de Brecha", "TITLE_GARRICK" },
+        { "Verdugo del Ocaso", "TITLE_KRAVEN" },
+        { "Tejedora de Cenizas", "TITLE_NEREZZA" },
+        { "Ratero de los Tejados", "TITLE_PIP" },
+        { "Lectora de Escarcha", "TITLE_SOLVEIG" },
+        { "Yunque de Invierno", "TITLE_ULRIC" },
+        { "Escudero del Risco", "TITLE_TORVALD" },
+        { "Ojo del Sotobosque", "TITLE_WREN" },
+    };
+
+    public static string GetTitle(string title)
+        => !string.IsNullOrEmpty(title) && TitleKeys.TryGetValue(title, out var key) ? Get(key) : title;
+
+    // EnemyData.enemyName guarda el texto ES tal cual (dato de diseño, no una clave) -- mismo
+    // patrón que TitleKeys/OriginKeys: si no coincide, se enseña sin traducir en vez de romper.
+    private static readonly Dictionary<string, string> EnemyNameKeys = new Dictionary<string, string>
+    {
+        { "Goblin", "ENEMY_GOBLIN" },
+        { "Rey Goblin", "ENEMY_GOBLIN_KING" },
+        { "Goblin Tirador", "ENEMY_GOBLIN_ARCHER" },
+        { "Orco Bruto", "ENEMY_ORC_BRAWLER" },
+        { "Chaman Oscuro", "ENEMY_DARK_SHAMAN" },
+        { "Esqueleto Pillo", "ENEMY_SKELETON_ROGUE" },
+    };
+
+    public static string GetEnemyName(string enemyName)
+        => !string.IsNullOrEmpty(enemyName) && EnemyNameKeys.TryGetValue(enemyName, out var key) ? Get(key) : enemyName;
 
     public static void SetLanguage(GameLanguage language)
     {

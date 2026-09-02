@@ -456,7 +456,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
         AudioManager.PlayAt(SfxId.MeleeHit, enemy.transform.position);
         enemy.TakeDamage(damage, ignoresDefense, ArmorPierce);
 
-        if (critico) DamageTextManager.Show(enemy.transform.position, "¡CRÍTICO!", UITheme.BarMorale);
+        if (critico) DamageTextManager.Show(enemy.transform.position, LocalizationManager.Get("FX_CRITICAL"), UITheme.BarMorale);
         if (critico) AudioManager.Play(SfxId.Critical);
         if (critico) CombatFeelManager.OnCriticalHit();
 
@@ -1356,7 +1356,7 @@ public void DeployViaGateway(Vector2 destination)
 
         // El crítico se tira una vez para toda la habilidad; las 18 ramas usan este daño.
         int damage = RollStrike(skill.DamageFrom(Attack), out bool critico);
-        if (critico) DamageTextManager.Show(transform.position, "¡CRÍTICO!", UITheme.BarMorale);
+        if (critico) DamageTextManager.Show(transform.position, LocalizationManager.Get("FX_CRITICAL"), UITheme.BarMorale);
         if (critico) AudioManager.Play(SfxId.Critical);
         if (critico) CombatFeelManager.OnCriticalHit();
 

@@ -46,6 +46,7 @@ public class MasterHUD : MonoBehaviour
         }
         HeroProgress.HeroAscended += OnHeroAscended;
         SaveManager.RosterLoaded += RefreshStarCounts;
+        LocalizationManager.LanguageChanged += OnLanguageChanged;
     }
 
     void OnDisable()
@@ -63,6 +64,16 @@ public class MasterHUD : MonoBehaviour
         }
         HeroProgress.HeroAscended -= OnHeroAscended;
         SaveManager.RosterLoaded -= RefreshStarCounts;
+        LocalizationManager.LanguageChanged -= OnLanguageChanged;
+    }
+
+    // Los rótulos de la TopBar solo se recalculaban con eventos de economía/piso: "TORRE Piso N"
+    // y "COMIDA" se quedaban en el idioma anterior si el jugador cambiaba de idioma sin gastar
+    // recursos ni cambiar de piso mientras tanto.
+    private void OnLanguageChanged()
+    {
+        if (economy != null) RefreshResources();
+        RefreshFloor();
     }
 
     private void OnHeroAscended(HeroController hero, int newStarRank) => RefreshStarCounts();

@@ -299,7 +299,7 @@ public class SummonAltarUI : MonoBehaviour
         carta.texto.text = $"<size={UITheme.SizeValue}><color={UITheme.Tag(rareza)}>{estrellas}</color></size>\n" +
                            $"<b>{carta.datos.heroName}</b>\n" +
                            $"<size={UITheme.SizeCaption}><color={UITheme.Tag(UITheme.TextSoft)}>" +
-                           $"{carta.datos.title}</color></size>\n" +
+                           $"{LocalizationManager.GetTitle(carta.datos.title)}</color></size>\n" +
                            $"<size={UITheme.SizeMicro}><color={UITheme.Tag(UITheme.TextFaint)}>" +
                            $"{LocalizationManager.GetOrigin(carta.datos.origin)}</color></size>";
 

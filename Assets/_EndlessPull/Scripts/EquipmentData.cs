@@ -65,23 +65,23 @@ public enum EquipmentSlot
     Shield = 3
 }
 
-// Nombres visibles de los tipos de arma; la UI va en español.
+// Nombres visibles de los tipos de arma.
 public static class WeaponTypes
 {
     public static string DisplayName(WeaponType type)
     {
         switch (type)
         {
-            case WeaponType.Sword: return "Espada";
-            case WeaponType.Spear: return "Lanza";
-            case WeaponType.Bow: return "Arco";
-            case WeaponType.Shield: return "Escudo";
-            case WeaponType.Armor: return "Armadura";
-            case WeaponType.Accessory: return "Accesorio";
-            case WeaponType.Staff: return "Báculo";
-            case WeaponType.Mace: return "Maza";
+            case WeaponType.Sword: return LocalizationManager.Get("WEAPON_SWORD");
+            case WeaponType.Spear: return LocalizationManager.Get("WEAPON_SPEAR");
+            case WeaponType.Bow: return LocalizationManager.Get("WEAPON_BOW");
+            case WeaponType.Shield: return LocalizationManager.Get("WEAPON_SHIELD");
+            case WeaponType.Armor: return LocalizationManager.Get("WEAPON_ARMOR");
+            case WeaponType.Accessory: return LocalizationManager.Get("WEAPON_ACCESSORY");
+            case WeaponType.Staff: return LocalizationManager.Get("WEAPON_STAFF");
+            case WeaponType.Mace: return LocalizationManager.Get("WEAPON_MACE");
         }
-        return "Sin arma";
+        return LocalizationManager.Get("WEAPON_NONE");
     }
 }
 

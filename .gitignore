@@ -14,6 +14,9 @@
 # Asset Store Tools
 /[Aa]ssets/AssetStoreTools*
 
+# Autoguardado de recuperación tras cierre inesperado/crash
+/[Aa]ssets/_Recovery/
+
 # Autogenerado por Unity al abrir el proyecto
 /[Aa]ssets/Plugins/Editor/JetBrains*
 

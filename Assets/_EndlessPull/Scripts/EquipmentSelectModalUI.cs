@@ -12,6 +12,9 @@ public class EquipmentSelectModalUI : MonoBehaviour
     [Tooltip("Tienda de la que salen el almacén y el equipo.")]
     [SerializeField] private ShopManager shop;
 
+    [Tooltip("Ficha de héroe a la que se vuelve al cerrar este modal.")]
+    [SerializeField] private HeroQuickCardUI quickCard;
+
     [Tooltip("Tamaño del modal.")]
     [SerializeField] private Vector2 size = new Vector2(920f, 660f);
 
@@ -32,6 +35,11 @@ public class EquipmentSelectModalUI : MonoBehaviour
     // Filtro de la lista por tipo de hueco; null = Todos.
     private EquipmentSlot? filterSlot;
     private Button[] filterButtons;
+    private TMP_Text[] filterButtonLabels;
+
+    private static readonly string[] FilterKeys = {
+        "UI_FILTER_ALL", "UI_FILTER_WEAPONS", "UI_FILTER_SHIELDS", "UI_FILTER_ARMORS", "UI_FILTER_ACCESSORIES"
+    };
 
 
     public bool IsOpen => panel != null && panel.activeSelf;
@@ -41,6 +49,7 @@ public class EquipmentSelectModalUI : MonoBehaviour
     {
         if (canvas == null) canvas = UnityEngine.Object.FindFirstObjectByType<Canvas>();
         if (shop == null) shop = UnityEngine.Object.FindFirstObjectByType<ShopManager>();
+        if (quickCard == null) quickCard = UnityEngine.Object.FindFirstObjectByType<HeroQuickCardUI>();
 
         Build();
     }
@@ -72,10 +81,13 @@ public class EquipmentSelectModalUI : MonoBehaviour
         UIManager.OpenExclusive(panel);
     }
 
+    // Este modal solo lo abre la ficha de héroe: al cerrarlo, vuelve a ella.
     public void Close()
     {
         if (panel != null) panel.SetActive(false);
         hero = null;
+
+        if (quickCard != null) quickCard.Reopen();
     }
 
     // Atajo de siempre: coge la primera pieza que le sirva, empezando por el arma.
@@ -114,6 +126,8 @@ public class EquipmentSelectModalUI : MonoBehaviour
         {
             if (filterButtons[i] == null) continue;
             filterButtons[i].targetGraphic.color = filterSlot == valores[i] ? UITheme.Teal : UITheme.Neutral;
+            if (filterButtonLabels != null && i < filterButtonLabels.Length && filterButtonLabels[i] != null)
+                filterButtonLabels[i].text = LocalizationManager.Get(FilterKeys[i]);
         }
     }
 
@@ -293,6 +307,7 @@ private void Build()
         EquipmentSlot?[] valoresFiltro = { null, EquipmentSlot.Weapon, EquipmentSlot.Shield, EquipmentSlot.Armor, EquipmentSlot.Accessory };
 
         filterButtons = new Button[5];
+        filterButtonLabels = new TMP_Text[5];
         const float filterBtnWidth = 150f;
         const float filterBtnGap = 8f;
         for (int i = 0; i < 5; i++)
@@ -308,6 +323,7 @@ private void Build()
             frt.pivot = new Vector2(0f, 1f);
             frt.anchoredPosition = new Vector2(x, -110f);
             filterButtons[i] = btnFiltro;
+            filterButtonLabels[i] = btnFiltro.GetComponentInChildren<TMP_Text>();
         }
 
         // Viewport con scroll: el almacén puede pasar de diez piezas sin problema.

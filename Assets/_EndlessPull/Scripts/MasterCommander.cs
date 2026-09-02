@@ -127,7 +127,7 @@ public class MasterCommander : MonoBehaviour
 
         focusFireTimer = FocusFireCooldown;
         AudioManager.Play(SfxId.DecreeFocusFire);
-        DamageTextManager.Show(prey.transform.position, "¡ENFOCAR!", new Color(1f, 0.55f, 0.2f));
+        DamageTextManager.Show(prey.transform.position, LocalizationManager.Get("FX_FOCUS_FIRE"), new Color(1f, 0.55f, 0.2f));
         VfxManager.Play(VfxId.DecreeCast, prey.transform.position);
         Debug.Log($"[Decreto] Enfocar Objetivo: {count} héroe(s) sobre {prey.Data.enemyName} " +
                   $"({prey.CurrentHealth} PV).", this);
@@ -150,7 +150,7 @@ public class MasterCommander : MonoBehaviour
         {
             hero.SetForcedTarget(null);
             hero.ApplyDefensiveStance(regroupDuration, regroupRetreat);
-            DamageTextManager.Show(hero.transform.position, "¡DEFENSA!", new Color(0.6f, 0.8f, 1f));
+            DamageTextManager.Show(hero.transform.position, LocalizationManager.Get("FX_DEFENSE"), new Color(0.6f, 0.8f, 1f));
             VfxManager.Play(VfxId.DecreeCast, hero.transform.position);
             count++;
         }

@@ -58,7 +58,7 @@ public class BossHealthBarUI : MonoBehaviour
         if (bound == null) return;
 
         bound.HealthChanged += OnHealthChanged;
-        if (nameLabel != null) nameLabel.text = bound.Data != null ? bound.Data.enemyName : string.Empty;
+        if (nameLabel != null) nameLabel.text = bound.Data != null ? LocalizationManager.GetEnemyName(bound.Data.enemyName) : string.Empty;
         OnHealthChanged(bound.CurrentHealth, bound.MaxHealth);
     }
 

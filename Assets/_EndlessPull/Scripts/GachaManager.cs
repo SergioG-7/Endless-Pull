@@ -223,7 +223,7 @@ public class GachaManager : MonoBehaviour
         hero.SetPassives(passives);
         GrantStarterWeapon(hero);
 
-        DamageTextManager.Show(hero.transform.position, "¡Nuevo Héroe Invocado!",
+        DamageTextManager.Show(hero.transform.position, LocalizationManager.Get("FX_NEW_HERO"),
             new Color(1f, 0.9f, 0.4f));
 
         Debug.Log($"[Gacha] Pasivas de {pulled.heroName}: {PassiveSkills.Describe(passives)}.", hero.gameObject);

@@ -53,6 +53,16 @@ public class BuildingInspectUI : MonoBehaviour
         if (panel != null) panel.SetActive(false);
     }
 
+    void OnEnable() => LocalizationManager.LanguageChanged += OnLanguageChanged;
+    void OnDisable() => LocalizationManager.LanguageChanged -= OnLanguageChanged;
+
+    // La ficha solo se refrescaba al abrirla (Show()); si el idioma cambiaba con la ficha ya
+    // abierta, título/ocupación/producción se quedaban en el idioma anterior.
+    private void OnLanguageChanged()
+    {
+        if (IsOpen) Refresh();
+    }
+
     public void Show(BaseBuilding target)
     {
         if (panel == null || target == null) return;
@@ -89,10 +99,10 @@ public class BuildingInspectUI : MonoBehaviour
         if (building == null) return;
 
         titulo.text = string.Format(LocalizationManager.Get("UI_BUILDING_TITLE"),
-            building.BuildingName, building.Level);
+            BuildingTypes.DisplayName(building.Type), building.Level);
         ocupacion.text = string.Format(LocalizationManager.Get("UI_OCCUPANCY"),
             building.CurrentOccupants, building.Capacity,
-            BuildingTypes.DisplayName(building.Type), BaseBuilding.TowerFloor);
+            BuildingTypes.DisplayName(building.Type));
         produccion.text = string.Format(LocalizationManager.Get("UI_PER_TICK"), BeneficioPorTick());
 
         bool puede = economy != null && economy.CanAffordMaterials(building.NextWoodCost, building.NextIronCost);
@@ -188,26 +198,27 @@ public class BuildingInspectUI : MonoBehaviour
         switch (building.Type)
         {
             case BuildingType.TrainingDummy:
-                return $"{building.ExpPerTick} EXP cada {building.TickInterval:0.#}s";
+                return string.Format(LocalizationManager.Get("UI_PROD_TRAINING"),
+                    building.ExpPerTick, building.TickInterval.ToString("0.#"));
             case BuildingType.Canteen:
             case BuildingType.RestArea:
-                return $"{building.HealPerTick} PV y {building.MoralePerTick:0.#} moral " +
-                       $"cada {building.TickInterval:0.#}s";
+                return string.Format(LocalizationManager.Get("UI_PROD_REST"),
+                    building.HealPerTick, building.MoralePerTick.ToString("0.#"), building.TickInterval.ToString("0.#"));
             case BuildingType.Farm:
-                return $"{building.FoodPerHarvest} comida cada {building.HarvestInterval:0.#}s " +
-                       "(+50 % por trabajador)";
+                return string.Format(LocalizationManager.Get("UI_PROD_FARM"),
+                    building.FoodPerHarvest, building.HarvestInterval.ToString("0.#"));
             case BuildingType.Workshop:
-                return $"+{building.Level * 5} % de éxito en la forja";
+                return string.Format(LocalizationManager.Get("UI_PROD_WORKSHOP"), building.Level * 5);
             case BuildingType.ManaWell:
-                return $"{building.ManaPerVisitTick} MP cada {building.TickInterval:0.#}s " +
-                       $"(+{building.PassiveManaPerSecond:0.#} MP/s a trabajadores)";
+                return string.Format(LocalizationManager.Get("UI_PROD_MANAWELL"),
+                    building.ManaPerVisitTick, building.TickInterval.ToString("0.#"), building.PassiveManaPerSecond.ToString("0.#"));
             case BuildingType.Forge:
                 if (crafting == null) crafting = UnityEngine.Object.FindFirstObjectByType<CraftingManager>();
                 return crafting != null && crafting.ForgeUnlocked
-                    ? $"-{crafting.ForgeDiscount * 100f:0}% coste de mejora de equipo"
+                    ? string.Format(LocalizationManager.Get("UI_PROD_FORGE"), (crafting.ForgeDiscount * 100f).ToString("0"))
                     : LocalizationManager.Get("UI_FORGE_LOCKED");
             case BuildingType.WarRoom:
-                return $"-{Mathf.Min(building.Level * 4f, 50f):0}% cooldown de decretos";
+                return string.Format(LocalizationManager.Get("UI_PROD_WARROOM"), Mathf.Min(building.Level * 4f, 50f).ToString("0"));
             case BuildingType.Archive:
                 return LocalizationManager.Get("UI_ARCHIVE_HINT");
         }
@@ -234,8 +245,9 @@ public class BuildingInspectUI : MonoBehaviour
             bool dentro = building.IsWorker(hero);
             bool hayHueco = building.Workers.Count < building.Capacity;
 
+            string etiquetaAsignar = LocalizationManager.Get(dentro ? "BTN_UNASSIGN" : "BTN_ASSIGN");
             var fila = UIBuild.Button(lista, "Row_" + hero.name,
-                $"{hero.Data.heroName}  {hero.StarRank}★  ·  {(dentro ? "DESASIGNAR" : "ASIGNAR")}",
+                $"{hero.Data.heroName}  {hero.StarRank}★  ·  {etiquetaAsignar}",
                 dentro ? new Color(0.30f, 0.52f, 0.32f) : new Color(0.28f, 0.28f, 0.34f),
                 new Vector2(0f, rowHeight), Vector2.zero, () => OnWorkerPressed(hero));
 
@@ -313,8 +325,6 @@ public class BuildingInspectUI : MonoBehaviour
         scroll.content = lista;
         scroll.horizontal = false;
 
-        UIBuild.Button(panel.transform, "Btn_CloseBuilding", "Cerrar",
-            new Color(0.32f, 0.28f, 0.36f), new Vector2(300f, 60f), new Vector2(0f, -(size.y - 74f)),
-            Close);
+        UIBuild.CloseButtonTopRight(panel.transform, Close);
     }
 }

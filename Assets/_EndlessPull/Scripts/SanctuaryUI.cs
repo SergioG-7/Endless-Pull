@@ -98,6 +98,23 @@ public class SanctuaryUI : MonoBehaviour
         if (panel != null) panel.SetActive(false);
     }
 
+    void OnEnable() => LocalizationManager.LanguageChanged += OnLanguageChanged;
+    void OnDisable() => LocalizationManager.LanguageChanged -= OnLanguageChanged;
+
+    // Título/pestañas se fijaban una vez en Build() y la lista solo se refresca por su timer
+    // interno mientras el panel está abierto: sin esto, cambiar de idioma con el Santuario abierto
+    // dejaba título y pestañas en el idioma anterior.
+    private void OnLanguageChanged()
+    {
+        titulo.text = LocalizationManager.Get("UI_SANCTUARY");
+        tabAscendLabel.text = LocalizationManager.Get("UI_ASCENSION_TAB");
+        tabSynthLabel.text = LocalizationManager.Get("UI_SYNTHESIS_TAB");
+
+        if (!IsOpen) return;
+        RefreshList();
+        RefreshRightPanel();
+    }
+
     void Update()
     {
         if (!IsOpen) return;
@@ -348,12 +365,19 @@ public class SanctuaryUI : MonoBehaviour
         var tier = progress != null ? progress.AscendStoneTier : AscensionStoneTier.Menor;
         int gemCost = progress != null ? progress.AscendGemCost : 0;
         float multiplier = progress != null ? progress.AscensionStatMultiplier : 1f;
+        int gemsHeld = economy != null ? economy.Gems : 0;
+        int stonesHeld = crafting != null ? crafting.StoneCount(tier) : 0;
+        bool faltanGemas = gemsHeld < gemCost;
+        bool faltaPiedra = stonesHeld < 1;
 
+        // Antes solo mostraba el coste y desactivaba el botón sin decir POR QUÉ: el jugador veía
+        // un héroe a Nv. tope "bloqueado" sin saber si le faltaban gemas o la Piedra exacta.
         previewBody.text =
             string.Format(LocalizationManager.Get("UI_ASCEND_PREVIEW"), hero.StarRank, hero.StarRank + 1, multiplier) +
-            "\n" + string.Format(LocalizationManager.Get("UI_ASCEND_COST"), gemCost, AscensionStoneTiers.DisplayName(tier)) +
-            $"\n<color={UITheme.Tag(UITheme.TextFaint)}>{LocalizationManager.Get("UI_STONES_HELD")} " +
-            $"{crafting.StoneCount(tier)}</color>";
+            $"\n<color={UITheme.Tag(faltanGemas ? UITheme.DangerLight : UITheme.TextFaint)}>" +
+            string.Format(LocalizationManager.Get("UI_ASCEND_NEED_GEMS"), gemsHeld, gemCost) + "</color>" +
+            $"\n<color={UITheme.Tag(faltaPiedra ? UITheme.DangerLight : UITheme.TextFaint)}>" +
+            string.Format(LocalizationManager.Get("UI_ASCEND_NEED_STONE"), AscensionStoneTiers.DisplayName(tier), stonesHeld) + "</color>";
 
         bool canAscend = progress != null && progress.CanAscend(economy, crafting);
         SetPreviewAction(LocalizationManager.Get("UI_ASCEND"), canAscend);

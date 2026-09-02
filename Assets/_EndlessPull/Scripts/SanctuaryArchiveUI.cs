@@ -17,6 +17,8 @@ public class SanctuaryArchiveUI : MonoBehaviour
 
     private GameObject panel;
     private RectTransform lista;
+    private TMP_Text titulo;
+    private TMP_Text closeLabel;
 
     public bool IsOpen => panel != null && panel.activeSelf;
 
@@ -31,6 +33,21 @@ public class SanctuaryArchiveUI : MonoBehaviour
     void Start()
     {
         if (panel != null) panel.SetActive(false);
+    }
+
+    void OnEnable()
+    {
+        LocalizationManager.LanguageChanged += OnLanguageChanged;
+    }
+
+    void OnDisable()
+    {
+        LocalizationManager.LanguageChanged -= OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged()
+    {
+        if (IsOpen) Refresh();
     }
 
     public void Show()
@@ -50,6 +67,9 @@ public class SanctuaryArchiveUI : MonoBehaviour
     {
         if (lista == null) return;
 
+        if (titulo != null) titulo.text = LocalizationManager.Get("UI_ARCHIVE_TITLE");
+        if (closeLabel != null) closeLabel.text = LocalizationManager.Get("UI_CLOSE");
+
         for (int i = lista.childCount - 1; i >= 0; i--)
             Destroy(lista.GetChild(i).gameObject);
 
@@ -60,7 +80,7 @@ public class SanctuaryArchiveUI : MonoBehaviour
             y = AddRow(LocalizationManager.Get("UI_ARCHIVE_NO_MILESTONES"), UITheme.TextMuted, y);
         else
             foreach (var hito in archive.Milestones)
-                y = AddRow(hito, UITheme.Text, y);
+                y = AddRow(SanctuaryArchiveManager.Format(hito), UITheme.Text, y);
 
         y = AddHeader(LocalizationManager.Get("UI_ARCHIVE_LORE"), y);
 
@@ -69,7 +89,7 @@ public class SanctuaryArchiveUI : MonoBehaviour
             foreach (var entrada in archive.UnlockedLore())
             {
                 y = AddRow($"<b>{LocalizationManager.Get(entrada.titleKey)}</b>", UITheme.Amber, y);
-                y = AddRow(entrada.summary, UITheme.TextMuted, y);
+                y = AddRow(LocalizationManager.Get(entrada.summaryKey), UITheme.TextMuted, y);
             }
         }
 
@@ -117,7 +137,7 @@ public class SanctuaryArchiveUI : MonoBehaviour
 
         panel = UIBuild.Panel(canvas.transform, "SanctuaryArchive", size, new Color(0.10f, 0.12f, 0.15f, 0.98f));
 
-        var titulo = UIBuild.TopLabel(panel.transform, "Title", UIBuild.TitleSize, 46f, -14f,
+        titulo = UIBuild.TopLabel(panel.transform, "Title", UIBuild.TitleSize, 46f, -14f,
             TextAlignmentOptions.Left);
         titulo.text = LocalizationManager.Get("UI_ARCHIVE_TITLE");
 
@@ -147,8 +167,9 @@ public class SanctuaryArchiveUI : MonoBehaviour
         scroll.content = lista;
         scroll.horizontal = false;
 
-        UIBuild.Button(panel.transform, "Btn_CloseArchive", LocalizationManager.Get("UI_CLOSE"),
+        var btnClose = UIBuild.Button(panel.transform, "Btn_CloseArchive", LocalizationManager.Get("UI_CLOSE"),
             new Color(0.32f, 0.28f, 0.36f), new Vector2(300f, 60f), new Vector2(0f, -(size.y - 74f)),
             Close);
+        closeLabel = btnClose.GetComponentInChildren<TMP_Text>();
     }
 }

@@ -267,7 +267,7 @@ public class HeroProgress : MonoBehaviour
 
         if (hero == null || hero.Data == null)
         {
-            levelLabel.text = $"Nv. {level}";
+            levelLabel.text = $"{LocalizationManager.Get("UI_LEVEL_ABBR")} {level}";
             return;
         }
 
@@ -277,7 +277,7 @@ public class HeroProgress : MonoBehaviour
 
         string rareza = UITheme.Tag(RarityColor(hero.StarRank));
         levelLabel.text = $"<color={rareza}>{estrellas} {hero.Data.heroName}</color>" +
-                          $" · <color={UITheme.Tag(UITheme.Text)}>Nv. {level}</color>";
+                          $" · <color={UITheme.Tag(UITheme.Text)}>{LocalizationManager.Get("UI_LEVEL_ABBR")} {level}</color>";
         levelLabel.color = UITheme.Text;
     }
 }

@@ -147,6 +147,9 @@ public class SquadManagementUI : MonoBehaviour
         if (panel != null) panel.SetActive(false);
     }
 
+    // party.Toggle/ToggleExpedition/ApplyPreset/SavePreset ya disparan PartyChanged, suscrito
+    // a Rebuild en OnEnable: llamar a Rebuild() aquí también duplicaba el destroy+recreate de
+    // la lista en el mismo frame, y eso era el parpadeo de los botones Tower/Gather.
     private void OnTowerPressed(HeroController hero)
     {
         if (party == null) return;
@@ -157,8 +160,6 @@ public class SquadManagementUI : MonoBehaviour
         // Si no ha cambiado nada es que el héroe ya tenía otro puesto: se explica en el aviso.
         if (!dentro && !party.IsInParty(hero)) aviso.text = HeroAssignment.BusyWarning(hero);
         else aviso.text = string.Empty;
-
-        Rebuild();
     }
 
     private void OnGatherPressed(HeroController hero)
@@ -170,8 +171,6 @@ public class SquadManagementUI : MonoBehaviour
 
         if (!dentro && !party.IsInExpedition(hero)) aviso.text = HeroAssignment.BusyWarning(hero);
         else aviso.text = string.Empty;
-
-        Rebuild();
     }
 
     private void OnApplyPreset(int index)
@@ -180,7 +179,6 @@ public class SquadManagementUI : MonoBehaviour
 
         party.ApplyPreset(index);
         aviso.text = string.Empty;
-        Rebuild();
     }
 
     private void OnSavePreset(int index)
@@ -188,7 +186,6 @@ public class SquadManagementUI : MonoBehaviour
         if (party == null) return;
 
         party.SavePreset(index);
-        Rebuild();
     }
 
     private void Rebuild()
@@ -222,7 +219,9 @@ public class SquadManagementUI : MonoBehaviour
               $"<color={UITheme.Tag(UITheme.Cyan)}>{LocalizationManager.Get("UI_GATHER_SQUAD")}</color> " +
               $"<b>{party.ExpeditionSquad.Count}/{party.MaxExpeditionSize}</b>";
 
-        if (recolectando && string.IsNullOrEmpty(aviso.text))
+        // Antes solo se fijaba una vez (si aviso.text estaba vacío): la cuenta atrás se quedaba
+        // congelada en el primer número/idioma para siempre. Se recalcula en cada Rebuild().
+        if (recolectando)
             aviso.text = string.Format(LocalizationManager.Get("UI_GATHERING_NOW"),
                 expeditions.Remaining.ToString("0"));
 
@@ -288,7 +287,7 @@ public class SquadManagementUI : MonoBehaviour
         nombre.text = $"<size={UITheme.SizeCaption}><color={UITheme.Tag(rareza)}>{estrellas}</color></size>  " +
                       $"<b>{hero.Data.heroName}</b>\n" +
                       $"<size={UITheme.SizeCaption}><color={UITheme.Tag(UITheme.TextMuted)}>" +
-                      $"Nv.{nivel}{humor}</color></size>";
+                      $"{LocalizationManager.Get("UI_LEVEL_ABBR")}{nivel}{humor}</color></size>";
 
         // El puesto que ocupa ahora: nombre del edificio si trabaja, o el rótulo del deber.
         string puesto = duty == HeroDuty.Building

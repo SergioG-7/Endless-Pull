@@ -110,7 +110,7 @@ public class StatusEffectManager : MonoBehaviour
             status.magnitude -= absorbido;
             if (status.magnitude <= 0f) status.remaining = 0f;
 
-            DamageTextManager.Show(transform.position, $"-{absorbido} escudo", new Color(0.5f, 0.8f, 1f));
+            DamageTextManager.Show(transform.position, string.Format(LocalizationManager.Get("FX_SHIELD_ABSORB"), absorbido), new Color(0.5f, 0.8f, 1f));
             return amount - absorbido;
         }
 

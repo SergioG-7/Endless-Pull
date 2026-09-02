@@ -30,6 +30,8 @@ public class CombatHUD : MonoBehaviour
     private TMP_Text speedLabel;
     private Button autoRetreatButton;
     private Button retreatButton;
+    private TMP_Text autoRetreatLabel;
+    private TMP_Text retreatLabel;
 
     private bool fast;
     private bool autoRetreatArmed;
@@ -45,15 +47,25 @@ public class CombatHUD : MonoBehaviour
     void OnEnable()
     {
         if (waves != null) waves.ExpeditionChanged += OnExpeditionChanged;
+        LocalizationManager.LanguageChanged += RefreshLocalizedTexts;
     }
 
     void OnDisable()
     {
         if (waves != null) waves.ExpeditionChanged -= OnExpeditionChanged;
+        LocalizationManager.LanguageChanged -= RefreshLocalizedTexts;
 
         // Al desactivarse (p.ej. cambio de escena) no debe quedarse el juego a cámara rápida.
         Time.timeScale = 1f;
         Time.fixedDeltaTime = 0.02f;
+    }
+
+    // Los botones se construían una vez en Awake() y se quedaban en el idioma de entonces
+    // para siempre, aunque el resto del HUD sí reaccionara al cambio de idioma.
+    private void RefreshLocalizedTexts()
+    {
+        if (autoRetreatLabel != null) autoRetreatLabel.text = LocalizationManager.Get("UI_AUTO_RETREAT");
+        if (retreatLabel != null) retreatLabel.text = LocalizationManager.Get("UI_RETREAT_NOW");
     }
 
     private void OnExpeditionChanged(ExpeditionState state, string message)
@@ -110,10 +122,12 @@ public class CombatHUD : MonoBehaviour
         autoRetreatButton = UIBuild.Button(root, "AutoRetreatButton",
             LocalizationManager.Get("UI_AUTO_RETREAT"), UITheme.Neutral, buttonSize,
             Vector2.zero, ToggleAutoRetreat);
+        autoRetreatLabel = autoRetreatButton.GetComponentInChildren<TMP_Text>();
 
         retreatButton = UIBuild.Button(root, "RetreatButton",
             LocalizationManager.Get("UI_RETREAT_NOW"), UITheme.DangerSoft, buttonSize,
             new Vector2(buttonWidth + 4f, 0f), ManualRetreat);
+        retreatLabel = retreatButton.GetComponentInChildren<TMP_Text>();
 
         root.gameObject.SetActive(false);
         RefreshSpeedLabel();

@@ -30,6 +30,7 @@ public class TowerPanelUI : MonoBehaviour
     private RectTransform content;
     private TMP_Text title;
     private TMP_Text info;
+    private TMP_Text closeLabel;
 
     public bool IsOpen => panel != null && panel.activeSelf;
 
@@ -46,6 +47,17 @@ public class TowerPanelUI : MonoBehaviour
     void Start()
     {
         if (panel != null) panel.SetActive(false);
+    }
+
+    void OnEnable() => LocalizationManager.LanguageChanged += OnLanguageChanged;
+    void OnDisable() => LocalizationManager.LanguageChanged -= OnLanguageChanged;
+
+    // Solo se refrescaba al abrir (Open()); si el idioma cambiaba con el selector de piso ya
+    // abierto, título/cabecera/filas se quedaban en el idioma anterior.
+    private void OnLanguageChanged()
+    {
+        if (closeLabel != null) closeLabel.text = LocalizationManager.Get("UI_CLOSE");
+        if (IsOpen) Rebuild();
     }
 
     public void Toggle()
@@ -224,7 +236,7 @@ public class TowerPanelUI : MonoBehaviour
         crt.anchoredPosition = new Vector2(0f, 12f);
         close.GetComponent<Image>().color = new Color(0.32f, 0.28f, 0.36f);
 
-        var closeLabel = NewLabel(close.transform, "Label", 26f);
+        closeLabel = NewLabel(close.transform, "Label", 26f);
         closeLabel.rectTransform.anchorMin = Vector2.zero;
         closeLabel.rectTransform.anchorMax = Vector2.one;
         closeLabel.rectTransform.offsetMin = Vector2.zero;

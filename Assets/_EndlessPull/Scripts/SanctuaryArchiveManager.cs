@@ -9,7 +9,7 @@ public class SanctuaryArchiveManager : MonoBehaviour
     private struct LoreEntry
     {
         public string titleKey;
-        public string summary;
+        public string summaryKey;
         public int requiredFloor;
     }
 
@@ -17,23 +17,27 @@ public class SanctuaryArchiveManager : MonoBehaviour
     // que ya desbloquea los cuadrantes East/South/West (ver QuadrantController).
     private static readonly LoreEntry[] loreEntries =
     {
-        new LoreEntry { titleKey = "ARCHIVE_LORE_TOWER", requiredFloor = 1,
-            summary = "La Torre es una institución de expedición reconocida en el mundo: el Maestro " +
-                      "dirige escuadras piso a piso desde el Portal, sin entrar nunca en persona." },
-        new LoreEntry { titleKey = "ARCHIVE_LORE_DECREES", requiredFloor = 5,
-            summary = "Los Decretos son la única voz de mando directa del Maestro en combate, " +
-                      "un protocolo codificado por los eruditos de la Torre de Marfil." },
-        new LoreEntry { titleKey = "ARCHIVE_LORE_HIERARCHY", requiredFloor = 10,
-            summary = "La Ley del Rango reparte los cupos de cada instalación de base por mérito " +
-                      "de expedición, no por antigüedad ni favor personal." },
-        new LoreEntry { titleKey = "ARCHIVE_LORE_FACTIONS", requiredFloor = 15,
-            summary = "Cada origen de héroe representa una facción real del mundo, con su propia " +
-                      "razón para luchar mejor codo a codo con los suyos." },
+        new LoreEntry { titleKey = "ARCHIVE_LORE_TOWER", summaryKey = "ARCHIVE_LORE_TOWER_BODY", requiredFloor = 1 },
+        new LoreEntry { titleKey = "ARCHIVE_LORE_DECREES", summaryKey = "ARCHIVE_LORE_DECREES_BODY", requiredFloor = 5 },
+        new LoreEntry { titleKey = "ARCHIVE_LORE_HIERARCHY", summaryKey = "ARCHIVE_LORE_HIERARCHY_BODY", requiredFloor = 10 },
+        new LoreEntry { titleKey = "ARCHIVE_LORE_FACTIONS", summaryKey = "ARCHIVE_LORE_FACTIONS_BODY", requiredFloor = 15 },
     };
 
+    // Hito estructurado: se renderiza con la plantilla localizada en el momento de mostrarlo,
+    // no al ascender, para que un cambio de idioma después no deje el historial congelado.
+    public struct AscensionMilestone
+    {
+        public string heroName;
+        public int starRank;
+        public int floor;
+    }
+
     // Registro en memoria de esta sesión; persistirlo en el save queda para el paso 2.
-    private readonly List<string> milestones = new List<string>();
-    public IReadOnlyList<string> Milestones => milestones;
+    private readonly List<AscensionMilestone> milestones = new List<AscensionMilestone>();
+    public IReadOnlyList<AscensionMilestone> Milestones => milestones;
+
+    public static string Format(AscensionMilestone m) =>
+        string.Format(LocalizationManager.Get("ARCHIVE_MILESTONE"), m.heroName, m.starRank, m.floor);
 
     void OnEnable() => HeroProgress.HeroAscended += OnHeroAscended;
     void OnDisable() => HeroProgress.HeroAscended -= OnHeroAscended;
@@ -42,17 +46,21 @@ public class SanctuaryArchiveManager : MonoBehaviour
     {
         if (hero == null || hero.Data == null) return;
 
-        milestones.Insert(0,
-            $"{hero.Data.heroName} asciende a {starRank}★ (Piso {BaseBuilding.TowerFloor}).");
+        milestones.Insert(0, new AscensionMilestone
+        {
+            heroName = hero.Data.heroName,
+            starRank = starRank,
+            floor = BaseBuilding.TowerFloor
+        });
     }
 
     // Entradas de lore que ya tocan según el piso actual de la torre.
-    public List<(string titleKey, string summary)> UnlockedLore()
+    public List<(string titleKey, string summaryKey)> UnlockedLore()
     {
         var result = new List<(string, string)>();
         foreach (var entry in loreEntries)
             if (BaseBuilding.TowerFloor >= entry.requiredFloor)
-                result.Add((entry.titleKey, entry.summary));
+                result.Add((entry.titleKey, entry.summaryKey));
 
         return result;
     }

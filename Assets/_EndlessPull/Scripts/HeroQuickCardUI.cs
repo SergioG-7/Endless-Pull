@@ -29,6 +29,9 @@ public class HeroQuickCardUI : MonoBehaviour
     private GameObject panel;
     private HeroController hero;
 
+    // Marca si esta ficha se abrió desde el Roster: al cerrar con [X] hay que volver ahí.
+    private bool returnToRoster;
+
     private GameObject portraitFrame;
     private TMP_Text titulo;
     private TMP_Text subclase;
@@ -49,6 +52,7 @@ public class HeroQuickCardUI : MonoBehaviour
     private Button usePotionHpButton, usePotionMpButton;
     private TMP_Text potionHpLabel, potionMpLabel;
     private Button btnLock, btnEquip, btnSubclass;
+    private TMP_Text seeRosterLabel;
 
     public bool IsOpen => panel != null && panel.activeSelf;
 
@@ -77,11 +81,26 @@ public class HeroQuickCardUI : MonoBehaviour
         Refresh();
     }
 
-    public void Show(HeroController target)
+    public void Show(HeroController target) => Show(target, false);
+
+    // fromRoster marca que el [X] debe reabrir el Roster al cerrar esta ficha.
+    public void Show(HeroController target, bool fromRoster)
     {
         if (panel == null || target == null) return;
 
         hero = target;
+        returnToRoster = fromRoster;
+        UIManager.OpenExclusive(panel);
+        Refresh();
+    }
+
+    // La usa el modal de Equipar al cerrarse: reabre la ficha sin perder el héroe ni el
+    // origen (Roster o mundo), porque UIManager.OpenExclusive solo desactiva el GameObject
+    // y nunca llama a Close().
+    public void Reopen()
+    {
+        if (panel == null || hero == null) return;
+
         UIManager.OpenExclusive(panel);
         Refresh();
     }
@@ -90,10 +109,17 @@ public class HeroQuickCardUI : MonoBehaviour
     {
         if (panel != null) panel.SetActive(false);
         hero = null;
+
+        if (returnToRoster)
+        {
+            returnToRoster = false;
+            if (roster != null) roster.Open();
+        }
     }
 
     public void OnSeeInRosterPressed()
     {
+        returnToRoster = false;
         Close();
         if (roster != null) roster.Open();
     }
@@ -127,7 +153,7 @@ public class HeroQuickCardUI : MonoBehaviour
 
         string oficio = hero.Subclass != HeroSubclass.None ? hero.SubclassName : LocalizationManager.Get("UI_NO_SUBCLASS");
         string puesto = hero.AssignedBuilding != null
-            ? $"   ·   Trabaja en {hero.AssignedBuilding.BuildingName}"
+            ? string.Format(LocalizationManager.Get("UI_WORKS_AT"), BuildingTypes.DisplayName(hero.AssignedBuilding.Type))
             : string.Empty;
         subclase.text = $"{oficio}   ·   {HeroTraits.DisplayName(hero.Trait)}{puesto}";
 
@@ -177,6 +203,8 @@ public class HeroQuickCardUI : MonoBehaviour
             hero.IsLocked ? UITheme.DangerSoft : UITheme.Neutral, true);
         SetActionButton(btnEquip, LocalizationManager.Get("UI_EQUIP"), UITheme.Teal, shop != null || equipModal != null);
         SetActionButton(btnSubclass, LocalizationManager.Get("UI_SUBCLASS"), UITheme.AccentSoft, puedeSubclase);
+
+        if (seeRosterLabel != null) seeRosterLabel.text = LocalizationManager.Get("UI_SEE_ROSTER");
     }
 
     private static void SetActionButton(Button button, string text, Color color, bool interactable)
@@ -303,9 +331,10 @@ private void Build()
             OnUseMpPotionPressed);
         potionMpLabel = usePotionMpButton.GetComponentInChildren<TMP_Text>();
 
-        UIBuild.Button(panel.transform, "Btn_SeeRoster", LocalizationManager.Get("UI_SEE_ROSTER"),
+        var btnSeeRoster = UIBuild.Button(panel.transform, "Btn_SeeRoster", LocalizationManager.Get("UI_SEE_ROSTER"),
             new Color(0.35f, 0.30f, 0.60f), new Vector2(ActionBtnWidth, ActionBtnHeight), new Vector2(xRoster, row2Y),
             OnSeeInRosterPressed);
+        seeRosterLabel = btnSeeRoster.GetComponentInChildren<TMP_Text>();
     }
 
 

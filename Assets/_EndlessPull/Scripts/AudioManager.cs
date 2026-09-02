@@ -97,6 +97,9 @@ public class AudioManager : MonoBehaviour
     [Tooltip("Segundos mínimos entre dos disparos del mismo efecto; corta el zumbido.")]
     [SerializeField] private float minInterval = 0.04f;
 
+    [Tooltip("Multiplicador de volumen del clic de UI sobre uiVolume; se oía flojo con el volumen normal.")]
+    [SerializeField] private float uiClickVolumeBoost = 1.8f;
+
     [Tooltip("Frecuencia de muestreo de los clips sintéticos.")]
     [SerializeField] private int sampleRate = 44100;
 
@@ -165,6 +168,12 @@ public class AudioManager : MonoBehaviour
     private static readonly Dictionary<SfxId, float> MaxDurationSeconds = new Dictionary<SfxId, float>
     {
         { SfxId.CraftSuccess, 3f }
+    };
+
+    // Clips importados con silencio al principio (ej. yunque): arranca la reproducción pasado ese hueco.
+    private static readonly Dictionary<SfxId, float> StartOffsetSeconds = new Dictionary<SfxId, float>
+    {
+        { SfxId.CraftSuccess, 1f }
     };
 
     public bool Muted => muted;
@@ -491,11 +500,14 @@ public class AudioManager : MonoBehaviour
 
         var categoria = MixCategoryOf(id);
 
+        float volumenBase = ChannelOf(id) == AudioChannel.UI ? uiVolume : combatVolume;
+
         source.clip = clip;
         source.outputAudioMixerGroup = GroupFor(categoria);
-        source.volume = ChannelOf(id) == AudioChannel.UI ? uiVolume : combatVolume;
+        source.volume = id == SfxId.UiClick ? volumenBase * uiClickVolumeBoost : volumenBase;
         source.spatialBlend = 0f;
         source.transform.position = positional ? worldPosition : transform.position;
+        source.time = StartOffsetSeconds.TryGetValue(id, out float offset) && offset < clip.length ? offset : 0f;
         source.Play();
 
         if (MaxDurationSeconds.TryGetValue(id, out float maxSeconds) && clip.length > maxSeconds)

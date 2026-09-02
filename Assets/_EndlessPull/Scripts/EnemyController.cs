@@ -277,7 +277,7 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         if (body != null) body.color = bossWindupTint;
         ShowTelegraph(true);
 
-        DamageTextManager.Show(transform.position, "¡CARGANDO PISOTÓN!", new Color(1f, 0.3f, 0.25f));
+        DamageTextManager.Show(transform.position, LocalizationManager.Get("FX_SLAM_CHARGING"), new Color(1f, 0.3f, 0.25f));
         Debug.Log($"[Jefe] {data.enemyName} carga el golpe: {bossSlamWindup}s para reaccionar.", this);
     }
 
@@ -339,6 +339,7 @@ public class EnemyController : MonoBehaviour, IHealthOwner
 
         foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None))
         {
+            if (!hero.IsDeployed || hero.CurrentHealth <= 0) continue;
             if (((Vector2)(hero.transform.position - transform.position)).sqrMagnitude > radiusSqr) continue;
 
             hero.TakeDamage(damage);
@@ -347,7 +348,7 @@ public class EnemyController : MonoBehaviour, IHealthOwner
 
         if (hits > 0)
         {
-            DamageTextManager.Show(transform.position, "¡PISOTÓN!", new Color(1f, 0.4f, 0.3f));
+            DamageTextManager.Show(transform.position, LocalizationManager.Get("FX_SLAM"), new Color(1f, 0.4f, 0.3f));
             Debug.Log($"[Jefe] {data.enemyName} sacude a {hits} héroe(s) por {damage}.", this);
         }
     }
@@ -397,6 +398,9 @@ public class EnemyController : MonoBehaviour, IHealthOwner
 
         foreach (var hero in heroes)
         {
+            // Solo escuadra desplegada en la expedición: ignora héroes ociosos en la base.
+            if (!hero.IsDeployed || hero.CurrentHealth <= 0) continue;
+
             float sqr = ((Vector2)(hero.transform.position - transform.position)).sqrMagnitude;
             if (sqr > rangeSqr) continue;
 

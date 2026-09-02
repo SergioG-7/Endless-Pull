@@ -33,6 +33,12 @@ public class InGameMenuUI : MonoBehaviour
     private Slider combatVolumeSlider;
     private readonly Button[] languageButtons = new Button[3];
 
+    // Se fijaban una sola vez en Build() y nunca se releían tras cambiar de idioma.
+    private TMP_Text pauseLabel;
+    private TMP_Text resumeLabel;
+    private TMP_Text quitLabel;
+    private TMP_Text languageTitle;
+
     public bool IsOpen => panel != null && panel.activeSelf;
 
     void Awake()
@@ -106,6 +112,10 @@ public class InGameMenuUI : MonoBehaviour
     private void RefreshTexts()
     {
         titulo.text = LocalizationManager.Get("UI_IN_GAME_MENU");
+        pauseLabel.text = LocalizationManager.Get("UI_PAUSE");
+        resumeLabel.text = LocalizationManager.Get("UI_RESUME");
+        quitLabel.text = LocalizationManager.Get("UI_QUIT_TO_MENU");
+        languageTitle.text = LocalizationManager.Get("UI_LANGUAGE");
 
         for (int i = 0; i < languageButtons.Length; i++)
         {
@@ -135,10 +145,12 @@ public class InGameMenuUI : MonoBehaviour
         titulo = UIBuild.TopLabel(panel.transform, "Title", UITheme.SizeTitle, 40f, -24f,
             TextAlignmentOptions.Center);
 
-        UIBuild.Button(panel.transform, "Btn_Pause", LocalizationManager.Get("UI_PAUSE"),
+        var btnPause = UIBuild.Button(panel.transform, "Btn_Pause", LocalizationManager.Get("UI_PAUSE"),
             UITheme.Neutral, new Vector2(172f, 64f), new Vector2(-96f, -100f), OnPausePressed);
-        UIBuild.Button(panel.transform, "Btn_Resume", LocalizationManager.Get("UI_RESUME"),
+        pauseLabel = btnPause.GetComponentInChildren<TMP_Text>();
+        var btnResume = UIBuild.Button(panel.transform, "Btn_Resume", LocalizationManager.Get("UI_RESUME"),
             UITheme.Amber, new Vector2(172f, 64f), new Vector2(96f, -100f), OnResumePressed);
+        resumeLabel = btnResume.GetComponentInChildren<TMP_Text>();
 
         float volumeY = -200f;
         uiVolumeLabel = UIBuild.TopLabel(panel.transform, "UiVolumeLabel", UITheme.SizeBody, 26f,
@@ -157,10 +169,10 @@ public class InGameMenuUI : MonoBehaviour
         }
 
         float langY = combatY - 100f;
-        var langTitle = UIBuild.TopLabel(panel.transform, "LanguageTitle", UITheme.SizeBody, 26f,
+        languageTitle = UIBuild.TopLabel(panel.transform, "LanguageTitle", UITheme.SizeBody, 26f,
             langY, TextAlignmentOptions.Center);
-        langTitle.text = LocalizationManager.Get("UI_LANGUAGE");
-        langTitle.color = UITheme.TextSoft;
+        languageTitle.text = LocalizationManager.Get("UI_LANGUAGE");
+        languageTitle.color = UITheme.TextSoft;
 
         for (int i = 0; i < 3; i++)
         {
@@ -172,8 +184,9 @@ public class InGameMenuUI : MonoBehaviour
             languageButtons[i] = button;
         }
 
-        UIBuild.Button(panel.transform, "Btn_QuitToMenu", LocalizationManager.Get("UI_QUIT_TO_MENU"),
+        var btnQuit = UIBuild.Button(panel.transform, "Btn_QuitToMenu", LocalizationManager.Get("UI_QUIT_TO_MENU"),
             UITheme.DangerSoft, new Vector2(360f, 60f), new Vector2(0f, -(size.y - 60f)), OnQuitPressed);
+        quitLabel = btnQuit.GetComponentInChildren<TMP_Text>();
 
         panel.SetActive(false);
     }

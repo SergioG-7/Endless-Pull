@@ -1,65 +1,62 @@
 # Roadmap de Produccion Endless Pull
 
-## Fase 40
+## Fase 44 — COMPLETADA (2026-09-02)
 
-[DIRECTIVE: SYSTEMIC LOCALIZATION, ENEMY AI, SMART AUDIO INTEGRATION & UI HARDENING]
+Storage con tarjetas/paginación, grid de base uniforme, bug de reclamo de expedición, y
+auditoría exhaustiva de localización JA. Las 8 secciones del directivo original quedaron
+resueltas y verificadas (compilación limpia + Play Mode donde el entorno lo permitió).
+
+Detalle completo de qué se tocó, por qué, y qué se verificó: ver
+`production/session-state/active.md`, sesión "Fase 44 (Storage cards, grid de base, claim de
+expedición, JA)". Incluye también la investigación post-Fase 44 del reporte "botón Ascender no
+reacciona" (sin bug reproducible, flujo verificado de punta a punta con clic real simulado).
+
+Sin directivo pendiente. Esperar siguiente fase del usuario antes de inventar trabajo nuevo.
+
+## Fase 45
+
+[DIRECTIVE: WORLD SPATIAL ISOLATION, CAMERA PIVOT, UI LOCALIZATION AUDIT & AUDIO REFINEMENT]
 Actúa en el hilo principal como desarrollador senior de Unity C# y uGUI.
-PROHIBIDO invocar subagentes si no es para hacerlo más rapido, si vas a invocarlo para tu no hacer nada en la rama principal no lo hagas (/team-\*). Respuestas breves, directas y centradas en la edición de código.
+PROHIBIDO invocar subagentes (/team-\*). Respuestas breves y centradas exclusivamente en el código.
 
-Ejecuta de forma exhaustiva el siguiente paquete de correcciones, arquitectura de audio y saneamiento integral:
+Aplica el siguiente conjunto de correcciones críticas y saneamiento del mundo:
 
 ---
 
-1. Sistema de Audio Inteligente y Mapeo por Nombre (AudioManager.cs / Assets/Audio):
+1. Aislamiento Espacial de la Arena y Corrección de Cámara (CameraDirector.cs, WaveManager.cs, Base.unity):
 
-- Singleton AudioManager: Crea/actualiza `AudioManager.cs` con canales independientes (BGM y SFX), control de volumen y auto-detección de clips en `Assets/Audio` (o subcarpetas).
-- Mapeo Inteligente por Palabras Clave: Inspecciona los nombres de archivo para asociar cada clip a su evento correspondiente según coincidencia de texto:
-  - BGM Base: coincide con "base", "ambient", "peace", "village", "town", etc. (loop, crossfade).
-  - BGM Combate: coincide con "combat", "battle", "tower", "fight", "arena", etc. (loop, crossfade).
-  - UI Clic / Pestaña: coincide con "click", "tap", "button", "select", "tick".
-  - Modales Open/Close: coincide con "open", "window", "popup", "close", "dismiss", "back".
-  - Error / Bloqueo: coincide con "error", "deny", "locked", "cancel", "fail".
-  - Crafteo / Yunque: coincide con "anvil", "craft", "forge", "hammer", "smith".
-  - Recompensas / Monedas: coincide con "reward", "coin", "gold", "gem", "loot".
-  - Curación / Poción: coincide con "heal", "potion", "magic_heal", "recovery".
-  - Invocación / Ascenso: coincide con "summon", "ascend", "portal", "level_up", "fanfare".
-  - Ataque Melee / Impacto: coincide con "hit", "slash", "sword", "strike", "punch".
-  - Ataque Distancia / Disparo: coincide con "shoot", "arrow", "bow", "cast", "magic_shot".
-  - Victoria / Derrota: coincide con "victory", "win", "defeat", "lose", "game_over".
-- Límite de Duración para SFX Largos (ej. Yunque): Implementa reproducción controlada (`PlaySFX(clip, maxDuration = 3f)`) para que efectos con audios largos o repetitivos (como el golpeo de yunque) hagan fade-out y se detengan a los 3 segundos en vez de reproducir el archivo entero.
+- Desplazamiento Masivo de la Arena: La arena de combate está demasiado cerca y se asoma por la izquierda al alejar la vista en la base. Mueve todo el contenedor de la Torre/Arena (`Env_Arena`, spawners, muros) a una posición lejana en el plano mundial (ej. `X = 500f` o `X = 1000f`) para que sea físicamente imposible verla desde la cámara de la base en cualquier nivel de zoom.
+- Centrado del Pivot de Cámara: Corrige la interpolación del zoom en `CameraDirector.cs`. El zoom debe pivotar matemáticamente sobre el centro de la base `(0, 0)`, evitando que la vista se desplace a la derecha y corte el lateral izquierdo del campamento.
 
-2. IA de Enemigos en Combate (EnemyController.cs, EnemyCombatAI.cs, WaveManager.cs):
+2. Limpieza de Colliders en Tower Gateway y Cartel Residual (BaseManager.cs, Base.unity):
 
-- Target Acquisition de Enemigos: Corrige la IA enemiga. Los esqueletos/goblins DEBEN buscar activamente al héroe vivo más cercano (`AcquireNearestHeroTarget`) al spawnear y al morir su objetivo actual.
-- Ataque y Daño Real: Los enemigos deben desplazarse hacia la posición X del héroe objetivo (-X) y ejecutar sus ataques y daño al entrar en rango cuerpo a cuerpo o distancia (resolver el bug de que caminan en línea recta hacia la izquierda ignorando a los héroes sin hacer daño).
+- Elimina cualquier script de edificio bloqueado (`LockedBuilding`), collider invisible o trigger residual que haya quedado bajo la zona morada de `Tower Gateway`.
+- Toda el área del portal debe responder exclusivamente a la interacción de la Torre; hacer clic en el halo morado NO debe activar el sonido de error (`Audio_Error`) ni reportar que el edificio está bloqueado.
 
-3. Reglas de Asignación Exclusiva a Edificios (BuildingController.cs, WorkerManager.cs, BaseManager.cs):
+3. Localización de Candados y Tamaño de Placas de Héroe (BuildingLockVisual.cs, HeroWorldBadge.cs, Base.unity):
 
-- Unicidad de Trabajador: Un héroe SOLO puede estar asignado a un único edificio a la vez. Si se asigna a la Forja estando en la Granja, debe desasignarse automáticamente de la Granja previa.
-- Prioridad de Despliegue: Si un héroe asignado a un edificio es enviado a la Torre o a una Expedición activa, debe desasignarse automáticamente del edificio para evitar duplicidad de presencia.
+- Candados de Edificios en Escena: Elimina el texto fijo en inglés ("Unlocks at Floor X"). Conéctalo a `LocalizationManager` para que se traduzca y refresque dinámicamente con `OnLanguageChanged`:
+  - ES: `"Desbloquea en Piso {0}"`
+  - EN: `"Unlocks at Floor {0}"`
+  - JA: `"フロア{0}で解放"`
+- Placas Flotantes de Héroes en la Base: Aumenta el tamaño del `TextMeshPro` / `RectTransform` del cartelito flotante sobre cada héroe (`Nombre · Nv. X`) en un 25-30% para que se lea cómodamente desde la vista general sin zoom.
 
-4. UI: Santuario, Roster [X] y Taller de Alquimia (SanctuaryUI.cs, RosterUI.cs, AlchemyWorkshopUI.cs):
+4. Auditoría de Localización en Taller de Alquimia y Almacén (AlchemyWorkshopUI.cs, ShopUI.cs / StorageUI.cs):
 
-- Santuario (Corte de Retratos): Ajusta el `Viewport` / `Content` y añade `padding.left = 20px` (y `offsetMin.x`) en el prefab de ítem del héroe para que los sprites nunca se corten por el borde izquierdo de la lista.
-- Roster [X]: Sustituye el botón de cierre actual por `UIBuild.CloseButtonTopRight`, idéntico en tamaño, posición y comportamiento al de la Ficha de Héroe.
-- Crafteo de Equipo:
-  - Renombra el botón "Craft Weapon" a "Craft Equipment" / `BTN_CRAFT_EQUIPMENT`.
-  - Aumenta el tamaño de fuente del toast/texto de resultado del ítem obtenido (armas, armaduras, pociones y piedras) para que sea claramente legible.
+- Taller de Alquimia (Pestañas Superiores):
+  - "Stone Forging" $\rightarrow$ ES: "Forja de Piedras" | EN: "Stone Forging" | JA: "覚醒石錬成"
+  - "Forge & Repair" $\rightarrow$ ES: "Forjar y Reparar" | EN: "Forge & Repair" | JA: "鍛造・修理"
+  - "Alchemy" $\rightarrow$ ES: "Alquimia" | EN: "Alchemy" | JA: "錬金術"
+- Almacén (Storage):
+  - Traducir cabecera: ES: "Almacén" | EN: "Storage" | JA: "倉庫".
+  - Traducir botón inferior: "Close" $\rightarrow$ ES: "Cerrar" | EN: "Close" | JA: "閉じる" (o sustituir por `UIBuild.CloseButtonTopRight`).
+  - Añadir fila superior de filtros por categoría: "Todos", "Consumibles", "Materiales", "Equipo" localizados a los 3 idiomas.
 
-5. Auditoría y Cobertura Total de Localización (LocalizationManager.cs y scripts UI):
-   Audita y sustituye CUALQUIER string hardcodeado en los 3 idiomas (ES / EN / JA):
+5. Ajuste del SFX del Yunque (AudioManager.cs):
 
-- Edificios y Modales: Nombres y textos de ocupación de "Granja del Valle", "Sala de Guerra", "Archivo del Santuario", "Forja", cabeceras internas de "Storage" y "Sanctuary" ("Ascension", "Synthesis", "Needs to reach Lv. X", "Max rarity").
-- Combate y HUD:
-  - Sinapsis/Origen: Traducir "Reino Fronterizo" y demás afinidades de origen (`ORIGIN_FRONTIER_REALM`, etc.).
-  - TopBar y Toasts: Clave de "TORRE / TOWER", y banner de victoria de piso ("Piso X superado", "Floor X cleared", etc.).
-- Ficha de Héroe y Roster:
-  - Personalidades/Rasgos: "Trabajador", "Glotón", "Feroz", "Perezoso", etc.
-  - Estados de Moral: "Inspirado", "Normal", "Desmotivado".
-  - Subclases y Equipo: Nombres de armas/armaduras ("Espada de Madera", etc.) sin sufijos en español al estar en JA/EN.
-  - Botones: "View in Roster" (`BTN_VIEW_ROSTER`).
+- Reducir el tiempo de corte del sonido de crafteo (`CraftAnvil`): ajustar para que se detenga a los 1.3s - 1.5s de reproducción (máximo 1–2 golpes de martillo en vez de los 4 que trae el archivo).
 
 6. Verificación:
 
 - Compilar limpio vía Unity MCP (filtro `error CS` = 0 errores).
-- Validar en Play Mode: comprobar que los enemigos ataquen a los héroes e inflijan daño, que la música y SFX suenen en sus eventos (y el crafteo no dure más de 3s), que los retratos del Santuario no se recorten a la izquierda, que la asignación a edificios sea exclusiva y que al cambiar a Japonés no quede ni una sola palabra en español/inglés.
+- Validar en Play Mode: comprobar que la arena no sea visible al alejar el zoom de la base, que el zoom esté centrado, que pulsar la zona morada del portal no dé error, que los candados salgan en japonés (`フロアXで解放`), que las pestañas del taller y el almacén estén 100% traducidas con filtros funcionales, y que el yunque solo golpee un par de veces.
