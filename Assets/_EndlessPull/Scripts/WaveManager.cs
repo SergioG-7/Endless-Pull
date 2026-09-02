@@ -23,6 +23,23 @@ public enum ExpeditionState
     Lost
 }
 
+// Tipo de resultado de la última batalla, para regenerar el banner con el idioma activo
+// en vez de guardar el string ya formateado (se quedaba congelado si el jugador cambiaba
+// de idioma después de retirarse o perder).
+public enum BattleResultType
+{
+    Cleared,
+    Defeat,
+    Retreat
+}
+
+public struct LastBattleResult
+{
+    public int Floor;
+    public BattleResultType ResultType;
+    public int SurvivorsCount;
+}
+
 public class WaveManager : MonoBehaviour
 {
     [Tooltip("Prefab de enemigo que se usa para poblar la oleada.")]
@@ -233,6 +250,9 @@ public Vector2 ArenaFocus => arenaCenter + new Vector2((heroSpawnOffset.x + spaw
 
     // Se dispara con (estado, mensaje) para que la UI muestre el feedback.
     public event System.Action<ExpeditionState, string> ExpeditionChanged;
+
+    // Solo Retirada/Derrota (Victoria ya tiene su propio FloorCleared con el desglose de recompensa).
+    public event System.Action<LastBattleResult> BattleResultReported;
 
     // Se dispara con el piso nuevo; evita que la UI dependa del orden de los Start.
     public event System.Action<int> FloorChanged;
@@ -544,6 +564,12 @@ private void DeployParty()
 
         Report(ExpeditionState.Idle, string.Format(
             LocalizationManager.Get("UI_STATUS_RETREAT"), currentFloor, rescatados));
+        BattleResultReported?.Invoke(new LastBattleResult
+        {
+            Floor = currentFloor,
+            ResultType = BattleResultType.Retreat,
+            SurvivorsCount = rescatados
+        });
         return true;
     }
 
@@ -713,6 +739,12 @@ private void DeployParty()
             AudioManager.Play(SfxId.Defeat);
             Report(ExpeditionState.Lost, string.Format(
                 LocalizationManager.Get("UI_STATUS_LOST"), currentFloor));
+            BattleResultReported?.Invoke(new LastBattleResult
+            {
+                Floor = currentFloor,
+                ResultType = BattleResultType.Defeat,
+                SurvivorsCount = 0
+            });
         }
     }
 

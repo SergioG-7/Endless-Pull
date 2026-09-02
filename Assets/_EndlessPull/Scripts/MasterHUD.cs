@@ -44,6 +44,7 @@ public class MasterHUD : MonoBehaviour
             waves.ExpeditionChanged += OnExpeditionChanged;
             waves.FloorChanged += OnFloorChanged;
             waves.FloorCleared += OnFloorCleared;
+            waves.BattleResultReported += OnBattleResultReported;
         }
         HeroProgress.HeroAscended += OnHeroAscended;
         SaveManager.RosterLoaded += RefreshStarCounts;
@@ -63,6 +64,7 @@ public class MasterHUD : MonoBehaviour
             waves.ExpeditionChanged -= OnExpeditionChanged;
             waves.FloorChanged -= OnFloorChanged;
             waves.FloorCleared -= OnFloorCleared;
+            waves.BattleResultReported -= OnBattleResultReported;
         }
         HeroProgress.HeroAscended -= OnHeroAscended;
         SaveManager.RosterLoaded -= RefreshStarCounts;
@@ -77,9 +79,39 @@ public class MasterHUD : MonoBehaviour
         if (economy != null) RefreshResources();
         RefreshFloor();
         if (showingWonStatus) RefreshWonStatus();
+        else if (showingBattleResult) RefreshBattleResultStatus();
     }
 
     private void OnHeroAscended(HeroController hero, int newStarRank) => RefreshStarCounts();
+
+    private LastBattleResult lastBattleResult;
+    private bool showingBattleResult;
+
+    // Retirada/Derrota: mismo motivo que BuildWonMessage — guardar el dato crudo, no el string ya
+    // formateado, para poder regenerarlo si el jugador cambia de idioma con el banner en pantalla.
+    private void OnBattleResultReported(LastBattleResult result)
+    {
+        lastBattleResult = result;
+        showingBattleResult = true;
+        RefreshBattleResultStatus();
+    }
+
+    private void RefreshBattleResultStatus()
+    {
+        if (statusLabel != null) statusLabel.text = BuildBattleResultMessage();
+    }
+
+    private string BuildBattleResultMessage()
+    {
+        return lastBattleResult.ResultType switch
+        {
+            BattleResultType.Retreat => string.Format(LocalizationManager.Get("UI_STATUS_RETREAT"),
+                lastBattleResult.Floor, lastBattleResult.SurvivorsCount),
+            BattleResultType.Defeat => string.Format(LocalizationManager.Get("UI_STATUS_LOST"),
+                lastBattleResult.Floor),
+            _ => string.Empty
+        };
+    }
 
 void Start()
     {
@@ -198,6 +230,12 @@ private void OnGemsChanged(int gems)
     private void OnExpeditionChanged(ExpeditionState state, string message)
     {
         showingWonStatus = state == ExpeditionState.Won;
+
+        // Cualquier cambio de estado (incluido empezar un piso nuevo) apaga el banner de
+        // resultado anterior; si WaveManager reporta un resultado real justo después
+        // (Retirada/Derrota), OnBattleResultReported lo reactiva con el texto correcto.
+        showingBattleResult = false;
+
         if (statusLabel != null) statusLabel.text = showingWonStatus ? BuildWonMessage() : message;
         RefreshFloor();
     }

@@ -223,6 +223,11 @@ public class GachaManager : MonoBehaviour
         hero.SetPassives(passives);
         GrantStarterWeapon(hero);
 
+        // Un héroe que nace ya en 3★/4★ se especializa solo, sin interrumpir la invocación con
+        // un modal de elección (se puede cambiar luego desde el panel del héroe).
+        var progress = hero.GetComponent<HeroProgress>();
+        if (progress != null) progress.GrantSubclassIfDue(allowUiOffer: false);
+
         DamageTextManager.Show(hero.transform.position, LocalizationManager.Get("FX_NEW_HERO"),
             new Color(1f, 0.9f, 0.4f));
 

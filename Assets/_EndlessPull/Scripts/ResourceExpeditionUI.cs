@@ -65,17 +65,12 @@ public class ResourceExpeditionUI : MonoBehaviour
     {
         if (panel == null) return;
 
-        // Sin nadie asignado a recolección, ir directo a la asignación de escuadra en vez de
-        // enseñar una lista de destinos que no se puede usar todavía. Si ya hay recompensa
-        // lista para reclamar, nunca redirigir: el reclamo no depende de la escuadra.
-        bool listaParaReclamar = expeditions != null && expeditions.ReadyToClaim;
-        var party = UnityEngine.Object.FindFirstObjectByType<PartyManager>();
-        if (!listaParaReclamar && party != null && party.ExpeditionSquad.Count == 0 && squadUI != null)
-        {
-            squadUI.OpenForConfirm(false, null);
-            return;
-        }
-
+        // Flujo idéntico a la Torre (TowerPanelUI.OnFloorPressed): este panel siempre se abre
+        // primero para elegir destino, y OnDestinationPressed es el único sitio que visita la
+        // confirmación de escuadra (una sola vez). Antes, con la escuadra vacía, Open() saltaba
+        // directo a squadUI.OpenForConfirm(false, null) — un callback nulo que no arrancaba nada
+        // y obligaba al jugador a volver a pulsar "Expedición" para llegar de verdad a los
+        // destinos, la doble apertura que describe el roadmap.
         UIManager.OpenExclusive(panel);
         Refresh();
     }
@@ -117,7 +112,11 @@ public class ResourceExpeditionUI : MonoBehaviour
 
         bool running = expeditions != null && expeditions.IsRunning;
         bool ready = expeditions != null && expeditions.ReadyToClaim;
-        bool canStart = expeditions != null && expeditions.CanStart;
+
+        // Solo depende de si ya hay una recolección en curso, no de si la escuadra ya tiene
+        // gente asignada: igual que el piso de Torre, la escuadra se revisa/completa en la
+        // pantalla de confirmación que se abre justo después (OnDestinationPressed), no aquí.
+        bool notBusy = expeditions != null && !expeditions.IsRunning;
 
         status.text = ready
             ? string.Format(LocalizationManager.Get("UI_EXPEDITION_READY"), DestinationName(expeditions.CurrentType))
@@ -135,8 +134,8 @@ public class ResourceExpeditionUI : MonoBehaviour
             var type = (ResourceExpeditionType)i;
             buttonLabels[i].text = DestinationName(type) + "   ->   " + RewardName(type);
             buttons[i].gameObject.SetActive(!ready);
-            buttons[i].interactable = canStart;
-            buttons[i].targetGraphic.color = canStart ? readyColor : busyColor;
+            buttons[i].interactable = notBusy;
+            buttons[i].targetGraphic.color = notBusy ? readyColor : busyColor;
         }
     }
 

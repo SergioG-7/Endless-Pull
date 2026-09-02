@@ -142,11 +142,11 @@ public static class LocalizationManager
         { "UI_STATUS_WON",   new[] { "Piso {0} superado ({1})  +{2} gemas, +{3} madera, +{4} hierro",
                                        "Floor {0} cleared ({1})  +{2} gems, +{3} wood, +{4} iron",
                                        "{0}階クリア（{1}）　+{2}ジェム、+{3}木材、+{4}鉄" } },
-        { "UI_STATUS_LOST",  new[] { "Expedición fallida en el piso {0}", "Expedition failed on floor {0}",
-                                       "{0}階で遠征失敗" } },
+        { "UI_STATUS_LOST",  new[] { "Derrota en el piso {0}", "Defeated on floor {0}",
+                                       "フロア{0}で敗北" } },
         { "UI_STATUS_RETREAT", new[] { "Retirada del piso {0}: {1} héroe(s) a salvo, sin recompensa",
                                          "Retreat from floor {0}: {1} hero(es) safe, no reward",
-                                         "{0}階から撤退：{1}人の英雄が無事、報酬なし" } },
+                                         "フロア{0}から撤退: {1}名の英雄が無事帰還、報酬なし" } },
 
         // Acelerador de combate y retirada automática (CombatHUD).
         { "UI_AUTO_RETREAT",  new[] { "Auto-Retirada", "Auto-Retreat", "自動撤退" } },

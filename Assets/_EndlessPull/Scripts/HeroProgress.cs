@@ -206,7 +206,7 @@ public class HeroProgress : MonoBehaviour
     }
 
     // A partir de 3 estrellas el héroe se especializa en el arquetipo del arma que empuña.
-    public void GrantSubclassIfDue()
+    public void GrantSubclassIfDue(bool allowUiOffer = true)
     {
         if (hero == null || hero.StarRank < HeroSubclasses.MinStarRank) return;
         if (hero.Subclass != HeroSubclass.None) return;
@@ -215,7 +215,7 @@ public class HeroProgress : MonoBehaviour
         if (HeroSubclasses.OptionsFor(arquetipo).Length == 0) arquetipo = WeaponType.Sword;
 
         // Con modal en escena elige el jugador; el sorteo solo cubre que no lo haya.
-        if (SubclassSelectionUI.Offer(hero, arquetipo)) return;
+        if (allowUiOffer && SubclassSelectionUI.Offer(hero, arquetipo)) return;
 
         var elegida = HeroSubclasses.RandomFor(arquetipo);
         hero.SetSubclass(elegida);

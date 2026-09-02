@@ -601,10 +601,10 @@ public class SanctuaryUI : MonoBehaviour
         scroll.scrollSensitivity = 30f;
 
         var layout = bodyGo.AddComponent<VerticalLayoutGroup>();
-        // Más margen a los lados que arriba/abajo: el aro de la lista recortaba el borde
-        // izquierdo del retrato de la fila cuando el hueco era el mismo en las 4 direcciones.
-        layout.padding = new RectOffset(20, 10, 6, 6);
-        layout.spacing = 6f;
+        // Margen holgado en las 4 direcciones: con 20/10/6/6 los textos largos («Lv.30が必要です»,
+            // nombres de héroe) y la tarjeta quedaban apretados contra los bordes del modal.
+            layout.padding = new RectOffset(35, 35, 20, 20);
+            layout.spacing = 10f;
         layout.childControlWidth = true;
         layout.childForceExpandWidth = true;
         layout.childControlHeight = false;
@@ -644,16 +644,16 @@ public class SanctuaryUI : MonoBehaviour
         // Debajo de las dos tarjetas (Receptor + Sacrificio, 96px cada una): así el nombre nunca
         // queda detrás de la tarjeta del sacrificio, que ahora ocupa el mismo ancho que antes.
         previewName = UIBuild.Label(panel.transform, "PreviewName", UITheme.SizeName, TextAlignmentOptions.Left);
-        AnchorTopLeft(previewName.rectTransform, x, -220f, size.x - RightX - 24f, 32f);
+        AnchorTopLeft(previewName.rectTransform, x, -220f, size.x - RightX - 38f, 32f);
 
         previewBody = UIBuild.Label(panel.transform, "PreviewBody", UITheme.SizeBody, TextAlignmentOptions.TopLeft);
         previewBody.color = UITheme.TextSoft;
         previewBody.lineSpacing = 12f;
-        AnchorTopLeft(previewBody.rectTransform, x, -256f, size.x - RightX - 24f, 188f);
+        AnchorTopLeft(previewBody.rectTransform, x, -256f, size.x - RightX - 38f, 188f);
 
         previewHint = UIBuild.Label(panel.transform, "PreviewHint", UITheme.SizeBody, TextAlignmentOptions.TopLeft);
         previewHint.color = UITheme.TextFaint;
-        AnchorTopLeft(previewHint.rectTransform, x, -140f, size.x - RightX - 24f, 60f);
+        AnchorTopLeft(previewHint.rectTransform, x, -140f, size.x - RightX - 38f, 60f);
 
         previewAction = UIBuild.Button(panel.transform, "Btn_PreviewAction", string.Empty, UITheme.Amber,
             new Vector2(220f, 52f), new Vector2(x, -(size.y - 62f)), OnPreviewActionPressed);

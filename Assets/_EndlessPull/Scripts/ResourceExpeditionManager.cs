@@ -23,6 +23,9 @@ public class ResourceExpeditionManager : MonoBehaviour
     [Tooltip("Gestor del que sale la escuadra de recolección.")]
     [SerializeField] private PartyManager party;
 
+    [Tooltip("Torre, para escalar la recompensa según el piso más alto superado.")]
+    [SerializeField] private WaveManager waves;
+
     private ResourceExpeditionType currentType;
     private float remaining;
     private int heroesSent;
@@ -46,6 +49,7 @@ public class ResourceExpeditionManager : MonoBehaviour
     {
         if (economy == null) economy = UnityEngine.Object.FindFirstObjectByType<EconomyManager>();
         if (party == null) party = UnityEngine.Object.FindFirstObjectByType<PartyManager>();
+        if (waves == null) waves = UnityEngine.Object.FindFirstObjectByType<WaveManager>();
     }
 
     void Update()
@@ -82,8 +86,8 @@ public class ResourceExpeditionManager : MonoBehaviour
         return LocalizationManager.Get("UI_GEMS");
     }
 
-    // Ya no consume intentos: solo hace falta escuadra libre y ningún slot ocupado.
-    public bool CanStart => !IsRunning && party != null && party.ExpeditionSquad.Count > 0;
+    // Escala con el piso más alto superado: 5% extra por piso (Piso 1 = x1, Piso 21 = x2).
+    public float ProgressMultiplier => 1f + 0.05f * Mathf.Max(0, (waves != null ? waves.HighestClearedFloor : 1) - 1);
 
     public bool StartExpedition(ResourceExpeditionType type)
     {
@@ -125,7 +129,7 @@ public class ResourceExpeditionManager : MonoBehaviour
     {
         if (!readyToClaim) return false;
 
-        int amount = rewardPerHero * Mathf.Max(1, heroesSent);
+        int amount = Mathf.RoundToInt(rewardPerHero * Mathf.Max(1, heroesSent) * ProgressMultiplier);
 
         // Toast de resumen antes de sumar el material: el jugador ve exactamente qué ganó,
         // no solo el número final del recurso ya actualizado en el TopBar.
