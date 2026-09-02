@@ -120,3 +120,9 @@ Desktop.ini
 # ---------------------------------------------------------------
 /design/gdd/
 /production/project-stage-report.md
+
+# ---------------------------------------------------------------
+# Documentación interna de proceso (roadmap, flujo de trabajo, ejemplos de
+# sesión): no debe ser pública al abrir el repositorio.
+# ---------------------------------------------------------------
+/docs/
