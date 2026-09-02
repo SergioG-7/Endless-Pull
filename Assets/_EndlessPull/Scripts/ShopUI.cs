@@ -51,12 +51,26 @@ public class ShopUI : MonoBehaviour
     // Una entrada por tipo de objeto agrupado; el icono es un color plano, ya que el proyecto
     // no tiene arte de icono real para materiales/piedras/pociones/equipo (mismo criterio que
     // el resto de la base, sin sprites propios: acento de color por categoría).
+    private enum StorageCategory { Materials, Consumables, Equipment }
+
     private struct StorageEntry
     {
         public string title;
         public int count;
         public Color swatch;
+        public StorageCategory category;
     }
+
+    // Filtro de categoría sobre la cuadrícula; null = Todos. Mismo criterio que
+    // EquipmentSelectModalUI.filterSlot.
+    private StorageCategory? activeFilter;
+    private Button[] categoryButtons;
+    private TMP_Text[] categoryButtonLabels;
+
+    private static readonly StorageCategory?[] FilterValues =
+        { null, StorageCategory.Consumables, StorageCategory.Materials, StorageCategory.Equipment };
+    private static readonly string[] FilterKeys =
+        { "UI_FILTER_ALL", "UI_FILTER_CONSUMABLES", "UI_SECTION_MATERIALS", "UI_SECTION_EQUIPMENT" };
 
     public bool IsOpen => panel != null && panel.activeSelf;
 
@@ -72,11 +86,13 @@ public class ShopUI : MonoBehaviour
     void OnEnable()
     {
         if (shop != null) shop.InventoryChanged += MarkDirty;
+        LocalizationManager.LanguageChanged += RefreshStaticLabels;
     }
 
     void OnDisable()
     {
         if (shop != null) shop.InventoryChanged -= MarkDirty;
+        LocalizationManager.LanguageChanged -= RefreshStaticLabels;
     }
 
 void Start()
@@ -88,17 +104,7 @@ void Start()
         if (inventoryLabel != null) inventoryLabel.gameObject.SetActive(false);
         if (inventoryScroll != null) inventoryScroll.gameObject.SetActive(false);
 
-        // El título venía fijo en la escena ("TIENDA DE EQUIPO"), sin traducir ni actualizar
-        // tras el cambio de rol a Almacén.
-        if (titleLabel != null) titleLabel.text = LocalizationManager.Get("UI_STORAGE");
-
-        // El botón [X] venía con "Cerrar" fijo en la escena, sin traducir (Fase 39).
-        if (panel != null)
-        {
-            var cerrarLabel = panel.transform.Find("Btn_CloseShop")?.GetComponentInChildren<TMP_Text>();
-            if (cerrarLabel != null) cerrarLabel.text = LocalizationManager.Get("UI_CLOSE");
-        }
-
+        RefreshStaticLabels();
         BuildGrid();
 
         // El equipo ya no se compra con gemas: solo se obtiene por crafteo y recompensas.
@@ -139,6 +145,43 @@ void Start()
 
     private void MarkDirty() => gridDirty = true;
 
+    // Título y botón [X] de escena; releídos aquí y en cada cambio de idioma.
+    private void RefreshStaticLabels()
+    {
+        if (titleLabel != null) titleLabel.text = LocalizationManager.Get("UI_STORAGE");
+
+        if (panel != null)
+        {
+            var cerrarLabel = panel.transform.Find("Btn_CloseShop")?.GetComponentInChildren<TMP_Text>();
+            if (cerrarLabel != null) cerrarLabel.text = LocalizationManager.Get("UI_CLOSE");
+        }
+
+        RefreshFilterButtons();
+    }
+
+    // Botón de filtro de la cabecera; null = Todos. Vuelve siempre a la primera página.
+    private void SetFilter(StorageCategory? category)
+    {
+        activeFilter = category;
+        currentPage = 0;
+        MarkDirty();
+        RefreshFilterButtons();
+    }
+
+    // Resalta el botón del filtro activo entre los 4 (Todos/Consumibles/Materiales/Equipo).
+    private void RefreshFilterButtons()
+    {
+        if (categoryButtons == null) return;
+
+        for (int i = 0; i < categoryButtons.Length && i < FilterValues.Length; i++)
+        {
+            if (categoryButtons[i] == null) continue;
+            categoryButtons[i].targetGraphic.color = activeFilter == FilterValues[i] ? UITheme.Teal : UITheme.Neutral;
+            if (categoryButtonLabels != null && i < categoryButtonLabels.Length && categoryButtonLabels[i] != null)
+                categoryButtonLabels[i].text = LocalizationManager.Get(FilterKeys[i]);
+        }
+    }
+
     public void Toggle()
     {
         if (IsOpen) Close();
@@ -172,22 +215,22 @@ void Start()
 
         if (economy != null)
         {
-            entries.Add(new StorageEntry { title = LocalizationManager.Get("UI_GEMS"), count = economy.Gems, swatch = UITheme.Amber });
-            entries.Add(new StorageEntry { title = LocalizationManager.Get("UI_WOOD"), count = economy.Wood, swatch = UITheme.Cyan });
-            entries.Add(new StorageEntry { title = LocalizationManager.Get("UI_IRON"), count = economy.Iron, swatch = UITheme.Cyan });
-            entries.Add(new StorageEntry { title = LocalizationManager.Get("UI_FOOD"), count = economy.Food, swatch = UITheme.Cyan });
+            entries.Add(new StorageEntry { title = LocalizationManager.Get("UI_GEMS"), count = economy.Gems, swatch = UITheme.Amber, category = StorageCategory.Materials });
+            entries.Add(new StorageEntry { title = LocalizationManager.Get("UI_WOOD"), count = economy.Wood, swatch = UITheme.Cyan, category = StorageCategory.Materials });
+            entries.Add(new StorageEntry { title = LocalizationManager.Get("UI_IRON"), count = economy.Iron, swatch = UITheme.Cyan, category = StorageCategory.Materials });
+            entries.Add(new StorageEntry { title = LocalizationManager.Get("UI_FOOD"), count = economy.Food, swatch = UITheme.Cyan, category = StorageCategory.Materials });
         }
 
         if (crafting != null)
         {
             foreach (AscensionStoneTier tier in System.Enum.GetValues(typeof(AscensionStoneTier)))
                 entries.Add(new StorageEntry { title = AscensionStoneTiers.DisplayName(tier),
-                    count = crafting.StoneCount(tier), swatch = UITheme.Accent2 });
+                    count = crafting.StoneCount(tier), swatch = UITheme.Accent2, category = StorageCategory.Consumables });
 
             entries.Add(new StorageEntry { title = LocalizationManager.Get("UI_POTIONS_HELD"),
-                count = crafting.HealingPotions, swatch = UITheme.BarHP });
+                count = crafting.HealingPotions, swatch = UITheme.BarHP, category = StorageCategory.Consumables });
             entries.Add(new StorageEntry { title = LocalizationManager.Get("UI_MANA_POTIONS_HELD"),
-                count = crafting.ManaPotions, swatch = UITheme.BarMP });
+                count = crafting.ManaPotions, swatch = UITheme.BarMP, category = StorageCategory.Consumables });
         }
 
         if (shop != null)
@@ -200,7 +243,7 @@ void Start()
             }
 
             foreach (var par in conteo)
-                entries.Add(new StorageEntry { title = par.Key, count = par.Value, swatch = UITheme.Teal });
+                entries.Add(new StorageEntry { title = par.Key, count = par.Value, swatch = UITheme.Teal, category = StorageCategory.Equipment });
         }
 
         return entries;
@@ -212,6 +255,8 @@ void Start()
         if (gridContent == null) return;
 
         var entries = BuildEntries();
+        if (activeFilter.HasValue)
+            entries.RemoveAll(e => e.category != activeFilter.Value);
 
         int totalPages = Mathf.Max(1, Mathf.CeilToInt(entries.Count / (float)PageSize));
         currentPage = Mathf.Clamp(currentPage, 0, totalPages - 1);
@@ -310,21 +355,54 @@ void Start()
         RebuildGrid();
     }
 
+    // Fila de filtros por categoría (Todos/Consumibles/Materiales/Equipo), mismo criterio que
+    // el filtro de tipo de EquipmentSelectModalUI.
+    private void BuildFilterRow()
+    {
+        const float btnWidth = 150f;
+        const float btnGap = 8f;
+
+        categoryButtons = new Button[FilterValues.Length];
+        categoryButtonLabels = new TMP_Text[FilterValues.Length];
+
+        for (int i = 0; i < FilterValues.Length; i++)
+        {
+            float x = 40f + i * (btnWidth + btnGap);
+            var categoriaCapturada = FilterValues[i];
+            var btnFiltro = UIBuild.Button(panel.transform, $"Btn_StorageFilter_{i}", LocalizationManager.Get(FilterKeys[i]),
+                UITheme.Neutral, new Vector2(btnWidth, 34f), Vector2.zero, () => SetFilter(categoriaCapturada));
+
+            var frt = btnFiltro.GetComponent<RectTransform>();
+            frt.anchorMin = new Vector2(0f, 1f);
+            frt.anchorMax = new Vector2(0f, 1f);
+            frt.pivot = new Vector2(0f, 1f);
+            frt.anchoredPosition = new Vector2(x, -96f);
+
+            categoryButtons[i] = btnFiltro;
+            categoryButtonLabels[i] = btnFiltro.GetComponentInChildren<TMP_Text>();
+        }
+
+        RefreshFilterButtons();
+    }
+
     // Cuadrícula (GridLayoutGroup) + barra de paginación, montadas bajo el panel de escena.
     private void BuildGrid()
     {
         if (panel == null) return;
 
+        BuildFilterRow();
+
         var viewport = new GameObject("StorageGrid", typeof(RectTransform));
         viewport.transform.SetParent(panel.transform, false);
         // Solo offsetMin/offsetMax: mezclarlos con sizeDelta/anchoredPosition en un ancla
         // top-stretch descuadra el rect (lección ya conocida de otros modales de esta base).
+        // Top empieza 44px más abajo que antes para dejar sitio a la fila de filtros.
         var vrt = viewport.GetComponent<RectTransform>();
         vrt.anchorMin = new Vector2(0f, 1f);
         vrt.anchorMax = new Vector2(1f, 1f);
         vrt.pivot = new Vector2(0.5f, 1f);
         vrt.offsetMin = new Vector2(40f, -(96f + 500f));
-        vrt.offsetMax = new Vector2(-40f, -96f);
+        vrt.offsetMax = new Vector2(-40f, -140f);
 
         gridContent = vrt;
         var grid = viewport.AddComponent<GridLayoutGroup>();

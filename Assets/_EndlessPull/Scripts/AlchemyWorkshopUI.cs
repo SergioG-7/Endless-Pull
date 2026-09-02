@@ -84,14 +84,22 @@ public class AlchemyWorkshopUI : MonoBehaviour
 
     void OnEnable()
     {
-        LocalizationManager.LanguageChanged += Refresh;
+        LocalizationManager.LanguageChanged += OnLanguageChanged;
         if (crafting != null) crafting.CraftResolved += OnResolved;
     }
 
     void OnDisable()
     {
-        LocalizationManager.LanguageChanged -= Refresh;
+        LocalizationManager.LanguageChanged -= OnLanguageChanged;
         if (crafting != null) crafting.CraftResolved -= OnResolved;
+    }
+
+    // Refresh() ya cubre cabecera y tarjetas (Update() la repasa cada frame mientras está
+    // abierto); las pestañas quedaban fuera porque su texto solo se fijaba en BuildTabs().
+    private void OnLanguageChanged()
+    {
+        RefreshTabs();
+        Refresh();
     }
 
     void Start()
@@ -139,6 +147,10 @@ public class AlchemyWorkshopUI : MonoBehaviour
     // Solo una pestaña visible a la vez: sus tarjetas se muestran, el resto se oculta.
     private void RefreshTabs()
     {
+        tabStonesLabel.text = LocalizationManager.Get("UI_FORGE_STONES");
+        tabEquipmentLabel.text = LocalizationManager.Get("UI_TAB_EQUIPMENT");
+        tabAlchemyLabel.text = LocalizationManager.Get("UI_TAB_ALCHEMY");
+
         StyleTab(tabStones, tabStonesLabel, activeTab == WorkshopTab.Stones);
         StyleTab(tabEquipment, tabEquipmentLabel, activeTab == WorkshopTab.Equipment);
         StyleTab(tabAlchemy, tabAlchemyLabel, activeTab == WorkshopTab.Alchemy);

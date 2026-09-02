@@ -152,7 +152,7 @@ RectTransform:
   m_GameObject: {fileID: 3626354448054636472}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.28, y: 1.28, z: 1.28}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8197239478552113420}
@@ -590,6 +590,10 @@ MonoBehaviour:
   data: {fileID: 11400000, guid: 0ff170ed087d92246ad4b7387a9fc8de, type: 2}
   trait: 0
   rangedAttackRange: 4.5
+  meleeThreatRange: 2.5
+  microStepDistance: 0.4
+  gatewayTravelSeconds: 0.4
+  gatewayHoldSeconds: 1.2
   apathyAfterSeconds: 90
   apathyInterval: 15
   apathyMoraleLoss: 5
@@ -638,6 +642,9 @@ MonoBehaviour:
   painToleranceFactor: 0.5
   eagleEyeBonusRange: 3
   defensiveStanceBonus: 5
+  maxKiteRadius: 3.5
+  hitFlashThreshold: 0.12
+  hitFlashDuration: 0.08
 --- !u!114 &8534592815500860111
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -673,10 +680,12 @@ MonoBehaviour:
   healthGrowthPerLevel: 0.1
   attackGrowthPerLevel: 2
   levelsPerStar: 10
-  ascendGemCost: 500
-  ascendStoneCost: 1
+  ascendGemCostByStar: 64000000fa000000f4010000e8030000
   ascensionStatMultiplier: 1.4
   levelLabel: {fileID: 8932244556792481435}
+  aggression: 0.5
+  safeDistance: 0.5
+  skillThreshold: 0.15
 --- !u!114 &8913006601584226682
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -743,6 +752,8 @@ MonoBehaviour:
   walkThreshold: 0.05
   framesPerSecond: 9
   idleGrace: 0.1
+  lungeDistance: 0.15
+  lungeDuration: 0.15
 --- !u!1 &6744772514828819670
 GameObject:
   m_ObjectHideFlags: 0
@@ -770,7 +781,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: -0.95, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.28, y: 1.28, z: 1.28}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1765135480855250004}

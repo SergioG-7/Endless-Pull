@@ -34,17 +34,18 @@ public static class LocalizationManager
         { "UI_CONTINUE",     new[] { "Continuar", "Continue", "つづきから" } },
         { "UI_OPTIONS",      new[] { "Opciones", "Options", "設定" } },
         { "UI_LANGUAGE",     new[] { "Idioma", "Language", "言語" } },
-        { "UI_MASTER_VOLUME",new[] { "Volumen general", "Master Volume", "音量" } },
         { "UI_BACK",         new[] { "Volver", "Back", "もどる" } },
 
-        // Menú de pausa in-game (InGameMenuUI).
+        // Menú de pausa in-game (InGameMenuUI) y opciones del menú principal (MainMenuUI):
+        // los 3 canales de audio unificados de AudioManager (Fase 46).
         { "UI_IN_GAME_MENU", new[] { "Menú", "Menu", "メニュー" } },
         { "UI_RESUME",       new[] { "Reanudar", "Resume", "再開" } },
         { "UI_PAUSE",        new[] { "Pausar", "Pause", "一時停止" } },
-        { "UI_UI_VOLUME",    new[] { "Volumen de interfaz", "UI Volume", "UI音量" } },
-        { "UI_COMBAT_VOLUME",new[] { "Volumen de combate", "Combat Volume", "戦闘音量" } },
+        { "UI_BGM_VOLUME",   new[] { "Música", "Music", "BGM" } },
+        { "UI_UI_VOLUME",    new[] { "Interfaz", "UI", "UI音" } },
+        { "UI_COMBAT_VOLUME",new[] { "Combate", "Combat", "戦闘音" } },
         { "UI_QUIT_TO_MENU", new[] { "Guardar y salir", "Save and Quit", "セーブして終了" } },
-        { "UI_CLOSE",        new[] { "Cerrar", "Close", "とじる" } },
+        { "UI_CLOSE",        new[] { "Cerrar", "Close", "閉じる" } },
         { "UI_NO_SAVE",      new[] { "Sin partida guardada", "No saved game", "セーブデータなし" } },
 
         { "UI_VIEW_HEROES",  new[] { "Ver Héroes", "View Heroes", "英雄一覧" } },
@@ -127,8 +128,9 @@ public static class LocalizationManager
         { "UI_FILTER_SHIELDS",     new[] { "Escudos", "Shields", "盾" } },
         { "UI_FILTER_ARMORS",      new[] { "Armaduras", "Armor", "防具" } },
         { "UI_FILTER_ACCESSORIES", new[] { "Accesorios", "Accessories", "装飾品" } },
+        { "UI_FILTER_CONSUMABLES", new[] { "Consumibles", "Consumables", "消耗品" } },
 { "EQUIP_HUNTER_RING",   new[] { "Anillo del Cazador", "Hunter's Ring", "狩人の指輪" } },
-{ "UI_QUADRANT_LOCKED_TAP",  new[] { "Desbloquea en Piso {0}", "Unlocks at Floor {0}", "{0}階で解放" } },
+{ "UI_QUADRANT_LOCKED_TAP",  new[] { "Desbloquea en Piso {0}", "Unlocks at Floor {0}", "フロア{0}で解放" } },
 
         // Estados de combate/expedición mostrados en el HUD (WaveManager.Report).
         { "UI_STATUS_ASSIGN_HEROES", new[] { "Asigna héroes a la escuadra", "Assign heroes to the party", "部隊に英雄を配置してください" } },
@@ -551,8 +553,8 @@ public static class LocalizationManager
         { "UI_WORKSHOP",     new[] { "Taller de Alquimia", "Alchemy Workshop", "錬金工房" } },
         { "UI_ARTISANS",     new[] { "Artesanos", "Artisans", "職人" } },
         { "UI_COST",         new[] { "Coste", "Cost", "費用" } },
-        { "UI_FORGE_STONES", new[] { "Forja de Piedras", "Stone Forging", "石の錬成" } },
-        { "UI_TAB_EQUIPMENT", new[] { "Forja y Reparación", "Forge & Repair", "製作と修理" } },
+        { "UI_FORGE_STONES", new[] { "Forja de Piedras", "Stone Forging", "覚醒石錬成" } },
+        { "UI_TAB_EQUIPMENT", new[] { "Forjar y Reparar", "Forge & Repair", "鍛造・修理" } },
         { "UI_TAB_ALCHEMY",  new[] { "Alquimia", "Alchemy", "錬金術" } },
         { "UI_STONES_HELD",  new[] { "Piedras de Ascensión", "Ascension Stones", "覚醒石" } },
         { "UI_SUCCESS_CHANCE", new[] { "Probabilidad de éxito", "Success chance", "成功率" } },

@@ -43,6 +43,7 @@ public class MasterHUD : MonoBehaviour
         {
             waves.ExpeditionChanged += OnExpeditionChanged;
             waves.FloorChanged += OnFloorChanged;
+            waves.FloorCleared += OnFloorCleared;
         }
         HeroProgress.HeroAscended += OnHeroAscended;
         SaveManager.RosterLoaded += RefreshStarCounts;
@@ -61,6 +62,7 @@ public class MasterHUD : MonoBehaviour
         {
             waves.ExpeditionChanged -= OnExpeditionChanged;
             waves.FloorChanged -= OnFloorChanged;
+            waves.FloorCleared -= OnFloorCleared;
         }
         HeroProgress.HeroAscended -= OnHeroAscended;
         SaveManager.RosterLoaded -= RefreshStarCounts;
@@ -74,6 +76,7 @@ public class MasterHUD : MonoBehaviour
     {
         if (economy != null) RefreshResources();
         RefreshFloor();
+        if (showingWonStatus) RefreshWonStatus();
     }
 
     private void OnHeroAscended(HeroController hero, int newStarRank) => RefreshStarCounts();
@@ -184,10 +187,34 @@ private void OnGemsChanged(int gems)
 
     private void OnFloorChanged(int floor) => RefreshFloor();
 
+    // Datos puros del último piso ganado; el mensaje se regenera con la plantilla del idioma
+    // activo en vez de guardar el string ya formateado, que se quedaba congelado en el idioma
+    // de cuando se ganó si el jugador cambiaba de idioma después (banner bajo la TopBar).
+    private void OnFloorCleared(FloorRewardInfo info) => lastWonReward = info;
+
+    private FloorRewardInfo lastWonReward;
+    private bool showingWonStatus;
+
     private void OnExpeditionChanged(ExpeditionState state, string message)
     {
-        if (statusLabel != null) statusLabel.text = message;
+        showingWonStatus = state == ExpeditionState.Won;
+        if (statusLabel != null) statusLabel.text = showingWonStatus ? BuildWonMessage() : message;
         RefreshFloor();
+    }
+
+    private void RefreshWonStatus()
+    {
+        if (statusLabel != null) statusLabel.text = BuildWonMessage();
+    }
+
+    private string BuildWonMessage()
+    {
+        string modo = lastWonReward.firstClear
+            ? LocalizationManager.Get("UI_FIRST_CLEAR")
+            : LocalizationManager.Get("UI_REPEAT");
+
+        return string.Format(LocalizationManager.Get("UI_STATUS_WON"),
+            lastWonReward.floor, modo, lastWonReward.gems, lastWonReward.wood, lastWonReward.iron);
     }
 
 private void RefreshFloor()

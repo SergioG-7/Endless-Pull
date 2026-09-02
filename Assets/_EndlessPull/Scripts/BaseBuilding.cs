@@ -404,8 +404,24 @@ void Start()
             if (worker != null) worker.RestoreMP(PassiveManaPerSecond * Time.deltaTime);
     }
 
-    void OnEnable() => all.Add(this);
-    void OnDisable() => all.Remove(this);
+    void OnEnable()
+    {
+        all.Add(this);
+        LocalizationManager.LanguageChanged += RefreshLockLabel;
+    }
+
+    void OnDisable()
+    {
+        all.Remove(this);
+        LocalizationManager.LanguageChanged -= RefreshLockLabel;
+    }
+
+    // Releído en cada cambio de idioma; el candado se construye una sola vez en Start().
+    private void RefreshLockLabel()
+    {
+        if (lockLabel == null) return;
+        lockLabel.text = string.Format(LocalizationManager.Get("UI_QUADRANT_LOCKED_TAP"), requiredFloor);
+    }
 
     public bool IsInside(Vector2 position)
         => ((Vector2)transform.position - position).sqrMagnitude <= interactionRadius * interactionRadius;

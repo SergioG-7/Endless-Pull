@@ -6,13 +6,14 @@ using UnityEngine.UI;
 // Pantalla de título. Se monta a sí misma sobre el canvas, así no hay nada que cablear en escena.
 public class MainMenuUI : MonoBehaviour
 {
-    private const string VolumeKey = "EndlessPull.MasterVolume";
-
     [Tooltip("Canvas donde se monta el menú; vacío coge el primero de la escena.")]
     [SerializeField] private Canvas canvas;
 
     [Tooltip("Guardado del que salen 'Continuar' y 'Nueva Partida'.")]
     [SerializeField] private SaveManager saves;
+
+    [Tooltip("Gestor de audio cuyos volúmenes controlan los sliders; mismos 3 canales que el menú de pausa.")]
+    [SerializeField] private AudioManager audioManager;
 
     [Tooltip("Color de fondo de la pantalla de título.")]
     [SerializeField] private Color backgroundColor = new Color(0.06f, 0.05f, 0.10f, 1f);
@@ -32,8 +33,12 @@ public class MainMenuUI : MonoBehaviour
     private TMP_Text continueLabel;
     private TMP_Text titleLabel;
     private TMP_Text optionsTitle;
-    private TMP_Text volumeLabel;
-    private Slider volumeSlider;
+    private TMP_Text bgmVolumeLabel;
+    private TMP_Text uiVolumeLabel;
+    private TMP_Text combatVolumeLabel;
+    private Slider bgmVolumeSlider;
+    private Slider uiVolumeSlider;
+    private Slider combatVolumeSlider;
 
     private readonly List<Button> languageButtons = new List<Button>();
     private readonly Dictionary<TMP_Text, string> boundLabels = new Dictionary<TMP_Text, string>();
@@ -44,8 +49,8 @@ public class MainMenuUI : MonoBehaviour
     {
         if (canvas == null) canvas = UnityEngine.Object.FindFirstObjectByType<Canvas>();
         if (saves == null) saves = UnityEngine.Object.FindFirstObjectByType<SaveManager>();
+        if (audioManager == null) audioManager = UnityEngine.Object.FindFirstObjectByType<AudioManager>();
 
-        AudioListener.volume = PlayerPrefs.GetFloat(VolumeKey, 1f);
         Build();
     }
 
@@ -65,6 +70,7 @@ public class MainMenuUI : MonoBehaviour
         root.SetActive(true);
         root.transform.SetAsLastSibling();
         optionsPanel.SetActive(false);
+        if (titleLabel != null) titleLabel.color = new Color(titleLabel.color.r, titleLabel.color.g, titleLabel.color.b, 1f);
         // Mientras el menu manda, nadie ha elegido partida todavia: guardar pisaria el JSON de disco.
         SaveManager.SavingAllowed = false;
         Time.timeScale = 0f;
@@ -101,8 +107,31 @@ public class MainMenuUI : MonoBehaviour
         Close();
     }
 
-    public void OnOptionsPressed() => optionsPanel.SetActive(true);
-    public void OnOptionsBackPressed() => optionsPanel.SetActive(false);
+    public void OnOptionsPressed()
+    {
+        optionsPanel.SetActive(true);
+
+        // El título de fondo chocaba con los sliders/botones del panel de ajustes: se apaga
+        // mientras esté abierto en vez de tocar su jerarquía.
+        if (titleLabel != null) titleLabel.color = new Color(titleLabel.color.r, titleLabel.color.g, titleLabel.color.b, 0f);
+
+        // Se releen aquí porque el menú de pausa comparte el mismo AudioManager y puede haber
+        // cambiado los valores durante la partida.
+        if (audioManager != null)
+        {
+            bgmVolumeSlider.SetValueWithoutNotify(audioManager.BGMVolume);
+            uiVolumeSlider.SetValueWithoutNotify(audioManager.UIVolume);
+            combatVolumeSlider.SetValueWithoutNotify(audioManager.CombatVolume);
+        }
+
+        RefreshVolumeLabels();
+    }
+
+    public void OnOptionsBackPressed()
+    {
+        optionsPanel.SetActive(false);
+        if (titleLabel != null) titleLabel.color = new Color(titleLabel.color.r, titleLabel.color.g, titleLabel.color.b, 1f);
+    }
 
     private void OnLanguagePressed(GameLanguage language)
     {
@@ -110,12 +139,22 @@ public class MainMenuUI : MonoBehaviour
         RefreshTexts();
     }
 
-    private void OnVolumeChanged(float value)
+    private void OnBgmVolumeChanged(float value)
     {
-        AudioListener.volume = value;
-        PlayerPrefs.SetFloat(VolumeKey, value);
-        PlayerPrefs.Save();
-        RefreshVolumeLabel();
+        if (audioManager != null) audioManager.BGMVolume = value;
+        RefreshVolumeLabels();
+    }
+
+    private void OnUiVolumeChanged(float value)
+    {
+        if (audioManager != null) audioManager.UIVolume = value;
+        RefreshVolumeLabels();
+    }
+
+    private void OnCombatVolumeChanged(float value)
+    {
+        if (audioManager != null) audioManager.CombatVolume = value;
+        RefreshVolumeLabels();
     }
 
     // Un solo sitio donde se reescribe todo: al abrir y al cambiar de idioma.
@@ -135,15 +174,19 @@ public class MainMenuUI : MonoBehaviour
             languageButtons[i].targetGraphic.color = active ? selectedColor : buttonColor;
         }
 
-        RefreshVolumeLabel();
+        RefreshVolumeLabels();
     }
 
-    private void RefreshVolumeLabel()
+    private void RefreshVolumeLabels()
     {
-        if (volumeLabel == null || volumeSlider == null) return;
+        if (audioManager == null) return;
 
-        volumeLabel.text = LocalizationManager.Get("UI_MASTER_VOLUME")
-                           + "   " + Mathf.RoundToInt(volumeSlider.value * 100f) + "%";
+        bgmVolumeLabel.text = $"{LocalizationManager.Get("UI_BGM_VOLUME")}   " +
+                              $"{Mathf.RoundToInt(audioManager.BGMVolume * 100f)}%";
+        uiVolumeLabel.text = $"{LocalizationManager.Get("UI_UI_VOLUME")}   " +
+                             $"{Mathf.RoundToInt(audioManager.UIVolume * 100f)}%";
+        combatVolumeLabel.text = $"{LocalizationManager.Get("UI_COMBAT_VOLUME")}   " +
+                                 $"{Mathf.RoundToInt(audioManager.CombatVolume * 100f)}%";
     }
 
     private void Build()
@@ -193,16 +236,24 @@ public class MainMenuUI : MonoBehaviour
             languageButtons.Add(button);
         }
 
-        volumeLabel = NewLabel(optionsPanel.transform, "VolumeLabel", 40f, TextAlignmentOptions.Center);
-        Stretch(volumeLabel.rectTransform, new Vector2(0f, 0.40f), new Vector2(1f, 0.48f));
+        // 3 canales unificados (Música/Combate/Interfaz), mismo AudioManager que InGameMenuUI.
+        bgmVolumeLabel = NewLabel(optionsPanel.transform, "BgmVolumeLabel", 34f, TextAlignmentOptions.Center);
+        Stretch(bgmVolumeLabel.rectTransform, new Vector2(0f, 0.46f), new Vector2(1f, 0.53f));
+        bgmVolumeSlider = BuildVolumeSlider(optionsPanel.transform, 0.42f, OnBgmVolumeChanged);
 
-        volumeSlider = BuildVolumeSlider(optionsPanel.transform);
+        combatVolumeLabel = NewLabel(optionsPanel.transform, "CombatVolumeLabel", 34f, TextAlignmentOptions.Center);
+        Stretch(combatVolumeLabel.rectTransform, new Vector2(0f, 0.32f), new Vector2(1f, 0.39f));
+        combatVolumeSlider = BuildVolumeSlider(optionsPanel.transform, 0.28f, OnCombatVolumeChanged);
+
+        uiVolumeLabel = NewLabel(optionsPanel.transform, "UiVolumeLabel", 34f, TextAlignmentOptions.Center);
+        Stretch(uiVolumeLabel.rectTransform, new Vector2(0f, 0.18f), new Vector2(1f, 0.25f));
+        uiVolumeSlider = BuildVolumeSlider(optionsPanel.transform, 0.14f, OnUiVolumeChanged);
 
         var back = NewButton(optionsPanel.transform, "Btn_OptionsBack",
             LocalizationManager.Get("UI_BACK"), OnOptionsBackPressed);
         var brt = back.GetComponent<RectTransform>();
-        brt.anchorMin = new Vector2(0.5f, 0.14f);
-        brt.anchorMax = new Vector2(0.5f, 0.14f);
+        brt.anchorMin = new Vector2(0.5f, 0.05f);
+        brt.anchorMax = new Vector2(0.5f, 0.05f);
         brt.pivot = new Vector2(0.5f, 0.5f);
         brt.sizeDelta = new Vector2(420f, 90f);
         brt.anchoredPosition = Vector2.zero;
@@ -211,16 +262,17 @@ public class MainMenuUI : MonoBehaviour
         optionsPanel.SetActive(false);
     }
 
-    private Slider BuildVolumeSlider(Transform parent)
+    private Slider BuildVolumeSlider(Transform parent, float yAnchor,
+                                     UnityEngine.Events.UnityAction<float> onChanged)
     {
         var go = new GameObject("VolumeSlider", typeof(RectTransform), typeof(Slider));
         go.transform.SetParent(parent, false);
 
         var rt = go.GetComponent<RectTransform>();
-        rt.anchorMin = new Vector2(0.5f, 0.31f);
-        rt.anchorMax = new Vector2(0.5f, 0.31f);
+        rt.anchorMin = new Vector2(0.5f, yAnchor);
+        rt.anchorMax = new Vector2(0.5f, yAnchor);
         rt.pivot = new Vector2(0.5f, 0.5f);
-        rt.sizeDelta = new Vector2(700f, 46f);
+        rt.sizeDelta = new Vector2(700f, 40f);
         rt.anchoredPosition = Vector2.zero;
 
         var background = new GameObject("Background", typeof(RectTransform), typeof(Image));
@@ -242,8 +294,7 @@ public class MainMenuUI : MonoBehaviour
         slider.targetGraphic = fill.GetComponent<Image>();
         slider.minValue = 0f;
         slider.maxValue = 1f;
-        slider.SetValueWithoutNotify(PlayerPrefs.GetFloat(VolumeKey, 1f));
-        slider.onValueChanged.AddListener(OnVolumeChanged);
+        slider.onValueChanged.AddListener(onChanged);
         return slider;
     }
 

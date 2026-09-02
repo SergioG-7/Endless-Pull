@@ -26,8 +26,10 @@ public class WorldInteractionManager : MonoBehaviour
     [Tooltip("Panel de Torre que abre el Portal de la base.")]
     [SerializeField] private TowerPanelUI towerCard;
 
+    // Cubre el halo morado completo (Env_PortalRing, radio visual ~1.95u) para que ningún punto
+    // visible del portal caiga en el chequeo de cuadrante/edificio bloqueado de más abajo.
     [Tooltip("Radio de toque del Portal de la Torre.")]
-    [SerializeField] private float gatewayTouchRadius = 1.1f;
+    [SerializeField] private float gatewayTouchRadius = 2f;
 
     void Awake()
     {

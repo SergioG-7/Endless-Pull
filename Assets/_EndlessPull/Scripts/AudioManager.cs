@@ -165,9 +165,10 @@ public class AudioManager : MonoBehaviour
     private Coroutine bgmCrossfadeRoutine;
 
     // Efectos largos/repetitivos (ej. golpeo de yunque) se cortan con fade-out en vez de sonar enteros.
+    // Yunque: 1.2s de corte + 0.3s de fade = silencio total a 1.5s, uno o dos golpes en vez de cuatro.
     private static readonly Dictionary<SfxId, float> MaxDurationSeconds = new Dictionary<SfxId, float>
     {
-        { SfxId.CraftSuccess, 3f }
+        { SfxId.CraftSuccess, 1.2f }
     };
 
     // Clips importados con silencio al principio (ej. yunque): arranca la reproducción pasado ese hueco.

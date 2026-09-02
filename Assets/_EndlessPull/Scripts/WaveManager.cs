@@ -131,7 +131,7 @@ public class WaveManager : MonoBehaviour
     [SerializeField] private float bossArrivalBannerSeconds = 1.2f;
 
     [Tooltip("Origen de la arena; la base queda lejos para que no se mezclen las dos zonas.")]
-    [SerializeField] private Vector2 arenaCenter = new Vector2(40f, 0f);
+    [SerializeField] private Vector2 arenaCenter = new Vector2(1000f, 0f);
 
     [Tooltip("Desplazamiento de la formación de héroes respecto al origen de la arena; los deja en el extremo izquierdo, lejos de los enemigos, para que las unidades a distancia tengan hueco real de tiro.")]
     [SerializeField] private Vector2 heroSpawnOffset = new Vector2(-9.5f, 0f);

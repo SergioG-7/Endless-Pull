@@ -15,7 +15,7 @@ public class CameraDirector : MonoBehaviour
     [SerializeField] private Vector2 baseView = new Vector2(0f, 0f);
 
     [Tooltip("Punto de combate de reserva; con un WaveManager en escena manda el suyo.")]
-    [SerializeField] private Vector2 arenaView = new Vector2(40f, 0f);
+    [SerializeField] private Vector2 arenaView = new Vector2(1000f, 0f);
 
     [Tooltip("Segundos que tarda el viaje entre base y arena.")]
     [SerializeField] private float travelSeconds = 1.1f;
@@ -338,9 +338,11 @@ private void OnExpeditionChanged(ExpeditionState state, string message)
         float minY = bounds.min.y + halfHeight;
         float maxY = bounds.max.y - halfHeight;
 
-        // Si el encuadre es más grande que la zona desbloqueada, se centra en vez de forzar límites cruzados.
-        float clampedX = minX <= maxX ? Mathf.Clamp(basePosition.x, minX, maxX) : bounds.center.x;
-        float clampedY = minY <= maxY ? Mathf.Clamp(basePosition.y, minY, maxY) : bounds.center.y;
+        // Si el encuadre es más grande que la zona desbloqueada, pivota sobre el centro real de la
+        // base (baseView) en vez de bounds.center, que se desplaza al encapsular cuadrantes
+        // desbloqueados de forma asimétrica y cortaba el lateral izquierdo del campamento.
+        float clampedX = minX <= maxX ? Mathf.Clamp(basePosition.x, minX, maxX) : baseView.x;
+        float clampedY = minY <= maxY ? Mathf.Clamp(basePosition.y, minY, maxY) : baseView.y;
 
         basePosition = new Vector2(clampedX, clampedY);
         origin = basePosition;

@@ -27,8 +27,10 @@ public class InGameMenuUI : MonoBehaviour
 
     private GameObject panel;
     private TMP_Text titulo;
+    private TMP_Text bgmVolumeLabel;
     private TMP_Text uiVolumeLabel;
     private TMP_Text combatVolumeLabel;
+    private Slider bgmVolumeSlider;
     private Slider uiVolumeSlider;
     private Slider combatVolumeSlider;
     private readonly Button[] languageButtons = new Button[3];
@@ -66,6 +68,16 @@ public class InGameMenuUI : MonoBehaviour
         // Fase 37: abrir el menú (ajustes de idioma/volumen) ya NO pausa por sí solo — solo lo
         // hace el botón Pausar/Reanudar explícito de dentro, para poder mirar ajustes en vivo.
         UIManager.OpenExclusive(panel);
+
+        // Se releen aquí (no solo en Build()) porque el menú principal comparte el mismo
+        // AudioManager y puede haber cambiado los valores mientras este panel estaba cerrado.
+        if (audioManager != null)
+        {
+            bgmVolumeSlider.SetValueWithoutNotify(audioManager.BGMVolume);
+            uiVolumeSlider.SetValueWithoutNotify(audioManager.UIVolume);
+            combatVolumeSlider.SetValueWithoutNotify(audioManager.CombatVolume);
+        }
+
         RefreshTexts();
     }
 
@@ -95,6 +107,12 @@ public class InGameMenuUI : MonoBehaviour
     {
         LocalizationManager.SetLanguage(language);
         RefreshTexts();
+    }
+
+    private void OnBgmVolumeChanged(float value)
+    {
+        if (audioManager != null) audioManager.BGMVolume = value;
+        RefreshVolumeLabels();
     }
 
     private void OnUiVolumeChanged(float value)
@@ -130,6 +148,8 @@ public class InGameMenuUI : MonoBehaviour
     {
         if (audioManager == null) return;
 
+        bgmVolumeLabel.text = $"{LocalizationManager.Get("UI_BGM_VOLUME")}   " +
+                              $"{Mathf.RoundToInt(audioManager.BGMVolume * 100f)}%";
         uiVolumeLabel.text = $"{LocalizationManager.Get("UI_UI_VOLUME")}   " +
                              $"{Mathf.RoundToInt(audioManager.UIVolume * 100f)}%";
         combatVolumeLabel.text = $"{LocalizationManager.Get("UI_COMBAT_VOLUME")}   " +
@@ -140,7 +160,9 @@ public class InGameMenuUI : MonoBehaviour
     {
         if (canvas == null) return;
 
-        panel = UIBuild.Panel(canvas.transform, "InGameMenuPanel", size, UITheme.Bg);
+        // +90 de alto para la nueva fila de Música (3 canales en vez de 2, Fase 46).
+        var panelSize = new Vector2(size.x, size.y + 90f);
+        panel = UIBuild.Panel(canvas.transform, "InGameMenuPanel", panelSize, UITheme.Bg);
 
         titulo = UIBuild.TopLabel(panel.transform, "Title", UITheme.SizeTitle, 40f, -24f,
             TextAlignmentOptions.Center);
@@ -152,7 +174,12 @@ public class InGameMenuUI : MonoBehaviour
             UITheme.Amber, new Vector2(172f, 64f), new Vector2(96f, -100f), OnResumePressed);
         resumeLabel = btnResume.GetComponentInChildren<TMP_Text>();
 
-        float volumeY = -200f;
+        float bgmY = -200f;
+        bgmVolumeLabel = UIBuild.TopLabel(panel.transform, "BgmVolumeLabel", UITheme.SizeBody, 26f,
+            bgmY, TextAlignmentOptions.Center);
+        bgmVolumeSlider = BuildSlider(panel.transform, "BgmVolumeSlider", bgmY - 34f, OnBgmVolumeChanged);
+
+        float volumeY = bgmY - 90f;
         uiVolumeLabel = UIBuild.TopLabel(panel.transform, "UiVolumeLabel", UITheme.SizeBody, 26f,
             volumeY, TextAlignmentOptions.Center);
         uiVolumeSlider = BuildSlider(panel.transform, "UiVolumeSlider", volumeY - 34f, OnUiVolumeChanged);
@@ -164,6 +191,7 @@ public class InGameMenuUI : MonoBehaviour
 
         if (audioManager != null)
         {
+            bgmVolumeSlider.SetValueWithoutNotify(audioManager.BGMVolume);
             uiVolumeSlider.SetValueWithoutNotify(audioManager.UIVolume);
             combatVolumeSlider.SetValueWithoutNotify(audioManager.CombatVolume);
         }
@@ -185,7 +213,7 @@ public class InGameMenuUI : MonoBehaviour
         }
 
         var btnQuit = UIBuild.Button(panel.transform, "Btn_QuitToMenu", LocalizationManager.Get("UI_QUIT_TO_MENU"),
-            UITheme.DangerSoft, new Vector2(360f, 60f), new Vector2(0f, -(size.y - 60f)), OnQuitPressed);
+            UITheme.DangerSoft, new Vector2(360f, 60f), new Vector2(0f, -(panelSize.y - 60f)), OnQuitPressed);
         quitLabel = btnQuit.GetComponentInChildren<TMP_Text>();
 
         panel.SetActive(false);
