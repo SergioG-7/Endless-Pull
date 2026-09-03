@@ -44,11 +44,33 @@ void Update()
     {
         if (!TryGetTouchPoint(out Vector2 punto)) return;
 
-        // El héroe manda sobre el edificio: suelen estar uno encima del otro.
+        // El héroe manda sobre el edificio: suelen estar uno encima del otro. Isel es la
+        // excepción: su punto de "Plaza" coincide con el origen de la base, donde los héroes
+        // también deambulan, así que un toque solapado lo gana quien esté físicamente más
+        // cerca del punto real tocado, no un orden fijo de prioridad.
         var hero = HeroAt(punto);
+        bool nearFairy = BaseFairyController.Instance != null && BaseFairyController.Instance.IsWithinTouch(punto);
+
+        if (hero != null && nearFairy)
+        {
+            float dHero = Vector2.Distance(hero.transform.position, punto);
+            float dFairy = Vector2.Distance(BaseFairyController.Instance.transform.position, punto);
+            if (dFairy <= dHero)
+            {
+                BaseFairyController.Instance.OnTapped();
+                return;
+            }
+        }
+
         if (hero != null)
         {
             if (heroCard != null) heroCard.Show(hero);
+            return;
+        }
+
+        if (nearFairy)
+        {
+            BaseFairyController.Instance.OnTapped();
             return;
         }
 

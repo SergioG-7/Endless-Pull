@@ -12,7 +12,9 @@ public enum RosterFilter
     TwoStar,
     ThreeStar,
     FourStar,
-    FiveStar
+    FiveStar,
+    SixStar,
+    SevenStar
 }
 
 // Criterio de ordenación de las filas.
@@ -131,8 +133,8 @@ public class RosterUI : MonoBehaviour
             LocalizationManager.Get("UI_SORT_RARITY"), ref cursor, OnSortPressed);
         sortLabel = sortButton.GetComponentInChildren<TMP_Text>();
 
-        // Seis pestañas exactas: Todos y una por cada rango de estrella.
-        string[] keys = { "UI_ALL", "1★", "2★", "3★", "4★", "5★+" };
+        // Ocho pestañas exactas: Todos y una por cada rango de estrella, 1★ a 7★.
+        string[] keys = { "UI_ALL", "1★", "2★", "3★", "4★", "5★", "6★", "7★" };
         for (int i = keys.Length - 1; i >= 0; i--)
         {
             var value = (RosterFilter)i;
@@ -233,7 +235,9 @@ public class RosterUI : MonoBehaviour
             case RosterFilter.TwoStar: return hero.StarRank == 2;
             case RosterFilter.ThreeStar: return hero.StarRank == 3;
             case RosterFilter.FourStar: return hero.StarRank == 4;
-            case RosterFilter.FiveStar: return hero.StarRank >= 5;
+            case RosterFilter.FiveStar: return hero.StarRank == 5;
+            case RosterFilter.SixStar: return hero.StarRank == 6;
+            case RosterFilter.SevenStar: return hero.StarRank == 7;
         }
         return true;
     }

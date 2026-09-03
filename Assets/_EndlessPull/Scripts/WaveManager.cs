@@ -12,6 +12,11 @@ public struct FloorRewardInfo
     public int wood;
     public int iron;
     public int exp;
+
+    // Sub-Misión Oculta ganada en este piso, si la había; None si no. Se guarda el tipo (no el
+    // texto ya formateado) para poder reconstruir el mensaje en el idioma activo si cambia después.
+    public HiddenChallengeType hiddenChallengeType;
+    public int hiddenChallengeGems;
 }
 
 // Estado de la expedición del piso actual.
@@ -50,6 +55,17 @@ public enum FloorMissionType
     Survival,
     Escort,
     BossHunt
+}
+
+// Sub-Misión Oculta: reto secundario por piso, sorteado en silencio; solo se revela
+// con un toast si se cumple. None = este piso no tiene reto asignado.
+public enum HiddenChallengeType
+{
+    None,
+    SpeedClear,
+    Assassinate,
+    NoHeroDown,
+    EscortUnharmed
 }
 
 public class WaveManager : MonoBehaviour
@@ -150,6 +166,12 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Taller del que sale la Piedra de Ascensión que suelta el cofre de jefe.")]
     [SerializeField] private CraftingManager crafting;
 
+    [Tooltip("Fracción de vida por debajo de la cual un héroe desplegado se auto-cura con una poción, si le queda cupo.")]
+    [SerializeField] private float autoPotionHealthRatio = 0.35f;
+
+    [Tooltip("Máximo de auto-curaciones por héroe y expedición.")]
+    [SerializeField] private int autoPotionUsesPerExpedition = 3;
+
     [Tooltip("Último piso de cada tier en el cofre de jefe (Menor, Media, Mayor); por encima cae Legendaria.")]
     [SerializeField] private int[] stoneTierFloorCap = { 5, 10, 15 };
 
@@ -184,6 +206,19 @@ public class WaveManager : MonoBehaviour
 
     [Tooltip("Cada cuántos segundos entra un enemigo nuevo mientras dure la Supervivencia.")]
     [SerializeField] private float survivalRespawnInterval = 4f;
+
+    [Tooltip("Segundos límite del reto oculto de despeje rápido en pisos normales (Subyugación).")]
+    [SerializeField] private float hiddenSpeedClearSeconds = 45f;
+
+    [Tooltip("Segundos límite del reto oculto de despeje rápido en piso de jefe.")]
+    [SerializeField] private float hiddenBossSpeedClearSeconds = 90f;
+
+    [Tooltip("Gemas extra que da un reto oculto superado, además de la Piedra de Ascensión.")]
+    [SerializeField] private int hiddenChallengeGemBonus = 50;
+
+    [Tooltip("Probabilidad de que un piso tenga reto oculto en cada intento, mientras no se le haya ganado ya uno antes.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float hiddenChallengeChance = 0.10f;
 
     [Tooltip("Origen de la arena; la base queda lejos para que no se mezclen las dos zonas.")]
     [SerializeField] private Vector2 arenaCenter = new Vector2(1000f, 0f);
@@ -228,6 +263,10 @@ public class WaveManager : MonoBehaviour
 
     private readonly List<EnemyController> wave = new List<EnemyController>();
     private readonly List<HeroController> deployed = new List<HeroController>();
+
+    // Ranura de consumible: cupo de auto-curaciones por héroe, compartido con el stock
+    // global de pociones (sin inventario propio por héroe); se reinicia en cada despliegue.
+    private readonly Dictionary<HeroController, int> potionUsesThisExpedition = new Dictionary<HeroController, int>();
     private ExpeditionState state = ExpeditionState.Idle;
 
     // Preparación táctica: la oleada está en escena pero congelada.
@@ -252,8 +291,34 @@ public class WaveManager : MonoBehaviour
     private float survivalRespawnTimer;
     private float escortDamageAccumulator;
 
+    // Sub-Misión Oculta del piso actual: sorteada al empezar, se resuelve en silencio y solo
+    // se revela con un toast si se cumple al superar el piso.
+    private HiddenChallengeType currentChallenge;
+    private EnemyController challengeTarget;
+    private float challengeSpeedLimit;
+    private float combatElapsed;
+    private int deployedStartCount;
+    private bool heroDownOccurred;
+
+    // Pisos que ya han pagado su reto oculto alguna vez; no se vuelve a sortear ahí, para que no
+    // se pueda farmear el mismo piso en bucle por materiales/gemas gratis.
+    private readonly HashSet<int> hiddenChallengeAwardedFloors = new HashSet<int>();
+
     public FloorMissionType CurrentMissionType => currentMissionType;
     public EscortNpc CurrentEscort => currentEscort != null ? currentEscort : null;
+
+    // El banner de misión solo necesita saber SI hay reto este piso, nunca cuál es.
+    public bool HasHiddenChallenge => currentChallenge != HiddenChallengeType.None;
+
+    // La usa el SaveManager para guardar/cargar qué pisos ya pagaron su reto oculto.
+    public IEnumerable<int> HiddenChallengeAwardedFloors => hiddenChallengeAwardedFloors;
+
+    public void LoadHiddenChallengeAwardedFloors(IEnumerable<int> floors)
+    {
+        hiddenChallengeAwardedFloors.Clear();
+        if (floors == null) return;
+        foreach (int floor in floors) hiddenChallengeAwardedFloors.Add(floor);
+    }
 
     // Segundos de preparación táctica del piso (cuenta atrás previa al combate); lo lee el
     // banner de misión para durar justo lo que tarda en soltarse la oleada.
@@ -291,6 +356,10 @@ public class WaveManager : MonoBehaviour
     // El Piso 10 es asedio (más dps sobre Friacis que una escolta pura); los demás pisos de
     // Escort (15/25) no presionan tan fuerte. Vive fuera del enum a propósito (ver comentario ahí).
     private static bool IsSiegeFloor(int floor) => floor == 10;
+
+    // Lectura pública de a qué tipo cae un piso sin tener que empezarlo; la usa Isel
+    // para avisar de qué le espera al jugador en el próximo piso seleccionable.
+    public FloorMissionType PeekMissionType(int floor) => MissionTypeFor(floor);
 
     public int CurrentFloor => currentFloor;
     public int HighestClearedFloor => highestClearedFloor;
@@ -482,6 +551,8 @@ void Awake()
             wave.Add(enemy);
         }
 
+        AssignHiddenChallenge();
+
         // El jefe se suma a la oleada normal del piso; el evento se dispara dentro de SpawnBoss().
         // Piso 20: jefe único Halgiraph en vez del genérico recurrente, si está asignado.
         EnemyData chosenBoss = currentFloor == 20 && halgiraphData != null ? halgiraphData : bossData;
@@ -621,6 +692,7 @@ void Awake()
 private void DeployParty()
     {
         deployed.Clear();
+        potionUsesThisExpedition.Clear();
 
         int slot = 0;
         foreach (var hero in party.Party)
@@ -847,6 +919,91 @@ private void DeployParty()
         return AscensionStoneTier.Legendaria;
     }
 
+    // Sortea el reto oculto del piso según su tipo de misión; nunca se anuncia el contenido,
+    // solo su existencia (MissionBannerUI lee HasHiddenChallenge). Se llama con la oleada inicial
+    // ya en escena (sin el jefe) para poder elegir un "explorador" objetivo del reto de asesinato.
+    private void AssignHiddenChallenge()
+    {
+        challengeTarget = null;
+        combatElapsed = 0f;
+        heroDownOccurred = false;
+        deployedStartCount = CountAliveDeployed();
+        currentChallenge = HiddenChallengeType.None;
+
+        // Ya se ganó un reto oculto en este piso antes, o no ha tocado esta vez: sin reto.
+        if (hiddenChallengeAwardedFloors.Contains(currentFloor)) return;
+        if (Random.value >= hiddenChallengeChance) return;
+
+        switch (currentMissionType)
+        {
+            case FloorMissionType.Survival:
+                currentChallenge = HiddenChallengeType.NoHeroDown;
+                break;
+            case FloorMissionType.Escort:
+                currentChallenge = HiddenChallengeType.EscortUnharmed;
+                break;
+            case FloorMissionType.BossHunt:
+                currentChallenge = HiddenChallengeType.SpeedClear;
+                challengeSpeedLimit = hiddenBossSpeedClearSeconds;
+                break;
+            default:
+                if (wave.Count > 0 && Random.value < 0.5f)
+                {
+                    currentChallenge = HiddenChallengeType.Assassinate;
+                    challengeTarget = wave[Random.Range(0, wave.Count)];
+                }
+                else
+                {
+                    currentChallenge = HiddenChallengeType.SpeedClear;
+                    challengeSpeedLimit = hiddenSpeedClearSeconds;
+                }
+                break;
+        }
+    }
+
+    // Se comprueba solo en el instante de superar el piso, antes de desmontar escolta/escuadra.
+    private bool HiddenChallengeCleared()
+    {
+        switch (currentChallenge)
+        {
+            case HiddenChallengeType.SpeedClear: return combatElapsed <= challengeSpeedLimit;
+            case HiddenChallengeType.Assassinate: return challengeTarget == null;
+            case HiddenChallengeType.NoHeroDown: return !heroDownOccurred;
+            case HiddenChallengeType.EscortUnharmed:
+                return currentEscort != null && currentEscort.CurrentHealth >= currentEscort.MaxHealth;
+            default: return false;
+        }
+    }
+
+    public static string ChallengeWonKey(HiddenChallengeType type) => type switch
+    {
+        HiddenChallengeType.SpeedClear => "CHALLENGE_SPEED_CLEAR_WON",
+        HiddenChallengeType.Assassinate => "CHALLENGE_ASSASSINATE_WON",
+        HiddenChallengeType.NoHeroDown => "CHALLENGE_NO_HERO_DOWN_WON",
+        HiddenChallengeType.EscortUnharmed => "CHALLENGE_ESCORT_UNHARMED_WON",
+        _ => string.Empty
+    };
+
+    // Ranura de consumible: sin inventario propio por héroe, cada desplegado se cura
+    // solo con la poción más débil disponible del stock global si su vida cae por debajo del
+    // umbral, hasta un cupo por héroe y expedición.
+    private void TickAutoPotions()
+    {
+        if (crafting == null) return;
+
+        foreach (var hero in deployed)
+        {
+            if (hero == null || hero.MaxHealth <= 0) continue;
+            if ((float)hero.CurrentHealth / hero.MaxHealth >= autoPotionHealthRatio) continue;
+
+            potionUsesThisExpedition.TryGetValue(hero, out int used);
+            if (used >= autoPotionUsesPerExpedition) continue;
+
+            if (crafting.TryUseHealingPotion(hero))
+                potionUsesThisExpedition[hero] = used + 1;
+        }
+    }
+
     void Update()
     {
         if (state != ExpeditionState.InProgress) return;
@@ -869,6 +1026,11 @@ private void DeployParty()
             countdownTimer = 0f;
             ReleaseWave();
         }
+
+        combatElapsed += Time.deltaTime;
+        if (!heroDownOccurred && CountAliveDeployed() < deployedStartCount) heroDownOccurred = true;
+
+        TickAutoPotions();
 
         int aliveNow = AliveEnemies;
 
@@ -922,6 +1084,23 @@ private void DeployParty()
 
             if (bossChest) GrantBossChest(cleared);
 
+            // Sub-Misión Oculta: se resuelve aquí, con la escolta todavía viva si la había,
+            // antes de que DespawnEscort()/RecallParty() borren el estado que hace falta leer.
+            // Se anuncia dentro del mismo mensaje de piso superado, no en un toast aparte.
+            HiddenChallengeType challengeWonType = HiddenChallengeType.None;
+            if (currentChallenge != HiddenChallengeType.None && HiddenChallengeCleared())
+            {
+                crafting?.AddStones(StoneTierForFloor(cleared), 1);
+                economy?.Add(hiddenChallengeGemBonus);
+                hiddenChallengeAwardedFloors.Add(cleared);
+                challengeWonType = currentChallenge;
+            }
+            currentChallenge = HiddenChallengeType.None;
+
+            string challengeText = challengeWonType != HiddenChallengeType.None
+                ? "  |  " + string.Format(LocalizationManager.Get(ChallengeWonKey(challengeWonType)), hiddenChallengeGemBonus)
+                : string.Empty;
+
             int expGain = Mathf.Max(1, expReward * cleared);
             GrantCombatExp(cleared);
 
@@ -955,11 +1134,13 @@ private void DeployParty()
                 gems = gemGain + (bossChest ? bossChestGems : 0),
                 wood = woodGain + (bossChest ? bossChestMaterials : 0),
                 iron = ironGain + (bossChest ? bossChestMaterials : 0),
-                exp = expGain
+                exp = expGain,
+                hiddenChallengeType = challengeWonType,
+                hiddenChallengeGems = hiddenChallengeGemBonus
             });
 
             Report(ExpeditionState.Won, string.Format(
-                LocalizationManager.Get("UI_STATUS_WON"), cleared, modo, gemGain, woodGain, ironGain));
+                LocalizationManager.Get("UI_STATUS_WON"), cleared, modo, gemGain, woodGain, ironGain, challengeText));
             SetBossFloor(false);
             return;
         }

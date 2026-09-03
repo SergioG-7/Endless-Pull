@@ -231,10 +231,13 @@ void Start()
                 entries.Add(new StorageEntry { title = AscensionStoneTiers.DisplayName(tier),
                     count = crafting.StoneCount(tier), swatch = UITheme.Accent2, category = StorageCategory.Consumables });
 
-            entries.Add(new StorageEntry { title = LocalizationManager.Get("UI_POTIONS_HELD"),
-                count = crafting.HealingPotions, swatch = UITheme.BarHP, category = StorageCategory.Consumables });
-            entries.Add(new StorageEntry { title = LocalizationManager.Get("UI_MANA_POTIONS_HELD"),
-                count = crafting.ManaPotions, swatch = UITheme.BarMP, category = StorageCategory.Consumables });
+            foreach (PotionTier tier in System.Enum.GetValues(typeof(PotionTier)))
+                entries.Add(new StorageEntry { title = HealingPotionTiers.DisplayName(tier),
+                    count = crafting.HealingPotionCount(tier), swatch = UITheme.BarHP, category = StorageCategory.Consumables });
+
+            foreach (PotionTier tier in System.Enum.GetValues(typeof(PotionTier)))
+                entries.Add(new StorageEntry { title = ManaPotionTiers.DisplayName(tier),
+                    count = crafting.ManaPotionCount(tier), swatch = UITheme.BarMP, category = StorageCategory.Consumables });
         }
 
         if (shop != null)

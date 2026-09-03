@@ -16,9 +16,13 @@ public class MissionBannerUI : MonoBehaviour
     [Tooltip("Segundos de fundido de entrada y de salida del banner.")]
     [SerializeField] private float fadeSeconds = 0.25f;
 
+    [Tooltip("Segundos extra sobre la cuenta atrás para dar tiempo a leer el objetivo y si hay reto oculto.")]
+    [SerializeField] private float extraReadSeconds = 1f;
+
     private CanvasGroup group;
     private TMP_Text titleLabel;
     private TMP_Text objectiveLabel;
+    private TMP_Text hiddenLabel;
     private Coroutine routine;
 
     void Awake()
@@ -49,7 +53,7 @@ public class MissionBannerUI : MonoBehaviour
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = new Vector2(0f, 0.5f);
         rt.anchorMax = new Vector2(1f, 0.5f);
-        rt.offsetMin = new Vector2(0f, 70f);
+        rt.offsetMin = new Vector2(0f, 40f);
         rt.offsetMax = new Vector2(0f, 170f);
 
         group = go.GetComponent<CanvasGroup>();
@@ -57,9 +61,10 @@ public class MissionBannerUI : MonoBehaviour
         group.blocksRaycasts = false;
         group.interactable = false;
 
+        // Tres franjas apiladas: título, objetivo y (nueva) aviso de reto oculto sí/no.
         titleLabel = UIBuild.Label(go.transform, "Title", UITheme.SizeTitle * 1.4f, TextAlignmentOptions.Center);
         var titleRt = titleLabel.rectTransform;
-        titleRt.anchorMin = new Vector2(0f, 0.5f);
+        titleRt.anchorMin = new Vector2(0f, 0.615f);
         titleRt.anchorMax = new Vector2(1f, 1f);
         titleRt.offsetMin = Vector2.zero;
         titleRt.offsetMax = Vector2.zero;
@@ -67,11 +72,19 @@ public class MissionBannerUI : MonoBehaviour
 
         objectiveLabel = UIBuild.Label(go.transform, "Objective", UITheme.SizeBody, TextAlignmentOptions.Center);
         var objRt = objectiveLabel.rectTransform;
-        objRt.anchorMin = new Vector2(0f, 0f);
-        objRt.anchorMax = new Vector2(1f, 0.5f);
+        objRt.anchorMin = new Vector2(0f, 0.231f);
+        objRt.anchorMax = new Vector2(1f, 0.615f);
         objRt.offsetMin = Vector2.zero;
         objRt.offsetMax = Vector2.zero;
         objectiveLabel.color = UITheme.TextSoft;
+
+        hiddenLabel = UIBuild.Label(go.transform, "HiddenChallenge", UITheme.SizeBody * 0.85f, TextAlignmentOptions.Center);
+        var hiddenRt = hiddenLabel.rectTransform;
+        hiddenRt.anchorMin = new Vector2(0f, 0f);
+        hiddenRt.anchorMax = new Vector2(1f, 0.231f);
+        hiddenRt.offsetMin = Vector2.zero;
+        hiddenRt.offsetMax = Vector2.zero;
+        hiddenLabel.color = new Color(1f, 0.85f, 0.2f);
     }
 
     private void OnMissionStarted(FloorMissionType type, int floor)
@@ -82,9 +95,10 @@ public class MissionBannerUI : MonoBehaviour
         titleLabel.color = ColorFor(type);
         objectiveLabel.text = string.Format(LocalizationManager.Get(ObjectiveKey(type)),
             Mathf.RoundToInt(waves.SurvivalDuration));
+        hiddenLabel.text = LocalizationManager.Get(waves.HasHiddenChallenge ? "MISSION_HIDDEN_YES" : "MISSION_HIDDEN_NO");
 
         if (routine != null) StopCoroutine(routine);
-        routine = StartCoroutine(FadeRoutine(Mathf.Max(0.1f, waves.CombatCountdown)));
+        routine = StartCoroutine(FadeRoutine(Mathf.Max(0.1f, waves.CombatCountdown + extraReadSeconds)));
     }
 
     // Entra, se sostiene y sale, todo dentro de la ventana de la cuenta atrás; corre en tiempo

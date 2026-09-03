@@ -54,8 +54,12 @@ public class AlchemyWorkshopUI : MonoBehaviour
     private Ficha armas;
     private Ficha reparar;
     private Ficha mejora;
-    private Ficha pocion;
-    private Ficha pocionMana;
+
+    // Pociones de Curación y de Maná, cada una en sus 3 tiers (Menor/Media/Mayor);
+    // paginadas de a 3 igual que forgePager, mismo ancho de tarjeta.
+    private readonly Ficha[] pociones = new Ficha[3];
+    private readonly Ficha[] pocionesMana = new Ficha[3];
+    private const int PotionPageSize = 3;
 
     // Un UIPager por fila; las flechas se ocultan solas si todo cabe en una página.
     private UIPager stonesPager;
@@ -195,15 +199,15 @@ public class AlchemyWorkshopUI : MonoBehaviour
         Refresh();
     }
 
-    public void OnCraftPotionPressed()
+    public void OnCraftPotionPressed(PotionTier tier)
     {
-        if (crafting != null) crafting.TryCraftPotion();
+        if (crafting != null) crafting.TryCraftPotion(tier);
         Refresh();
     }
 
-    public void OnCraftManaPotionPressed()
+    public void OnCraftManaPotionPressed(PotionTier tier)
     {
-        if (crafting != null) crafting.TryCraftManaPotion();
+        if (crafting != null) crafting.TryCraftManaPotion(tier);
         Refresh();
     }
 
@@ -259,19 +263,12 @@ public class AlchemyWorkshopUI : MonoBehaviour
             && economy.CanAffordMaterials(crafting.RepairAllWoodCost(), crafting.RepairAllIronCost());
         SetButton(reparar, LocalizationManager.Get("UI_REPAIR_ALL"), puedeReparar, UITheme.DangerSoft);
 
-        // Pociones de Curación
-        pocion.titulo.text = LocalizationManager.Get("UI_FORGE_POTIONS");
-        pocion.cuerpo.text = $"{LocalizationManager.Get("UI_POTIONS_HELD")} <b>{crafting.HealingPotions}</b>";
-        pocion.coste.text = Cost(crafting.PotionWoodCost, 0, crafting.PotionFoodCost);
-        SetButton(pocion, LocalizationManager.Get("UI_CRAFT_POTION"), crafting.CanCraftPotion, UITheme.Cyan);
-
-        // Pociones de Maná
-        pocionMana.titulo.text = LocalizationManager.Get("UI_FORGE_MANA_POTIONS");
-        pocionMana.cuerpo.text = $"{LocalizationManager.Get("UI_MANA_POTIONS_HELD")} <b>{crafting.ManaPotions}</b>";
-        pocionMana.coste.text = Cost(crafting.ManaPotionWoodCost, 0, crafting.ManaPotionFoodCost);
-        bool puedeManaPotion = economy != null
-            && economy.CanAffordMaterials(crafting.ManaPotionWoodCost, 0) && economy.CanAffordFood(crafting.ManaPotionFoodCost);
-        SetButton(pocionMana, LocalizationManager.Get("UI_CRAFT_MANA_POTION"), puedeManaPotion, UITheme.Cyan);
+        // Pociones de Curación y de Maná, cada una en sus 3 tiers.
+        var potionTiers = (PotionTier[])System.Enum.GetValues(typeof(PotionTier));
+        for (int i = 0; i < potionTiers.Length && i < pociones.Length; i++)
+            RefreshPotionCard(pociones[i], potionTiers[i]);
+        for (int i = 0; i < potionTiers.Length && i < pocionesMana.Length; i++)
+            RefreshManaPotionCard(pocionesMana[i], potionTiers[i]);
 
         // Mejora de Equipo
         mejora.titulo.text = LocalizationManager.Get("UI_UPGRADE_GEAR");
@@ -291,6 +288,22 @@ public class AlchemyWorkshopUI : MonoBehaviour
                             $"<b>{crafting.EffectiveSuccessChance * 100f:0}%</b>";
         ficha.coste.text = Cost(crafting.StoneWoodCost(tier), crafting.StoneIronCost(tier), 0);
         SetButton(ficha, LocalizationManager.Get("UI_FORGE"), crafting.CanCraftStone(tier), UITheme.Amber);
+    }
+
+    private void RefreshPotionCard(Ficha ficha, PotionTier tier)
+    {
+        ficha.titulo.text = HealingPotionTiers.DisplayName(tier);
+        ficha.cuerpo.text = $"{LocalizationManager.Get("UI_POTIONS_HELD")} <b>{crafting.HealingPotionCount(tier)}</b>";
+        ficha.coste.text = Cost(crafting.PotionWoodCost(tier), 0, crafting.PotionFoodCost(tier));
+        SetButton(ficha, LocalizationManager.Get("UI_CRAFT_POTION"), crafting.CanCraftPotion(tier), UITheme.Cyan);
+    }
+
+    private void RefreshManaPotionCard(Ficha ficha, PotionTier tier)
+    {
+        ficha.titulo.text = ManaPotionTiers.DisplayName(tier);
+        ficha.cuerpo.text = $"{LocalizationManager.Get("UI_MANA_POTIONS_HELD")} <b>{crafting.ManaPotionCount(tier)}</b>";
+        ficha.coste.text = Cost(crafting.ManaPotionWoodCost(tier), 0, crafting.ManaPotionFoodCost(tier));
+        SetButton(ficha, LocalizationManager.Get("UI_CRAFT_MANA_POTION"), crafting.CanCraftManaPotion(tier), UITheme.Cyan);
     }
 
     // Coste en columnas: el recurso a la izquierda y la cifra siempre en la misma tabulación.
@@ -355,8 +368,13 @@ public class AlchemyWorkshopUI : MonoBehaviour
         mejora = CreateCard("Card_Upgrade", 0f, 0f, OnUpgradeGearPressed);
         reparar = CreateCard("Card_Repair", 0f, 0f, OnRepairAllPressed);
 
-        pocion = CreateCard("Card_Potion", 0f, 0f, OnCraftPotionPressed);
-        pocionMana = CreateCard("Card_PotionMana", 0f, 0f, OnCraftManaPotionPressed);
+        var potionTiers = (PotionTier[])System.Enum.GetValues(typeof(PotionTier));
+        for (int i = 0; i < potionTiers.Length && i < pociones.Length; i++)
+        {
+            var tier = potionTiers[i];
+            pociones[i] = CreateCard("Card_Potion_" + tier, 0f, 0f, () => OnCraftPotionPressed(tier));
+            pocionesMana[i] = CreateCard("Card_PotionMana_" + tier, 0f, 0f, () => OnCraftManaPotionPressed(tier));
+        }
 
         feedback = UIBuild.TopLabel(panel.transform, "Feedback", UITheme.SizeTitle, 32f,
             -(CardTop + CardHeight + 8f), TextAlignmentOptions.Center);
@@ -379,9 +397,15 @@ public class AlchemyWorkshopUI : MonoBehaviour
         forgePager = new UIPager(panel.transform, new Vector2(0f, pagerY));
         forgePager.Setup(new[] { armas.root, mejora.root, reparar.root }, new[] { -step3, 0f, step3 });
 
-        float xPar = (CardWidth + CardGap) * 0.5f;
+        var potionCards = new GameObject[pociones.Length + pocionesMana.Length];
+        for (int i = 0; i < pociones.Length; i++) potionCards[i] = pociones[i].root;
+        for (int i = 0; i < pocionesMana.Length; i++) potionCards[pociones.Length + i] = pocionesMana[i].root;
+
+        var potionSlots = new float[PotionPageSize];
+        for (int i = 0; i < PotionPageSize; i++) potionSlots[i] = (i - (PotionPageSize - 1) / 2f) * step3;
+
         alchemyPager = new UIPager(panel.transform, new Vector2(0f, pagerY));
-        alchemyPager.Setup(new[] { pocion.root, pocionMana.root }, new[] { -xPar, xPar });
+        alchemyPager.Setup(potionCards, potionSlots);
 
         // Arranca en la pestaña de Piedras: las otras dos filas se ocultan hasta que se abra su
         // pestaña (RefreshTabs las reactivará cuando toque).

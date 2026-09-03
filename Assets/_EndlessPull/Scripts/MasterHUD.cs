@@ -298,8 +298,13 @@ private void OnGemsChanged(int gems)
             ? LocalizationManager.Get("UI_FIRST_CLEAR")
             : LocalizationManager.Get("UI_REPEAT");
 
+        string challengeText = lastWonReward.hiddenChallengeType != HiddenChallengeType.None
+            ? "  |  " + string.Format(LocalizationManager.Get(WaveManager.ChallengeWonKey(lastWonReward.hiddenChallengeType)),
+                lastWonReward.hiddenChallengeGems)
+            : string.Empty;
+
         return string.Format(LocalizationManager.Get("UI_STATUS_WON"),
-            lastWonReward.floor, modo, lastWonReward.gems, lastWonReward.wood, lastWonReward.iron);
+            lastWonReward.floor, modo, lastWonReward.gems, lastWonReward.wood, lastWonReward.iron, challengeText);
     }
 
 private void RefreshFloor()

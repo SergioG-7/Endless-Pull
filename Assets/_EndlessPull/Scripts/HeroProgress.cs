@@ -225,27 +225,6 @@ public class HeroProgress : MonoBehaviour
                   $"({WeaponTypes.DisplayName(arquetipo)}).", this);
     }
 
-    // Cambio manual desde el roster; solo entre las tres del mismo arquetipo.
-    public bool CycleSubclass()
-    {
-        if (hero == null || hero.StarRank < HeroSubclasses.MinStarRank) return false;
-
-        var arquetipo = hero.Subclass != HeroSubclass.None
-            ? HeroSubclasses.ArchetypeOf(hero.Subclass)
-            : hero.EquippedWeaponType;
-
-        var opciones = HeroSubclasses.OptionsFor(arquetipo);
-        if (opciones.Length == 0) return false;
-
-        int indice = 0;
-        for (int i = 0; i < opciones.Length; i++)
-            if (opciones[i] == hero.Subclass) indice = i + 1;
-
-        hero.SetSubclass(opciones[indice % opciones.Length]);
-        SaveManager.RequestSave();
-        return true;
-    }
-
     private void LevelUp()
     {
         level++;

@@ -70,7 +70,7 @@ public class ResourceExpeditionManager : MonoBehaviour
         if (crafting == null) crafting = UnityEngine.Object.FindFirstObjectByType<CraftingManager>();
     }
 
-    // Rotación semanal (roadmap Fase 52): qué destino da el bono x1.5 hoy. Por ahora los otros
+    // Rotación semanal: qué destino da el bono x1.5 hoy. Por ahora los otros
     // tres siguen siendo elegibles igual (pedido explícito: "que se vean todas para poder
     // probarlas"), esto solo decide cuál luce la etiqueta de bono y cobra el multiplicador.
     public static ResourceExpeditionType TodaysBonusType(System.DateTime now) => now.DayOfWeek switch

@@ -29,6 +29,36 @@ public static class AscensionStoneTiers
     }
 }
 
+// Poción por tier: Menor, Media, Mayor. Compartido entre Curación y Maná.
+public enum PotionTier
+{
+    Menor,
+    Media,
+    Mayor
+}
+
+public static class HealingPotionTiers
+{
+    public static string DisplayName(PotionTier tier) => tier switch
+    {
+        PotionTier.Menor => LocalizationManager.Get("UI_POTION_MENOR"),
+        PotionTier.Media => LocalizationManager.Get("UI_POTION_MEDIA"),
+        PotionTier.Mayor => LocalizationManager.Get("UI_POTION_MAYOR"),
+        _ => tier.ToString()
+    };
+}
+
+public static class ManaPotionTiers
+{
+    public static string DisplayName(PotionTier tier) => tier switch
+    {
+        PotionTier.Menor => LocalizationManager.Get("UI_MANA_POTION_MENOR"),
+        PotionTier.Media => LocalizationManager.Get("UI_MANA_POTION_MEDIA"),
+        PotionTier.Mayor => LocalizationManager.Get("UI_MANA_POTION_MAYOR"),
+        _ => tier.ToString()
+    };
+}
+
 // Taller de Alquimia: forja piedras y armas a cambio de materiales. Las gemas no entran aquí.
 public class CraftingManager : MonoBehaviour
 {
@@ -60,17 +90,23 @@ public class CraftingManager : MonoBehaviour
     [Tooltip("Comida que consume la cuadrilla mientras fabrica un arma.")]
     [SerializeField] private int weaponFoodCost = 20;
 
-    [Tooltip("Comida que cuesta fabricar una poción de curación instantánea.")]
-    [SerializeField] private int potionFoodCost = 20;
+    [Tooltip("Madera que cuesta cada tier de Poción de Curación: Menor, Media, Mayor.")]
+    [SerializeField] private int[] potionWoodCostByTier = { 10, 20, 40 };
 
-    [Tooltip("Madera que cuesta fabricar una poción de curación instantánea.")]
-    [SerializeField] private int potionWoodCost = 10;
+    [Tooltip("Comida que cuesta cada tier de Poción de Curación: Menor, Media, Mayor.")]
+    [SerializeField] private int[] potionFoodCostByTier = { 20, 40, 80 };
 
-    [Tooltip("Comida que cuesta fabricar una poción de maná instantánea.")]
-    [SerializeField] private int manaPotionFoodCost = 15;
+    [Tooltip("Fracción de vida máxima que restaura cada tier de Poción de Curación: Menor, Media, Mayor.")]
+    [SerializeField] private float[] potionHealFractionByTier = { 0.4f, 0.7f, 1f };
 
-    [Tooltip("Madera que cuesta fabricar una poción de maná instantánea.")]
-    [SerializeField] private int manaPotionWoodCost = 15;
+    [Tooltip("Madera que cuesta cada tier de Poción de Maná: Menor, Media, Mayor.")]
+    [SerializeField] private int[] manaPotionWoodCostByTier = { 15, 30, 60 };
+
+    [Tooltip("Comida que cuesta cada tier de Poción de Maná: Menor, Media, Mayor.")]
+    [SerializeField] private int[] manaPotionFoodCostByTier = { 15, 30, 60 };
+
+    [Tooltip("Fracción de maná máximo que restaura cada tier de Poción de Maná: Menor, Media, Mayor.")]
+    [SerializeField] private float[] manaPotionRestoreFractionByTier = { 0.4f, 0.7f, 1f };
 
     [Tooltip("Madera que cuesta una mejora de equipo básico.")]
     [SerializeField] private int upgradeWoodCost = 50;
@@ -109,23 +145,37 @@ public class CraftingManager : MonoBehaviour
     [SerializeField] private int[] stoneIronCostByTier = { 15, 35, 70, 140, 240, 420 };
 
     private readonly int[] stoneCounts = new int[6];
-    private int healingPotions;
-    private int manaPotions;
+    private readonly int[] healingPotionCounts = new int[3];
+    private readonly int[] manaPotionCounts = new int[3];
 
     public int StoneCount(AscensionStoneTier tier) => stoneCounts[(int)tier];
     public int[] StoneCounts => stoneCounts;
-    public int HealingPotions => healingPotions;
-    public int ManaPotions => manaPotions;
+    public int HealingPotionCount(PotionTier tier) => healingPotionCounts[(int)tier];
+    public int ManaPotionCount(PotionTier tier) => manaPotionCounts[(int)tier];
+    public int[] HealingPotionCounts => healingPotionCounts;
+    public int[] ManaPotionCounts => manaPotionCounts;
+
+    // Suma de los 3 tiers; la usan las fichas que solo necesitan un total (ficha rápida del héroe, Almacén).
+    public int TotalHealingPotions => Sum(healingPotionCounts);
+    public int TotalManaPotions => Sum(manaPotionCounts);
+
+    private static int Sum(int[] counts)
+    {
+        int total = 0;
+        foreach (int n in counts) total += n;
+        return total;
+    }
+
     public float SuccessChance => successChance;
 
     // Los costes que se cobran de verdad ya llevan la rebaja de los artesanos.
     public int WeaponWoodCost => Discounted(weaponWoodCost);
     public int WeaponIronCost => Discounted(weaponIronCost);
     public int WeaponFoodCost => Discounted(weaponFoodCost);
-    public int PotionWoodCost => Discounted(potionWoodCost);
-    public int PotionFoodCost => Discounted(potionFoodCost);
-    public int ManaPotionWoodCost => Discounted(manaPotionWoodCost);
-    public int ManaPotionFoodCost => Discounted(manaPotionFoodCost);
+    public int PotionWoodCost(PotionTier tier) => Discounted(potionWoodCostByTier[(int)tier]);
+    public int PotionFoodCost(PotionTier tier) => Discounted(potionFoodCostByTier[(int)tier]);
+    public int ManaPotionWoodCost(PotionTier tier) => Discounted(manaPotionWoodCostByTier[(int)tier]);
+    public int ManaPotionFoodCost(PotionTier tier) => Discounted(manaPotionFoodCostByTier[(int)tier]);
     public int UpgradeWoodCost => ForgeDiscounted(upgradeWoodCost);
     public int UpgradeIronCost => ForgeDiscounted(upgradeIronCost);
     public int UpgradeFoodCost => ForgeDiscounted(upgradeFoodCost);
@@ -224,8 +274,11 @@ public class CraftingManager : MonoBehaviour
         && economy.CanAffordMaterials(WeaponWoodCost, WeaponIronCost)
         && economy.CanAffordFood(WeaponFoodCost);
 
-    public bool CanCraftPotion => economy != null
-        && economy.CanAffordMaterials(PotionWoodCost, 0) && economy.CanAffordFood(PotionFoodCost);
+    public bool CanCraftPotion(PotionTier tier) => economy != null
+        && economy.CanAffordMaterials(PotionWoodCost(tier), 0) && economy.CanAffordFood(PotionFoodCost(tier));
+
+    public bool CanCraftManaPotion(PotionTier tier) => economy != null
+        && economy.CanAffordMaterials(ManaPotionWoodCost(tier), 0) && economy.CanAffordFood(ManaPotionFoodCost(tier));
 
     public bool CanUpgradeGear => ForgeUnlocked && economy != null
         && economy.CanAffordMaterials(UpgradeWoodCost, UpgradeIronCost)
@@ -237,11 +290,11 @@ public class CraftingManager : MonoBehaviour
     // Se dispara con el tier y el número de piedras de ese tier cada vez que cambia.
     public event System.Action<AscensionStoneTier, int> StonesChanged;
 
-    // Se dispara con el número de pociones cada vez que cambia.
-    public event System.Action<int> PotionsChanged;
+    // Se dispara con el tier y el número de pociones de ese tier cada vez que cambia.
+    public event System.Action<PotionTier, int> PotionsChanged;
 
-    // Se dispara con el número de pociones de maná cada vez que cambia.
-    public event System.Action<int> ManaPotionsChanged;
+    // Se dispara con el tier y el número de pociones de maná de ese tier cada vez que cambia.
+    public event System.Action<PotionTier, int> ManaPotionsChanged;
 
     void Awake()
     {
@@ -341,14 +394,14 @@ public class CraftingManager : MonoBehaviour
     }
 
     // La comida se cobra siempre que hay madera; fabricar una poción no falla.
-    public bool TryCraftPotion()
+    public bool TryCraftPotion(PotionTier tier)
     {
-        int madera = PotionWoodCost;
-        int comida = PotionFoodCost;
+        int madera = PotionWoodCost(tier);
+        int comida = PotionFoodCost(tier);
 
         if (economy == null || !economy.CanAffordMaterials(madera, 0) || !economy.CanAffordFood(comida))
         {
-            Debug.LogWarning($"[Taller] Poción: hacen falta {madera} madera y {comida} comida.", this);
+            Debug.LogWarning($"[Taller] Poción {tier}: hacen falta {madera} madera y {comida} comida.", this);
             CraftResolved?.Invoke(false, LocalizationManager.Get("UI_NO_MATERIALS"));
             return false;
         }
@@ -356,40 +409,49 @@ public class CraftingManager : MonoBehaviour
         economy.TrySpendMaterials(madera, 0);
         economy.TrySpendFood(comida);
 
-        healingPotions++;
-        PotionsChanged?.Invoke(healingPotions);
+        healingPotionCounts[(int)tier]++;
+        PotionsChanged?.Invoke(tier, healingPotionCounts[(int)tier]);
 
-        Debug.Log($"[Taller] Poción de curación fabricada. Tienes {healingPotions}.", this);
+        Debug.Log($"[Taller] Poción de curación {tier} fabricada. Tienes {healingPotionCounts[(int)tier]}.", this);
         CraftResolved?.Invoke(true, LocalizationManager.Get("UI_POTION_CRAFTED"));
 
         SaveManager.RequestSave();
         return true;
     }
 
-    // Cura al héroe al máximo y consume una poción del almacén.
+    // Cura con la poción más débil disponible primero (ahorra las fuertes para cuando hagan
+    // falta de verdad); la usan tanto la ficha manual del héroe en base como la auto-curación
+    // en combate.
     public bool TryUseHealingPotion(HeroController target)
     {
-        if (target == null || healingPotions <= 0) return false;
+        if (target == null) return false;
 
-        target.Heal(target.MaxHealth);
+        for (int i = 0; i < healingPotionCounts.Length; i++)
+        {
+            if (healingPotionCounts[i] <= 0) continue;
 
-        healingPotions--;
-        PotionsChanged?.Invoke(healingPotions);
-        AudioManager.Play(SfxId.Potion);
+            target.Heal(Mathf.RoundToInt(target.MaxHealth * potionHealFractionByTier[i]));
 
-        SaveManager.RequestSave();
-        return true;
+            healingPotionCounts[i]--;
+            PotionsChanged?.Invoke((PotionTier)i, healingPotionCounts[i]);
+            AudioManager.Play(SfxId.Potion);
+
+            SaveManager.RequestSave();
+            return true;
+        }
+
+        return false;
     }
 
     // La comida se cobra siempre que hay madera; fabricar una poción no falla.
-    public bool TryCraftManaPotion()
+    public bool TryCraftManaPotion(PotionTier tier)
     {
-        int madera = ManaPotionWoodCost;
-        int comida = ManaPotionFoodCost;
+        int madera = ManaPotionWoodCost(tier);
+        int comida = ManaPotionFoodCost(tier);
 
         if (economy == null || !economy.CanAffordMaterials(madera, 0) || !economy.CanAffordFood(comida))
         {
-            Debug.LogWarning($"[Taller] Poción de maná: hacen falta {madera} madera y {comida} comida.", this);
+            Debug.LogWarning($"[Taller] Poción de maná {tier}: hacen falta {madera} madera y {comida} comida.", this);
             CraftResolved?.Invoke(false, LocalizationManager.Get("UI_NO_MATERIALS"));
             return false;
         }
@@ -397,29 +459,36 @@ public class CraftingManager : MonoBehaviour
         economy.TrySpendMaterials(madera, 0);
         economy.TrySpendFood(comida);
 
-        manaPotions++;
-        ManaPotionsChanged?.Invoke(manaPotions);
+        manaPotionCounts[(int)tier]++;
+        ManaPotionsChanged?.Invoke(tier, manaPotionCounts[(int)tier]);
 
-        Debug.Log($"[Taller] Poción de maná fabricada. Tienes {manaPotions}.", this);
+        Debug.Log($"[Taller] Poción de maná {tier} fabricada. Tienes {manaPotionCounts[(int)tier]}.", this);
         CraftResolved?.Invoke(true, LocalizationManager.Get("UI_MANA_POTION_CRAFTED"));
 
         SaveManager.RequestSave();
         return true;
     }
 
-    // Restaura el MP al máximo del héroe y consume una poción del almacén.
+    // Restaura MP con la poción de maná más débil disponible primero; mismo criterio que curación.
     public bool TryUseManaPotion(HeroController target)
     {
-        if (target == null || manaPotions <= 0) return false;
+        if (target == null) return false;
 
-        target.RestoreMP(target.MaxMP);
+        for (int i = 0; i < manaPotionCounts.Length; i++)
+        {
+            if (manaPotionCounts[i] <= 0) continue;
 
-        manaPotions--;
-        ManaPotionsChanged?.Invoke(manaPotions);
-        AudioManager.Play(SfxId.Potion);
+            target.RestoreMP(Mathf.RoundToInt(target.MaxMP * manaPotionRestoreFractionByTier[i]));
 
-        SaveManager.RequestSave();
-        return true;
+            manaPotionCounts[i]--;
+            ManaPotionsChanged?.Invoke((PotionTier)i, manaPotionCounts[i]);
+            AudioManager.Play(SfxId.Potion);
+
+            SaveManager.RequestSave();
+            return true;
+        }
+
+        return false;
     }
 
     // Mejora a todo el roster de una vez: bonus plano de ataque/defensa a coste fijo,
@@ -600,17 +669,25 @@ public class CraftingManager : MonoBehaviour
             StonesChanged?.Invoke((AscensionStoneTier)i, stoneCounts[i]);
     }
 
-    // La usa el SaveManager al cargar.
-    public void LoadPotions(int saved)
+    // La usa el SaveManager al cargar; un save de antes de los tiers solo trae Menor.
+    public void LoadPotions(int savedMenor, int savedMedia, int savedMayor)
     {
-        healingPotions = Mathf.Max(0, saved);
-        PotionsChanged?.Invoke(healingPotions);
+        healingPotionCounts[(int)PotionTier.Menor] = Mathf.Max(0, savedMenor);
+        healingPotionCounts[(int)PotionTier.Media] = Mathf.Max(0, savedMedia);
+        healingPotionCounts[(int)PotionTier.Mayor] = Mathf.Max(0, savedMayor);
+
+        for (int i = 0; i < healingPotionCounts.Length; i++)
+            PotionsChanged?.Invoke((PotionTier)i, healingPotionCounts[i]);
     }
 
-    // La usa el SaveManager al cargar; sin entrada guardada (partidas viejas) se queda en 0.
-    public void LoadManaPotions(int saved)
+    // La usa el SaveManager al cargar; un save de antes de los tiers solo trae Menor.
+    public void LoadManaPotions(int savedMenor, int savedMedia, int savedMayor)
     {
-        manaPotions = Mathf.Max(0, saved);
-        ManaPotionsChanged?.Invoke(manaPotions);
+        manaPotionCounts[(int)PotionTier.Menor] = Mathf.Max(0, savedMenor);
+        manaPotionCounts[(int)PotionTier.Media] = Mathf.Max(0, savedMedia);
+        manaPotionCounts[(int)PotionTier.Mayor] = Mathf.Max(0, savedMayor);
+
+        for (int i = 0; i < manaPotionCounts.Length; i++)
+            ManaPotionsChanged?.Invoke((PotionTier)i, manaPotionCounts[i]);
     }
 }

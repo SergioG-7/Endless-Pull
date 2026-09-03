@@ -508,7 +508,9 @@ void Start()
 
                 var progress = hero.GetComponent<HeroProgress>();
                 if (progress == null) return false;
-                progress.AddEXP(ExpPerTick);
+
+                // Con afecto al máximo, la EXP de entrenamiento sube un poco.
+                progress.AddEXP(Mathf.RoundToInt(ExpPerTick * (1f + hero.AffinityExpBonus)));
                 return true;
 
             case BuildingType.Canteen:

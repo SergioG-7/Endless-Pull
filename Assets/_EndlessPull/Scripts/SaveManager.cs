@@ -39,6 +39,9 @@ public class HeroSaveData
     public int bonusStarRank;
     public float ascensionMultiplier = 1f;
 
+    // Afecto por regalos; 0 por defecto en saves antiguos, sin héroe regalado todavía.
+    public float affinity;
+
     // Mejora de equipo básico del Taller: bonus plano, independiente del nivel/ascensión.
     public int gearUpgradeAttack;
     public int gearUpgradeDefense;
@@ -91,8 +94,16 @@ public class GameSaveData
     // Piedras por tier: [0]=Menor [1]=Media [2]=Mayor [3]=Legendaria.
     public int[] ascensionStoneCounts;
 
+    // Zurrón de pociones de saves anteriores a los tiers; se migra a Menor al cargar (ver Load).
     public int healingPotions;
     public int manaPotions;
+
+    // Pociones por tier: [0]=Menor [1]=Media [2]=Mayor.
+    public int[] healingPotionCounts;
+    public int[] manaPotionCounts;
+
+    // Pisos que ya pagaron su Sub-Misión Oculta alguna vez; no se vuelve a sortear ahí.
+    public List<int> hiddenChallengeAwardedFloors = new List<int>();
 
     // Expedición de recursos en curso, si la había al guardar (WS3: cooldown real + reclamo manual).
     public int expeditionType;
@@ -236,8 +247,8 @@ public class SaveManager : MonoBehaviour
         }
 
         if (crafting != null) save.ascensionStoneCounts = (int[])crafting.StoneCounts.Clone();
-        if (crafting != null) save.healingPotions = crafting.HealingPotions;
-        if (crafting != null) save.manaPotions = crafting.ManaPotions;
+        if (crafting != null) save.healingPotionCounts = (int[])crafting.HealingPotionCounts.Clone();
+        if (crafting != null) save.manaPotionCounts = (int[])crafting.ManaPotionCounts.Clone();
 
         if (expeditions != null)
         {
@@ -251,6 +262,7 @@ public class SaveManager : MonoBehaviour
         {
             save.currentFloor = waves.CurrentFloor;
             save.highestClearedFloor = waves.HighestClearedFloor;
+            save.hiddenChallengeAwardedFloors = new List<int>(waves.HiddenChallengeAwardedFloors);
         }
 
         save.quadrantEastRevealed = QuadrantController.Find(QuadrantId.East)?.Revealed ?? false;
@@ -298,6 +310,7 @@ public class SaveManager : MonoBehaviour
                 accessoryDurability = hero.DurabilityOf(EquipmentSlot.Accessory),
                 bonusStarRank = hero.BonusStarRank,
                 ascensionMultiplier = hero.AscensionMultiplier,
+                affinity = hero.Affinity,
                 gearUpgradeAttack = hero.GearUpgradeAttack,
                 gearUpgradeDefense = hero.GearUpgradeDefense,
                 weaponAssetName = AssetNameOf(hero.Weapon),
@@ -386,7 +399,11 @@ public class SaveManager : MonoBehaviour
         if (save.highestClearedFloor <= 0)
             save.highestClearedFloor = Mathf.Max(0, save.currentFloor - 1);
 
-        if (waves != null) waves.LoadProgress(save.currentFloor, save.highestClearedFloor);
+        if (waves != null)
+        {
+            waves.LoadProgress(save.currentFloor, save.highestClearedFloor);
+            waves.LoadHiddenChallengeAwardedFloors(save.hiddenChallengeAwardedFloors);
+        }
 
         // El piso ya está publicado en BaseBuilding.TowerFloor: los cuadrantes pueden calcular su IsUnlocked.
         QuadrantController.Find(QuadrantId.East)?.LoadRevealed(save.quadrantEastRevealed);
@@ -408,8 +425,22 @@ public class SaveManager : MonoBehaviour
             crafting.LoadStones(menor, media, mayor, legendaria, trascendente, celestial);
         }
 
-        if (crafting != null) crafting.LoadPotions(save.healingPotions);
-        if (crafting != null) crafting.LoadManaPotions(save.manaPotions);
+        if (crafting != null)
+        {
+            // Un save de antes de los tiers no trae healingPotionCounts: su zurrón genérico
+            // se conserva entero como Poción Menor, para no perder progreso ya guardado.
+            var hp = save.healingPotionCounts;
+            int hpMenor = (hp != null && hp.Length > 0) ? hp[0] : save.healingPotions;
+            int hpMedia = (hp != null && hp.Length > 1) ? hp[1] : 0;
+            int hpMayor = (hp != null && hp.Length > 2) ? hp[2] : 0;
+            crafting.LoadPotions(hpMenor, hpMedia, hpMayor);
+
+            var mp = save.manaPotionCounts;
+            int mpMenor = (mp != null && mp.Length > 0) ? mp[0] : save.manaPotions;
+            int mpMedia = (mp != null && mp.Length > 1) ? mp[1] : 0;
+            int mpMayor = (mp != null && mp.Length > 2) ? mp[2] : 0;
+            crafting.LoadManaPotions(mpMenor, mpMedia, mpMayor);
+        }
 
         if (expeditions != null)
             expeditions.LoadState(save.expeditionType, save.expeditionRemaining,
@@ -535,6 +566,7 @@ public class SaveManager : MonoBehaviour
 
             // La ascensión va antes que el nivel: escala las bases sobre las que se calculan los bonus.
             hero.LoadAscension(entry.bonusStarRank, entry.ascensionMultiplier);
+            hero.LoadAffinity(entry.affinity);
             hero.LoadGearUpgrade(entry.gearUpgradeAttack, entry.gearUpgradeDefense);
 
             var passives = new List<PassiveSkill>();

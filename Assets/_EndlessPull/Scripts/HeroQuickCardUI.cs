@@ -17,6 +17,15 @@ public class HeroQuickCardUI : MonoBehaviour
     [Tooltip("Tienda de la que sale el equipamiento.")]
     [SerializeField] private ShopManager shop;
 
+    [Tooltip("Economía de la que sale la comida del botón Regalar.")]
+    [SerializeField] private EconomyManager economy;
+
+    [Tooltip("Comida que cuesta cada regalo.")]
+    [SerializeField] private int giftFoodCost = 15;
+
+    [Tooltip("Afecto que da cada regalo (0-100).")]
+    [SerializeField] private float giftAffinityGain = 5f;
+
     [Tooltip("Modal de equipamiento manual que abre el botón Equipar (también permite desequipar).")]
     [SerializeField] private EquipmentSelectModalUI equipModal;
 
@@ -47,11 +56,11 @@ public class HeroQuickCardUI : MonoBehaviour
     private const float ActionBtnHeight = 46f;
     private const float ActionBtnGap = 12f;
 
-    private Image barHp, barMp, barMoral, barFatiga;
-    private TMP_Text txtHp, txtMp, txtMoral, txtFatiga;
+    private Image barHp, barMp, barMoral, barFatiga, barAfinidad;
+    private TMP_Text txtHp, txtMp, txtMoral, txtFatiga, txtAfinidad;
     private Button usePotionHpButton, usePotionMpButton;
     private TMP_Text potionHpLabel, potionMpLabel;
-    private Button btnLock, btnEquip, btnSubclass;
+    private Button btnLock, btnEquip, btnGift;
     private TMP_Text seeRosterLabel;
 
     public bool IsOpen => panel != null && panel.activeSelf;
@@ -63,6 +72,7 @@ public class HeroQuickCardUI : MonoBehaviour
         if (crafting == null) crafting = UnityEngine.Object.FindFirstObjectByType<CraftingManager>();
         if (shop == null) shop = UnityEngine.Object.FindFirstObjectByType<ShopManager>();
         if (equipModal == null) equipModal = UnityEngine.Object.FindFirstObjectByType<EquipmentSelectModalUI>();
+        if (economy == null) economy = UnityEngine.Object.FindFirstObjectByType<EconomyManager>();
 
         Build();
     }
@@ -173,17 +183,20 @@ public class HeroQuickCardUI : MonoBehaviour
         txtFatiga.text = string.Format(LocalizationManager.Get("UI_QUICKCARD_FATIGUE"), hero.FatiguePercent) +
                          (hero.IsExhausted ? LocalizationManager.Get("UI_EXHAUSTED") : string.Empty);
 
+        UIBuild.SetBar(barAfinidad, hero.Affinity / 100f);
+        txtAfinidad.text = string.Format(LocalizationManager.Get("UI_QUICKCARD_AFFINITY"), Mathf.RoundToInt(hero.Affinity));
+
         equipo.text = string.Format(LocalizationManager.Get("UI_QUICKCARD_GEAR"),
             hero.Attack, hero.Defense,
             Pieza(EquipmentSlot.Weapon), Pieza(EquipmentSlot.Shield),
             Pieza(EquipmentSlot.Armor), Pieza(EquipmentSlot.Accessory));
 
-        int pocionesHp = crafting != null ? crafting.HealingPotions : 0;
+        int pocionesHp = crafting != null ? crafting.TotalHealingPotions : 0;
         if (usePotionHpButton != null) usePotionHpButton.interactable = pocionesHp > 0 && hero.CurrentHealth < hero.MaxHealth;
         if (potionHpLabel != null)
             potionHpLabel.text = string.Format(LocalizationManager.Get("UI_USE_POTION"), pocionesHp);
 
-        int pocionesMp = crafting != null ? crafting.ManaPotions : 0;
+        int pocionesMp = crafting != null ? crafting.TotalManaPotions : 0;
         if (usePotionMpButton != null) usePotionMpButton.interactable = pocionesMp > 0 && hero.CurrentMP < hero.MaxMP;
         if (potionMpLabel != null)
             potionMpLabel.text = string.Format(LocalizationManager.Get("UI_USE_MANA_POTION"), pocionesMp);
@@ -197,12 +210,13 @@ public class HeroQuickCardUI : MonoBehaviour
 
     private void RefreshActionButtons()
     {
-        bool puedeSubclase = hero.StarRank >= HeroSubclasses.MinStarRank;
+        bool puedeRegalar = economy != null && economy.Food >= giftFoodCost && hero.Affinity < 100f;
 
         SetActionButton(btnLock, LocalizationManager.Get(hero.IsLocked ? "UI_LOCK" : "UI_UNLOCK"),
             hero.IsLocked ? UITheme.DangerSoft : UITheme.Neutral, true);
         SetActionButton(btnEquip, LocalizationManager.Get("UI_EQUIP"), UITheme.Teal, shop != null || equipModal != null);
-        SetActionButton(btnSubclass, LocalizationManager.Get("UI_SUBCLASS"), UITheme.AccentSoft, puedeSubclase);
+        SetActionButton(btnGift, string.Format(LocalizationManager.Get("UI_GIFT"), giftFoodCost),
+            UITheme.AccentSoft, puedeRegalar);
 
         if (seeRosterLabel != null) seeRosterLabel.text = LocalizationManager.Get("UI_SEE_ROSTER");
     }
@@ -245,13 +259,16 @@ public class HeroQuickCardUI : MonoBehaviour
         Refresh();
     }
 
-    // Rota entre las tres subclases del arquetipo del héroe.
-    private void OnSubclassClicked()
+    // Comida especial a cambio de afecto (ATK a partir de 50, EXP de entrenamiento al máximo).
+    // Sustituye al viejo botón de cambiar subclase manualmente — la subclase se sigue asignando
+    // sola (al azar en la invocación o a elegir al ascender), sin botón propio.
+    private void OnGiftClicked()
     {
-        if (hero == null) return;
+        if (hero == null || economy == null) return;
+        if (!economy.TrySpendFood(giftFoodCost)) return;
 
-        var progress = hero.GetComponent<HeroProgress>();
-        if (progress != null) progress.CycleSubclass();
+        hero.AddAffinity(giftAffinityGain);
+        SaveManager.RequestSave();
         Refresh();
     }
 
@@ -270,7 +287,7 @@ private void Build()
     {
         if (canvas == null) return;
 
-        var panelSize = new Vector2(size.x, Mathf.Max(size.y, 740f));
+        var panelSize = new Vector2(size.x, Mathf.Max(size.y, 780f));
         panel = UIBuild.Panel(canvas.transform, "HeroQuickCard", panelSize, new Color(0.11f, 0.11f, 0.17f, 0.98f));
 
         UIBuild.CloseButtonTopRight(panel.transform, Close);
@@ -299,8 +316,10 @@ private void Build()
             new Color(0.85f, 0.70f, 0.25f), out txtMoral);
         barFatiga = UIBuild.Bar(panel.transform, "Bar_Fatigue", new Vector2(size.x - 40f, 34f), new Vector2(0f, -(HeaderHeight + 120f)),
             new Color(0.55f, 0.45f, 0.35f), out txtFatiga);
+        barAfinidad = UIBuild.Bar(panel.transform, "Bar_Affinity", new Vector2(size.x - 40f, 34f), new Vector2(0f, -(HeaderHeight + 160f)),
+            new Color(0.85f, 0.45f, 0.65f), out txtAfinidad);
 
-        float gearY = -(HeaderHeight + 168f);
+        float gearY = -(HeaderHeight + 208f);
         equipo = UIBuild.TopLabel(panel.transform, "Gear", UIBuild.BodySize, 90f, gearY, TextAlignmentOptions.TopLeft);
 
         float statusY = gearY - 98f;
@@ -313,7 +332,7 @@ private void Build()
 
         btnLock = BuildActionButton(panel.transform, "Btn_Lock", row1Y, 0, OnLockClicked);
         btnEquip = BuildActionButton(panel.transform, "Btn_Equip", row1Y, 1, OnEquipClicked);
-        btnSubclass = BuildActionButton(panel.transform, "Btn_Subclass", row1Y, 2, OnSubclassClicked);
+        btnGift = BuildActionButton(panel.transform, "Btn_Gift", row1Y, 2, OnGiftClicked);
 
         float xHp = GridX(0);
         float xMp = GridX(1);

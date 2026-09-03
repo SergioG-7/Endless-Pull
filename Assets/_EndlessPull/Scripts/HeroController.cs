@@ -293,6 +293,18 @@ public class HeroController : MonoBehaviour, IHealthOwner
     private int bonusStarRank;
     private float ascensionMultiplier = 1f;
 
+    // Afecto acumulado por regalos; 0-100, persiste entre sesiones.
+    private float affinity;
+
+    [Tooltip("Afecto a partir del cual el héroe gana el bonus de ataque por afecto.")]
+    [SerializeField] private float affinityAtkThreshold = 50f;
+
+    [Tooltip("Bonus de ataque, en tanto por uno, al superar el umbral de afecto.")]
+    [SerializeField] private float affinityAtkBonus = 0.02f;
+
+    [Tooltip("Bonus de EXP de entrenamiento, en tanto por uno, con el afecto al máximo (100).")]
+    [SerializeField] private float affinityExpBonus = 0.05f;
+
     // Bonus por instancia que aporta el nivel; el HeroData compartido no se toca nunca.
     private int bonusMaxHealth;
     private int bonusAttack;
@@ -349,6 +361,10 @@ public class HeroController : MonoBehaviour, IHealthOwner
     public int StarRank => data != null ? Mathf.Min(7, data.starRank + bonusStarRank) : 0;
     public float AscensionMultiplier => ascensionMultiplier;
     public int BonusStarRank => bonusStarRank;
+
+    public float Affinity => affinity;
+    public float AffinityAtkBonus => affinity >= affinityAtkThreshold ? affinityAtkBonus : 0f;
+    public float AffinityExpBonus => affinity >= 100f ? affinityExpBonus : 0f;
 
     public WeaponType EquippedWeaponType => weapon != null ? weapon.weaponType : WeaponType.None;
 
@@ -548,7 +564,8 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
             float multiplier = (IsInspired ? 1f + inspiredAttackBonus : 1f)
                                * mastery.DamageMultiplier(EquippedWeaponType)
-                               * (1f + originSynergy);
+                               * (1f + originSynergy)
+                               * (1f + AffinityAtkBonus);
 
             return Mathf.RoundToInt(raw * multiplier);
         }
@@ -926,6 +943,12 @@ public void DeployViaGateway(Vector2 destination)
         bonusStarRank = Mathf.Max(0, savedBonusStarRank);
         ascensionMultiplier = savedMultiplier > 0f ? savedMultiplier : 1f;
     }
+
+    // La llama HeroQuickCardUI al regalar comida; positiva siempre, con tope en 100.
+    public void AddAffinity(float amount) => affinity = Mathf.Clamp(affinity + amount, 0f, 100f);
+
+    // La usa el SaveManager para devolver el afecto tal cual estaba.
+    public void LoadAffinity(float savedAffinity) => affinity = Mathf.Clamp(savedAffinity, 0f, 100f);
 
     public int GearUpgradeAttack => gearUpgradeAttack;
     public int GearUpgradeDefense => gearUpgradeDefense;
