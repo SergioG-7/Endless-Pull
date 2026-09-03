@@ -23,11 +23,23 @@ public static class PassiveSkills
     {
         switch (passive)
         {
-            case PassiveSkill.PainTolerance: return "Aguante";
-            case PassiveSkill.Evasion: return "Evasión";
-            case PassiveSkill.EagleEye: return "Ojo de Águila";
+            case PassiveSkill.PainTolerance: return LocalizationManager.Get("PASSIVE_NAME_PAINTOLERANCE");
+            case PassiveSkill.Evasion: return LocalizationManager.Get("PASSIVE_NAME_EVASION");
+            case PassiveSkill.EagleEye: return LocalizationManager.Get("PASSIVE_NAME_EAGLEEYE");
         }
         return passive.ToString();
+    }
+
+    // Explicación corta de qué hace de verdad; la usa el modal de Habilidades de la ficha.
+    public static string Description(PassiveSkill passive)
+    {
+        switch (passive)
+        {
+            case PassiveSkill.PainTolerance: return LocalizationManager.Get("PASSIVE_DESC_PAINTOLERANCE");
+            case PassiveSkill.Evasion: return LocalizationManager.Get("PASSIVE_DESC_EVASION");
+            case PassiveSkill.EagleEye: return LocalizationManager.Get("PASSIVE_DESC_EAGLEEYE");
+        }
+        return string.Empty;
     }
 
     // Sortea una o dos pasivas distintas para un héroe recién invocado.
@@ -49,7 +61,7 @@ public static class PassiveSkills
 
     public static string Describe(IReadOnlyList<PassiveSkill> passives)
     {
-        if (passives == null || passives.Count == 0) return "sin pasivas";
+        if (passives == null || passives.Count == 0) return LocalizationManager.Get("UI_NO_PASSIVES");
 
         var names = new List<string>();
         foreach (var p in passives) names.Add(DisplayName(p));

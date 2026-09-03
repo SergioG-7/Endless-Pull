@@ -77,7 +77,10 @@ public class SanctuaryUI : MonoBehaviour
     // Confirmación previa al sacrificio: quién se iba a sacrificar mientras el jugador decide,
     // sin tocar el estado de SynthesisManager todavía (irreversible una vez confirmado).
     private GameObject synthConfirmOverlay;
+    private TMP_Text synthConfirmTitle;
     private TMP_Text synthConfirmMessage;
+    private TMP_Text synthConfirmConfirmLabel;
+    private TMP_Text synthConfirmCancelLabel;
     private HeroController pendingSynthTarget;
     private HeroController pendingSynthFodder;
 
@@ -109,6 +112,14 @@ public class SanctuaryUI : MonoBehaviour
         titulo.text = LocalizationManager.Get("UI_SANCTUARY");
         tabAscendLabel.text = LocalizationManager.Get("UI_ASCENSION_TAB");
         tabSynthLabel.text = LocalizationManager.Get("UI_SYNTHESIS_TAB");
+
+        // El mini-modal de confirmar Síntesis se construye una sola vez en Awake() y no volvía
+        // a releerse: quedaba congelado en el idioma que hubiera al arrancar la partida.
+        if (synthConfirmTitle != null) synthConfirmTitle.text = LocalizationManager.Get("UI_SYNTH_CONFIRM_TITLE");
+        if (synthConfirmConfirmLabel != null) synthConfirmConfirmLabel.text = LocalizationManager.Get("UI_SYNTH");
+        if (synthConfirmCancelLabel != null) synthConfirmCancelLabel.text = LocalizationManager.Get("UI_CANCEL");
+        if (pendingSynthTarget != null && pendingSynthFodder != null)
+            ShowSynthConfirm(pendingSynthTarget, pendingSynthFodder);
 
         if (!IsOpen) return;
         RefreshList();
@@ -685,19 +696,21 @@ public class SanctuaryUI : MonoBehaviour
         var box = UIBuild.Panel(synthConfirmOverlay.transform, "SynthConfirmBox",
             new Vector2(460f, 260f), UITheme.BgPanel);
 
-        var titulo = UIBuild.TopLabel(box.transform, "Title", UITheme.SizeName, 30f, -20f,
+        synthConfirmTitle = UIBuild.TopLabel(box.transform, "Title", UITheme.SizeName, 30f, -20f,
             TextAlignmentOptions.Center);
-        titulo.text = LocalizationManager.Get("UI_SYNTH_CONFIRM_TITLE");
+        synthConfirmTitle.text = LocalizationManager.Get("UI_SYNTH_CONFIRM_TITLE");
 
         synthConfirmMessage = UIBuild.TopLabel(box.transform, "Message", UITheme.SizeBody, 130f, -56f,
             TextAlignmentOptions.Center);
         synthConfirmMessage.color = UITheme.TextSoft;
 
-        UIBuild.Button(box.transform, "Btn_ConfirmSynth", LocalizationManager.Get("UI_SYNTH"),
+        var btnConfirm = UIBuild.Button(box.transform, "Btn_ConfirmSynth", LocalizationManager.Get("UI_SYNTH"),
             UITheme.DangerSoft, new Vector2(180f, 48f), new Vector2(-100f, -200f), OnConfirmSynthPressed);
+        synthConfirmConfirmLabel = btnConfirm.GetComponentInChildren<TMP_Text>();
 
-        UIBuild.Button(box.transform, "Btn_CancelSynth", LocalizationManager.Get("UI_CANCEL"),
+        var btnCancel = UIBuild.Button(box.transform, "Btn_CancelSynth", LocalizationManager.Get("UI_CANCEL"),
             UITheme.Neutral, new Vector2(180f, 48f), new Vector2(100f, -200f), OnCancelSynthPressed);
+        synthConfirmCancelLabel = btnCancel.GetComponentInChildren<TMP_Text>();
 
         synthConfirmOverlay.SetActive(false);
     }

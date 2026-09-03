@@ -172,6 +172,17 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Máximo de auto-curaciones por héroe y expedición.")]
     [SerializeField] private int autoPotionUsesPerExpedition = 3;
 
+    [Tooltip("Segundos mínimos entre cada auto-curación del mismo héroe, para que no se beba el inventario de golpe.")]
+    [SerializeField] private float autoPotionCooldown = 3f;
+
+    [Tooltip("Fracción de vida por debajo de la cual sobrevivir a un combate cuenta como situación crítica, de cara al Despertar de Habilidades.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float criticalHealthRatioForAwakening = 0.20f;
+
+    [Tooltip("Probabilidad de que un héroe elegible (sobrevivió crítico, o mató al jefe) despierte una pasiva nueva al superar el piso.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float skillAwakeningChance = 0.15f;
+
     [Tooltip("Último piso de cada tier en el cofre de jefe (Menor, Media, Mayor); por encima cae Legendaria.")]
     [SerializeField] private int[] stoneTierFloorCap = { 5, 10, 15 };
 
@@ -204,8 +215,14 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Segundos que hay que aguantar en el Piso 5 (Filtro de Supervivencia).")]
     [SerializeField] private float survivalDuration = 60f;
 
-    [Tooltip("Cada cuántos segundos entra un enemigo nuevo mientras dure la Supervivencia.")]
+    [Tooltip("Cada cuántos segundos entra una oleada nueva mientras dure la Supervivencia.")]
     [SerializeField] private float survivalRespawnInterval = 4f;
+
+    [Tooltip("Enemigos que entran de golpe en cada oleada de Supervivencia, en el piso base (Piso 5).")]
+    [SerializeField] private int survivalWaveBaseSize = 2;
+
+    [Tooltip("Enemigos extra por oleada de Supervivencia por cada piso por encima del piso base.")]
+    [SerializeField] private int survivalWaveGrowthPerFloor = 1;
 
     [Tooltip("Segundos límite del reto oculto de despeje rápido en pisos normales (Subyugación).")]
     [SerializeField] private float hiddenSpeedClearSeconds = 45f;
@@ -267,6 +284,13 @@ public class WaveManager : MonoBehaviour
     // Ranura de consumible: cupo de auto-curaciones por héroe, compartido con el stock
     // global de pociones (sin inventario propio por héroe); se reinicia en cada despliegue.
     private readonly Dictionary<HeroController, int> potionUsesThisExpedition = new Dictionary<HeroController, int>();
+
+    // Momento (Time.time) a partir del cual el héroe puede volver a auto-curarse con poción.
+    private readonly Dictionary<HeroController, float> potionCooldownUntil = new Dictionary<HeroController, float>();
+
+    // Héroes desplegados que en algún momento de esta expedición cayeron por debajo del umbral
+    // crítico y siguen en pie: candidatos al Despertar de Habilidades al superar el piso.
+    private readonly HashSet<HeroController> survivedCritical = new HashSet<HeroController>();
     private ExpeditionState state = ExpeditionState.Idle;
 
     // Preparación táctica: la oleada está en escena pero congelada.
@@ -435,10 +459,11 @@ public Vector2 ArenaFocus => arenaCenter + new Vector2((heroSpawnOffset.x + spaw
         PublishFloor();
     }
 
-    // Los edificios miran el piso alcanzado para su capacidad y su desbloqueo.
+    // Los edificios miran el piso REALMENTE SUPERADO, nunca el que solo se puede intentar —
+    // si no, seleccionar un piso nuevo ya lo desbloqueaba aunque se perdiera.
     private void PublishFloor()
     {
-        BaseBuilding.SetTowerFloor(Mathf.Max(currentFloor, highestClearedFloor + 1));
+        BaseBuilding.SetTowerFloor(highestClearedFloor);
         FloorChanged?.Invoke(currentFloor);
     }
 
@@ -468,6 +493,12 @@ void Awake()
         ArenaWallMax = arenaCenter + arenaWallHalfExtents;
 
         DrawArenaFence();
+
+        // BaseBuilding.TowerFloor es estático y sobrevive a la recarga de escena de Nueva
+        // Partida (solo un reload de dominio lo resetea) — sin este aviso en Awake, un piso
+        // alto de la partida anterior deja todos los edificios desbloqueados de salida.
+        // SaveManager.Load() (en Start, tras todos los Awake) lo corrige después si hay guardado.
+        PublishFloor();
     }
 
     // Valla perimetral visible: marco de piedra/madera oscura integrado con el bioma, no una
@@ -505,6 +536,18 @@ void Awake()
         if (party == null || party.Party.Count == 0)
         {
             Report(ExpeditionState.Idle, LocalizationManager.Get("UI_STATUS_ASSIGN_HEROES"));
+            return;
+        }
+
+        // Insubordinación: un héroe con la moral por los suelos, vida residual o equipo roto se
+        // niega a entrar al Portal hasta que el Master lo resuelva (Cantina/Taller).
+        foreach (var hero in party.Party)
+        {
+            if (hero == null || !hero.IsInsubordinate) continue;
+
+            string motivo = LocalizationManager.Get(hero.InsubordinationReasonKey());
+            Report(ExpeditionState.Idle, string.Format(
+                LocalizationManager.Get("UI_STATUS_INSUBORDINATE"), hero.Data.heroName, motivo));
             return;
         }
 
@@ -615,8 +658,16 @@ void Awake()
         return enemyData;
     }
 
-    // Piso 5: un enemigo más cada intervalo, con el mismo escalado y línea que la oleada
-    // inicial, para mantener la presión de "oleadas continuas" durante la Supervivencia.
+    // Grupo de enemigos de golpe cada intervalo, no de uno en uno, con más integrantes cuanto
+    // más alto el piso, para mantener la presión hasta agotar el cronómetro.
+    private void SpawnSurvivalWave()
+    {
+        int size = Mathf.Max(1, survivalWaveBaseSize + survivalWaveGrowthPerFloor * Mathf.Max(0, currentFloor - 5));
+        for (int i = 0; i < size; i++) SpawnSurvivalReinforcement();
+    }
+
+    // Un enemigo más, con el mismo escalado y línea que la oleada inicial; lo llama
+    // SpawnSurvivalWave() tantas veces como integrantes tenga la oleada de ese piso.
     private void SpawnSurvivalReinforcement()
     {
         if (enemyPrefab == null) return;
@@ -693,6 +744,8 @@ private void DeployParty()
     {
         deployed.Clear();
         potionUsesThisExpedition.Clear();
+        potionCooldownUntil.Clear();
+        survivedCritical.Clear();
 
         int slot = 0;
         foreach (var hero in party.Party)
@@ -994,14 +1047,58 @@ private void DeployParty()
         foreach (var hero in deployed)
         {
             if (hero == null || hero.MaxHealth <= 0) continue;
-            if ((float)hero.CurrentHealth / hero.MaxHealth >= autoPotionHealthRatio) continue;
+
+            float ratio = (float)hero.CurrentHealth / hero.MaxHealth;
+
+            // Marca al héroe como candidato al Despertar de Habilidades si sigue en pie tras
+            // rozar la muerte; se resuelve de verdad solo al superar el piso.
+            if (ratio <= criticalHealthRatioForAwakening) survivedCritical.Add(hero);
+
+            if (ratio >= autoPotionHealthRatio) continue;
 
             potionUsesThisExpedition.TryGetValue(hero, out int used);
             if (used >= autoPotionUsesPerExpedition) continue;
 
+            potionCooldownUntil.TryGetValue(hero, out float readyAt);
+            if (Time.time < readyAt) continue;
+
             if (crafting.TryUseHealingPotion(hero))
+            {
                 potionUsesThisExpedition[hero] = used + 1;
+                potionCooldownUntil[hero] = Time.time + autoPotionCooldown;
+            }
         }
+    }
+
+    // Da a cada héroe elegible (sobrevivió crítico esta expedición, o el piso era de jefe y
+    // cayó) una tirada de Despertar de Habilidades al superar el piso.
+    private void TryAwakenSkills(bool bossKilled)
+    {
+        foreach (var hero in deployed)
+        {
+            if (hero == null || hero.CurrentHealth <= 0) continue;
+            if (!bossKilled && !survivedCritical.Contains(hero)) continue;
+            if (Random.value >= skillAwakeningChance) continue;
+
+            TryAwakenSkill(hero);
+        }
+    }
+
+    // Le da una pasiva nueva del pool que aún no tenga; sin hueco libre no pasa nada.
+    private void TryAwakenSkill(HeroController hero)
+    {
+        var pool = new List<PassiveSkill>(PassiveSkills.All);
+        pool.RemoveAll(hero.HasPassive);
+        if (pool.Count == 0) return;
+
+        var chosen = pool[Random.Range(0, pool.Count)];
+        var updated = new List<PassiveSkill>(hero.Passives) { chosen };
+        hero.SetPassives(updated);
+
+        string msg = string.Format(LocalizationManager.Get("UI_SKILL_AWAKENING"),
+            hero.Data.heroName, PassiveSkills.DisplayName(chosen));
+        ScreenBanner.ShowCompact(msg, 3f, UITheme.AccentPick);
+        Debug.Log($"[Despertar] {msg}", this);
     }
 
     void Update()
@@ -1044,7 +1141,7 @@ private void DeployParty()
             if (survivalRespawnTimer <= 0f)
             {
                 survivalRespawnTimer = survivalRespawnInterval;
-                SpawnSurvivalReinforcement();
+                SpawnSurvivalWave();
             }
         }
 
@@ -1107,6 +1204,10 @@ private void DeployParty()
             // Ganar sube la moral de todo el que siga en pie.
             foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None))
                 hero.AddMorale(moraleRewardOnWin);
+
+            // Despertar de Habilidades: se resuelve con la escuadra todavía desplegada (antes
+            // de RecallParty(), que vacía `deployed`).
+            TryAwakenSkills(bossChest);
 
             // Friacis (si la había) no muere al ganar, pero su barra debe desaparecer con el
             // resto de la oleada — si no, se queda visible en el HUD de vuelta en la base.

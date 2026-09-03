@@ -259,8 +259,11 @@ public class BaseFairyController : MonoBehaviour
         var backdrop = backdropGo.GetComponent<SpriteRenderer>();
         backdrop.sprite = Resources.Load<Sprite>("UI/UI_Rounded");
         backdrop.drawMode = SpriteDrawMode.Sliced;
-        backdrop.size = new Vector2(4.8f, 0.95f);
+        backdrop.size = new Vector2(5.6f, 1.5f);
         backdrop.color = UITheme.Hex("141A26", 0.92f);
+        // Sin capa explícita cae en "Default", por debajo de "Characters": el bocadillo se
+        // dibujaba detrás de Isel, invisible aunque estuviera activo.
+        backdrop.sortingLayerName = "Characters";
         backdrop.sortingOrder = 19;
 
         var borderGo = new GameObject("Border", typeof(SpriteRenderer));
@@ -268,16 +271,23 @@ public class BaseFairyController : MonoBehaviour
         var border = borderGo.GetComponent<SpriteRenderer>();
         border.sprite = Resources.Load<Sprite>("UI/UI_RoundedRingThin");
         border.drawMode = SpriteDrawMode.Sliced;
-        border.size = new Vector2(4.8f, 0.95f);
+        border.size = new Vector2(5.6f, 1.5f);
         border.color = UITheme.Cyan;
+        border.sortingLayerName = "Characters";
         border.sortingOrder = 20;
 
         hintLabel = hintBubble.GetComponent<TextMeshPro>();
-        hintLabel.fontSize = 1.05f;
+        // Fuente fija de 1.05 salía casi ilegible sin hacer zoom; auto-sizing con un mínimo
+        // más alto y ajuste de línea para que los consejos largos quepan en dos líneas.
+        hintLabel.enableAutoSizing = true;
+        hintLabel.fontSizeMin = 1.4f;
+        hintLabel.fontSizeMax = 2.1f;
+        hintLabel.enableWordWrapping = true;
         hintLabel.alignment = TextAlignmentOptions.Center;
         hintLabel.color = UITheme.Text;
+        hintLabel.sortingLayerID = SortingLayer.NameToID("Characters");
         hintLabel.sortingOrder = 21;
-        hintLabel.rectTransform.sizeDelta = new Vector2(4.5f, 0.95f);
+        hintLabel.rectTransform.sizeDelta = new Vector2(5.2f, 1.4f);
 
         hintBubble.SetActive(false);
     }

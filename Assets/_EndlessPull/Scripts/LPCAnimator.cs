@@ -118,7 +118,11 @@ public class LPCAnimator : MonoBehaviour
     public static Sprite[] SliceWalkSheet(Texture2D sheet)
     {
         if (sheet == null) return null;
-        if (sliceCache.TryGetValue(sheet, out var cached)) return cached;
+
+        // Un recorte cacheado puede tener los Sprite ya destruidos aunque la textura clave
+        // siga viva; comprobar el primer elemento antes de fiarse del acierto de caché.
+        if (sliceCache.TryGetValue(sheet, out var cached) && cached != null && cached.Length > 0 && cached[0] != null)
+            return cached;
 
         int frameWidth = sheet.width / Columnas;
         int frameHeight = sheet.height / Filas;

@@ -84,6 +84,9 @@ public class SpeechBubble : MonoBehaviour
         if (hero.CurrentHealth < hero.MaxHealth / 2)
             return Pick("SAY_HURT_1", "SAY_HURT_2");
 
+        if (hero.HasBrokenGear)
+            return Pick("SAY_BROKEN_GEAR_1", "SAY_BROKEN_GEAR_2");
+
         if (hero.MoralePercent > 80)
             return Pick("SAY_HAPPY_1", "SAY_HAPPY_2");
 

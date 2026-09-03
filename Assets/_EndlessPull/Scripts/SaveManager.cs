@@ -32,6 +32,10 @@ public class HeroSaveData
     public float safeDistance = 0.5f;
     public float skillThreshold = 0.15f;
 
+    // Refinamiento de habilidad (0-1) ganado entrenando en el muñeco de la base; 0 en saves
+    // anteriores a esta fase, arranca desde cero sin migración especial.
+    public float skillRefinement;
+
     // Los enums van como int: es lo único que JsonUtility garantiza dentro de una lista.
     public List<int> passives = new List<int>();
     public List<MasterySaveData> mastery = new List<MasterySaveData>();
@@ -302,6 +306,7 @@ public class SaveManager : MonoBehaviour
                 aggression = progress != null ? progress.Aggression : 0.5f,
                 safeDistance = progress != null ? progress.SafeDistance : 0.5f,
                 skillThreshold = progress != null ? progress.SkillThreshold : 0.15f,
+                skillRefinement = progress != null ? progress.SkillRefinement : 0f,
                 assignedBuilding = hero.AssignedBuilding != null ? hero.AssignedBuilding.SaveId : string.Empty,
                 shieldAssetName = AssetNameOf(hero.Shield),
                 weaponDurability = hero.DurabilityOf(EquipmentSlot.Weapon),
@@ -584,6 +589,7 @@ public class SaveManager : MonoBehaviour
             {
                 progress.LoadState(entry.level, entry.currentExp);
                 progress.LoadTactics(entry.aggression, entry.safeDistance, entry.skillThreshold);
+                progress.LoadSkillRefinement(entry.skillRefinement);
             }
 
             hero.LoadVitals(entry.currentHealth, entry.currentMP, entry.fatigue, entry.morale);

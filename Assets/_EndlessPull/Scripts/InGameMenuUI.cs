@@ -161,7 +161,8 @@ public class InGameMenuUI : MonoBehaviour
         if (canvas == null) return;
 
         // +90 de alto para la nueva fila de Música (3 canales en vez de 2, Fase 46).
-        var panelSize = new Vector2(size.x, size.y + 90f);
+        // +50 extra de margen inferior: "Guardar y salir" quedaba pegado al borde del panel.
+        var panelSize = new Vector2(size.x, size.y + 90f + 50f);
         panel = UIBuild.Panel(canvas.transform, "InGameMenuPanel", panelSize, UITheme.Bg);
 
         titulo = UIBuild.TopLabel(panel.transform, "Title", UITheme.SizeTitle, 40f, -24f,
@@ -213,7 +214,7 @@ public class InGameMenuUI : MonoBehaviour
         }
 
         var btnQuit = UIBuild.Button(panel.transform, "Btn_QuitToMenu", LocalizationManager.Get("UI_QUIT_TO_MENU"),
-            UITheme.DangerSoft, new Vector2(360f, 60f), new Vector2(0f, -(panelSize.y - 60f)), OnQuitPressed);
+            UITheme.DangerSoft, new Vector2(360f, 60f), new Vector2(0f, -(panelSize.y - 100f)), OnQuitPressed);
         quitLabel = btnQuit.GetComponentInChildren<TMP_Text>();
 
         panel.SetActive(false);

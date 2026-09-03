@@ -155,6 +155,15 @@ public class SquadManagementUI : MonoBehaviour
         if (party == null) return;
 
         bool dentro = party.IsInParty(hero);
+
+        // Insubordinación: no se le deja subir a la escuadra de Torre hasta que se resuelva.
+        if (!dentro && hero != null && hero.IsInsubordinate)
+        {
+            aviso.text = string.Format(LocalizationManager.Get("UI_INSUBORDINATE_WARNING"),
+                hero.Data.heroName, LocalizationManager.Get(hero.InsubordinationReasonKey()));
+            return;
+        }
+
         party.Toggle(hero);
 
         // Si no ha cambiado nada es que el héroe ya tenía otro puesto: se explica en el aviso.
@@ -256,6 +265,11 @@ public class SquadManagementUI : MonoBehaviour
 
         int porRareza = b.StarRank.CompareTo(a.StarRank);
         if (porRareza != 0) return porRareza;
+
+        int nivelA = a.GetComponent<HeroProgress>()?.Level ?? 1;
+        int nivelB = b.GetComponent<HeroProgress>()?.Level ?? 1;
+        int porNivel = nivelB.CompareTo(nivelA);
+        if (porNivel != 0) return porNivel;
 
         return string.Compare(a.Data.heroName, b.Data.heroName, System.StringComparison.Ordinal);
     }

@@ -124,6 +124,23 @@ public static class HeroSubclasses
         return new HeroSubclass[0];
     }
 
+    // Rareza de nacimiento (la del gacha, sin contar ascensiones) a partir de la cual se puede
+    // optar a Mago Arcano; por debajo, esa carta no se ofrece nunca, aunque el héroe ascienda
+    // después a 3★+ y empuñe báculo.
+    public const int MageMinBirthStarRank = 3;
+
+    // Igual que OptionsFor(archetype), pero le quita Mago Arcano a un héroe nacido plebeyo
+    // (1★/2★) — el resto de arquetipos no incluyen esa subclase, así que no les afecta.
+    public static HeroSubclass[] OptionsFor(WeaponType archetype, int birthStarRank)
+    {
+        var options = OptionsFor(archetype);
+        if (birthStarRank >= MageMinBirthStarRank) return options;
+
+        var plebeyas = new List<HeroSubclass>(options);
+        plebeyas.Remove(HeroSubclass.ArcaneMage);
+        return plebeyas.ToArray();
+    }
+
     // Las tres subclases de clérigo curan y protegen en vez de pegar.
     public static bool IsSupport(HeroSubclass subclass)
         => ArchetypeOf(subclass) == WeaponType.Mace;
@@ -222,13 +239,28 @@ public static class HeroSubclasses
            ? string.Empty
            : LocalizationManager.Get("ROLE_" + subclass.ToString().ToUpperInvariant());
 
+    // Peso relativo de Mago Arcano frente al resto (peso 1) cuando sí puede salir — su ratio de
+    // aparición es mucho más bajo incluso entre los héroes elegibles (3★+ de nacimiento).
+    private const float ArcaneMageWeight = 0.3f;
+
     // Sortea una subclase del arquetipo; la usa la ascensión cuando el jugador no elige.
-    public static HeroSubclass RandomFor(WeaponType archetype)
+    public static HeroSubclass RandomFor(WeaponType archetype, int birthStarRank)
     {
-        var options = OptionsFor(archetype);
+        var options = OptionsFor(archetype, birthStarRank);
         if (options.Length == 0) return HeroSubclass.None;
 
-        return options[Random.Range(0, options.Length)];
+        float total = 0f;
+        foreach (var opt in options) total += opt == HeroSubclass.ArcaneMage ? ArcaneMageWeight : 1f;
+
+        float roll = Random.value * total;
+        float acumulado = 0f;
+        foreach (var opt in options)
+        {
+            acumulado += opt == HeroSubclass.ArcaneMage ? ArcaneMageWeight : 1f;
+            if (roll <= acumulado) return opt;
+        }
+
+        return options[options.Length - 1];
     }
 
     public static List<HeroSubclass> AllReal()

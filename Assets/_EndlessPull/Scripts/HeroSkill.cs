@@ -32,15 +32,18 @@ public class HeroSkill
 
     public bool CanCast(int currentMP) => IsReady && currentMP >= mpCost;
 
-    // Arranca el enfriamiento; el maná lo descuenta quien lanza la habilidad.
-    public void PutOnCooldown() => cooldownTimer = cooldown;
+    // Arranca el enfriamiento; el maná lo descuenta quien lanza la habilidad. reductionFactor
+    // (0-1) viene del refinamiento de entrenamiento del héroe (ver HeroProgress.SkillRefinement).
+    public void PutOnCooldown(float reductionFactor = 0f)
+        => cooldownTimer = cooldown * Mathf.Clamp01(1f - reductionFactor);
 
     public int DamageFrom(int attack) => Mathf.Max(1, Mathf.RoundToInt(attack * damageMultiplier));
 
-    // El nombre visible sale del diccionario; el campo serializado es solo el respaldo.
+    // El nombre visible sale del diccionario; el campo serializado es solo el respaldo interno
+    // (nunca se muestra directamente, para que el héroe sin subclase también salga localizado).
     public string GetDisplayName()
     {
-        if (subclass == HeroSubclass.None) return skillName;
+        if (subclass == HeroSubclass.None) return LocalizationManager.Get("UI_SKILL_BASIC_STRIKE");
 
         string localizado = HeroSubclasses.SkillName(subclass);
         return string.IsNullOrEmpty(localizado) ? skillName : localizado;
@@ -48,5 +51,7 @@ public class HeroSkill
 
     // Lo que hace la habilidad más allá del daño, ya localizado.
     public string GetDescription()
-        => subclass == HeroSubclass.None ? string.Empty : HeroSubclasses.DescribeSkill(subclass);
+        => subclass == HeroSubclass.None
+            ? LocalizationManager.Get("UI_SKILL_BASIC_STRIKE_DESC")
+            : HeroSubclasses.DescribeSkill(subclass);
 }

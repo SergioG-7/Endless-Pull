@@ -175,6 +175,14 @@ public class HeroController : MonoBehaviour, IHealthOwner
     [Range(0f, 1f)]
     [SerializeField] private float evasionChance = 0.15f;
 
+    [Tooltip("Bonus de crítico al llegar al refinamiento de habilidad máximo (entrenamiento en el muñeco).")]
+    [Range(0f, 1f)]
+    [SerializeField] private float maxCritBonusFromRefinement = 0.10f;
+
+    [Tooltip("Reducción del enfriamiento de habilidad al llegar al refinamiento máximo.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float maxSkillCooldownReductionFromRefinement = 0.20f;
+
     [Tooltip("Probabilidad base de golpe crítico, de 0 a 1.")]
     [Range(0f, 1f)]
     [SerializeField] private float baseCritChance = 0.12f;
@@ -441,9 +449,11 @@ public class HeroController : MonoBehaviour, IHealthOwner
         return total;
     }
 
-    // Los afijos van en porcentaje: aquí se pasan a tanto por uno una sola vez.
+    // Los afijos van en porcentaje: aquí se pasan a tanto por uno una sola vez. La pericia de
+    // arma suma su propio bonus de esquiva (rango F=0 ... S=tope), sin depender de la pasiva.
     public float EffectiveEvasionChance
-        => Mathf.Clamp01(evasionChance + AffixTotal(EquipmentAffix.EvasionBoost) * 0.01f);
+        => Mathf.Clamp01(evasionChance + AffixTotal(EquipmentAffix.EvasionBoost) * 0.01f
+                          + mastery.EvasionBonus(EquippedWeaponType));
 
     public float ArmorPierce
         => Mathf.Clamp01(AffixTotal(EquipmentAffix.ArmorPierce) * 0.01f);
@@ -451,7 +461,14 @@ public class HeroController : MonoBehaviour, IHealthOwner
     public float LifeStealRatio
         => Mathf.Clamp01(AffixTotal(EquipmentAffix.LifeSteal) * 0.01f);
 
-    public float CritChance => Mathf.Clamp01(baseCritChance);
+    // El refinamiento del muñeco de entrenamiento afina la puntería con la habilidad, aplicado
+    // aquí como bonus general de crítico (no hay un stat de precisión separado en este combate).
+    public float CritChance => Mathf.Clamp01(baseCritChance
+        + (progress != null ? progress.SkillRefinement * maxCritBonusFromRefinement : 0f));
+
+    // Cuánto se acorta el enfriamiento de la habilidad activa por refinamiento de entrenamiento.
+    public float SkillCooldownReduction
+        => progress != null ? progress.SkillRefinement * maxSkillCooldownReductionFromRefinement : 0f;
 
     public float CritMultiplier
         => baseCritMultiplier + AffixTotal(EquipmentAffix.CritDamage) * 0.01f;
@@ -599,6 +616,37 @@ public class HeroController : MonoBehaviour, IHealthOwner
          : Mood == MoraleState.Demoralized ? LocalizationManager.Get("UI_MOOD_DEMORALIZED")
          : string.Empty;
 
+    [Tooltip("Fracción de vida por debajo de la cual la vida residual cuenta para la Insubordinación.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float insubordinationHealthRatio = 0.30f;
+
+    // Cualquier pieza equipada y rota cuenta como equipo precario.
+    public bool HasBrokenGear
+    {
+        get
+        {
+            foreach (EquipmentSlot slot in System.Enum.GetValues(typeof(EquipmentSlot)))
+                if (GetEquipped(slot) != null && IsBroken(slot)) return true;
+            return false;
+        }
+    }
+
+    // Se niega a entrar a la Torre con la moral por los suelos, vida residual o equipo roto,
+    // hasta que se resuelva en la Cantina o el Taller.
+    public bool IsInsubordinate
+        => IsDemoralized
+           || (MaxHealth > 0 && (float)CurrentHealth / MaxHealth < insubordinationHealthRatio)
+           || HasBrokenGear;
+
+    // El primer motivo que aplica, para no listarlos todos a la vez en el aviso.
+    public string InsubordinationReasonKey()
+    {
+        if (IsDemoralized) return "UI_INSUBORDINATE_MORALE";
+        if (MaxHealth > 0 && (float)CurrentHealth / MaxHealth < insubordinationHealthRatio) return "UI_INSUBORDINATE_HEALTH";
+        if (HasBrokenGear) return "UI_INSUBORDINATE_GEAR";
+        return string.Empty;
+    }
+
     // Agotamiento y desmoralización pesan a la vez sobre llegar y golpear.
     public float EffectiveMoveSpeed
     {
@@ -617,7 +665,9 @@ public class HeroController : MonoBehaviour, IHealthOwner
     {
         get
         {
-            float cooldown = attackCooldown;
+            // La pericia de arma acorta la recuperación base; la fatiga/desmoralización se
+            // suman encima tal cual, no se ven reducidas por la pericia.
+            float cooldown = attackCooldown * (1f - mastery.RecoveryReduction(EquippedWeaponType));
             if (IsExhausted) cooldown += exhaustionAttackDelay;
             if (IsDemoralized) cooldown += demoralizedAttackDelay;
             return cooldown;
@@ -1378,7 +1428,7 @@ public void DeployViaGateway(Vector2 destination)
     private void CastCombatSkill(EnemyController victim)
     {
         currentMP -= skill.mpCost;
-        skill.PutOnCooldown();
+        skill.PutOnCooldown(SkillCooldownReduction);
 
         // Los golpes a distancia ya tienen su propio proyectil; el empujón es solo cuerpo a cuerpo.
         if (!IsRanged && animator != null) animator.PlayAttackLunge(victim.transform.position);
@@ -1508,7 +1558,7 @@ public void DeployViaGateway(Vector2 destination)
         if (subclass == HeroSubclass.HighPriest && !urgente) return;
 
         currentMP -= skill.mpCost;
-        skill.PutOnCooldown();
+        skill.PutOnCooldown(SkillCooldownReduction);
 
         switch (subclass)
         {
@@ -1761,7 +1811,8 @@ public void DeployViaGateway(Vector2 destination)
         // Evasión: el golpe no llega, así que no hay daño, ni fatiga, ni moral perdida.
         // La pasiva innata da el grueso y el afijo de la pieza suma encima.
         bool puedeEsquivar = HasPassive(PassiveSkill.Evasion)
-                             || AffixTotal(EquipmentAffix.EvasionBoost) > 0f;
+                             || AffixTotal(EquipmentAffix.EvasionBoost) > 0f
+                             || mastery.EvasionBonus(EquippedWeaponType) > 0f;
 
         if (puedeEsquivar && UnityEngine.Random.value < EffectiveEvasionChance)
         {
@@ -1826,7 +1877,7 @@ public void DeployViaGateway(Vector2 destination)
 
         attackTimer = EffectiveAttackCooldown;
         currentMP -= skill.mpCost;
-        skill.PutOnCooldown();
+        skill.PutOnCooldown(SkillCooldownReduction);
 
         StrikeEnemy(enemy, skill.DamageFrom(Attack));
         AddMasteryPoints(masteryPerHit);

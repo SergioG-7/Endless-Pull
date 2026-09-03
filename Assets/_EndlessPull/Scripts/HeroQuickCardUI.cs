@@ -29,6 +29,9 @@ public class HeroQuickCardUI : MonoBehaviour
     [Tooltip("Modal de equipamiento manual que abre el botón Equipar (también permite desequipar).")]
     [SerializeField] private EquipmentSelectModalUI equipModal;
 
+    [Tooltip("Modal de habilidad activa, pasivas y pericia de arma que abre el botón Habilidades.")]
+    [SerializeField] private HeroSkillsModalUI skillsModal;
+
     [Tooltip("Tamaño de la ficha.")]
     [SerializeField] private Vector2 size = new Vector2(760f, 620f);
 
@@ -62,6 +65,7 @@ public class HeroQuickCardUI : MonoBehaviour
     private TMP_Text potionHpLabel, potionMpLabel;
     private Button btnLock, btnEquip, btnGift;
     private TMP_Text seeRosterLabel;
+    private TMP_Text skillsButtonLabel;
 
     public bool IsOpen => panel != null && panel.activeSelf;
 
@@ -72,6 +76,7 @@ public class HeroQuickCardUI : MonoBehaviour
         if (crafting == null) crafting = UnityEngine.Object.FindFirstObjectByType<CraftingManager>();
         if (shop == null) shop = UnityEngine.Object.FindFirstObjectByType<ShopManager>();
         if (equipModal == null) equipModal = UnityEngine.Object.FindFirstObjectByType<EquipmentSelectModalUI>();
+        if (skillsModal == null) skillsModal = UnityEngine.Object.FindFirstObjectByType<HeroSkillsModalUI>();
         if (economy == null) economy = UnityEngine.Object.FindFirstObjectByType<EconomyManager>();
 
         Build();
@@ -219,6 +224,7 @@ public class HeroQuickCardUI : MonoBehaviour
             UITheme.AccentSoft, puedeRegalar);
 
         if (seeRosterLabel != null) seeRosterLabel.text = LocalizationManager.Get("UI_SEE_ROSTER");
+        if (skillsButtonLabel != null) skillsButtonLabel.text = LocalizationManager.Get("UI_SKILLS_BUTTON");
     }
 
     private static void SetActionButton(Button button, string text, Color color, bool interactable)
@@ -259,6 +265,12 @@ public class HeroQuickCardUI : MonoBehaviour
         Refresh();
     }
 
+    private void OnSkillsPressed()
+    {
+        if (hero == null || skillsModal == null) return;
+        skillsModal.Open(hero);
+    }
+
     // Comida especial a cambio de afecto (ATK a partir de 50, EXP de entrenamiento al máximo).
     // Sustituye al viejo botón de cambiar subclase manualmente — la subclase se sigue asignando
     // sola (al azar en la invocación o a elegir al ascender), sin botón propio.
@@ -287,7 +299,9 @@ private void Build()
     {
         if (canvas == null) return;
 
-        var panelSize = new Vector2(size.x, Mathf.Max(size.y, 780f));
+        // +70 para la 3ª fila con el botón de Habilidades, bajo los otros dos; sin mover nada
+        // de lo que ya había — todo sigue anclado igual desde el borde superior.
+        var panelSize = new Vector2(size.x, Mathf.Max(size.y, 780f) + 70f);
         panel = UIBuild.Panel(canvas.transform, "HeroQuickCard", panelSize, new Color(0.11f, 0.11f, 0.17f, 0.98f));
 
         UIBuild.CloseButtonTopRight(panel.transform, Close);
@@ -354,6 +368,14 @@ private void Build()
             new Color(0.35f, 0.30f, 0.60f), new Vector2(ActionBtnWidth, ActionBtnHeight), new Vector2(xRoster, row2Y),
             OnSeeInRosterPressed);
         seeRosterLabel = btnSeeRoster.GetComponentInChildren<TMP_Text>();
+
+        // 3ª fila, un solo botón ancho y centrado: abre el modal aparte de Habilidad activa,
+        // Pasivas y Pericia de Arma (demasiado contenido para meterlo aquí sin desbordar).
+        float row3Y = row2Y - ActionBtnHeight - ActionBtnGap;
+        var btnSkills = UIBuild.Button(panel.transform, "Btn_Skills", LocalizationManager.Get("UI_SKILLS_BUTTON"),
+            new Color(0.55f, 0.35f, 0.20f), new Vector2(ActionBtnWidth * 3f + ActionBtnGap * 2f, ActionBtnHeight),
+            new Vector2(0f, row3Y), OnSkillsPressed);
+        skillsButtonLabel = btnSkills.GetComponentInChildren<TMP_Text>();
     }
 
 

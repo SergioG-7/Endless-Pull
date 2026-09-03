@@ -208,6 +208,20 @@ public static class LocalizationManager
                                              "Isel calms a dispute between disheartened heroes.",
                                              "イセルが意気消沈した英雄たちの諍いを鎮めた。" } },
 
+        // Rango de Pericia de Arma (F-S), overlay sobre el nivel numérico (WeaponMastery).
+        { "MASTERY_RANK_F", new[] { "F", "F", "F" } },
+        { "MASTERY_RANK_E", new[] { "E", "E", "E" } },
+        { "MASTERY_RANK_D", new[] { "D", "D", "D" } },
+        { "MASTERY_RANK_C", new[] { "C", "C", "C" } },
+        { "MASTERY_RANK_B", new[] { "B", "B", "B" } },
+        { "MASTERY_RANK_A", new[] { "A", "A", "A" } },
+        { "MASTERY_RANK_S", new[] { "S", "S", "S" } },
+
+        // Despertar de Habilidades: pasiva nueva al sobrevivir crítico o matar a un jefe.
+        { "UI_SKILL_AWAKENING", new[] { "¡{0} despierta una nueva pasiva: {1}!",
+                                          "{0} awakens a new passive: {1}!",
+                                          "{0}が新しいパッシブ「{1}」に目覚めた！" } },
+
         // Acelerador de combate y retirada automática (CombatHUD).
         { "UI_AUTO_RETREAT",  new[] { "Auto-Retirada", "Auto-Retreat", "自動撤退" } },
 
@@ -310,6 +324,31 @@ public static class LocalizationManager
         { "UI_GEAR_PIECE",       new[] { "{0} ({1}/{2})", "{0} ({1}/{2})", "{0} ({1}/{2})" } },
         { "UI_GEAR_PIECE_BROKEN",new[] { "{0} [ROTO]", "{0} [BROKEN]", "{0}［破損］" } },
         { "UI_GEAR_EMPTY",       new[] { "-", "-", "-" } },
+        // Botón "Habilidades" de la ficha rápida y su modal aparte (activa + pasivas + pericia).
+        { "UI_SKILLS_BUTTON",         new[] { "Habilidades", "Skills", "スキル" } },
+        { "UI_SKILLS_MODAL_TITLE",    new[] { "Habilidades y Pericia", "Skills and Mastery", "スキルと熟練度" } },
+        { "UI_SKILLS_SECTION_ACTIVE", new[] { "Habilidad Activa", "Active Skill", "アクティブスキル" } },
+        { "UI_SKILLS_SECTION_PASSIVE",new[] { "Pasivas", "Passives", "パッシブ" } },
+        { "UI_SKILLS_SECTION_MASTERY",new[] { "Pericia de Arma", "Weapon Mastery", "武器熟練度" } },
+        { "UI_MASTERY_EXPLANATION",  new[] { "Sube golpeando en combate o entrenando en el muñeco. A más rango, menos recuperación tras atacar y más probabilidad de esquivar.",
+                                               "Grows by fighting or training on the dummy. Higher rank means less recovery after attacking and a better chance to dodge.",
+                                               "戦闘や訓練用の人形での鍛錬で上がる。ランクが高いほど攻撃後の隙が減り、回避率も上がる。" } },
+        { "UI_MASTERY_NONE",         new[] { "Aún sin entrenar ningún arma.", "Hasn't trained with any weapon yet.", "まだどの武器も鍛えていない。" } },
+        { "UI_NO_PASSIVES",          new[] { "sin pasivas", "no passives", "パッシブなし" } },
+        { "UI_SKILL_BASIC_STRIKE",   new[] { "Golpe Potente", "Mighty Strike", "渾身の一撃" } },
+        { "UI_SKILL_BASIC_STRIKE_DESC", new[] { "Ataque cuerpo a cuerpo reforzado; se sustituye por la habilidad de la subclase al llegar a 3★.",
+                                                  "A reinforced melee strike; replaced by the subclass skill upon reaching 3★.",
+                                                  "強化された近接攻撃。3★に到達すると転職スキルに置き換わる。" } },
+        { "PASSIVE_NAME_PAINTOLERANCE", new[] { "Aguante", "Pain Tolerance", "忍耐" } },
+        { "PASSIVE_NAME_EVASION",       new[] { "Evasión", "Evasion", "回避" } },
+        { "PASSIVE_NAME_EAGLEEYE",      new[] { "Ojo de Águila", "Eagle Eye", "鷹の目" } },
+        { "PASSIVE_DESC_PAINTOLERANCE", new[] { "Encajar golpes cansa la mitad de lo normal.",
+                                                   "Taking hits builds fatigue at half the normal rate.",
+                                                   "被弾時の疲労蓄積が通常の半分になる。" } },
+        { "PASSIVE_DESC_EVASION",       new[] { "Probabilidad de esquivar un golpe por completo, sin sufrir daño.",
+                                                   "A chance to dodge a hit entirely, taking no damage.",
+                                                   "攻撃を完全に回避し、ダメージを受けない確率がある。" } },
+        { "PASSIVE_DESC_EAGLEEYE",      new[] { "Alcance de ataque extra.", "Extra attack range.", "攻撃射程が伸びる。" } },
         { "UI_USE_POTION",       new[] { "Usar Poción ({0})", "Use Potion ({0})", "ポーションを使う（{0}）" } },
         { "UI_USE_MANA_POTION",  new[] { "Usar Poción de Maná ({0})", "Use Mana Potion ({0})", "マナポーションを使う（{0}）" } },
         { "UI_POTION_HP",        new[] { "Curación", "Healing", "回復" } },
@@ -459,6 +498,20 @@ public static class LocalizationManager
         { "SAY_LOWMORALE_2", new[] { "Esto acabará mal.", "This will end badly.", "碌なことにならないぞ。" } },
         { "SAY_HURT_1",      new[] { "Estas heridas escuecen.", "These wounds sting.", "この傷が痛む。" } },
         { "SAY_HURT_2",      new[] { "Necesito vendas.", "I need bandages.", "包帯が要る。" } },
+        { "SAY_BROKEN_GEAR_1", new[] { "Mi equipo está para el arrastre.", "My gear is falling apart.", "装備がボロボロだ。" } },
+        { "SAY_BROKEN_GEAR_2", new[] { "Esta arma ya no aguanta más golpes.", "This weapon can't take another hit.", "この武器はもう限界だ。" } },
+
+        // El héroe se niega a subir a la Torre hasta resolver lo que le pasa; el banner de
+        // expedición y el aviso al meterlo en la escuadra comparten los mismos motivos.
+        { "UI_INSUBORDINATE_MORALE", new[] { "la moral por los suelos", "morale in the gutter", "士気がどん底" } },
+        { "UI_INSUBORDINATE_HEALTH", new[] { "las heridas sin curar", "unhealed wounds", "傷が癒えていない" } },
+        { "UI_INSUBORDINATE_GEAR",   new[] { "el equipo roto", "broken gear", "装備の破損" } },
+        { "UI_STATUS_INSUBORDINATE", new[] { "{0} se niega a entrar a la Torre: {1}.",
+                                               "{0} refuses to enter the Tower: {1}.",
+                                               "{0}は塔に入るのを拒否した：{1}。" } },
+        { "UI_INSUBORDINATE_WARNING", new[] { "{0} se niega a unirse a la escuadra: {1}.",
+                                                "{0} refuses to join the party: {1}.",
+                                                "{0}は部隊への参加を拒否した：{1}。" } },
         { "SAY_HAPPY_1",     new[] { "¡Hoy es un buen día!", "Today's a good day!", "今日はいい日だ！" } },
         { "SAY_HAPPY_2",     new[] { "Que venga el siguiente piso.", "Bring on the next floor.", "次の階へ行こう。" } },
         { "SAY_GLUTTON",     new[] { "Yo peleo mejor comido.", "I fight better fed.", "腹が減っては戦はできぬ。" } },

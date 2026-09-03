@@ -57,6 +57,11 @@ public class HeroProgress : MonoBehaviour
     private int currentEXP;
     private HeroController hero;
 
+    // Refinamiento de habilidad (0-1): crece entrenando en el muñeco, baja el enfriamiento y
+    // sube la precisión de la habilidad activa. Nunca baja por su cuenta.
+    private float skillRefinement;
+    public float SkillRefinement => skillRefinement;
+
     public int Level => level;
     public int CurrentEXP => currentEXP;
     public int MaxEXP => Mathf.RoundToInt(baseMaxEXP * Mathf.Pow(expGrowthPerLevel, level - 1));
@@ -142,6 +147,15 @@ public class HeroProgress : MonoBehaviour
         SaveManager.RequestSave();
     }
 
+    // La usa el muñeco de entrenamiento (BaseBuilding); la carga el SaveManager al restaurar.
+    public void AddSkillRefinement(float amount)
+    {
+        if (amount <= 0f) return;
+        skillRefinement = Mathf.Clamp01(skillRefinement + amount);
+    }
+
+    public void LoadSkillRefinement(float saved) => skillRefinement = Mathf.Clamp01(saved);
+
     public void AddEXP(int amount)
     {
         if (amount <= 0) return;
@@ -218,7 +232,8 @@ public class HeroProgress : MonoBehaviour
         // Con modal en escena elige el jugador; el sorteo solo cubre que no lo haya.
         if (allowUiOffer && SubclassSelectionUI.Offer(hero, arquetipo)) return;
 
-        var elegida = HeroSubclasses.RandomFor(arquetipo);
+        int nacimiento = hero.Data != null ? hero.Data.starRank : hero.StarRank;
+        var elegida = HeroSubclasses.RandomFor(arquetipo, nacimiento);
         hero.SetSubclass(elegida);
 
         Debug.Log($"[Subclase] {hero.Data.heroName} se especializa como {HeroSubclasses.DisplayName(elegida)} " +

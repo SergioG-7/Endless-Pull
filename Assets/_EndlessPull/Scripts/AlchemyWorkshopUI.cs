@@ -106,8 +106,12 @@ public class AlchemyWorkshopUI : MonoBehaviour
 
     // Refresh() ya cubre cabecera y tarjetas (Update() la repasa cada frame mientras está
     // abierto); las pestañas quedaban fuera porque su texto solo se fijaba en BuildTabs().
+    // Con el panel cerrado no hace falta refrescar nada: Open() ya llama a RefreshTabs()+Refresh()
+    // en el idioma vigente la próxima vez que se abra.
     private void OnLanguageChanged()
     {
+        if (!IsOpen) return;
+
         RefreshTabs();
         Refresh();
         stonesPager.RefreshLocalization();
@@ -169,10 +173,11 @@ public class AlchemyWorkshopUI : MonoBehaviour
         StyleTab(tabAlchemy, tabAlchemyLabel, activeTab == WorkshopTab.Alchemy);
 
         // Cada pager decide qué tarjetas de su fila se ven (la página activa) y las oculta todas
-        // cuando su pestaña no es la que está abierta.
-        stonesPager.SetTabActive(activeTab == WorkshopTab.Stones);
-        forgePager.SetTabActive(activeTab == WorkshopTab.Equipment);
-        alchemyPager.SetTabActive(activeTab == WorkshopTab.Alchemy);
+        // cuando su pestaña no es la que está abierta. "?." de guarda: un pager nulo aquí abortaba
+        // el evento estático LanguageChanged entero, dejando sin refrescar a lo suscrito después.
+        stonesPager?.SetTabActive(activeTab == WorkshopTab.Stones);
+        forgePager?.SetTabActive(activeTab == WorkshopTab.Equipment);
+        alchemyPager?.SetTabActive(activeTab == WorkshopTab.Alchemy);
     }
 
     private static void StyleTab(Button tab, TMP_Text label, bool active)

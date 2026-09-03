@@ -1,6 +1,24 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// Rango visible de pericia, de F (novato) a S (maestro); overlay sobre el nivel numérico 1-10
+// que ya existía, sin tocar su fórmula de daño.
+public enum MasteryRank { F, E, D, C, B, A, S }
+
+public static class MasteryRanks
+{
+    public static string DisplayName(MasteryRank rank) => rank switch
+    {
+        MasteryRank.F => LocalizationManager.Get("MASTERY_RANK_F"),
+        MasteryRank.E => LocalizationManager.Get("MASTERY_RANK_E"),
+        MasteryRank.D => LocalizationManager.Get("MASTERY_RANK_D"),
+        MasteryRank.C => LocalizationManager.Get("MASTERY_RANK_C"),
+        MasteryRank.B => LocalizationManager.Get("MASTERY_RANK_B"),
+        MasteryRank.A => LocalizationManager.Get("MASTERY_RANK_A"),
+        _ => LocalizationManager.Get("MASTERY_RANK_S")
+    };
+}
+
 // Maestría por tipo de arma: se gana pegando y entrenando, y sube el daño con ese tipo.
 [System.Serializable]
 public class WeaponMastery
@@ -13,6 +31,12 @@ public class WeaponMastery
 
     [Tooltip("Daño extra en tanto por uno por cada nivel de maestría.")]
     public float bonusPerLevel = 0.05f;
+
+    [Tooltip("Bonus de evasión (probabilidad de esquiva) al llegar al rango de pericia S.")]
+    public float maxEvasionBonusAtRankS = 0.08f;
+
+    [Tooltip("Reducción del tiempo de recuperación tras atacar al llegar al rango de pericia S.")]
+    public float maxRecoveryReductionAtRankS = 0.18f;
 
     // Runtime: el diccionario no se serializa, lo guarda y restaura el SaveManager.
     private readonly Dictionary<WeaponType, int> points = new Dictionary<WeaponType, int>();
@@ -31,6 +55,27 @@ public class WeaponMastery
 
     public float DamageMultiplier(WeaponType type)
         => type == WeaponType.None ? 1f : 1f + LevelOf(type) * bonusPerLevel;
+
+    // F=1-2, E=3-4, D=5-6, C=7, B=8, A=9, S=10 — overlay sobre el nivel numérico, sin tocar
+    // la progresión de daño de arriba.
+    public MasteryRank RankOf(WeaponType type)
+    {
+        int level = LevelOf(type);
+        if (level <= 2) return MasteryRank.F;
+        if (level <= 4) return MasteryRank.E;
+        if (level <= 6) return MasteryRank.D;
+        if (level == 7) return MasteryRank.C;
+        if (level == 8) return MasteryRank.B;
+        if (level == 9) return MasteryRank.A;
+        return MasteryRank.S;
+    }
+
+    // Escala en línea recta con el rango (F=0/6 ... S=6/6) hasta el tope configurado.
+    public float EvasionBonus(WeaponType type)
+        => type == WeaponType.None ? 0f : (int)RankOf(type) / 6f * maxEvasionBonusAtRankS;
+
+    public float RecoveryReduction(WeaponType type)
+        => type == WeaponType.None ? 0f : (int)RankOf(type) / 6f * maxRecoveryReductionAtRankS;
 
     // Devuelve true si el punto ganado ha hecho subir de nivel.
     public bool AddPoints(WeaponType type, int amount)
@@ -56,7 +101,8 @@ public class WeaponMastery
         foreach (var pair in points)
         {
             if (pair.Value <= 0) continue;
-            parts.Add($"{WeaponTypes.DisplayName(pair.Key)} Nv.{LevelOf(pair.Key)}");
+            parts.Add($"{WeaponTypes.DisplayName(pair.Key)} Nv.{LevelOf(pair.Key)} " +
+                      $"({MasteryRanks.DisplayName(RankOf(pair.Key))})");
         }
 
         // Vacio en vez de un texto: el rotulo del roster ya pone "Maestria" delante.

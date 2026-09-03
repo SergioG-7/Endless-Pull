@@ -54,15 +54,22 @@ public class SubclassSelectionUI : MonoBehaviour
     {
         if (panel == null || target == null) return false;
 
-        opciones = HeroSubclasses.OptionsFor(archetype);
-        if (opciones.Length < 3) return false;
+        int nacimiento = target.Data != null ? target.Data.starRank : target.StarRank;
+        opciones = HeroSubclasses.OptionsFor(archetype, nacimiento);
+        if (opciones.Length < 2) return false;
 
         hero = target;
         titulo.text = string.Format(LocalizationManager.Get("UI_SUBCLASS_OFFER_TITLE"),
             hero.Data.heroName, hero.StarRank, WeaponTypes.DisplayName(archetype));
 
-        for (int i = 0; i < 3; i++)
+        // Normalmente son 3 cartas; un héroe nacido plebeyo con báculo se queda sin la de Mago
+        // Arcano y ve solo 2 — la tercera carta se apaga en vez de mostrarse vacía.
+        for (int i = 0; i < cartas.Length; i++)
         {
+            bool activa = i < opciones.Length;
+            cartas[i].gameObject.SetActive(activa);
+            if (!activa) continue;
+
             var sub = opciones[i];
             textos[i].text = $"<b>{HeroSubclasses.DisplayName(sub)}</b>\n" +
                              $"<color=#B9A96A>{RolDe(sub)}</color>\n\n" +
@@ -73,8 +80,23 @@ public class SubclassSelectionUI : MonoBehaviour
                              $"{HeroSubclasses.MakeSkill(sub).cooldown:0.#}s";
         }
 
+        RepositionCards(opciones.Length);
+
         UIManager.OpenExclusive(panel);
         return true;
+    }
+
+    // Con 3 cartas reproduce exactamente las posiciones de siempre ((i-1)*paso); con 2 las
+    // centra como pareja en vez de dejarlas descuadradas a la izquierda.
+    private void RepositionCards(int count)
+    {
+        float step = cardSize.x + 24f;
+        for (int i = 0; i < count; i++)
+        {
+            float x = (i - (count - 1) / 2f) * step;
+            var rt = cartas[i].GetComponent<RectTransform>();
+            rt.anchoredPosition = new Vector2(x, rt.anchoredPosition.y);
+        }
     }
 
     private void OnCardPressed(int index)

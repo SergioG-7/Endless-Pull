@@ -20,6 +20,7 @@ public class QuestBoardUI : MonoBehaviour
 
     private GameObject panel;
     private TMP_Text titulo;
+    private TMP_Text closeLabel;
     private RectTransform lista;
 
     public bool IsOpen => panel != null && panel.activeSelf;
@@ -68,6 +69,7 @@ public class QuestBoardUI : MonoBehaviour
         if (lista == null || quests == null) return;
 
         titulo.text = LocalizationManager.Get("UI_QUESTS");
+        if (closeLabel != null) closeLabel.text = LocalizationManager.Get("UI_CLOSE");
 
         for (int i = lista.childCount - 1; i >= 0; i--)
             Destroy(lista.GetChild(i).gameObject);
@@ -187,7 +189,8 @@ public class QuestBoardUI : MonoBehaviour
         scroll.content = lista;
         scroll.horizontal = false;
 
-        UIBuild.Button(panel.transform, "Btn_CloseQuests", LocalizationManager.Get("UI_CLOSE"),
+        var btnClose = UIBuild.Button(panel.transform, "Btn_CloseQuests", LocalizationManager.Get("UI_CLOSE"),
             Color.clear, new Vector2(240f, 48f), new Vector2(0f, -(size.y - 62f)), Close);
+        closeLabel = btnClose.GetComponentInChildren<TMP_Text>();
     }
 }
