@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Isolde_1Star
+  m_EditorClassIdentifier: EndlessPull.Runtime::HeroData
+  heroName: Isolde
+  title: "Pu\xF1os de Taberna"
+  origin: Ciudad Baja
+  bio: "Se gana la comida a pu\xF1etazos en tabernas bajas; nunca ha perdido una
+    pelea que mereciera la pena."
+  bioEn: She earns her meals with her fists in low taverns; she has never lost a
+    fight worth having.
+  bioJa: "\u5B89\u9152\u5834\u3067\u62F3\u3092\u4F7F\u3063\u3066\u98DF\u4E8B\u3092\u7A3C\u3050\u3002\u4FA1\u5024\u306E\u3042\u308B\u55A7\u5629\u306B\u8CA0\u3051\u305F\u3053\u3068\u306F\u306A\u3044\u3002"
+  bodySprite: {fileID: -7240157277377243952, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  walkFrames:
+  - {fileID: 989108514300241940, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: -7231525349579877856, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: 1960561872311697274, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: 1964240463093194369, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: -2624706402799566477, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: -871091084337296746, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: -5274365686035174863, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: 9113168175658376307, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: -3308817091774526381, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: 5018164993552850147, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: 7815488581630760874, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: -702230142225016717, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: 7103109261344428908, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: -2829876648061855883, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: 8274573131472347999, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: 4681020253975919175, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: -7984325320746481790, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: 7431435912472040132, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: -7240157277377243952, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: -1798750293134052868, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: 6833170092877947931, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: 2128763836354545252, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: 4328154829835178942, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: 2362804012604624195, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: 4686550490624499366, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: 2031602073677084981, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: 39690304563687358, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: -3246297104161833196, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: 8931791117936151251, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: 2099115924354349357, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: 514163911647996230, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: -6129653473060754465, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: 811437412442194008, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: 8436615895617487935, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: 7156058311953249087, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  - {fileID: 7596457556828666869, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
+  starRank: 1
+  maxHealth: 95
+  maxMP: 50
+  baseAttack: 19
+  baseDefense: 4
+  moveSpeed: 2.9

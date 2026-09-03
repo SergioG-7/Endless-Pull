@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Ysbel_3Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Ysbel
+  title: Yunque de la Guardia
+  origin: Cuartel de Muro Bajo
+  bio: "Ysbel entrena a los reclutas del Cuartel de Muro Bajo con la misma dureza con la que la entrenaron a ella, y ninguno se ha quejado dos veces. Pelea en primera línea porque no confía en pedirle a otro que lo haga."
+  bioEn: "Ysbel drills the recruits at Low Wall Barracks as hard as she was drilled herself, and none of them have complained twice. She fights on the front line because she doesn't trust asking anyone else to."
+  bioJa: "イズベルは自分が受けたのと同じ厳しさで低壁兵舎の新兵を鍛え、二度文句を言った者はいない。誰かに前線を任せることを信用できないから、自ら先頭に立って戦う。"
+  bodySprite: {fileID: -5643376410981543170, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  walkFrames:
+  - {fileID: -4277843473488502824, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: 4710480599077481121, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: -1604887570037418297, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: 7293028205594830992, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: -7407869935987493614, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: -6054528388785955270, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: 8404388874364050514, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: 1709469996096404544, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: -181636650921651248, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: -4676463193730108740, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: -3986314020641529682, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: 3970464627719643244, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: 5928338643046816055, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: -823527712716807249, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: 2346604209190159506, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: 6927067902922155367, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: -7260168930319192905, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: 5320156884381462209, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: -5643376410981543170, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: -1854421746941076239, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: 3534693539930876706, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: 5283670505760841453, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: -7659693066720921158, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: -5663041766975991955, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: -7624488157391961987, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: 7701216274918190631, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: 3351228920221933825, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: -9212315227814575585, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: 4065688112102664400, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: 3217583804568161435, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: -4555513874151647586, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: 1336828246204694062, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: -6730378006538696439, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: 8646972390909758288, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: -1015957158060184411, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  - {fileID: 3180035402553075072, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
+  starRank: 3
+  maxHealth: 295
+  maxMP: 50
+  baseAttack: 33
+  baseDefense: 16
+  moveSpeed: 2.3

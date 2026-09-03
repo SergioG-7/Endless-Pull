@@ -40,6 +40,18 @@ public struct LastBattleResult
     public int SurvivorsCount;
 }
 
+// Tipo de objetivo del piso. Subjugation es el 100% procedural de siempre (valor por defecto,
+// índice 0, para retrocompatibilidad); el resto son pisos guionizados dentro del rediseño 1-20
+// (más los dos de escolta pura, 15 y 25). El Piso 10 sigue siendo Escort de cara al enum, pero
+// se distingue como asedio (más dps sobre Friacis) vía IsSiegeFloor(), no como valor aparte.
+public enum FloorMissionType
+{
+    Subjugation,
+    Survival,
+    Escort,
+    BossHunt
+}
+
 public class WaveManager : MonoBehaviour
 {
     [Tooltip("Prefab de enemigo que se usa para poblar la oleada.")]
@@ -147,6 +159,32 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Segundos que se enseña el aviso '¡JEFE!' en pantalla.")]
     [SerializeField] private float bossArrivalBannerSeconds = 1.2f;
 
+    // ===== Revamp de pisos 1-20 + escolta (Friacis Al Lagner) =====
+
+    [Tooltip("Jefe único del Piso 20 (Halgiraph); si está vacío, el Piso 20 cae al jefe genérico.")]
+    [SerializeField] private EnemyData halgiraphData;
+
+    [Tooltip("Prefab de la NPC de escolta (Friacis) para los pisos 10/15/25.")]
+    [SerializeField] private EscortNpc escortPrefab;
+
+    [Tooltip("Vida de Friacis al desplegarse.")]
+    [SerializeField] private int escortMaxHealth = 220;
+
+    [Tooltip("Desgaste por segundo sobre Friacis mientras quede algún enemigo vivo en el Piso 10 (asedio, más presión que la escolta pura).")]
+    [SerializeField] private float siegeDamagePerSecond = 6f;
+
+    [Tooltip("Desgaste por segundo sobre Friacis mientras quede algún enemigo vivo en los Pisos 15/25 (escolta pura).")]
+    [SerializeField] private float escortDamagePerSecond = 3f;
+
+    [Tooltip("Radio en el que un enemigo vivo cuenta como amenaza real para Friacis.")]
+    [SerializeField] private float escortThreatRadius = 3.5f;
+
+    [Tooltip("Segundos que hay que aguantar en el Piso 5 (Filtro de Supervivencia).")]
+    [SerializeField] private float survivalDuration = 60f;
+
+    [Tooltip("Cada cuántos segundos entra un enemigo nuevo mientras dure la Supervivencia.")]
+    [SerializeField] private float survivalRespawnInterval = 4f;
+
     [Tooltip("Origen de la arena; la base queda lejos para que no se mezclen las dos zonas.")]
     [SerializeField] private Vector2 arenaCenter = new Vector2(1000f, 0f);
 
@@ -205,6 +243,54 @@ public class WaveManager : MonoBehaviour
 
     // El jefe vivo de esta expedición; null fuera de piso de jefe o si ya cayó.
     public EnemyController CurrentBoss => currentBoss != null ? currentBoss : null;
+
+    // Objetivo del piso actual, NPC de escolta viva y cronómetro de Supervivencia.
+    private FloorMissionType currentMissionType = FloorMissionType.Subjugation;
+    private bool currentIsSiege;
+    private EscortNpc currentEscort;
+    private float survivalTimer;
+    private float survivalRespawnTimer;
+    private float escortDamageAccumulator;
+
+    public FloorMissionType CurrentMissionType => currentMissionType;
+    public EscortNpc CurrentEscort => currentEscort != null ? currentEscort : null;
+
+    // Segundos de preparación táctica del piso (cuenta atrás previa al combate); lo lee el
+    // banner de misión para durar justo lo que tarda en soltarse la oleada.
+    public float CombatCountdown => combatCountdown;
+
+    // Segundos totales que hay que aguantar en un piso de Supervivencia (Piso 5).
+    public float SurvivalDuration => survivalDuration;
+
+    // Segundos que quedan del cronómetro de Supervivencia; 0 fuera de ese tipo de piso.
+    public float SurvivalTimeRemaining => Mathf.Max(0f, survivalTimer);
+
+    // Se dispara al empezar la cuenta atrás de un piso, con el tipo de misión y el número de
+    // piso; lo consume el banner de misión para mostrar título y objetivo.
+    public event System.Action<FloorMissionType, int> MissionStarted;
+
+    // Único punto de verdad de qué le toca a cada piso; Subjugation cae siempre al camino
+    // procedural de toda la vida. Los pisos 5/10/15/20/25 dejan de usar el jefe genérico
+    // recurrente (antes caían todos en IsBossFloor) para tener su propio objetivo guionizado.
+    private FloorMissionType MissionTypeFor(int floor)
+    {
+        switch (floor)
+        {
+            case 5: return FloorMissionType.Survival;
+            case 10: return FloorMissionType.Escort;
+            case 15: return FloorMissionType.Escort;
+            case 20: return FloorMissionType.BossHunt;
+            case 25: return FloorMissionType.Escort;
+        }
+
+        // Fuera del rediseño 1-20 (+ las dos escoltas sueltas), el jefe recurrente de siempre.
+        if (floor > 25 && IsBossFloor) return FloorMissionType.BossHunt;
+        return FloorMissionType.Subjugation;
+    }
+
+    // El Piso 10 es asedio (más dps sobre Friacis que una escolta pura); los demás pisos de
+    // Escort (15/25) no presionan tan fuerte. Vive fuera del enum a propósito (ver comentario ahí).
+    private static bool IsSiegeFloor(int floor) => floor == 10;
 
     public int CurrentFloor => currentFloor;
     public int HighestClearedFloor => highestClearedFloor;
@@ -360,6 +446,18 @@ void Awake()
         DespawnWave();
         DeployParty();
 
+        currentMissionType = MissionTypeFor(currentFloor);
+        currentIsSiege = IsSiegeFloor(currentFloor);
+        survivalTimer = survivalDuration;
+        survivalRespawnTimer = survivalRespawnInterval;
+        escortDamageAccumulator = 0f;
+
+        // Con huecos reales entre oleadas, dejar que la IA idle avance a ciegas la saca de la
+        // línea; en Supervivencia se aguanta el sitio hasta que aparezca el próximo objetivo.
+        bool hold = currentMissionType == FloorMissionType.Survival;
+        foreach (var hero in deployed)
+            if (hero != null) hero.SetHoldPosition(hold);
+
         int count = EnemyCountForFloor;
         float mult = StatMultiplierForFloor(currentFloor);
         float atk = AttackMultiplierForFloor(currentFloor);
@@ -385,15 +483,23 @@ void Awake()
         }
 
         // El jefe se suma a la oleada normal del piso; el evento se dispara dentro de SpawnBoss().
-        bossFloor = IsBossFloor && bossData != null;
-        if (bossFloor) SpawnBoss();
+        // Piso 20: jefe único Halgiraph en vez del genérico recurrente, si está asignado.
+        EnemyData chosenBoss = currentFloor == 20 && halgiraphData != null ? halgiraphData : bossData;
+        bossFloor = currentMissionType == FloorMissionType.BossHunt && chosenBoss != null;
+        if (bossFloor) SpawnBoss(chosenBoss);
+
+        // Friacis acompaña la oleada en los pisos de escolta (15/25 puros y el asedio del 10).
+        bool escortFloor = currentMissionType == FloorMissionType.Escort;
+        if (escortFloor) SpawnEscort();
 
         // Preparación táctica: la oleada ya está puesta, pero no se mueve hasta que pase la cuenta atrás.
         // En piso de jefe hay una pausa dramática y un aviso en pantalla antes de arrancar la cuenta atrás.
         if (bossFloor) StartCoroutine(BossArrivalThenCountdown());
         else BeginCountdown();
 
-        string extra = bossFloor ? LocalizationManager.Get("UI_BOSS_TAG") : string.Empty;
+        string extra = bossFloor ? LocalizationManager.Get("UI_BOSS_TAG")
+                      : escortFloor ? LocalizationManager.Get("UI_ESCORT_TAG")
+                      : string.Empty;
         string duro = HardFloors > 0 ? $"  ATK x{atk:0.00}" : string.Empty;
         Report(ExpeditionState.InProgress, string.Format(
             LocalizationManager.Get("UI_STATUS_FLOOR_START"),
@@ -417,6 +523,10 @@ void Awake()
     // Composición por piso: el goblin es el relleno y el resto entra según a qué altura estemos.
     private EnemyData PickEnemyData(int index)
     {
+        // Pisos 1-4 ("Pruebas de Caza"): solo goblins, sin orcos/tiradores/chamanes todavía
+        // — el filtro de verdad empieza en el Piso 5.
+        if (currentFloor <= 4) return enemyData;
+
         if (archerData != null && archerEveryNth > 0 && (index + 1) % archerEveryNth == 0) return archerData;
 
         // Los orcos aguantan: en los pisos duros salen siempre, no solo en los pares.
@@ -432,6 +542,30 @@ void Awake()
         }
 
         return enemyData;
+    }
+
+    // Piso 5: un enemigo más cada intervalo, con el mismo escalado y línea que la oleada
+    // inicial, para mantener la presión de "oleadas continuas" durante la Supervivencia.
+    private void SpawnSurvivalReinforcement()
+    {
+        if (enemyPrefab == null) return;
+
+        float mult = StatMultiplierForFloor(currentFloor);
+        float atk = AttackMultiplierForFloor(currentFloor);
+        var datos = PickEnemyData(wave.Count);
+
+        Vector2 half = spawnAreaSize * 0.5f;
+        Vector2 pos = arenaCenter + spawnAreaCenter + new Vector2(
+            Random.Range(-half.x, half.x),
+            Random.Range(-half.y, half.y));
+        pos += new Vector2(LineOffset(datos), 0f);
+
+        var go = Instantiate(enemyPrefab, pos, Quaternion.identity);
+        go.name = $"Enemy_{SafeName(datos)}_F{currentFloor}_Survival{wave.Count + 1}";
+
+        var enemy = go.GetComponent<EnemyController>();
+        enemy.Initialize(datos, mult, atk);
+        wave.Add(enemy);
     }
 
     private static string SafeName(EnemyData data)
@@ -452,6 +586,8 @@ void Awake()
     // Congela oleada y escuadra; la cuenta atrás numérica (3-2-1-¡Lucha!) da tiempo a leer el campo.
     private void BeginCountdown()
     {
+        MissionStarted?.Invoke(currentMissionType, currentFloor);
+
         countdownTimer = Mathf.Max(0f, combatCountdown);
         lastCountdownTick = Mathf.CeilToInt(countdownTimer);
 
@@ -588,6 +724,7 @@ private void DeployParty()
             hero.SetDeployed(false, viaGateway);
             hero.SetOriginSynergy(0f);
             hero.SetFrozen(false);
+            hero.SetHoldPosition(false);
             hero.Status.Clear();
             hero.WearEquipment(wearPerExpedition);
             if (underfed) hero.LoseMorale(malnutritionMoraleLoss);
@@ -603,7 +740,9 @@ private void DeployParty()
     }
 
     // El jefe escala igual que el relleno, pero ancla sus proporciones al piso de calibración.
-    private void SpawnBoss()
+    // Recibe qué EnemyData usar (Halgiraph en el Piso 20, el genérico en el resto) en vez de
+    // leer directamente el campo bossData, para no bifurcar el resto del método.
+    private void SpawnBoss(EnemyData bossToSpawn)
     {
         var go = Instantiate(enemyPrefab, arenaCenter + spawnAreaCenter + new Vector2(1.5f, 0f), Quaternion.identity);
         go.name = $"Enemy_Boss_F{currentFloor}";
@@ -614,15 +753,74 @@ private void DeployParty()
         float bossAtkMult = AttackMultiplierForFloor(currentFloor) / AttackMultiplierForFloor(bossCalibrationFloor);
 
         var boss = go.GetComponent<EnemyController>();
-        boss.Initialize(bossData, bossHpMult, bossAtkMult);
+        boss.Initialize(bossToSpawn, bossHpMult, bossAtkMult);
         boss.MakeBoss(bossScale);
         wave.Add(boss);
         currentBoss = boss;
 
-        Debug.Log($"[Jefe] {bossData.enemyName} aparece en el piso {currentFloor} " +
+        Debug.Log($"[Jefe] {bossToSpawn.enemyName} aparece en el piso {currentFloor} " +
                   $"con {boss.MaxHealth} PV.", this);
 
         BossStateChanged?.Invoke(true);
+    }
+
+    // Friacis aparece cerca de la escuadra (no en la línea enemiga) y su vida se reporta al
+    // HUD vía EscortHealthBarUI, igual que el jefe.
+    private void SpawnEscort()
+    {
+        if (escortPrefab == null) return;
+
+        Vector2 pos = arenaCenter + heroSpawnOffset + new Vector2(1.2f, -1.5f);
+        currentEscort = Instantiate(escortPrefab, pos, Quaternion.identity);
+        currentEscort.Initialize(escortMaxHealth);
+        currentEscort.Defeated += OnEscortDefeated;
+
+        Debug.Log($"[Escolta] {currentEscort.NpcName} desplegada en el piso {currentFloor} " +
+                  $"con {currentEscort.MaxHealth} PV.", this);
+    }
+
+    // Cualquier enemigo vivo a menos de radius de point cuenta como amenaza real.
+    private bool EnemyNear(Vector2 point, float radius)
+    {
+        foreach (var enemy in wave)
+        {
+            if (enemy == null || enemy.CurrentHealth <= 0) continue;
+            if (Vector2.Distance(enemy.transform.position, point) <= radius) return true;
+        }
+        return false;
+    }
+
+    private void DespawnEscort()
+    {
+        if (currentEscort == null) return;
+
+        currentEscort.Defeated -= OnEscortDefeated;
+        Destroy(currentEscort.gameObject);
+        currentEscort = null;
+    }
+
+    // Si Friacis cae, la misión fracasa de inmediato como retirada/derrota.
+    private void OnEscortDefeated()
+    {
+        if (state != ExpeditionState.InProgress) return;
+
+        string npcName = currentEscort != null ? currentEscort.NpcName : "Friacis";
+        int floor = currentFloor;
+
+        DespawnWave();
+        RecallParty();
+        SetBossFloor(false);
+        countdownTimer = 0f;
+        AudioManager.Play(SfxId.Defeat);
+
+        Report(ExpeditionState.Lost, string.Format(
+            LocalizationManager.Get("UI_STATUS_ESCORT_LOST"), npcName, floor));
+        BattleResultReported?.Invoke(new LastBattleResult
+        {
+            Floor = floor,
+            ResultType = BattleResultType.Defeat,
+            SurvivorsCount = CountAliveDeployed()
+        });
     }
 
     // Botín garantizado por tumbar al jefe: gemas, materiales y una Piedra de Ascensión cuyo
@@ -672,7 +870,41 @@ private void DeployParty()
             ReleaseWave();
         }
 
-        if (AliveEnemies == 0)
+        int aliveNow = AliveEnemies;
+
+        // Piso 5 (Filtro de Supervivencia): el reloj corre mientras haya combate, y
+        // entra un enemigo nuevo cada tanto para que la oleada nunca se vacíe antes de tiempo.
+        if (currentMissionType == FloorMissionType.Survival)
+        {
+            survivalTimer -= Time.deltaTime;
+
+            survivalRespawnTimer -= Time.deltaTime;
+            if (survivalRespawnTimer <= 0f)
+            {
+                survivalRespawnTimer = survivalRespawnInterval;
+                SpawnSurvivalReinforcement();
+            }
+        }
+
+        // Pisos 10/15/25 (asedio/escolta): Friacis solo se desgasta si hay enemigos vivos cerca
+        // de verdad (todavía no le apuntan como a un héroe, pero al menos el daño depende de
+        // que la amenaza esté encima suyo, no de un cronómetro ciego).
+        if (currentEscort != null && EnemyNear(currentEscort.transform.position, escortThreatRadius))
+        {
+            float dps = currentIsSiege ? siegeDamagePerSecond : escortDamagePerSecond;
+            escortDamageAccumulator += dps * Time.deltaTime;
+            int chip = Mathf.FloorToInt(escortDamageAccumulator);
+            if (chip > 0)
+            {
+                escortDamageAccumulator -= chip;
+                currentEscort.TakeDamage(chip);
+            }
+        }
+
+        bool normalClear = currentMissionType != FloorMissionType.Survival && aliveNow == 0;
+        bool survivalClear = currentMissionType == FloorMissionType.Survival && survivalTimer <= 0f;
+
+        if (normalClear || survivalClear)
         {
             int cleared = currentFloor;
 
@@ -697,6 +929,9 @@ private void DeployParty()
             foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None))
                 hero.AddMorale(moraleRewardOnWin);
 
+            // Friacis (si la había) no muere al ganar, pero su barra debe desaparecer con el
+            // resto de la oleada — si no, se queda visible en el HUD de vuelta en la base.
+            DespawnEscort();
             RecallParty();
 
             if (firstClear)
@@ -794,6 +1029,7 @@ private void DeployParty()
 
         wave.Clear();
         currentBoss = null;
+        DespawnEscort();
     }
 
     private void Report(ExpeditionState newState, string message)

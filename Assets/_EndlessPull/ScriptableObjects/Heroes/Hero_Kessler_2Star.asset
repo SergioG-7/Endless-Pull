@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Kessler_2Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Kessler
+  title: Guardia de Puente
+  origin: Puente de los Tres Arcos
+  bio: "Kessler cobra el peaje del Puente de los Tres Arcos de día, y lo defiende de noche cuando alguien intenta cruzarlo sin pagar. Ha perdido la cuenta de cuántas veces le han ofrecido sobornos."
+  bioEn: "Kessler collects the toll at the Three Arches Bridge by day, and defends it by night when someone tries to cross without paying. He's lost count of how many bribes he's been offered."
+  bioJa: "ケスラーは昼間は三連橋の通行料を徴収し、夜には料金を払わず渡ろうとする者から橋を守る。これまでに何度賄賂を持ちかけられたか、もう数えていない。"
+  bodySprite: {fileID: -4179958208451908572, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  walkFrames:
+  - {fileID: -8593596885720243306, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: -639218787474427974, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: 4555402426948712365, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: 5249963450502135488, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: 8243807171474723093, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: -5557235318953242546, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: 8145999898318694053, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: 4097714272189671407, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: -1151211668105869413, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: -1147413627450100192, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: 5937618546174169551, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: -6602806302924760799, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: -1284019007088760471, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: 4542322428073220258, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: 6185882036451651495, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: -547236191777854004, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: -6948304748008007432, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: -2492987541013050990, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: -4179958208451908572, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: -382207281132040872, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: -5075537690902405190, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: 8513486376957486579, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: -5217021278944781351, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: 232706209219828180, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: -669054845853965627, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: 1021008958789116483, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: -2558894499278092870, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: -2631687707448857953, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: -3291677650278908239, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: 4515447248529076010, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: -5744965687688739743, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: -1636913626185542458, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: 8741475286752928477, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: 8116339764937959333, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: -1088665183839121585, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  - {fileID: 8267204634421909149, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
+  starRank: 2
+  maxHealth: 180
+  maxMP: 50
+  baseAttack: 22
+  baseDefense: 12
+  moveSpeed: 2.1

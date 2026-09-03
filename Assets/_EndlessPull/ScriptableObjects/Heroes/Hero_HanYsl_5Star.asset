@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Hero_HanYsl_5Star
   m_EditorClassIdentifier: Assembly-CSharp::HeroData
   heroName: Han Ysl
-  title: Novato de la Vanguardia
+  title: La Leyenda que Nadie Confirma
   origin: Reino Fronterizo
   bio: "Dicen que Han Ysl puso fin a una guerra fronteriza antes de que el Maestro llegara a llamar a un solo voluntario. Nadie ha podido confirmarlo, y nadie se atreve a preguntarle directamente."
   bioEn: "They say Han Ysl ended a border war before the Master ever called for a single volunteer. No one's been able to confirm it, and no one dares ask directly."

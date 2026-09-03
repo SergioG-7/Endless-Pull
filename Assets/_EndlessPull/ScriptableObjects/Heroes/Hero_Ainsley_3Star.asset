@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Ainsley_3Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Ainsley
+  title: Flecha de la Feria de Otoño
+  origin: Feria de Otoño (itinerante)
+  bio: "Ainsley ganaba su pan en las ferias de otoño apostando a que nadie superaría su puntería, y nunca perdió. La guerra le pareció, al principio, solo otra feria con premios más altos."
+  bioEn: "Ainsley earned her bread at the autumn fairs betting no one could beat her aim, and never lost. War felt, at first, like just another fair with higher stakes."
+  bioJa: "エインズリーは秋の市で「誰も自分の腕前には勝てない」と賭けをして日銭を稼いでいたが、一度も負けたことがなかった。戦は最初、賞金の高い別の市のように思えた。"
+  bodySprite: {fileID: -5871078248672506618, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  walkFrames:
+  - {fileID: 1050227109268998429, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: -7781409486872535645, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: -3461627238672947434, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: 8568992809398716926, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: 881316373721629451, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: 1062738398422237443, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: -6908322788762354871, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: -8442686374639546844, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: 8202775416277182373, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: 6998664231360701738, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: 1333743286427985997, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: 392430153616320788, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: 2270690103460218084, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: -3017159394334922676, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: -8915163906273592529, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: 1511333743488294244, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: 372299414133127646, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: -4599994968174509535, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: -5871078248672506618, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: -7293505652221007819, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: -3098600314401827007, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: -7773539067594763961, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: 7524198204101382718, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: -8694564940161343716, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: 1619739741684490104, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: 3231716342669745230, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: -7039667880491890145, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: -402184827388110811, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: -1729985485883464095, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: 6506761196984022708, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: -7438309696500806986, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: 1783129857040429292, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: -7318063909408715132, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: -531786567920122647, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: -8375867262929413579, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  - {fileID: 606954588374168513, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
+  starRank: 3
+  maxHealth: 220
+  maxMP: 50
+  baseAttack: 45
+  baseDefense: 9
+  moveSpeed: 2.9

@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Liesel_2Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Liesel
+  title: Aprendiz de Milicia
+  origin: Villa del Junco
+  bio: "Liesel entró en la milicia porque era la única forma de seguir practicando tiro con arco sin que su familia se lo prohibiera. Todavía no ha admitido que ya dispara mejor que su instructor."
+  bioEn: "Liesel joined the militia because it was the only way to keep practicing archery without her family forbidding it. She still hasn't admitted she now shoots better than her instructor."
+  bioJa: "リーゼルが民兵に入ったのは、家族に禁じられずに弓の練習を続けられる唯一の方法だったからだ。もう教官より上手く射られることを、まだ本人は認めていない。"
+  bodySprite: {fileID: -6797161314159442767, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  walkFrames:
+  - {fileID: 9059192533671113531, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: 8843107232457602517, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: -7694641372950738364, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: 1312772418901890301, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: -5916245696799895367, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: -2980845705354041233, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: 3067512256896569213, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: 1989623190555234379, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: 8422883827671664516, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: 982754661500899234, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: -6880086879919039125, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: -5553956097924971406, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: -7466666271905278786, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: 8632466100853732036, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: -310280904457921900, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: -5039460006241379419, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: 7806915381480038638, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: -1360666563523582877, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: -6797161314159442767, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: -1941302217458914206, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: -624848270708314612, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: -1114947806009158170, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: -8275846918058850024, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: 8004626860839882811, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: 3855755928306590777, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: 3036064672063876502, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: 4339396308475795711, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: -79504736654385733, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: 1291649168906224167, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: 2883525773525643341, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: 7119093374738613220, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: -1533335693622612914, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: 7944963870444906675, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: 7617726324916127778, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: -668065852124930886, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  - {fileID: 1805513337739329981, guid: 94c7a327504410c4559e263aec990a46, type: 3}
+  starRank: 2
+  maxHealth: 140
+  maxMP: 50
+  baseAttack: 29
+  baseDefense: 6
+  moveSpeed: 2.7

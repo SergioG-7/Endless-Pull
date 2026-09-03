@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Hero_Aurelia_5Star
   m_EditorClassIdentifier: Assembly-CSharp::HeroData
   heroName: Aurelia
-  title: Novato de la Vanguardia
+  title: La que Sostuvo el Fuerte
   origin: Reino Fronterizo
   bio: "Las milicias fronterizas todavía cantan sobre la noche en que Aurelia sostuvo un fuerte ella sola hasta el amanecer. Nadie que estuviera allí ha vuelto a dudar de ella."
   bioEn: "The border militias still sing about the night Aurelia held a keep alone until dawn. No one who was there has doubted her since."

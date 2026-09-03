@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Roderic_3Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Roderic
+  title: Espada del Juramento Roto
+  origin: Orden Disuelta del Alba
+  bio: "Roderic sirvió a una orden de caballería que la corona disolvió por deudas que no eran suyas. Sigue jurando el mismo código, aunque ya nadie se lo exija."
+  bioEn: "Roderic served a knightly order the crown dissolved over debts that weren't his to pay. He still holds to the same code, even though no one requires it of him anymore."
+  bioJa: "ロデリックは、自分のせいではない借金を理由に王家が解散させた騎士団に仕えていた。誰にも求められなくなった今も、同じ掟を守り続けている。"
+  bodySprite: {fileID: -3167989615220841939, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  walkFrames:
+  - {fileID: 8042377996617923445, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: -6014821000786172497, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: 8092923140641055060, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: -6072117012266007158, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: 1751971054345536179, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: 7217105849681145245, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: -6439980022796958491, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: 3831313615262136135, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: 4329383270126717030, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: -2094042300374394239, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: -6015063145753067560, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: 6223166108310117396, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: -5581408841681927232, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: -8944355296007717961, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: -7006088486905922277, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: -5065635833545129527, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: -9145758656779015241, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: -4689574629453719701, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: -3167989615220841939, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: 680136738077036735, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: -8159986847018231944, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: -3951187599219194236, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: 8159912070687344825, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: -6935898880658887306, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: -544447188657288550, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: 8745337390863358726, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: 5568918064932404742, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: -3975887880354255199, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: -3521225483356542827, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: -8128652123866101034, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: -3934612417375033713, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: -987068040623774948, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: 5586514040765201681, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: -759390909208180896, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: 6281985761279785710, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  - {fileID: 7031133825325732585, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
+  starRank: 3
+  maxHealth: 280
+  maxMP: 50
+  baseAttack: 35
+  baseDefense: 15
+  moveSpeed: 2.4

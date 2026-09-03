@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_BrannaghVale_4Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Brannagh Vale
+  title: Muro de Fuerte Cenizo
+  origin: Fuerte Cenizo
+  bio: "Brannagh Vale asumió el mando de Fuerte Cenizo cuando su capitán cayó en el tercer asedio, y nunca lo devolvió porque nadie lo pidió de vuelta. La guarnición entera confía en ella más que en cualquier título."
+  bioEn: "Brannagh Vale took command of Ashen Fort when her captain fell in the third siege, and never handed it back because no one asked her to. The whole garrison trusts her more than any title."
+  bioJa: "ブラナー・ヴェイルは三度目の包囲戦で隊長が倒れた際に灰燼要塞の指揮を引き継ぎ、誰も返せと言わなかったのでそのまま指揮を執り続けている。駐屯兵全員が、いかなる肩書きよりも彼女を信頼している。"
+  bodySprite: {fileID: -8001967034296307867, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  walkFrames:
+  - {fileID: 7583431658889958589, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: 3250174706991160791, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: -6648267696047617654, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: 2280673454332567233, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: 4133610274043089070, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: -2347957223244179450, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: 8805671146331928256, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: -4270251528887094208, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: 6334196007578476969, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: -2303921715790887177, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: 5336186560574099721, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: 9043512306021954266, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: 1828692546491066245, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: -7134026438736231872, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: -3456057800577722305, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: -645505662229821405, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: -6419291839334310968, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: 6017915148265529269, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: -8001967034296307867, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: 603108764286818151, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: -7649266429016358053, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: 3956060237795216201, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: -3175319748416901813, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: -1074729907609199624, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: 4522120948129085707, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: 1000867574088561744, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: -7449496698592163109, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: -1378065299689002918, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: -3394469470018030772, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: -1291327871009846479, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: 9003990137687372639, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: -5051556038289457356, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: 5940669378572741995, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: 1918541465255181649, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: -8124200171288019356, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  - {fileID: -6646660973574486681, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
+  starRank: 4
+  maxHealth: 510
+  maxMP: 50
+  baseAttack: 43
+  baseDefense: 33
+  moveSpeed: 2.2

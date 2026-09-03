@@ -680,7 +680,7 @@ MonoBehaviour:
   healthGrowthPerLevel: 0.1
   attackGrowthPerLevel: 2
   levelsPerStar: 10
-  ascendGemCostByStar: 64000000fa000000f4010000e8030000
+  ascendGemCostByStar: 64000000fa000000f4010000e803000008070000b80b0000
   ascensionStatMultiplier: 1.4
   levelLabel: {fileID: 8932244556792481435}
   aggression: 0.5

@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Mairwen_2Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Mairwen
+  title: Vigía de Faro
+  origin: Faro de Punta Gris
+  bio: "Mairwen creció subiendo y bajando las escaleras del faro de Punta Gris, y fue la primera en avistar los barcos que trajeron la guerra. Ahora vigila con una lanza tanto como con un catalejo."
+  bioEn: "Mairwen grew up climbing the stairs of the Grey Point lighthouse, and was the first to spot the ships that brought the war. Now she keeps watch with a spear as much as a spyglass."
+  bioJa: "メアウェンは灰色岬の灯台の階段を上り下りしながら育ち、戦をもたらした船団を最初に発見した者だった。今では遠眼鏡と同じくらい、槍を手にして見張りに立つ。"
+  bodySprite: {fileID: -3777757179398816195, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  walkFrames:
+  - {fileID: -5976587182287969173, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: -9223058388391036721, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: 6054205756734321463, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: -5203072387161182814, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: -482948995405340269, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: -8125128874743774093, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: 606812482649872289, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: -2097080869649748954, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: 2215455786346681839, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: -1894780073632583199, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: 5504536596021149257, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: -9198392873580810625, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: 4941013784933318412, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: -8195810260453683413, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: 7785060369926283405, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: 3313183362080679820, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: 1018995731371097506, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: -1694982209157159241, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: -3777757179398816195, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: 2104715821519837449, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: 1722811792307776386, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: 6108223182478913447, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: 633592917139285202, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: 2118347552994993381, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: -7135322563521466580, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: 3545891223697197443, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: -632668130631345100, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: 6335254458139894987, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: -6979194618278260795, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: 5583884340102626637, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: -16459106508423516, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: 2689010055017425879, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: 4703269590144087882, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: 8891585826968372860, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: -3028269709977458804, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  - {fileID: -5399456584161791730, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
+  starRank: 2
+  maxHealth: 162
+  maxMP: 50
+  baseAttack: 24
+  baseDefense: 9
+  moveSpeed: 2.4

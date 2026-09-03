@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Hero_Darian_3Star
   m_EditorClassIdentifier: Assembly-CSharp::HeroData
   heroName: Darian
-  title: Novato de la Vanguardia
+  title: Capitán de la Milicia
   origin: Reino Fronterizo
   bio: "Darian dirigió la milicia de su aldea antes de que la Torre reclamara sus servicios a tiempo completo. Todavía manda como si tuviera un pueblo entero a su espalda."
   bioEn: "Darian led his village militia before the Tower claimed his services full-time. He still commands like he's got an entire village at his back."

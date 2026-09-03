@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7000cd0b1847904592109c0a368a9c8, type: 3}
+  m_Name: Enemy_Halgiraph
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyData
+  enemyName: Halgiraph
+  maxHealth: 900
+  baseAttack: 55
+  baseDefense: 14
+  attackRange: 1.3
+  moveSpeed: 1.1
+  attackCooldown: 1.6
+  magicAttack: 0
+  walkSheet: {fileID: 2800000, guid: c8a76bbf3c5b9acb6abe3dd94146b7fa, type: 3}

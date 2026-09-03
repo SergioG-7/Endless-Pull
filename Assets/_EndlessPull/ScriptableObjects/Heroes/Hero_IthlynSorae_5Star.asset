@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_IthlynSorae_5Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Ithlyn Sorae
+  title: Oráculo del Umbral Roto
+  origin: Umbral Roto (otro mundo)
+  bio: "Ithlyn cruzó al mundo de la Torre por una grieta que se cerró tras ella para siempre, y nunca ha encontrado el camino de vuelta. Cura a quien lucha a su lado como si cada vida salvada fuera un paso más cerca de casa."
+  bioEn: "Ithlyn crossed into the Tower's world through a rift that sealed behind her forever, and she has never found her way back. She heals whoever fights at her side as if every life saved brought her one step closer to home."
+  bioJa: "イスリンは、渡った後に永遠に閉じてしまった裂け目を通ってこの塔の世界にたどり着き、いまだに戻る道を見つけていない。共に戦う者を癒すたび、まるで故郷に一歩近づくかのように。"
+  bodySprite: {fileID: -2378546601417595387, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  walkFrames:
+  - {fileID: -8043242188342543108, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: -4209289450048404161, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: 8390332099288576149, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: -5879290231866802309, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: 5882253556062654780, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: -3927033627881934709, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: -4763233451925377250, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: -6751735075966234429, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: 3317454547751059844, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: -8415218042817710149, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: -7004892259143482981, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: -5739339650076365759, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: 1056558724262767652, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: -7775589061439264135, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: 2213819188112159530, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: 3932214523565045771, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: 3899152754862213460, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: 1185979082362216178, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: -2378546601417595387, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: 6044090127881283455, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: 1786069865414267228, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: -7361683806699514374, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: 4824119075324013597, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: 2285199771294978487, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: 374981229922934333, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: 768697618767426708, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: -8653341423890300726, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: 1737688191029723054, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: 3292441382767495999, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: -3416288184455284526, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: 3557333386853659863, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: -3056827979184422716, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: -8052931814835727905, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: 9023749991427014801, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: -4629293175724917301, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  - {fileID: 1477349455492528834, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
+  starRank: 5
+  maxHealth: 585
+  maxMP: 50
+  baseAttack: 58
+  baseDefense: 33
+  moveSpeed: 2.5

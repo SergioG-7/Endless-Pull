@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Ottilie_1Star
+  m_EditorClassIdentifier: EndlessPull.Runtime::HeroData
+  heroName: Ottilie
+  title: Dedos de Sombra
+  origin: Ciudad Baja
+  bio: Roba bolsillos en la Ciudad Baja; nadie la ve venir hasta que ya se ha ido.
+  bioEn: She picks pockets in the Lowtown; no one sees her coming until she's already
+    gone.
+  bioJa: "\u4E0B\u753A\u3067\u3059\u308A\u3092\u50CD\u304F\u3002\u8AB0\u3082\u5F7C\u5973\u304C\u6765\u305F\u3053\u3068\u306B\u6C17\u3065\u304B\u306A\u3044\u3001\u53BB\u3063\u305F\u5F8C\u3067\u3055\u3048\u3082\u3002"
+  bodySprite: {fileID: 8973959850526008504, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  walkFrames:
+  - {fileID: 4263578404366221310, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: 2254790905098486038, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: 4626932884367359409, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: -8714986450326545440, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: 5712891596827916161, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: -5118354223330486012, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: -7169564415980229159, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: 864521913121821981, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: -8209188632336493464, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: -4859207574587596393, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: -5602517251238258933, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: 7382702961847602949, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: -6598882933417999843, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: -3045532693366826517, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: -62568951806402500, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: -2397998334763396143, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: 4769344749407055938, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: -1744351951013733941, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: 8973959850526008504, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: -9018178396183501508, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: 2456291053403696194, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: 8470058593986364493, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: -2281166356514811472, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: -9021531714912095669, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: 1372024160197201096, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: -7955833720603684301, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: -9152094607454394948, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: 6247002026444346449, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: -7848748302161604241, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: 163449949489889282, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: 7371369215662789647, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: 543125534109615719, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: 2186988065303788935, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: 2761583932733953443, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: -4650633621663357594, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  - {fileID: 5738913789856514647, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
+  starRank: 1
+  maxHealth: 92
+  maxMP: 50
+  baseAttack: 19
+  baseDefense: 3
+  moveSpeed: 3

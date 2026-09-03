@@ -1,11 +1,13 @@
 using UnityEngine;
 
-// Destinos de recolección; cada uno trae un recurso distinto.
+// Destinos de recolección; cada uno trae un recurso distinto. Rift va al final para no
+// romper el índice guardado de partidas viejas (SaveManager lo persiste como int).
 public enum ResourceExpeditionType
 {
     Forest,
     Mine,
-    Hunt
+    Hunt,
+    Rift
 }
 
 // Expediciones de granjeo: la escuadra se va un rato y vuelve con material, sin combate.
@@ -25,6 +27,21 @@ public class ResourceExpeditionManager : MonoBehaviour
 
     [Tooltip("Torre, para escalar la recompensa según el piso más alto superado.")]
     [SerializeField] private WaveManager waves;
+
+    [Tooltip("Taller, para las Piedras de Ascensión que suelta Minas Profundas.")]
+    [SerializeField] private CraftingManager crafting;
+
+    [Tooltip("EXP por héroe que da Tierras de Caza, antes del multiplicador de piso/bono diario.")]
+    [SerializeField] private int expPerHero = 8;
+
+    [Tooltip("Piedras de Ascensión (tier Menor) por cada 2 héroes enviados a Minas Profundas.")]
+    [SerializeField] private float stonesPerHero = 0.5f;
+
+    [Tooltip("Las gemas de la Grieta Dimensional valen más por unidad que madera/hierro/comida; se aplica sobre el mismo cálculo base.")]
+    [SerializeField] private float riftGemFactor = 0.5f;
+
+    [Tooltip("Multiplicador de recompensa cuando el destino elegido es el bono rotativo del día.")]
+    [SerializeField] private float dailyBonusMultiplier = 1.5f;
 
     private ResourceExpeditionType currentType;
     private float remaining;
@@ -50,7 +67,23 @@ public class ResourceExpeditionManager : MonoBehaviour
         if (economy == null) economy = UnityEngine.Object.FindFirstObjectByType<EconomyManager>();
         if (party == null) party = UnityEngine.Object.FindFirstObjectByType<PartyManager>();
         if (waves == null) waves = UnityEngine.Object.FindFirstObjectByType<WaveManager>();
+        if (crafting == null) crafting = UnityEngine.Object.FindFirstObjectByType<CraftingManager>();
     }
+
+    // Rotación semanal (roadmap Fase 52): qué destino da el bono x1.5 hoy. Por ahora los otros
+    // tres siguen siendo elegibles igual (pedido explícito: "que se vean todas para poder
+    // probarlas"), esto solo decide cuál luce la etiqueta de bono y cobra el multiplicador.
+    public static ResourceExpeditionType TodaysBonusType(System.DateTime now) => now.DayOfWeek switch
+    {
+        System.DayOfWeek.Monday or System.DayOfWeek.Wednesday => ResourceExpeditionType.Mine,
+        System.DayOfWeek.Tuesday or System.DayOfWeek.Thursday => ResourceExpeditionType.Forest,
+        System.DayOfWeek.Friday or System.DayOfWeek.Saturday => ResourceExpeditionType.Hunt,
+        _ => ResourceExpeditionType.Rift
+    };
+
+    public static ResourceExpeditionType TodaysBonusType() => TodaysBonusType(System.DateTime.Now);
+
+    public float DailyBonusMultiplier => dailyBonusMultiplier;
 
     void Update()
     {
@@ -71,6 +104,7 @@ public class ResourceExpeditionManager : MonoBehaviour
             case ResourceExpeditionType.Forest: return LocalizationManager.Get("UI_FOREST");
             case ResourceExpeditionType.Mine: return LocalizationManager.Get("UI_MINE");
             case ResourceExpeditionType.Hunt: return LocalizationManager.Get("UI_HUNT");
+            case ResourceExpeditionType.Rift: return LocalizationManager.Get("UI_RIFT");
         }
         return type.ToString();
     }
@@ -129,7 +163,12 @@ public class ResourceExpeditionManager : MonoBehaviour
     {
         if (!readyToClaim) return false;
 
-        int amount = Mathf.RoundToInt(rewardPerHero * Mathf.Max(1, heroesSent) * ProgressMultiplier);
+        bool bonus = currentType == TodaysBonusType();
+        float mult = ProgressMultiplier * (bonus ? dailyBonusMultiplier : 1f);
+        int sent = Mathf.Max(1, heroesSent);
+
+        int amount = Mathf.RoundToInt(rewardPerHero * sent * mult
+            * (currentType == ResourceExpeditionType.Rift ? riftGemFactor : 1f));
 
         // Toast de resumen antes de sumar el material: el jugador ve exactamente qué ganó,
         // no solo el número final del recurso ya actualizado en el TopBar.
@@ -143,6 +182,25 @@ public class ResourceExpeditionManager : MonoBehaviour
             case ResourceExpeditionType.Forest: economy.AddMaterials(amount, 0); break;
             case ResourceExpeditionType.Mine: economy.AddMaterials(0, amount); break;
             case ResourceExpeditionType.Hunt: economy.AddFood(amount); break;
+            case ResourceExpeditionType.Rift: economy.Add(amount); break;
+        }
+
+        // Recompensa secundaria por destino (Minas: Piedra de Ascensión; Caza: EXP a la escuadra
+        // enviada), con su propio toast compacto arriba para no mezclarse con el resumen principal.
+        if (currentType == ResourceExpeditionType.Mine && crafting != null)
+        {
+            int stones = Mathf.Max(1, Mathf.RoundToInt(sent * stonesPerHero));
+            crafting.AddStones(AscensionStoneTier.Menor, stones);
+            ScreenBanner.ShowCompact(string.Format(LocalizationManager.Get("UI_EXPEDITION_SUMMARY_TOAST"),
+                stones, LocalizationManager.Get("UI_STONE_MENOR")), 2f, new Color(0.75f, 0.75f, 0.85f));
+        }
+        else if (currentType == ResourceExpeditionType.Hunt && party != null)
+        {
+            int expGain = Mathf.Max(1, Mathf.RoundToInt(expPerHero * mult));
+            foreach (var hero in party.ExpeditionSquad)
+                hero?.GetComponent<HeroProgress>()?.AddEXP(expGain);
+            ScreenBanner.ShowCompact(string.Format(LocalizationManager.Get("UI_EXPEDITION_SUMMARY_TOAST"),
+                expGain, "EXP"), 2f, new Color(0.75f, 0.75f, 0.85f));
         }
 
         Report(string.Format(LocalizationManager.Get("UI_EXPEDITION_CLAIMED"),

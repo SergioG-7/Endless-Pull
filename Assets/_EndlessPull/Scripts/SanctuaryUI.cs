@@ -348,7 +348,7 @@ public class SanctuaryUI : MonoBehaviour
         var rareza = HeroProgress.RarityColor(hero.StarRank);
         previewName.text = $"<color={UITheme.Tag(rareza)}>{hero.Data.heroName}</color>";
 
-        if (hero.StarRank >= 5)
+        if (hero.StarRank >= 7)
         {
             previewBody.text = LocalizationManager.Get("UI_ASCEND_MAX_RARITY");
             SetPreviewAction(LocalizationManager.Get("UI_ASCEND"), false);

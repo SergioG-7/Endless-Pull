@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Hilde_2Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Hilde
+  title: Vigía Nocturna
+  origin: Muralla del Puerto Norte
+  bio: "Hilde hace la guardia que nadie quiere, la de medianoche a amanecer, y ha aprendido a distinguir cada sonido normal del puerto de los que no lo son. Duerme de día y confía en muy pocos."
+  bioEn: "Hilde takes the watch no one wants, midnight to dawn, and has learned to tell every ordinary harbor sound from the ones that aren't. She sleeps by day and trusts very few."
+  bioJa: "ヒルデは誰もやりたがらない真夜中から夜明けまでの見張りを務め、港の普通の物音とそうでない物音を聞き分けられるようになった。昼は眠り、信じる者はごくわずかだ。"
+  bodySprite: {fileID: -391576131562977190, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  walkFrames:
+  - {fileID: 1258515057388795597, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: -3712354587249901143, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: -9012604529917598766, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: 5497910181553388207, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: -6320566859049527786, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: 5153046093652218034, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: -540553402747559189, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: -9214327085340509740, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: 6450562473436756488, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: -6137887008656066086, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: 5570329038014719267, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: -6613761000007910525, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: -1823689977006369842, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: -9125922098428156294, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: -1120995310570001849, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: -5099065266536850838, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: -8398808955754111445, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: 3916657148610381665, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: -391576131562977190, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: -416000317770132647, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: -4185086120419426763, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: 2386303031352507056, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: 7172305472796742196, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: 3881982210593224948, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: 6772310377493500686, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: 2002074608520753837, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: 8536813984214626302, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: 6697121615487590725, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: -6853540329685278380, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: -6514005647910916152, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: -6200434044550595365, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: 2654857900657708247, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: 1718764622894568775, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: -8717249232540876986, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: 2411024961182310722, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  - {fileID: -4190420180344838048, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
+  starRank: 2
+  maxHealth: 158
+  maxMP: 50
+  baseAttack: 24
+  baseDefense: 9
+  moveSpeed: 2.4

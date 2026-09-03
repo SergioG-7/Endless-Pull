@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Cadoc_3Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Cadoc
+  title: Punta de la Vanguardia
+  origin: Compañía de los Picos Grises
+  bio: "Cadoc siempre pide ir en primera fila de la formación de lanceros, convencido de que ese es el lugar donde más se puede proteger a los demás. Sus compañeros ya no discuten con él por eso."
+  bioEn: "Cadoc always asks to stand at the front of the spear formation, convinced that's the place where he can protect the others best. His comrades no longer argue with him about it."
+  bioJa: "カドックはいつも槍隊の最前列に立たせてほしいと願い出る。そこが最も仲間を守れる場所だと信じているからだ。仲間たちはもうそのことで彼と争わない。"
+  bodySprite: {fileID: -4687967217407699374, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  walkFrames:
+  - {fileID: 4343170947998009130, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: 3597695717732940094, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: 6716514815912626682, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: 4466502185585813378, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: 794439829902356266, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: -9040770204924060028, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: -7915845434782857963, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: -1476765526685267811, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: 1079390398987292806, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: 6176412071041164783, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: -3947987390646534984, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: 7756702682039555996, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: 3415601984617512872, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: -5869762895468926513, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: -6244742318381421501, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: -160869026720885708, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: 7565310479836521037, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: 4968671708723106785, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: -4687967217407699374, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: -7189359471813480097, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: 5598757693356364835, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: -8824151758813222837, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: -768599930170896884, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: 5875567958276651676, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: 2660418876180865588, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: 860639042530525532, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: 8378202221016756086, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: -3649402812273963072, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: -8105984798114692126, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: -7710226231506237997, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: 4779764933908843358, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: -2754712131192119444, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: -1696499702443150353, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: 5075092616440052386, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: 4282467050709465819, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  - {fileID: -4798736835390851730, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
+  starRank: 3
+  maxHealth: 260
+  maxMP: 50
+  baseAttack: 38
+  baseDefense: 13
+  moveSpeed: 2.55

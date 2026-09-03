@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Hero_Nyx_3Star
   m_EditorClassIdentifier: Assembly-CSharp::HeroData
   heroName: Nyx
-  title: Novato de la Vanguardia
+  title: Cartógrafa de la Frontera
   origin: Reino Fronterizo
   bio: "Nyx ha cartografiado más frontera a pie que los propios cartógrafos del Maestro desde sus mesas. Sabe leer el terreno como otros leen un libro."
   bioEn: "Nyx has mapped more of the frontier on foot than the Master's own cartographers ever have from their desks. She reads terrain the way others read a book."

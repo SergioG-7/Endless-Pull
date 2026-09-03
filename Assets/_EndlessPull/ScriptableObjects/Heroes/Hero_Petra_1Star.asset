@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Petra_1Star
+  m_EditorClassIdentifier: EndlessPull.Runtime::HeroData
+  heroName: Petra
+  title: Manos de Horno
+  origin: Ciudad Baja
+  bio: "Amasa pan para la guarnici\xF3n al alba; empu\xF1a el rodillo como si fuera
+    maza."
+  bioEn: She kneads bread for the garrison at dawn; she wields the rolling pin like
+    a mace.
+  bioJa: "\u591C\u660E\u3051\u306B\u5B88\u5099\u968A\u306E\u305F\u3081\u306E\u30D1\u30F3\u3092\u3053\u306D\u308B\u3002\u9EBA\u68D2\u3092\u307E\u308B\u3067\u68CD\u68D2\u306E\u3088\u3046\u306B\u632F\u308B\u3046\u3002"
+  bodySprite: {fileID: -3369646502352545738, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  walkFrames:
+  - {fileID: -1904041854563576701, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: -7918142087886260269, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: 3132343775571210543, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: 996468299234569865, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: 7961536690291725097, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: 2730191030198758220, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: -7567972060376885175, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: 2068497526321103222, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: -7298027515958592546, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: 7671690996550640195, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: 9026820213865604153, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: 4451553429954373639, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: -5003300617124361339, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: -8330872830228611047, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: 4235957265241726640, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: -3559714449347775792, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: -7599963179314343138, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: 4186825568932945228, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: -3369646502352545738, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: 4387608876673033320, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: 4544904317549064755, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: -4576799762780534872, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: -8199508928450221258, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: -2401418886985990467, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: -5480344290829213853, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: 3867304181692281343, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: 1883360885049998384, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: -7001567525402109236, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: 9130128700188257245, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: 4849403117131519382, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: 1928013687290100716, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: -1371487152139417287, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: 8697300776631534540, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: 6833994141294464114, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: -2391997499478974278, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  - {fileID: -93248024270840548, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
+  starRank: 1
+  maxHealth: 98
+  maxMP: 50
+  baseAttack: 13
+  baseDefense: 5
+  moveSpeed: 2.5

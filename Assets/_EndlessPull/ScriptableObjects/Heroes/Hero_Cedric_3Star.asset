@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Hero_Cedric_3Star
   m_EditorClassIdentifier: Assembly-CSharp::HeroData
   heroName: Cedric
-  title: Novato de la Vanguardia
+  title: Veterano de Tres Escaramuzas
   origin: Reino Fronterizo
   bio: "Cedric ha sobrevivido a tres escaramuzas fronterizas de las que dan nombre a las tabernas, y lleva las cicatrices como quien lleva medallas. Ya no necesita demostrar nada, solo seguir en pie."
   bioEn: "Cedric has survived three border skirmishes the kind taverns still name, and wears his scars like medals. He no longer needs to prove anything, only to keep standing."

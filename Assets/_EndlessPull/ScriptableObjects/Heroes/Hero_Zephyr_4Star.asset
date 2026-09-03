@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Hero_Zephyr_4Star
   m_EditorClassIdentifier: Assembly-CSharp::HeroData
   heroName: Zephyr
-  title: Novato de la Vanguardia
+  title: El Más Veloz de la Frontera
   origin: Reino Fronterizo
   bio: "Zephyr dejó atrás a una partida de asaltantes el doble de numerosa antes de que la mayoría hubiera desenvainado, y volvió a por el resto. En la frontera ya nadie duda de su velocidad."
   bioEn: "Zephyr outran a raiding party twice his number before most of them had even drawn steel, then came back for the rest. Nobody on the frontier doubts his speed anymore."

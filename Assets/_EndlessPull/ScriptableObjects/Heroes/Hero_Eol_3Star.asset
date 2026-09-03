@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Hero_Eol_3Star
   m_EditorClassIdentifier: Assembly-CSharp::HeroData
   heroName: Eol
-  title: Novato de la Vanguardia
+  title: Rastreador de Bandidos
   origin: Reino Fronterizo
   bio: "Eol pasó años rastreando bandas de asaltantes por la frontera antes de que alguien pensara en pagarle por ello. Conoce sus tácticas mejor que las suyas propias."
   bioEn: "Eol spent years tracking raider bands across the frontier before anyone thought to pay him for it. He knows their tactics better than he knows his own."

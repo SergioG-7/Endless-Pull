@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Orsolya_2Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Orsolya
+  title: Guardia de Mercado
+  origin: Plaza del Grano
+  bio: "Orsolya conoce a cada comerciante de la Plaza del Grano por su nombre, y a cada carterista por su cara. Nadie roba dos veces bajo su turno sin arrepentirse."
+  bioEn: "Orsolya knows every merchant in Grain Square by name, and every pickpocket by face. No one steals twice on her watch without regretting it."
+  bioJa: "オルソーリャは穀物広場の商人を一人残らず名前で覚え、すりの顔も一人残らず記憶している。彼女の見張りの下で二度盗みを働いた者は、必ず後悔する。"
+  bodySprite: {fileID: 6446046538456104812, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  walkFrames:
+  - {fileID: -7350951059765251645, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: 7711306452883335780, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: 8663209212368276671, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: 4655428399627688730, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: -907404010557779946, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: 3148626668513382717, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: -2176506174514838980, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: -8996513106153271347, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: 5285333364284346910, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: 4118987057233360512, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: 3750922280976917944, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: 6334780533845696012, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: 9207995284750141297, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: 1428503308172897761, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: 7330494602430666749, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: -8607897283997394591, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: -2652501227867039185, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: -1770448889168714866, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: 6446046538456104812, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: 2584512929926707265, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: -5108038972385953969, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: -7450860291336718219, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: -3954203001076314537, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: -1715709614909682025, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: -3992210523893740026, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: -5297941834966743578, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: 8362152344657854208, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: 297221688401306136, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: -5194804381666660934, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: 1138361236231767372, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: 3309231939900198815, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: -5967720804644366234, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: -2808479627908954276, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: 5134093061768006009, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: -2506877802192394406, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  - {fileID: 1952039775000187656, guid: 4de327218051798c5a377eeb339991ef, type: 3}
+  starRank: 2
+  maxHealth: 150
+  maxMP: 50
+  baseAttack: 27
+  baseDefense: 7
+  moveSpeed: 2.6

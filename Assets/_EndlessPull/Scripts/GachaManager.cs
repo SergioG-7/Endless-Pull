@@ -3,6 +3,13 @@ using UnityEngine;
 
 public class GachaManager : MonoBehaviour
 {
+    // Se dispara cuando un héroe termina de invocarse y configurarse del todo; el contador de
+    // rareza de la TopBar (MasterHUD) refrescaba antes solo con el gasto de gemas, que ocurre
+    // ANTES de que el héroe nuevo exista — se quedaba un tirón por detrás, invisible si esa
+    // invocación era la última de la sesión (nunca llegaba la siguiente tirada que lo "arrastrara").
+    public static event System.Action HeroSummoned;
+
+
     [Tooltip("Catálogo de héroes invocables; se agrupan solos por starRank.")]
     [SerializeField] private List<HeroData> catalog = new List<HeroData>();
 
@@ -236,6 +243,7 @@ public class GachaManager : MonoBehaviour
                   $"[{HeroTraits.DisplayName(trait)}] con {hero.MaxHealth} PV, " +
                   $"{hero.MaxMP} MP y {hero.Attack} ATK.", hero.gameObject);
 
+        HeroSummoned?.Invoke();
         SaveManager.RequestSave();
     }
 

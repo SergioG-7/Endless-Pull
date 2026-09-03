@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Torbin_1Star
+  m_EditorClassIdentifier: EndlessPull.Runtime::HeroData
+  heroName: Torbin
+  title: Cuero y Correa
+  origin: Marca Quemada
+  bio: Curte cuero para monturas y petos; huele siempre a humo y sebo.
+  bioEn: He tans leather for saddles and breastplates; he always smells of smoke
+    and tallow.
+  bioJa: "\u978D\u3084\u80F8\u5F53\u3066\u306E\u305F\u3081\u306B\u9769\u3092\u306A\u3081\u3059\u3002\u3044\u3064\u3082\u7159\u3068\u7363\u8102\u306E\u5302\u3044\u304C\u3059\u308B\u3002"
+  bodySprite: {fileID: -381671214235277250, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  walkFrames:
+  - {fileID: 8355703027496203093, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: -7569468778974678532, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: -7628643582597629093, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: 6746786187862030918, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: -8147108342878087145, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: 5238463917744712109, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: -7065008718493938534, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: -4022635036222629708, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: 8073247487309391469, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: -6295755434497684622, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: 9140051783048701159, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: 6719339615012364721, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: 8254035579081009986, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: 8513795150204895690, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: 5041269862584680799, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: -2729684672795599155, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: -7068857300420982120, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: 3839019110421235684, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: -381671214235277250, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: 9066605535768270055, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: -2878484040343545284, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: -7494829044967773204, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: 5517578669653541161, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: 5916172313293799708, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: 6020727636894242187, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: -4480990567185761851, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: -3725820429284579906, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: -4659430984544591609, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: -1259633621136410979, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: 1407926407427247353, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: 7111703490269860113, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: -7377508253028395240, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: 4344012454648367783, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: 2504105186314375909, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: 3152280010363726724, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  - {fileID: 990318817939243046, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
+  starRank: 1
+  maxHealth: 101
+  maxMP: 50
+  baseAttack: 15
+  baseDefense: 6
+  moveSpeed: 2.4

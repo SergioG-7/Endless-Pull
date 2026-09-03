@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Ferran_2Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Ferran
+  title: Guardián del Portón Este
+  origin: Aldea de los Tres Robles
+  bio: "Ferran monta guardia en el portón de su aldea desde que cumplió dieciséis años, armado con lanza prestada y voluntad propia. No ha tenido que usarla en serio todavía, pero se prepara cada noche como si mañana fuera el día."
+  bioEn: "Ferran has stood watch at his village gate since he turned sixteen, armed with a borrowed spear and his own resolve. He hasn't had to use it in earnest yet, but he trains every night as if tomorrow were the day."
+  bioJa: "フェランは十六歳になってから借り物の槍を手に、村の門番を務めている。まだ本気で使ったことはないが、明日がその日であるかのように毎晩鍛錬を欠かさない。"
+  bodySprite: {fileID: -6325463113623209349, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  walkFrames:
+  - {fileID: 8071633537473388946, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: -2253762573590309540, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: 7499350835562109944, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: 5042886104891324940, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: 6871921426867863519, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: 6161128199509177728, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: -6473017155748364552, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: 6846735681700052284, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: 4727011024861241678, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: -144420729846080330, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: -8805692654123288397, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: 6931682876444617601, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: -9179589392303016679, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: -1201052432150076018, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: -1615895284407351696, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: -53379050211285760, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: -574746541824989222, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: -6471961261736062603, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: -6325463113623209349, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: -2172309601614754320, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: 1351439249568054952, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: -1198624317684199154, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: -1167870780777019196, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: -5166555922787593379, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: -3848899134825905879, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: -9016981760949049774, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: 1963194828370363334, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: -7365463445719657833, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: -1570517879748380432, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: -5537716948952450838, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: 401349045449453867, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: -8075232425011928289, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: -1919006808754858666, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: 1400621336323251636, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: 6457806356749714247, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  - {fileID: 639122906735067449, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
+  starRank: 2
+  maxHealth: 175
+  maxMP: 50
+  baseAttack: 22
+  baseDefense: 12
+  moveSpeed: 2.15

@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Meret_1Star
+  m_EditorClassIdentifier: EndlessPull.Runtime::HeroData
+  heroName: Meret
+  title: "Guiso de Guarnici\xF3n"
+  origin: Torre de Marfil
+  bio: "Alimenta a los que suben a la Torre; nadie sube con el est\xF3mago vac\xEDo
+    si ella cocina."
+  bioEn: She feeds those climbing the Tower; no one goes up hungry if she is cooking.
+  bioJa: "\u5854\u306B\u767B\u308B\u8005\u305F\u3061\u306B\u98DF\u4E8B\u3092\u4E0E\u3048\u308B\u3002\u5F7C\u5973\u304C\u6599\u7406\u3092\u3059\u308C\u3070\u3001\u8AB0\u3082\u7A7A\u8179\u306E\u307E\u307E\u767B\u3089\u306A\u3044\u3002"
+  bodySprite: {fileID: -3243865903021334361, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  walkFrames:
+  - {fileID: -2639573199146413249, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: 9010010938852407994, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: -5202660938544149377, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: 1968284743084754361, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: 2436444077112958221, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: 661113061939632139, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: -7537579957618694125, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: 1485540643084365073, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: -3239665829167582119, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: 2483036994705194563, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: 8208120417174364410, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: 3593607562441664390, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: 7207637912150266090, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: 2965529791520406003, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: 7630644280590137349, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: 5121390621535148868, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: -7131422489799355586, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: 5292088864824294081, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: -3243865903021334361, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: -7500882220160962692, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: 5369718069724112661, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: 7407842405130427361, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: -3325559083478227318, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: 8750916165939980905, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: 76830006118579542, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: -5465126299316330798, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: 6064257825473149452, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: -382316516745821328, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: -6529297197712735461, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: -7648094306760175676, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: -3703560058998062617, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: -7006463649879979010, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: -6528947680896170305, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: -5882580694882551811, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: -4073426511115960770, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  - {fileID: 6709491249716150850, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
+  starRank: 1
+  maxHealth: 97
+  maxMP: 50
+  baseAttack: 14
+  baseDefense: 5
+  moveSpeed: 2.5

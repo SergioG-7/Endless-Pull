@@ -30,6 +30,9 @@ public class MasterHUD : MonoBehaviour
     // código, no viene de la escena como el resto de la barra).
     private TMP_Text starCountLabel;
 
+    // Cronómetro regresivo de Supervivencia (Piso 5); solo visible durante ese tipo de piso.
+    private TMP_Text survivalTimerLabel;
+
 
     void OnEnable()
     {
@@ -48,6 +51,7 @@ public class MasterHUD : MonoBehaviour
         }
         HeroProgress.HeroAscended += OnHeroAscended;
         SaveManager.RosterLoaded += RefreshStarCounts;
+        GachaManager.HeroSummoned += RefreshStarCounts;
         LocalizationManager.LanguageChanged += OnLanguageChanged;
     }
 
@@ -68,6 +72,7 @@ public class MasterHUD : MonoBehaviour
         }
         HeroProgress.HeroAscended -= OnHeroAscended;
         SaveManager.RosterLoaded -= RefreshStarCounts;
+        GachaManager.HeroSummoned -= RefreshStarCounts;
         LocalizationManager.LanguageChanged -= OnLanguageChanged;
     }
 
@@ -123,11 +128,53 @@ void Start()
         ConfigureNoClip(statusLabel);
 
         BuildStarCountLabel();
+        BuildSurvivalTimerLabel();
 
         if (economy != null) RefreshResources();
 
         RefreshFloor();
         RefreshStarCounts();
+    }
+
+    void Update()
+    {
+        if (survivalTimerLabel == null || waves == null) return;
+
+        bool show = waves.State == ExpeditionState.InProgress
+            && waves.CurrentMissionType == FloorMissionType.Survival;
+
+        if (survivalTimerLabel.gameObject.activeSelf != show)
+            survivalTimerLabel.gameObject.SetActive(show);
+
+        if (!show) return;
+
+        int seconds = Mathf.CeilToInt(waves.SurvivalTimeRemaining);
+        survivalTimerLabel.text = $"{seconds / 60:00}:{seconds % 60:00}";
+    }
+
+    // Cronómetro regresivo centrado en la TopBar, junto al resto de rótulos construidos por código.
+    private void BuildSurvivalTimerLabel()
+    {
+        if (floorLabel == null) return;
+
+        var topBar = floorLabel.transform.parent;
+        if (topBar == null) return;
+
+        // Anclado a la derecha, igual que el chip de recursos (resourcesLabel) y el de Piso
+        // (floorLabel), y colocado justo a su izquierda con margen: centrarlo en la barra caía
+        // encima del chip de Gemas/Madera/Hierro/Comida, que también vive en esa franja.
+        survivalTimerLabel = UIBuild.Label(topBar, "Txt_SurvivalTimer", UITheme.SizeTitle, TextAlignmentOptions.Center);
+        var rt = survivalTimerLabel.rectTransform;
+        rt.anchorMin = new Vector2(1f, 0.5f);
+        rt.anchorMax = new Vector2(1f, 0.5f);
+        rt.pivot = new Vector2(1f, 0.5f);
+        rt.sizeDelta = new Vector2(150f, 34f);
+        rt.anchoredPosition = new Vector2(-1120f, 0f);
+
+        survivalTimerLabel.fontStyle = FontStyles.Bold;
+        survivalTimerLabel.color = new Color(1f, 0.55f, 0.25f);
+        ConfigureNoClip((TextMeshProUGUI)survivalTimerLabel);
+        survivalTimerLabel.gameObject.SetActive(false);
     }
 
 

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Hero_Velvet_3Star
   m_EditorClassIdentifier: Assembly-CSharp::HeroData
   heroName: Velvet
-  title: Novato de la Vanguardia
+  title: Campeona Invicta
   origin: Reino Fronterizo
   bio: "Velvet era la campeona invicta de los torneos de duelo fronterizos hasta que la Torre le ofreció un adversario que de verdad valiera la pena. Sigue sin perder, solo que ahora nadie lleva la cuenta."
   bioEn: "Velvet was the undefeated champion of the frontier dueling circuit until the Tower offered her an opponent actually worth her time. She's still unbeaten, only now nobody's keeping score."

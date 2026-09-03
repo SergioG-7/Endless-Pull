@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Bram_1Star
+  m_EditorClassIdentifier: EndlessPull.Runtime::HeroData
+  heroName: Bram
+  title: Surco Firme
+  origin: Marca Quemada
+  bio: Ara tierra reseca por la guerra, terco en sacarle grano igual.
+  bioEn: He plows land scorched by war, stubbornly coaxing grain from it anyway.
+  bioJa: "\u6226\u3067\u713C\u3051\u305F\u571F\u5730\u3092\u8015\u3057\u3001\u305D\u308C\u3067\u3082\u9811\u56FA\u306B\u7A40\u7269\u3092\u5B9F\u3089\u305B\u3088\u3046\u3068\u3059\u308B\u3002"
+  bodySprite: {fileID: 4017920647285543016, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  walkFrames:
+  - {fileID: 437436248272874274, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: -7331704904317073592, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: -498276785096071461, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: -6712004558663751211, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: 6462424743425800516, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: -3191562169159774884, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: 5999619958337250700, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: -845179320748827365, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: 8059745502316119117, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: 5914796454883966978, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: -5033233246130414804, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: 2074922537968074050, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: 6585651251945151254, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: -6280756470499245521, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: -7007785291354700817, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: -4497684362708176901, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: 5636657249235811918, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: -6440398727546661403, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: 4017920647285543016, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: 7574640436921985676, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: -1617036711191851679, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: -1885883802082386244, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: 6232361180549928800, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: -759902738500374914, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: 2127374680779853786, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: 5661323723684924732, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: 3411824420361283148, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: 3330459103583550025, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: -1374526675258388808, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: -1084922348226880587, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: -6814100834105189670, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: 1319946467680438594, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: -4629181256522296970, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: -2904528845281735356, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: 2636549172877286305, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  - {fileID: 5611254999407091413, guid: f180af16ff2653844b791a2ec8791982, type: 3}
+  starRank: 1
+  maxHealth: 103
+  maxMP: 50
+  baseAttack: 15
+  baseDefense: 6
+  moveSpeed: 2.3

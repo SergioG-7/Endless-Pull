@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Vess_3Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Vess
+  title: Cuchillo del Callejón Norte
+  origin: Callejón Norte
+  bio: "Vess trabajó para tres bandas distintas del Callejón Norte antes de decidir que prefería trabajar para sí mismo. Nadie lo ha visto llegar antes de sentir el filo."
+  bioEn: "Vess worked for three different gangs in the North Alley before deciding he'd rather work for himself. No one has ever seen him arrive before feeling the blade."
+  bioJa: "ヴェスは自分のために働く方がいいと決める前に、北裏路地の三つの一味で働いていた。彼の刃を感じる前にその姿を見た者はいない。"
+  bodySprite: {fileID: -7569561301812737605, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  walkFrames:
+  - {fileID: 8287330783043932871, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: -5788395119342851067, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: -6106681751526524733, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: 150933349615669751, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: -2347493517765549050, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: -3032475837020586596, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: -1946066651031266278, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: 7598853467838672444, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: 4539232492365960463, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: -7851282483799611251, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: 4013219234598063886, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: -9175077973763585857, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: -444070128355099845, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: -4705477839844192087, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: 4126990868814585371, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: 8073696796054712265, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: -5010350087861792686, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: 5819097086049739011, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: -7569561301812737605, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: 3765634884872662981, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: 5009290400392288931, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: -699076287889903224, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: -3037720521456645676, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: -1455528766608221063, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: 2829001089194407855, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: -1660142866596322759, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: 4196819775703671963, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: -872673474168596970, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: -7239041791612066153, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: 4559921657556385087, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: 4954260069589922373, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: -678005026434109184, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: 8664074363651589151, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: -6800001395757056784, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: -3890784064692258324, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  - {fileID: -6101657318865068387, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
+  starRank: 3
+  maxHealth: 230
+  maxMP: 50
+  baseAttack: 43
+  baseDefense: 10
+  moveSpeed: 2.9

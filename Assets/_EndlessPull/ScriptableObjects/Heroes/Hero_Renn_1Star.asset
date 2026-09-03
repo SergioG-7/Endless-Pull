@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Renn_1Star
+  m_EditorClassIdentifier: EndlessPull.Runtime::HeroData
+  heroName: Renn
+  title: Rueda y Eje
+  origin: Torre de Marfil
+  bio: Repara carros de suministro para la Torre; sabe arreglar casi cualquier cosa
+    rota.
+  bioEn: He repairs supply wagons for the Tower; he can fix almost anything broken.
+  bioJa: "\u5854\u306E\u305F\u3081\u306E\u88DC\u7D66\u99AC\u8ECA\u3092\u4FEE\u7406\u3059\u308B\u3002\u58CA\u308C\u305F\u3082\u306E\u306A\u3089\u307B\u3068\u3093\u3069\u4F55\u3067\u3082\u76F4\u305B\u308B\u3002"
+  bodySprite: {fileID: 3358959269352358210, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  walkFrames:
+  - {fileID: -7555661329225150147, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: -5028549630092214860, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: 1489601915712767227, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: 227387132047640938, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: 6853994264750196091, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: -1669288629707370782, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: -8495816293211855640, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: 7330349178331899402, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: -829635403983240195, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: 4717237193410656551, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: 3914506038009542952, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: 623639872696763161, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: -5152899055190126144, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: -1273581789689523678, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: -5003525698359598620, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: -5370835614897321657, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: -370139392095006289, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: -3716001603115460754, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: 3358959269352358210, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: -904704271643340725, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: 6141261608938482144, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: -1601655804608316075, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: 2872866011352384177, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: -5582616781633004604, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: 2698446325388604508, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: -8804898811859539116, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: 4260372476831064022, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: -8523986689976494339, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: 8556724535460486298, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: 6982588670298368869, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: 897455708216938479, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: 7296865493634456144, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: -776886857244187906, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: 6127612297429119928, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: 8871934577278848412, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  - {fileID: 871185575723487995, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
+  starRank: 1
+  maxHealth: 100
+  maxMP: 50
+  baseAttack: 15
+  baseDefense: 5
+  moveSpeed: 2.5

@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Ness_1Star
+  m_EditorClassIdentifier: EndlessPull.Runtime::HeroData
+  heroName: Ness
+  title: Sal de la Tierra
+  origin: Abadia de Sal
+  bio: Extrae sal de las marismas; sus manos curtidas no tiemblan ante nada.
+  bioEn: She extracts salt from the marshes; her weathered hands never tremble.
+  bioJa: "\u6E7F\u5730\u304B\u3089\u5869\u3092\u63A1\u308B\u3002\u305D\u306E\u8352\u308C\u305F\u624B\u306F\u4F55\u306B\u3082\u9707\u3048\u306A\u3044\u3002"
+  bodySprite: {fileID: 1853379861728590398, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  walkFrames:
+  - {fileID: -7843117782625082824, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: -4667785978818653876, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: -3880846524215178720, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: -6303511169667506187, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: 4985659963091834363, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: -1155560990451478733, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: -5653830316700059171, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: -4666834056549451346, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: 4309890025452096700, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: 5680597428837543487, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: -8989722601707299324, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: 479059488066272138, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: 5596561622445799597, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: 3089974236150895233, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: 7307473643808444137, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: 4167009131052669070, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: -3865723077854358684, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: -5933665872135990004, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: 1853379861728590398, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: -7340662848169648192, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: 1462521977389893451, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: -7659574472330949450, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: -6021231740931667268, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: -8830572673744176755, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: 8049657288950368892, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: 5005970480059536684, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: 2513618961374188150, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: -3413026493712315054, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: 7880485071202798096, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: 4126322346675131410, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: 6311217880172929, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: -8548063266189524292, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: -4211656606357190727, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: -5921377260444234040, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: -3632221068721836427, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  - {fileID: -6904921312159854828, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
+  starRank: 1
+  maxHealth: 97
+  maxMP: 50
+  baseAttack: 14
+  baseDefense: 5
+  moveSpeed: 2.5

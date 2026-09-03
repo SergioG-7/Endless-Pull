@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Darvos_3Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Darvos
+  title: Escudo de la Frontera Este
+  origin: Guarnición de Piedra Alta
+  bio: "Darvos ha sostenido la línea en la Guarnición de Piedra Alta durante ocho asedios, y en ninguno retrocedió un paso. Su escudo lleva más abolladuras que su propia piel."
+  bioEn: "Darvos has held the line at High Stone Garrison through eight sieges, and never gave a single step in any of them. His shield carries more dents than his own skin."
+  bioJa: "ダーヴォスは高石の駐屯地で八度の包囲戦を耐え抜き、一度も一歩も退かなかった。彼の盾には、自分の肌よりも多くの傷が刻まれている。"
+  bodySprite: {fileID: -4460470441279580186, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  walkFrames:
+  - {fileID: 2197532373658707174, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: 8445104205199766204, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: -3436432925613447359, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: -7764369636431577192, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: -7190978884876994828, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: -5075890400751129547, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: -1606530817340726267, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: -3223906969615414589, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: -3345522999564421124, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: -7463821606445718444, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: 2200933196482927685, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: -9125029206144179020, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: 1957282830491792249, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: -7428552820643674665, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: -4902703152002303710, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: -1028826320939754888, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: 750492279633965993, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: 1261212751213297461, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: -4460470441279580186, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: 1235294701856098926, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: 6502103554807801518, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: 3233755860174854016, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: -7092906133827878949, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: 3783946236779309312, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: 8490423117616149652, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: 1018591999990032182, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: 4399712740426786426, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: -3260298513036110527, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: 485625887886390953, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: -3263196973097296724, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: -3613669043321165420, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: -8059659582013642765, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: -1294717557629170388, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: -8330561882103364776, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: -1951236282057660969, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  - {fileID: 2776867948983285200, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
+  starRank: 3
+  maxHealth: 305
+  maxMP: 50
+  baseAttack: 31
+  baseDefense: 17
+  moveSpeed: 2.25

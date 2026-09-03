@@ -20,7 +20,7 @@ public class CombatHUD : MonoBehaviour
     [SerializeField] private float autoRetreatThreshold = 0.20f;
 
     [Tooltip("Tamaño del panel del acelerador.")]
-    [SerializeField] private Vector2 panelSize = new Vector2(380f, 64f);
+    [SerializeField] private Vector2 panelSize = new Vector2(260f, 64f);
 
     [Tooltip("Posición del panel, anclada arriba a la derecha.")]
     [SerializeField] private Vector2 panelPosition = new Vector2(-150f, -24f);
@@ -29,9 +29,7 @@ public class CombatHUD : MonoBehaviour
     private Button speedButton;
     private TMP_Text speedLabel;
     private Button autoRetreatButton;
-    private Button retreatButton;
     private TMP_Text autoRetreatLabel;
-    private TMP_Text retreatLabel;
 
     private bool fast;
     private bool autoRetreatArmed;
@@ -65,7 +63,6 @@ public class CombatHUD : MonoBehaviour
     private void RefreshLocalizedTexts()
     {
         if (autoRetreatLabel != null) autoRetreatLabel.text = LocalizationManager.Get("UI_AUTO_RETREAT");
-        if (retreatLabel != null) retreatLabel.text = LocalizationManager.Get("UI_RETREAT_NOW");
     }
 
     private void OnExpeditionChanged(ExpeditionState state, string message)
@@ -112,32 +109,23 @@ public class CombatHUD : MonoBehaviour
         root.sizeDelta = panelSize;
         root.anchoredPosition = panelPosition;
 
-        float buttonWidth = panelSize.x / 3f - 4f;
+        // Sin botón de Retirada aquí: duplicaba el que ya vive en el panel de decretos del
+        // comandante (MasterActionBar/DEC_RETREAT), que es el que se usa de verdad.
+        float buttonWidth = panelSize.x / 2f - 2f;
         var buttonSize = new Vector2(buttonWidth, panelSize.y);
 
         speedButton = UIBuild.Button(root, "SpeedButton", "x1", UITheme.Neutral, buttonSize,
-            new Vector2(-buttonWidth - 4f, 0f), ToggleSpeed);
+            new Vector2(-buttonWidth / 2f - 2f, 0f), ToggleSpeed);
         speedLabel = speedButton.GetComponentInChildren<TMP_Text>();
 
         autoRetreatButton = UIBuild.Button(root, "AutoRetreatButton",
             LocalizationManager.Get("UI_AUTO_RETREAT"), UITheme.Neutral, buttonSize,
-            Vector2.zero, ToggleAutoRetreat);
+            new Vector2(buttonWidth / 2f + 2f, 0f), ToggleAutoRetreat);
         autoRetreatLabel = autoRetreatButton.GetComponentInChildren<TMP_Text>();
-
-        retreatButton = UIBuild.Button(root, "RetreatButton",
-            LocalizationManager.Get("UI_RETREAT_NOW"), UITheme.DangerSoft, buttonSize,
-            new Vector2(buttonWidth + 4f, 0f), ManualRetreat);
-        retreatLabel = retreatButton.GetComponentInChildren<TMP_Text>();
 
         root.gameObject.SetActive(false);
         RefreshSpeedLabel();
         RefreshAutoRetreatLook();
-    }
-
-    // Retirada inmediata a petición del jugador, sin esperar al umbral de la Auto-Retirada.
-    private void ManualRetreat()
-    {
-        if (waves != null) waves.RetreatExpedition();
     }
 
     // La TopBar (SideMenuUI) recalcula su alto/posición real en su propio Awake; aquí se lee

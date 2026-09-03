@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Hero_Elara_3Star
   m_EditorClassIdentifier: Assembly-CSharp::HeroData
   heroName: Elara
-  title: Novato de la Vanguardia
+  title: Superviviente de la Emboscada
   origin: Reino Fronterizo
   bio: "Elara fue la única superviviente de una emboscada que se llevó al resto de su patrulla. Cada golpe que da es, en parte, por ellos."
   bioEn: "Elara was the sole survivor of an ambush that took the rest of her patrol. Every strike she lands is, in part, for them."

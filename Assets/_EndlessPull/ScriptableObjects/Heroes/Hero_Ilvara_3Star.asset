@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Ilvara_3Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Ilvara
+  title: Sombra del Mercado Bajo
+  origin: Distrito de los Callejones
+  bio: "Ilvara aprendió a moverse sin ser vista antes que a leer, robando lo justo para no morir de hambre en el Mercado Bajo. Ahora vende esa misma discreción a quien pueda pagarla, daga siempre a mano."
+  bioEn: "Ilvara learned to move unseen before she learned to read, stealing just enough to survive in the Low Market. Now she sells that same discretion to whoever can pay for it, dagger always within reach."
+  bioJa: "イルヴァラは字を覚えるより先に、人目を忍ぶ術を身につけた。下町市場で飢えぬ分だけを盗んで生きてきた。今ではその隠密の腕を金で売る者となったが、短剣はいつも手の届く場所にある。"
+  bodySprite: {fileID: 5722643723047274288, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  walkFrames:
+  - {fileID: 8511536189219897936, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: 5960913197150826165, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: 7474057180301529229, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: -801550609137754476, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: -7045079967152475586, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: -4208282089015884330, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: 8353264496619437907, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: -5123525042969480204, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: 7345722553199004006, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: -2809303148858283057, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: 7922781725798719019, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: -1837202012481780503, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: 4621285671104359043, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: -1655126140297179556, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: 9211672286034013494, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: -5420792016596101091, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: -6227850623259400196, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: 3140659328902025023, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: 5722643723047274288, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: -770681441063983137, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: -1281869339231336789, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: -3469667660324274705, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: -5696025522368694841, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: -4682407170664139180, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: -6838674321649413634, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: 6394065637313928253, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: 6210271930131057040, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: 3598533028411147971, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: 5848346681024114147, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: -5815616114244804910, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: -889135636934080352, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: 6671699771687163724, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: -5993474078791328875, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: 3422926127959491020, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: 437695862143448038, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  - {fileID: -6924972942965120603, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
+  starRank: 3
+  maxHealth: 225
+  maxMP: 50
+  baseAttack: 44
+  baseDefense: 10
+  moveSpeed: 2.95

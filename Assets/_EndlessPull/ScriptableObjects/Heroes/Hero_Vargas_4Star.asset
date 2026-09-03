@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Hero_Vargas_4Star
   m_EditorClassIdentifier: Assembly-CSharp::HeroData
   heroName: Vargas
-  title: Novato de la Vanguardia
+  title: Guardián del Puente Fronterizo
   origin: Reino Fronterizo
   bio: "Vargas sostuvo un puente fronterizo él solo hasta que llegaron los refuerzos, y todavía cuenta la espera en horas, no en minutos. Nadie ha vuelto a intentar cruzar ese puente sin permiso."
   bioEn: "Vargas held a border bridge alone until reinforcements arrived, and still counts the wait in hours, not minutes. No one has tried crossing that bridge without permission since."

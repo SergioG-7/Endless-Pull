@@ -95,8 +95,15 @@ Desktop.ini
 # ---------------------------------------------------------------
 # Guardados locales / volcados de depuración de pruebas fuera de StreamingAssets
 # ---------------------------------------------------------------
+*save*.json
+save.json
 *.save
 /[Dd]ebug[Ss]aves/
+
+# ---------------------------------------------------------------
+# Claude Code: config/agentes local, no se versiona a partir de ahora
+# ---------------------------------------------------------------
+/.claude/
 
 # ---------------------------------------------------------------
 # Generador LPC clonado (89k ficheros de terceros, no se versiona)

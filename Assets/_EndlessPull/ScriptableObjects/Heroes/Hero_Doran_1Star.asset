@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Doran_1Star
+  m_EditorClassIdentifier: EndlessPull.Runtime::HeroData
+  heroName: Doran
+  title: Tronco al Hombro
+  origin: Bosque de Alder
+  bio: "El m\xE1s joven de una familia de le\xF1adores; carga troncos el doble de
+    su peso."
+  bioEn: The youngest of a family of woodcutters; he carries logs twice his own weight.
+  bioJa: "\u6728\u3053\u308A\u4E00\u5BB6\u306E\u672B\u3063\u5B50\u3002\u81EA\u5206\u306E\u500D\u306E\u91CD\u3055\u306E\u4E38\u592A\u3092\u904B\u3076\u3002"
+  bodySprite: {fileID: 2277986073847076109, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  walkFrames:
+  - {fileID: -2724271621799942037, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: -693619122012176654, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: -8865684996905977198, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: 7310773685618566684, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: -1376276299980477114, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: 2890713784018814698, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: -2544415112127013694, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: -5744194349976894792, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: 3671662062330209619, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: 2363197202438055769, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: 6449945088004409046, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: -2079151465132722289, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: -8748831018234669523, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: 2112521290014966681, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: 4047678730632348010, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: -3819037276372455528, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: 5044733937325177467, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: 8367204525734245145, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: 2277986073847076109, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: -9000426911422700399, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: 360110450956480433, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: -932602003597881053, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: 319758951270984060, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: 7625264155800234750, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: -7600830992027562203, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: -9077264061382196432, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: -7630414664003436371, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: -62708503079400670, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: -3929565783557503578, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: -3427172949281634340, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: 1940464918160901910, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: 697493146468250100, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: -5726334136700815814, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: -4308019629084252465, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: -8448932634939995080, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  - {fileID: -7829516717548450759, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
+  starRank: 1
+  maxHealth: 99
+  maxMP: 50
+  baseAttack: 14
+  baseDefense: 5
+  moveSpeed: 2.6

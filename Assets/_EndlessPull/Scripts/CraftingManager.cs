@@ -1,13 +1,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// Piedra de Ascensión por tier: Menor (1★→2★) hasta Legendaria (4★→5★).
+// Piedra de Ascensión por tier: Menor (1★→2★) hasta Celestial (6★→7★).
 public enum AscensionStoneTier
 {
     Menor,
     Media,
     Mayor,
-    Legendaria
+    Legendaria,
+    Trascendente,
+    Celestial
 }
 
 public static class AscensionStoneTiers
@@ -20,6 +22,8 @@ public static class AscensionStoneTiers
             case AscensionStoneTier.Media: return LocalizationManager.Get("UI_STONE_MEDIA");
             case AscensionStoneTier.Mayor: return LocalizationManager.Get("UI_STONE_MAYOR");
             case AscensionStoneTier.Legendaria: return LocalizationManager.Get("UI_STONE_LEGENDARIA");
+            case AscensionStoneTier.Trascendente: return LocalizationManager.Get("UI_STONE_TRASCENDENTE");
+            case AscensionStoneTier.Celestial: return LocalizationManager.Get("UI_STONE_CELESTIAL");
         }
         return tier.ToString();
     }
@@ -98,13 +102,13 @@ public class CraftingManager : MonoBehaviour
     [Tooltip("Economía de la que salen los materiales.")]
     [SerializeField] private EconomyManager economy;
 
-    [Tooltip("Madera que cuesta forjar cada tier de Piedra: Menor, Media, Mayor, Legendaria.")]
-    [SerializeField] private int[] stoneWoodCostByTier = { 30, 60, 120, 220 };
+    [Tooltip("Madera que cuesta forjar cada tier de Piedra: Menor, Media, Mayor, Legendaria, Trascendente, Celestial.")]
+    [SerializeField] private int[] stoneWoodCostByTier = { 30, 60, 120, 220, 380, 650 };
 
-    [Tooltip("Hierro que cuesta forjar cada tier de Piedra: Menor, Media, Mayor, Legendaria.")]
-    [SerializeField] private int[] stoneIronCostByTier = { 15, 35, 70, 140 };
+    [Tooltip("Hierro que cuesta forjar cada tier de Piedra: Menor, Media, Mayor, Legendaria, Trascendente, Celestial.")]
+    [SerializeField] private int[] stoneIronCostByTier = { 15, 35, 70, 140, 240, 420 };
 
-    private readonly int[] stoneCounts = new int[4];
+    private readonly int[] stoneCounts = new int[6];
     private int healingPotions;
     private int manaPotions;
 
@@ -582,12 +586,15 @@ public class CraftingManager : MonoBehaviour
 
     // La usa el SaveManager al cargar. `savedMenor` absorbe también el zurrón genérico de saves
     // anteriores a los tiers (ver SaveManager.Load), así no se pierde progreso ya guardado.
-    public void LoadStones(int savedMenor, int savedMedia, int savedMayor, int savedLegendaria)
+    public void LoadStones(int savedMenor, int savedMedia, int savedMayor, int savedLegendaria,
+                           int savedTrascendente = 0, int savedCelestial = 0)
     {
         stoneCounts[(int)AscensionStoneTier.Menor] = Mathf.Max(0, savedMenor);
         stoneCounts[(int)AscensionStoneTier.Media] = Mathf.Max(0, savedMedia);
         stoneCounts[(int)AscensionStoneTier.Mayor] = Mathf.Max(0, savedMayor);
         stoneCounts[(int)AscensionStoneTier.Legendaria] = Mathf.Max(0, savedLegendaria);
+        stoneCounts[(int)AscensionStoneTier.Trascendente] = Mathf.Max(0, savedTrascendente);
+        stoneCounts[(int)AscensionStoneTier.Celestial] = Mathf.Max(0, savedCelestial);
 
         for (int i = 0; i < stoneCounts.Length; i++)
             StonesChanged?.Invoke((AscensionStoneTier)i, stoneCounts[i]);

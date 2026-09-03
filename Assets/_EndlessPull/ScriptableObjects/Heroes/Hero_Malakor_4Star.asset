@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Hero_Malakor_4Star
   m_EditorClassIdentifier: Assembly-CSharp::HeroData
   heroName: Malakor
-  title: Novato de la Vanguardia
+  title: Puños que Rompen Filas
   origin: Reino Fronterizo
   bio: "Malakor rompió una formación enemiga a mano limpia durante las escaramuzas fronterizas, y la historia ha crecido cada año desde entonces. Pega como si todavía tuviera algo que demostrar, aunque ya no lo tenga."
   bioEn: "Malakor broke an enemy formation with his bare hands during the border skirmishes, and the story's grown every year since. He hits like he's still got something to prove, though he doesn't anymore."

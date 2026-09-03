@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_KestrelDorn_4Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Kestrel Dorn
+  title: Filo Impune de la Corte Baja
+  origin: Corte Baja
+  bio: "Kestrel Dorn nunca ha perdido un duelo formal, y las cortes bajas ya no se atreven a organizarle ninguno. Vive de retos improvisados en callejones, donde nadie pregunta las reglas."
+  bioEn: "Kestrel Dorn has never lost a formal duel, and the lower courts no longer dare arrange one for them. They live off impromptu alley challenges now, where no one asks about rules."
+  bioJa: "ケストレル・ドーンは正式な決闘で一度も負けたことがなく、下級法廷はもう誰も決闘を仕組もうとしない。今は誰も規則など問わない路地裏の即興の勝負で生計を立てている。"
+  bodySprite: {fileID: -5626035826302461172, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  walkFrames:
+  - {fileID: 6740528700743056336, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: 5655081485244034631, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: 2190936550337078784, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: 4925325891855733497, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: 7928103744515018790, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: 2923561254428397662, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: -6871205561323392880, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: -277888713899310038, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: -3218124567534827364, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: 6083376713040942015, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: 1049787159923428255, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: 2756912568540401905, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: -7623359950824485754, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: -3037711175763816004, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: -1390086593181011605, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: -8490386132853989966, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: 8725176435552634191, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: 3748096929168385193, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: -5626035826302461172, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: 3348709898910750762, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: 2040343529814112702, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: -3383961740111689926, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: 1101614894748153611, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: 2779014934102401026, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: -1238081021800424082, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: -144500167494448038, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: -678683010653672699, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: -1999594562559105845, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: -4766854280163684576, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: 6552581784533704475, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: -6458304728392183168, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: -3112846903269907994, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: -8977913555246920409, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: -6732020650108007289, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: 4801628315618327981, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  - {fileID: 692144544872416473, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
+  starRank: 4
+  maxHealth: 405
+  maxMP: 50
+  baseAttack: 54
+  baseDefense: 18
+  moveSpeed: 2.8

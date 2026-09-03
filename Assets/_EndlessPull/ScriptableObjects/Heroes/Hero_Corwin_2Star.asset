@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Corwin_2Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Corwin
+  title: Escudero de la Casa Ashgrove
+  origin: Feudo de Ashgrove
+  bio: "Corwin lleva tres años puliendo la armadura de un caballero que nunca lo deja empuñar una espada de verdad. Se entrena a escondidas por las noches, convencido de que su turno llegará pronto."
+  bioEn: "Corwin has spent three years polishing the armor of a knight who never lets him hold a real sword. He trains in secret at night, certain his turn is coming soon."
+  bioJa: "コーウィンは三年間、本物の剣を握らせてもらえない騎士の鎧を磨き続けてきた。夜にこっそり鍛錬を積み、自分の番はもうすぐ来ると信じている。"
+  bodySprite: {fileID: 4191932319953788827, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  walkFrames:
+  - {fileID: 2176534377393092775, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: -2565163932005571120, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: 8490472026393312754, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: 4406737270561112264, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: -9102481805134527250, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: 2871816835630184296, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: -120928961115688589, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: 465454887191988028, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: -6743924295025925350, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: -2927728434109500687, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: 1694476942110220673, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: -2659292707520512940, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: -5017295273741620881, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: -3455738657869070798, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: -943328615549174915, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: -7647225088195832126, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: 2387080113127235053, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: 2105985849028598311, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: 4191932319953788827, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: -2950630764078319313, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: -7383957738860841113, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: -6505698785146369845, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: -4449388054347687764, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: -5522932074095682330, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: 1150467978665728980, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: 7829866143437114943, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: -1874313162805424544, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: 3270428071916017018, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: -168042306701350581, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: -1798810464841390554, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: -8710178317642502014, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: 7139634275373997594, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: -9113319222377031022, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: 944578839219517071, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: 5230463377401189313, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  - {fileID: 1770199370267182216, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
+  starRank: 2
+  maxHealth: 160
+  maxMP: 50
+  baseAttack: 24
+  baseDefense: 9
+  moveSpeed: 2.35

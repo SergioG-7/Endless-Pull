@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Fenna_2Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Fenna
+  title: Aprendiz de Milicia
+  origin: Villa Cuervo Blanco
+  bio: "Fenna se presentó voluntaria a la milicia antes de cumplir la edad mínima, y el sargento no tuvo corazón para rechazarla dos veces. Compensa la falta de tamaño con una terquedad que agota a sus instructores."
+  bioEn: "Fenna volunteered for the militia before she was old enough, and the sergeant didn't have the heart to turn her away twice. She makes up for her size with a stubbornness that wears out her instructors."
+  bioJa: "フェンナは規定の年齢に達する前から民兵に志願し、軍曹も二度目は断る気になれなかった。体格の小ささを、教官たちを疲れさせるほどの頑固さで補っている。"
+  bodySprite: {fileID: -1742129160219957808, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  walkFrames:
+  - {fileID: 4845785493151005257, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: -5216638843805159716, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: 1775723734550923800, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: -150293202660355369, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: -5055944731790971722, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: -468099718223560687, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: -7541704128826996094, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: 4083382881602852263, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: -476004990595198383, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: -2612944124890118497, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: 5108290457150986959, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: 1306029102318952525, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: -5821989288206606062, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: 6530300813774288092, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: -6597075750186860253, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: -955407504649738706, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: 5676905317891859105, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: -3355322299877539899, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: -1742129160219957808, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: -8357486597517774469, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: -5415987008506788882, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: 5805591957924347937, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: -4144207337500361401, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: -4498937145406248572, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: 4684455215523356653, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: 3634396587657203664, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: 8452613926873601328, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: 8200308649031598965, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: 634425648355723291, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: -2027276159984787645, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: 8624545819599168073, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: 8819636557739299306, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: 2815043850148253012, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: 3740186707228478468, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: 795476434228224674, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  - {fileID: 7508496431534705563, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
+  starRank: 2
+  maxHealth: 145
+  maxMP: 50
+  baseAttack: 25
+  baseDefense: 7
+  moveSpeed: 2.5

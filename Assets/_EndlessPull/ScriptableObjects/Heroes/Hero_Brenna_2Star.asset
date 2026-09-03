@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Brenna_2Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Brenna
+  title: Cazadora de las Lomas Grises
+  origin: Lomas Grises
+  bio: "Brenna aprendió a rastrear antes que a caminar bien, siguiendo a su madre entre las Lomas Grises en busca de ciervos y lobos solitarios. Ahora rastrea algo más peligroso, y no falla un solo tiro."
+  bioEn: "Brenna learned to track before she could walk properly, following her mother through the Grey Downs after deer and lone wolves. Now she tracks something far more dangerous, and she doesn't miss a shot."
+  bioJa: "ブレンナは歩き方を覚えるより先に、母について灰色の丘陵で鹿や一匹狼を追う術を学んだ。今ではもっと危険なものを追っているが、矢を外したことはない。"
+  bodySprite: {fileID: 8663988539916645547, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  walkFrames:
+  - {fileID: 2377704781195048180, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: 5082269626532558683, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: -7672373181833988024, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: 8173225270639092312, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: -736718450531848879, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: 7042953895973633574, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: 6040533045953931627, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: -3957841695712384274, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: 1676294559605315405, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: 2269334556220031382, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: -2094757021223324752, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: 8032600166362651489, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: 109322536914819866, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: -6161915989640638617, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: -7950372889076339632, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: 8589563051085527691, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: -6023153780929699790, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: -637122674739578833, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: 8663988539916645547, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: 1665061634341330895, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: -5812578547838460913, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: -150259713292095005, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: -8090199988887213940, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: 7645983409267428507, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: 4810509698276724366, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: 7215976890574833789, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: 478812233234674643, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: 3420439016148250067, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: 2894669725529215739, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: -5835419647180121767, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: 8612481606315578270, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: -911510124442073294, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: -5385084906197030732, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: -4666618786477799033, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: 6244029213749575968, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  - {fileID: -5959877064494492864, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
+  starRank: 2
+  maxHealth: 150
+  maxMP: 50
+  baseAttack: 27
+  baseDefense: 7
+  moveSpeed: 2.6

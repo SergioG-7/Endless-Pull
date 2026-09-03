@@ -403,7 +403,9 @@ public class SaveManager : MonoBehaviour
             int media = (counts != null && counts.Length > 1) ? counts[1] : 0;
             int mayor = (counts != null && counts.Length > 2) ? counts[2] : 0;
             int legendaria = (counts != null && counts.Length > 3) ? counts[3] : 0;
-            crafting.LoadStones(menor, media, mayor, legendaria);
+            int trascendente = (counts != null && counts.Length > 4) ? counts[4] : 0;
+            int celestial = (counts != null && counts.Length > 5) ? counts[5] : 0;
+            crafting.LoadStones(menor, media, mayor, legendaria, trascendente, celestial);
         }
 
         if (crafting != null) crafting.LoadPotions(save.healingPotions);

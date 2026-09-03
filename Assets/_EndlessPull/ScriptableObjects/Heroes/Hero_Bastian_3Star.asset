@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Bastian_3Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Bastian
+  title: Guardián del Vado
+  origin: Vado de Piedra Gris
+  bio: "Bastian defiende el único vado seguro del río desde que su padre murió intentándolo. Nadie cruza sin su permiso, y su lanza alcanza más lejos de lo que cualquiera espera."
+  bioEn: "Bastian has defended the river's only safe ford since his father died trying to. No one crosses without his say-so, and his spear reaches farther than anyone expects."
+  bioJa: "バスティアンは、父がそれを守ろうとして命を落として以来、川で唯一安全な渡し場を守っている。彼の許可なく渡る者はなく、その槍は誰もが思うより遠くまで届く。"
+  bodySprite: {fileID: 5721499092933798771, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  walkFrames:
+  - {fileID: 6914504356050934652, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: 869940107913336589, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: -4640674772735118901, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: -3376479766381742915, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: -8864767173912844135, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: 3536984178297915287, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: 3380730858937813583, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: 8444838082037696220, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: -8748155595252447701, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: 3348739379090068919, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: -6985638621472625886, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: 880242004441160322, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: 1604090287621595964, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: 8766676718746298411, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: 4485276631310505240, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: 8927104933729425967, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: -2082756385375037148, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: -8656460720661388967, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: 5721499092933798771, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: -6664104023785751878, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: 5262136776164684537, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: 2973931709808322962, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: -1164119641797449077, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: 2043709167728077916, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: 7116156884199141850, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: -4158668338291229797, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: 8967676986503160929, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: 7140697094669638545, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: 6667236719565048636, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: 2573438679504760439, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: -5669491621743701723, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: -2917840991778965979, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: 510403394818323520, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: 8356293976855581291, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: -1033809979511467628, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  - {fileID: -8103880479789407376, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
+  starRank: 3
+  maxHealth: 270
+  maxMP: 50
+  baseAttack: 37
+  baseDefense: 13
+  moveSpeed: 2.5

@@ -24,6 +24,9 @@ public class EnemyController : MonoBehaviour, IHealthOwner
     [Tooltip("Alcance a partir del cual el enemigo dispara en vez de golpear de cerca.")]
     [SerializeField] private float rangedThreshold = 3f;
 
+    [Tooltip("Recorte del daño a distancia en tanto por uno; los tiradores no deben poder oneshotear.")]
+    [SerializeField] private float rangedDamageMultiplier = 0.7f;
+
     [Tooltip("Cada cuántos segundos vuelve a buscar héroes cercanos.")]
     [SerializeField] private float scanInterval = 0.25f;
 
@@ -158,7 +161,7 @@ public class EnemyController : MonoBehaviour, IHealthOwner
     public int CurrentHealth => currentHealth;
     public int MaxHealth => data != null ? Mathf.RoundToInt(data.maxHealth * statMultiplier) : 0;
     public int Attack => data != null
-        ? Mathf.RoundToInt(data.baseAttack * statMultiplier * attackMultiplier)
+        ? Mathf.RoundToInt(data.baseAttack * statMultiplier * attackMultiplier * (IsRanged ? rangedDamageMultiplier : 1f))
         : 0;
 
     public float AttackMultiplier => attackMultiplier;

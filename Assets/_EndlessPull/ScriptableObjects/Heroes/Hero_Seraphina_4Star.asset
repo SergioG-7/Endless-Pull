@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Hero_Seraphina_4Star
   m_EditorClassIdentifier: Assembly-CSharp::HeroData
   heroName: Seraphina
-  title: Novato de la Vanguardia
+  title: Azote de los Salteadores
   origin: Reino Fronterizo
   bio: "Seraphina limpió sola una guarida de salteadores que llevaba una década aterrorizando los caminos fronterizos. Desde entonces, esos caminos llevan su nombre en al menos tres tabernas."
   bioEn: "Seraphina single-handedly cleared out a highwaymen's den that had terrorized the frontier roads for a decade. Since then, those roads carry her name in at least three taverns."

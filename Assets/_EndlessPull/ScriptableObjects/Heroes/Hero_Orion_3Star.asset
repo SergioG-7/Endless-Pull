@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Hero_Orion_3Star
   m_EditorClassIdentifier: Assembly-CSharp::HeroData
   heroName: Orion
-  title: Novato de la Vanguardia
+  title: Heredero de la Lanza Caída
   origin: Reino Fronterizo
   bio: "Orion tomó la lanza de su padre, capitán de un fuerte fronterizo caído, y juró que no volvería a caer en su guardia. Pelea con la disciplina de quien no se permite fallar dos veces."
   bioEn: "Orion took up the spear of his father, a border captain who fell defending his post, and swore it would never fall again on his watch. He fights with the discipline of someone who won't allow himself to fail twice."

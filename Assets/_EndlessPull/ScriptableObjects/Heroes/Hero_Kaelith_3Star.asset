@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Hero_Kaelith_3Star
   m_EditorClassIdentifier: Assembly-CSharp::HeroData
   heroName: Kaelith
-  title: Novato de la Vanguardia
+  title: El Que Rompió el Cerco
   origin: Reino Fronterizo
   bio: "Kaelith cuenta que rompió el cerco de un fuerte fronterizo él solo; nadie lo ha desmentido, y menos aún quien estaba allí. La historia crece cada vez que la cuenta, pero el filo no ha perdido nada."
   bioEn: "Kaelith claims he broke a border fort's siege single-handed; no one's disputed it, least of all those who were there. The story grows every time he tells it, but the blade's lost none of its edge."

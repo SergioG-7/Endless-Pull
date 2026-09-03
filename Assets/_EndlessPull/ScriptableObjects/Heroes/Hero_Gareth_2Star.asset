@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Gareth_2Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Gareth
+  title: Guardia de la Mina Honda
+  origin: Mina Honda
+  bio: "Gareth vigila la entrada de la Mina Honda desde que un derrumbe se llevó a dos de sus compañeros. Conoce cada túnel de memoria y no deja pasar a nadie que no reconozca."
+  bioEn: "Gareth has guarded the entrance to the Deep Mine ever since a collapse took two of his fellow workers. He knows every tunnel by heart and lets no one through he doesn't recognize."
+  bioJa: "ガレスは崩落で二人の仲間を失って以来、深坑の入り口を見張っている。すべての坑道を暗記しており、見覚えのない者は誰も通さない。"
+  bodySprite: {fileID: 3846942753007579624, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  walkFrames:
+  - {fileID: -6338525654983569025, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: 3071580554141567641, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: -874076555527444200, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: -3136433909834548747, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: 4361555791400808248, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: 3851235438911913903, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: 5088396098651756219, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: -3504550618668182943, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: 2814783707374552689, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: -274319268267106795, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: -5160054495417527036, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: 2436725712327676245, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: 2174401365698612007, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: 8804393371109898671, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: -280858695139408584, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: 4678867615968136868, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: -8037340675336902887, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: 2560984302385649634, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: 3846942753007579624, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: 1322025076115753777, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: -8229191918843522653, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: 1857133594685363068, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: -4536459034964045982, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: -7421494313565559873, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: 6588854832008251286, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: -6503454556492540690, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: 5115834344438983988, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: -8824506024082001618, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: -8814107048364214399, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: -687916119866309583, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: -991324984944414470, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: -6990365406764357591, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: 1221333490459793127, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: 128452472849261463, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: -2572783151106660877, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  - {fileID: 8986550155962744266, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
+  starRank: 2
+  maxHealth: 182
+  maxMP: 50
+  baseAttack: 21
+  baseDefense: 13
+  moveSpeed: 2.05

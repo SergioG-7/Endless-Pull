@@ -45,16 +45,22 @@ public class AlchemyWorkshopUI : MonoBehaviour
     private TMP_Text feedback;
 
     // Una ficha por operación: cuerpo con el detalle, coste y su botón.
-    // Fase 37: las 4 piedras van cada una en su propia tarjeta, sin desplegable.
-    private readonly Ficha[] piedras = new Ficha[4];
+    // Las piedras van cada una en su propia tarjeta, paginadas de StonePageSize en StonePageSize.
+    private readonly Ficha[] piedras = new Ficha[6];
     private const float StoneCardWidth = 226f;
     private const float StoneCardGap = 16f;
+    private const int StonePageSize = 4;
 
     private Ficha armas;
     private Ficha reparar;
     private Ficha mejora;
     private Ficha pocion;
     private Ficha pocionMana;
+
+    // Un UIPager por fila; las flechas se ocultan solas si todo cabe en una página.
+    private UIPager stonesPager;
+    private UIPager forgePager;
+    private UIPager alchemyPager;
 
     // Pestañas: Piedras, Forja/Reparación de Equipo, Alquimia.
     private WorkshopTab activeTab = WorkshopTab.Stones;
@@ -100,6 +106,9 @@ public class AlchemyWorkshopUI : MonoBehaviour
     {
         RefreshTabs();
         Refresh();
+        stonesPager.RefreshLocalization();
+        forgePager.RefreshLocalization();
+        alchemyPager.RefreshLocalization();
     }
 
     void Start()
@@ -155,16 +164,11 @@ public class AlchemyWorkshopUI : MonoBehaviour
         StyleTab(tabEquipment, tabEquipmentLabel, activeTab == WorkshopTab.Equipment);
         StyleTab(tabAlchemy, tabAlchemyLabel, activeTab == WorkshopTab.Alchemy);
 
-        foreach (var ficha in piedras) ficha.root.SetActive(activeTab == WorkshopTab.Stones);
-
-        bool equip = activeTab == WorkshopTab.Equipment;
-        armas.root.SetActive(equip);
-        reparar.root.SetActive(equip);
-        mejora.root.SetActive(equip);
-
-        bool alchemy = activeTab == WorkshopTab.Alchemy;
-        pocion.root.SetActive(alchemy);
-        pocionMana.root.SetActive(alchemy);
+        // Cada pager decide qué tarjetas de su fila se ven (la página activa) y las oculta todas
+        // cuando su pestaña no es la que está abierta.
+        stonesPager.SetTabActive(activeTab == WorkshopTab.Stones);
+        forgePager.SetTabActive(activeTab == WorkshopTab.Equipment);
+        alchemyPager.SetTabActive(activeTab == WorkshopTab.Alchemy);
     }
 
     private static void StyleTab(Button tab, TMP_Text label, bool active)
@@ -231,7 +235,7 @@ public class AlchemyWorkshopUI : MonoBehaviour
               $"{numArtesanos} (-{Mathf.RoundToInt((1f - crafting.CostFactor) * 100f)}%)</color>"
             : string.Empty;
 
-        // Forja de Piedras: las 4 tarjetas directas, sin desplegable (Fase 37).
+        // Forja de Piedras: las 6 tarjetas directas, sin desplegable.
         var tiers = (AscensionStoneTier[])System.Enum.GetValues(typeof(AscensionStoneTier));
         for (int i = 0; i < tiers.Length && i < piedras.Length; i++)
             RefreshStoneCard(piedras[i], tiers[i]);
@@ -335,31 +339,54 @@ public class AlchemyWorkshopUI : MonoBehaviour
 
         BuildTabs();
 
-        // Las 4 piedras en su propia fila de tarjetas angostas, sin desplegable (Fase 37).
+        // La posición inicial no importa: stonesPager.Setup() las reubica en cuanto se crea,
+        // más abajo — solo hace falta que existan como GameObjects.
         var tiers = (AscensionStoneTier[])System.Enum.GetValues(typeof(AscensionStoneTier));
-        float stoneStep = StoneCardWidth + StoneCardGap;
-        float stoneStart = -1.5f * stoneStep;
         for (int i = 0; i < tiers.Length && i < piedras.Length; i++)
         {
             var tier = tiers[i];
-            piedras[i] = CreateCard("Card_Stone_" + tier, stoneStart + i * stoneStep, 0f,
+            piedras[i] = CreateCard("Card_Stone_" + tier, 0f, 0f,
                 StoneCardWidth, () => OnCraftStonePressed(tier));
         }
 
-        // Forja/Reparación: 3 tarjetas en una sola fila (Armas, Mejora, Reparar), mismo criterio
-        // de grilla que la fila de Piedras.
-        float step3 = CardWidth + CardGap;
-        armas = CreateCard("Card_Weapons", -step3, 0f, OnCraftWeaponPressed);
+        // Forja/Reparación: 3 tarjetas (Armas, Mejora, Reparar). Alquimia: Poción de Curación y
+        // de Maná. Mismo motivo: la posición real la fija el pager de cada fila, no CreateCard.
+        armas = CreateCard("Card_Weapons", 0f, 0f, OnCraftWeaponPressed);
         mejora = CreateCard("Card_Upgrade", 0f, 0f, OnUpgradeGearPressed);
-        reparar = CreateCard("Card_Repair", step3, 0f, OnRepairAllPressed);
+        reparar = CreateCard("Card_Repair", 0f, 0f, OnRepairAllPressed);
 
-        // Alquimia: pociones de Curación y de Maná, una fila de 2 tarjetas centradas.
-        float xPar = (CardWidth + CardGap) * 0.5f;
-        pocion = CreateCard("Card_Potion", -xPar, 0f, OnCraftPotionPressed);
-        pocionMana = CreateCard("Card_PotionMana", xPar, 0f, OnCraftManaPotionPressed);
+        pocion = CreateCard("Card_Potion", 0f, 0f, OnCraftPotionPressed);
+        pocionMana = CreateCard("Card_PotionMana", 0f, 0f, OnCraftManaPotionPressed);
 
         feedback = UIBuild.TopLabel(panel.transform, "Feedback", UITheme.SizeTitle, 32f,
             -(CardTop + CardHeight + 8f), TextAlignmentOptions.Center);
+
+        BuildPagers();
+    }
+
+    // Un UIPager por fila: huecos fijos por página, flechas que solo aparecen si hacen falta.
+    private void BuildPagers()
+    {
+        const float pagerY = 74f;
+
+        float stoneStep = StoneCardWidth + StoneCardGap;
+        var stoneSlots = new float[StonePageSize];
+        for (int i = 0; i < StonePageSize; i++) stoneSlots[i] = (i - (StonePageSize - 1) / 2f) * stoneStep;
+        stonesPager = new UIPager(panel.transform, new Vector2(0f, pagerY));
+        stonesPager.Setup(System.Array.ConvertAll(piedras, f => f.root), stoneSlots);
+
+        float step3 = CardWidth + CardGap;
+        forgePager = new UIPager(panel.transform, new Vector2(0f, pagerY));
+        forgePager.Setup(new[] { armas.root, mejora.root, reparar.root }, new[] { -step3, 0f, step3 });
+
+        float xPar = (CardWidth + CardGap) * 0.5f;
+        alchemyPager = new UIPager(panel.transform, new Vector2(0f, pagerY));
+        alchemyPager.Setup(new[] { pocion.root, pocionMana.root }, new[] { -xPar, xPar });
+
+        // Arranca en la pestaña de Piedras: las otras dos filas se ocultan hasta que se abra su
+        // pestaña (RefreshTabs las reactivará cuando toque).
+        forgePager.SetTabActive(false);
+        alchemyPager.SetTabActive(false);
     }
 
     // Tres botones de pestaña anclados arriba a la izquierda, mismo estilo que SanctuaryUI.
@@ -399,7 +426,7 @@ public class AlchemyWorkshopUI : MonoBehaviour
     private Ficha CreateCard(string name, float x, float yOffset, UnityEngine.Events.UnityAction onClick)
         => CreateCard(name, x, yOffset, CardWidth, onClick);
 
-    // Sobrecarga con ancho propio: la usan las 4 tarjetas de piedra, más angostas que el resto.
+    // Sobrecarga con ancho propio: la usan las tarjetas de piedra, más angostas que el resto.
     private Ficha CreateCard(string name, float x, float yOffset, float width,
                              UnityEngine.Events.UnityAction onClick)
     {

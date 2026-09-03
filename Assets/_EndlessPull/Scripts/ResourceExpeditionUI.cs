@@ -2,7 +2,8 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// Panel de recolección: tres destinos, cada uno con su recurso, pagados con intentos de torre.
+// Panel de recolección: un destino por fila (scrollable, mismo patrón que TowerPanelUI) para
+// que añadir nuevos destinos a la rotación no rompa el layout, con su recurso y el bono diario.
 public class ResourceExpeditionUI : MonoBehaviour
 {
     [Tooltip("Canvas donde se monta el panel; vacío coge el primero de la escena.")]
@@ -20,14 +21,25 @@ public class ResourceExpeditionUI : MonoBehaviour
     [Tooltip("Color de un destino disponible.")]
     [SerializeField] private Color readyColor = new Color(0.25f, 0.45f, 0.35f);
 
+    [Tooltip("Color de un destino disponible que además da el bono del día.")]
+    [SerializeField] private Color bonusColor = new Color(0.55f, 0.42f, 0.15f);
+
     [Tooltip("Color de un destino que ahora mismo no se puede elegir.")]
     [SerializeField] private Color busyColor = new Color(0.28f, 0.28f, 0.32f);
 
+    [Tooltip("Alto de cada fila de destino, en píxeles de UI.")]
+    [SerializeField] private float rowHeight = UITheme.MinTouchTarget;
+
+    private static readonly ResourceExpeditionType[] Types =
+        (ResourceExpeditionType[])System.Enum.GetValues(typeof(ResourceExpeditionType));
+
     private GameObject panel;
+    private RectTransform content;
     private TMP_Text title;
+    private TMP_Text bonusInfo;
     private TMP_Text status;
-    private readonly Button[] buttons = new Button[3];
-    private readonly TMP_Text[] buttonLabels = new TMP_Text[3];
+    private readonly Button[] buttons = new Button[Types.Length];
+    private readonly TMP_Text[] buttonLabels = new TMP_Text[Types.Length];
     private TMP_Text closeLabel;
     private Button claimButton;
     private TMP_Text claimLabel;
@@ -67,10 +79,7 @@ public class ResourceExpeditionUI : MonoBehaviour
 
         // Flujo idéntico a la Torre (TowerPanelUI.OnFloorPressed): este panel siempre se abre
         // primero para elegir destino, y OnDestinationPressed es el único sitio que visita la
-        // confirmación de escuadra (una sola vez). Antes, con la escuadra vacía, Open() saltaba
-        // directo a squadUI.OpenForConfirm(false, null) — un callback nulo que no arrancaba nada
-        // y obligaba al jugador a volver a pulsar "Expedición" para llegar de verdad a los
-        // destinos, la doble apertura que describe el roadmap.
+        // confirmación de escuadra (una sola vez).
         UIManager.OpenExclusive(panel);
         Refresh();
     }
@@ -110,6 +119,11 @@ public class ResourceExpeditionUI : MonoBehaviour
         closeLabel.text = LocalizationManager.Get("UI_CLOSE");
         claimLabel.text = LocalizationManager.Get("UI_CLAIM_REWARD");
 
+        var bonusType = ResourceExpeditionManager.TodaysBonusType();
+        float bonusMult = expeditions != null ? expeditions.DailyBonusMultiplier : 1f;
+        bonusInfo.text = string.Format(LocalizationManager.Get("UI_EXPEDITION_TODAY_BONUS"),
+            ResourceExpeditionManager.DisplayName(bonusType), bonusMult);
+
         bool running = expeditions != null && expeditions.IsRunning;
         bool ready = expeditions != null && expeditions.ReadyToClaim;
 
@@ -129,37 +143,21 @@ public class ResourceExpeditionUI : MonoBehaviour
         // Con recompensa lista, el hueco de destinos se convierte en el botón de reclamo.
         claimButton.gameObject.SetActive(ready);
 
-        for (int i = 0; i < buttons.Length; i++)
+        for (int i = 0; i < Types.Length; i++)
         {
-            var type = (ResourceExpeditionType)i;
-            buttonLabels[i].text = DestinationName(type) + "   ->   " + RewardName(type);
+            var type = Types[i];
+            bool isBonus = type == bonusType;
+
+            buttonLabels[i].text = DestinationName(type) + "   ->   " + RewardName(type)
+                + (isBonus ? LocalizationManager.Get("UI_EXPEDITION_BONUS_TAG") : string.Empty);
             buttons[i].gameObject.SetActive(!ready);
             buttons[i].interactable = notBusy;
-            buttons[i].targetGraphic.color = notBusy ? readyColor : busyColor;
+            buttons[i].targetGraphic.color = !notBusy ? busyColor : (isBonus ? bonusColor : readyColor);
         }
     }
 
-    private static string DestinationName(ResourceExpeditionType type)
-    {
-        switch (type)
-        {
-            case ResourceExpeditionType.Forest: return LocalizationManager.Get("UI_FOREST");
-            case ResourceExpeditionType.Mine: return LocalizationManager.Get("UI_MINE");
-            case ResourceExpeditionType.Hunt: return LocalizationManager.Get("UI_HUNT");
-        }
-        return type.ToString();
-    }
-
-    private static string RewardName(ResourceExpeditionType type)
-    {
-        switch (type)
-        {
-            case ResourceExpeditionType.Forest: return LocalizationManager.Get("UI_WOOD");
-            case ResourceExpeditionType.Mine: return LocalizationManager.Get("UI_IRON");
-            case ResourceExpeditionType.Hunt: return LocalizationManager.Get("UI_FOOD");
-        }
-        return string.Empty;
-    }
+    private static string DestinationName(ResourceExpeditionType type) => ResourceExpeditionManager.DisplayName(type);
+    private static string RewardName(ResourceExpeditionType type) => ResourceExpeditionManager.RewardName(type);
 
     private void Build()
     {
@@ -172,29 +170,63 @@ public class ResourceExpeditionUI : MonoBehaviour
         prt.anchorMin = new Vector2(0.5f, 0.5f);
         prt.anchorMax = new Vector2(0.5f, 0.5f);
         prt.pivot = new Vector2(0.5f, 0.5f);
-        prt.sizeDelta = new Vector2(880f, 540f);
+        prt.sizeDelta = UITheme.ModalSize;
         prt.anchoredPosition = Vector2.zero;
         panel.GetComponent<Image>().color = new Color(0.10f, 0.12f, 0.14f, 0.98f);
 
         title = NewLabel(panel.transform, "Title", 44f);
-        Place(title.rectTransform, 1f, new Vector2(0f, 70f), new Vector2(0f, 0f));
+        Place(title.rectTransform, 1f, new Vector2(0f, 60f), new Vector2(0f, 0f));
 
-        status = NewLabel(panel.transform, "Status", 28f);
-        Place(status.rectTransform, 1f, new Vector2(0f, 44f), new Vector2(0f, -72f));
+        bonusInfo = NewLabel(panel.transform, "BonusInfo", 24f);
+        Place(bonusInfo.rectTransform, 1f, new Vector2(0f, 34f), new Vector2(0f, -60f));
 
-        for (int i = 0; i < 3; i++)
+        status = NewLabel(panel.transform, "Status", 26f);
+        Place(status.rectTransform, 1f, new Vector2(0f, 36f), new Vector2(0f, -96f));
+
+        var viewport = new GameObject("Viewport", typeof(RectTransform), typeof(Image),
+                                      typeof(Mask), typeof(ScrollRect));
+        viewport.transform.SetParent(panel.transform, false);
+        var vrt = viewport.GetComponent<RectTransform>();
+        vrt.anchorMin = new Vector2(0f, 0f);
+        vrt.anchorMax = new Vector2(1f, 1f);
+        vrt.offsetMin = new Vector2(12f, 96f);
+        vrt.offsetMax = new Vector2(-12f, -134f);
+        viewport.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.25f);
+        viewport.GetComponent<Mask>().showMaskGraphic = true;
+
+        var contentGo = new GameObject("Content", typeof(RectTransform));
+        contentGo.transform.SetParent(viewport.transform, false);
+        content = contentGo.GetComponent<RectTransform>();
+        content.anchorMin = new Vector2(0f, 1f);
+        content.anchorMax = new Vector2(1f, 1f);
+        content.pivot = new Vector2(0.5f, 1f);
+        content.anchoredPosition = Vector2.zero;
+        content.sizeDelta = new Vector2(0f, 100f);
+
+        var layout = contentGo.AddComponent<VerticalLayoutGroup>();
+        layout.spacing = 8f;
+        layout.padding = new RectOffset(8, 8, 8, 8);
+        layout.childControlHeight = false;
+        layout.childForceExpandHeight = false;
+        contentGo.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+        var scroll = viewport.GetComponent<ScrollRect>();
+        scroll.viewport = vrt;
+        scroll.content = content;
+        scroll.horizontal = false;
+
+        for (int i = 0; i < Types.Length; i++)
         {
-            var type = (ResourceExpeditionType)i;
+            var type = Types[i];
 
             var go = new GameObject("Btn_" + type, typeof(RectTransform), typeof(Image), typeof(Button));
-            go.transform.SetParent(panel.transform, false);
+            go.transform.SetParent(content, false);
 
             var rt = go.GetComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0.5f, 1f);
-            rt.anchorMax = new Vector2(0.5f, 1f);
+            rt.anchorMin = new Vector2(0f, 1f);
+            rt.anchorMax = new Vector2(1f, 1f);
             rt.pivot = new Vector2(0.5f, 1f);
-            rt.sizeDelta = new Vector2(760f, 90f);
-            rt.anchoredPosition = new Vector2(0f, -130f - i * 106f);
+            rt.sizeDelta = new Vector2(0f, rowHeight);
 
             go.GetComponent<Image>().color = readyColor;
 
@@ -220,8 +252,8 @@ public class ResourceExpeditionUI : MonoBehaviour
         clrt.anchorMin = new Vector2(0.5f, 1f);
         clrt.anchorMax = new Vector2(0.5f, 1f);
         clrt.pivot = new Vector2(0.5f, 1f);
-        clrt.sizeDelta = new Vector2(760f, 90f);
-        clrt.anchoredPosition = new Vector2(0f, -130f);
+        clrt.sizeDelta = new Vector2(760f, rowHeight);
+        clrt.anchoredPosition = new Vector2(0f, -104f);
         claim.GetComponent<Image>().color = new Color(0.55f, 0.42f, 0.15f);
 
         claimLabel = NewLabel(claim.transform, "Label", 30f);
@@ -243,8 +275,8 @@ public class ResourceExpeditionUI : MonoBehaviour
         crt.anchorMin = new Vector2(0.5f, 0f);
         crt.anchorMax = new Vector2(0.5f, 0f);
         crt.pivot = new Vector2(0.5f, 0f);
-        crt.sizeDelta = new Vector2(280f, 66f);
-        crt.anchoredPosition = new Vector2(0f, 16f);
+        crt.sizeDelta = new Vector2(280f, UITheme.MinTouchTarget);
+        crt.anchoredPosition = new Vector2(0f, 12f);
         close.GetComponent<Image>().color = new Color(0.32f, 0.28f, 0.36f);
 
         closeLabel = NewLabel(close.transform, "Label", 26f);

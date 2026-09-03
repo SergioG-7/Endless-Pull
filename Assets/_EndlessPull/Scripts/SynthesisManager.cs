@@ -69,6 +69,14 @@ public class SynthesisManager : MonoBehaviour
             return false;
         }
 
+        // Un héroe desplegado en combate no se puede sacrificar a medio piso (roadmap: saneamiento
+        // de punteros antes de destruir, mejor evitar el hueco en la escuadra que limpiarlo después).
+        if (fodder.IsDeployed)
+        {
+            Report(string.Format(LocalizationManager.Get("UI_SYNTH_FODDER_DEPLOYED"), Describe(fodder)));
+            return false;
+        }
+
         var progress = targetHero.GetComponent<HeroProgress>();
         if (progress == null)
         {
@@ -79,6 +87,10 @@ public class SynthesisManager : MonoBehaviour
         int exp = ExpFrom(fodder);
         string fodderName = Describe(fodder);
         string targetName = Describe(targetHero);
+
+        // Desvincular de escuadra/expedición/edificio ANTES de destruir: no depender del prune
+        // periódico de cada manager, que solo corre en su propio Update() del frame siguiente.
+        UnassignFromEverywhere(fodder);
 
         // Se desactiva antes de destruir para que FindObjectsByType deje de verlo ya en este frame.
         fodder.gameObject.SetActive(false);
@@ -91,6 +103,20 @@ public class SynthesisManager : MonoBehaviour
             fodderName, exp, targetName, progress.Level));
         SaveManager.RequestSave();
         return true;
+    }
+
+    // Saca al sacrificado de escuadra de torre, expedición y puesto de trabajo (si tenía alguno).
+    private static void UnassignFromEverywhere(HeroController hero)
+    {
+        var party = UnityEngine.Object.FindFirstObjectByType<PartyManager>();
+        if (party != null)
+        {
+            if (party.IsInParty(hero)) party.Toggle(hero);
+            if (party.IsInExpedition(hero)) party.ToggleExpedition(hero);
+        }
+
+        foreach (var building in BaseBuilding.All)
+            if (building != null && building.IsWorker(hero)) building.ToggleWorker(hero);
     }
 
     // EXP proporcional a la rareza y al nivel del sacrificado.

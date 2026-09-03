@@ -238,6 +238,10 @@ public class HeroController : MonoBehaviour, IHealthOwner
     private CombatState combatState = CombatState.IdleSearching;
     public CombatState CombatSubState => combatState;
 
+    // Cuando está armado, IdleSearching aguanta el sitio en vez de avanzar a ciegas hacia +X.
+    private bool holdPosition;
+    public void SetHoldPosition(bool value) => holdPosition = value;
+
     // Candado del roster: un héroe bloqueado no se puede sacrificar por accidente.
     private bool isLocked;
 
@@ -342,7 +346,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
     public float DetectionReach => EffectiveDetectionRange;
     public bool IsInDefensiveStance => defensiveTimer > 0f;
 
-    public int StarRank => data != null ? Mathf.Min(5, data.starRank + bonusStarRank) : 0;
+    public int StarRank => data != null ? Mathf.Min(7, data.starRank + bonusStarRank) : 0;
     public float AscensionMultiplier => ascensionMultiplier;
     public int BonusStarRank => bonusStarRank;
 
@@ -1226,8 +1230,10 @@ public void DeployViaGateway(Vector2 destination)
         {
             // IdleSearching: sin objetivo visible, avanza hacia el lado enemigo (+X). PROHIBIDO
             // calcular ruta a la base — ScanForEnemies reengancha en cuanto detecte uno nuevo.
+            // holdPosition (armado por WaveManager en misiones con huecos entre oleadas) frena
+            // ese avance a ciegas para no sacar a la escuadra de la línea.
             combatState = CombatState.IdleSearching;
-            MoveTowards(transform.position + Vector3.right * detectionRange);
+            if (!holdPosition) MoveTowards(transform.position + Vector3.right * detectionRange);
             return;
         }
 

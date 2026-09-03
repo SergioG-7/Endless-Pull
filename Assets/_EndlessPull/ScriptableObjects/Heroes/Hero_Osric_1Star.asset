@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Osric_1Star
+  m_EditorClassIdentifier: EndlessPull.Runtime::HeroData
+  heroName: Osric
+  title: Hachero del Bosque Viejo
+  origin: Bosque de Alder
+  bio: "Corta le\xF1a para la torre desde ni\xF1o; su hacha pesa m\xE1s que su miedo."
+  bioEn: He has been chopping wood for the tower since he was a boy; his axe weighs
+    more than his fear.
+  bioJa: "\u5B50\u4F9B\u306E\u9803\u304B\u3089\u5854\u306E\u305F\u3081\u306B\u85AA\u3092\u5272\u3063\u3066\u304D\u305F\u3002\u5F7C\u306E\u65A7\u306F\u6050\u6016\u3088\u308A\u3082\u91CD\u3044\u3002"
+  bodySprite: {fileID: 8952759626276518981, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  walkFrames:
+  - {fileID: -4717246899268923253, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: -2717963328277946979, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: -933098180165979267, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: 1560836559416362677, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: 4641063888276243819, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: 6920465072545763800, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: -5819908907261922747, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: -243034609730438358, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: 847003768395402506, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: 3018202006086065125, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: -7228224224988547871, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: 5980732079368075171, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: -3478183912590883467, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: 8164433555166524959, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: 4578782884616962862, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: -5013967137047250994, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: -7279764688588579587, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: -6237422764848492556, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: 8952759626276518981, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: 8441149734792044150, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: -2565872247105679163, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: 1145426050737115637, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: -4419757890103027750, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: -3268426004386274497, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: 6425338309962258472, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: -4064043482320051851, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: -6901087021068482146, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: -4694884535197801093, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: -8537295731370484211, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: 6903470257360695702, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: -8514373102251818763, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: -5434101799975077823, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: -3822010904174794711, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: 2106490995816632455, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: 2221296588087843434, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  - {fileID: 7298749303119720465, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
+  starRank: 1
+  maxHealth: 102
+  maxMP: 50
+  baseAttack: 17
+  baseDefense: 6
+  moveSpeed: 2.4

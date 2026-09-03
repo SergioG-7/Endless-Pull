@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_KaidrosVaelthorne_5Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Kaidros Vaelthorne
+  title: Portador de la Última Llama
+  origin: Mundo Quebrado de Ashvael
+  bio: "Kaidros llegó a la Torre por accidente, arrastrado desde un mundo que ya no existe. Carga la última llama de su gente como un juramento silencioso: mientras él respire, no se apagará del todo."
+  bioEn: "Kaidros arrived at the Tower by accident, pulled from a world that no longer exists. He carries his people's last flame like a silent vow: as long as he draws breath, it will not go fully out."
+  bioJa: "カイドロスは、もはや存在しない世界から引きずり出され、偶然この塔にたどり着いた。彼は同胞の最後の炎を、静かな誓いのように背負っている――自分が息をしている限り、その炎は完全には消えない。"
+  bodySprite: {fileID: -3307209735215797670, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  walkFrames:
+  - {fileID: -6427871795788775681, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: 6527614310204667141, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: 7647015891758132545, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: 7674909909932341537, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: -8645429180814510332, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: -6638321011323342068, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: 7841659971634266319, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: -5225806837171384256, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: -9085951158466332822, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: 7220263969923865022, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: -5970585328606221052, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: 731272618842507555, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: 442927124109484054, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: -4230115079649500155, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: -5854750395081502944, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: -1620187622459612013, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: 8760752344004626908, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: -7421275109097250737, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: -3307209735215797670, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: -8860627576854345558, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: 6470951729294427976, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: -6822364693855286658, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: 8811696890730546456, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: 1818734948023981436, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: -4791878478142977941, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: 8484728803816909719, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: 5276314370399930568, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: -3231491938779892294, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: -7222829158768128718, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: -7183583543765306296, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: -7012916431300692793, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: -179587863773999831, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: -4957084211700663676, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: -6859528656742192244, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: -3429687133327825228, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  - {fileID: -52333431474312740, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
+  starRank: 5
+  maxHealth: 600
+  maxMP: 50
+  baseAttack: 75
+  baseDefense: 28
+  moveSpeed: 2.9

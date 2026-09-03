@@ -22,14 +22,15 @@ public class HeroProgress : MonoBehaviour
     [Tooltip("Niveles que da cada estrella: el tope es estrellas x este valor.")]
     [SerializeField] private int levelsPerStar = 10;
 
-    [Tooltip("Gemas que cuesta ascender según la rareza actual: índice 0 = 1★→2★ ... índice 3 = 4★→5★.")]
-    [SerializeField] private int[] ascendGemCostByStar = { 100, 250, 500, 1000 };
+    [Tooltip("Gemas que cuesta ascender según la rareza actual: índice 0 = 1★→2★ ... índice 5 = 6★→7★.")]
+    [SerializeField] private int[] ascendGemCostByStar = { 100, 250, 500, 1000, 1800, 3000 };
 
-    // Tier de Piedra que exige cada salto, en el mismo orden: 1★→2★ Menor ... 4★→5★ Legendaria.
+    // Tier de Piedra que exige cada salto, en el mismo orden: 1★→2★ Menor ... 6★→7★ Celestial.
     private static readonly AscensionStoneTier[] AscendStoneTierByStar =
     {
         AscensionStoneTier.Menor, AscensionStoneTier.Media,
-        AscensionStoneTier.Mayor, AscensionStoneTier.Legendaria
+        AscensionStoneTier.Mayor, AscensionStoneTier.Legendaria,
+        AscensionStoneTier.Trascendente, AscensionStoneTier.Celestial
     };
 
     [Tooltip("Factor por el que se multiplican las bases del héroe al ascender.")]
@@ -82,10 +83,10 @@ public class HeroProgress : MonoBehaviour
         return AscendStoneTierByStar[index];
     }
 
-    // Solo se asciende a tope de nivel, por debajo de 5★ y con gemas y piedra del tier exacto en mano.
+    // Solo se asciende a tope de nivel, por debajo de 7★ y con gemas y piedra del tier exacto en mano.
     public bool CanAscend(EconomyManager economy, CraftingManager crafting)
         => IsMaxLevel
-           && hero != null && hero.StarRank < 5
+           && hero != null && hero.StarRank < 7
            && economy != null && economy.CanAfford(AscendGemCost)
            && crafting != null && crafting.HasStone(AscendStoneTier);
 
@@ -169,7 +170,7 @@ public class HeroProgress : MonoBehaviour
             return false;
         }
 
-        if (hero == null || hero.StarRank >= 5)
+        if (hero == null || hero.StarRank >= 7)
         {
             Debug.LogWarning($"[Ascensión] {name} ya está en la rareza máxima.", this);
             return false;

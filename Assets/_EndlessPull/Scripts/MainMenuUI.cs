@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 // Pantalla de título. Se monta a sí misma sobre el canvas, así no hay nada que cablear en escena.
@@ -26,6 +27,10 @@ public class MainMenuUI : MonoBehaviour
 
     [Tooltip("Color del idioma seleccionado.")]
     [SerializeField] private Color selectedColor = new Color(0.70f, 0.55f, 0.20f);
+
+    // Tras recargar la escena para una Nueva Partida no debe reabrirse el menú: se entra
+    // directo a la partida virgen. Static porque Awake() reconstruye esta instancia.
+    private static bool skipAutoOpenOnce;
 
     private GameObject root;
     private GameObject optionsPanel;
@@ -58,8 +63,18 @@ public class MainMenuUI : MonoBehaviour
     void OnDisable() => LocalizationManager.LanguageChanged -= RefreshTexts;
 
     // El menú manda desde el primer frame: el juego arranca congelado detrás.
+    // Excepción: tras recargar por Nueva Partida se entra directo, sin volver a mostrar el menú.
     void Start()
     {
+        if (skipAutoOpenOnce)
+        {
+            skipAutoOpenOnce = false;
+            root.SetActive(false);
+            SaveManager.SavingAllowed = true;
+            Time.timeScale = 1f;
+            return;
+        }
+
         Open();
     }
 
@@ -98,13 +113,15 @@ public class MainMenuUI : MonoBehaviour
         Close();
     }
 
-    // Nueva Partida: se borra el guardado y se juega la escena tal y como está autorizada.
+    // Nueva Partida: borra el guardado y recarga la escena para partir del estado virgen
+    // autorado (héroes, edificios y recursos iniciales), no del estado en memoria de la sesión.
     public void OnNewGamePressed()
     {
         if (saves != null) saves.DeleteSave();
 
-        Debug.Log("[Menú] Nueva partida: base limpia con los recursos iniciales de la escena.", this);
-        Close();
+        Debug.Log("[Menú] Nueva partida: recargando escena en estado virgen.", this);
+        skipAutoOpenOnce = true;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     public void OnOptionsPressed()

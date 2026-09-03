@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Ivo_2Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Ivo
+  title: Escudero de Armería
+  origin: Herrería del Gremio
+  bio: "Ivo pasa más horas afilando espadas ajenas que empuñando la suya propia, pero conoce el filo y el peso de cada arma del gremio mejor que quien la forjó. Algún día dejará de ser el que las prepara."
+  bioEn: "Ivo spends more hours sharpening other people's swords than swinging his own, but he knows the edge and balance of every weapon in the guild better than the smiths who forged them. One day he'll stop being the one who prepares them."
+  bioJa: "イーヴォは自分の剣を振るうより、他人の剣を研ぐ時間の方が長い。それでも組合のどの武器の刃と重さも、鍛えた鍛冶屋本人より詳しく知っている。いつか道具を用意する側から抜け出すつもりだ。"
+  bodySprite: {fileID: -887102185461072969, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  walkFrames:
+  - {fileID: 1680123149735308248, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: 905482836423736351, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: 6038190866150693301, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: 7698945119800453472, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: -2668423112119465617, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: 3933009495771052082, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: -578299954401503406, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: 7735500074960146125, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: 4444191836421384200, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: -4702714734455690849, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: -4661464216107809568, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: -717893252139229178, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: -5804185333710553434, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: 514896839499154417, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: 9128466049594836621, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: 4067636434070691564, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: -2485277663672932267, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: -4139177494784910665, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: -887102185461072969, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: -6701252830320267926, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: -2031028413746670408, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: 6424338091092050925, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: -271248011350194530, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: -8876282007417336936, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: 113184602718315315, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: -382224008914756239, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: -5784530629674388551, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: 5893543703921058628, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: 3203977326734967670, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: -3712572046123250377, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: -6458827023947356668, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: -3098658393191530385, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: -2886197259612934781, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: -2680081531578063428, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: -7071218508121139925, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  - {fileID: -4432896071516178784, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
+  starRank: 2
+  maxHealth: 148
+  maxMP: 50
+  baseAttack: 25
+  baseDefense: 7
+  moveSpeed: 2.55

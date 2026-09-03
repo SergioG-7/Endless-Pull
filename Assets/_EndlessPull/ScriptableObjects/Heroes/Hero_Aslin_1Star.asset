@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Aslin_1Star
+  m_EditorClassIdentifier: EndlessPull.Runtime::HeroData
+  heroName: Aslin
+  title: Desertora con Suerte
+  origin: Marca Quemada
+  bio: "Desert\xF3 de una guerra menor antes de que la matara; ahora vende su espada
+    a quien pague mejor."
+  bioEn: She deserted a minor war before it could kill her; now she sells her sword
+    to the highest bidder.
+  bioJa: "\u5C0F\u3055\u306A\u6226\u4E89\u3067\u547D\u3092\u843D\u3068\u3059\u524D\u306B\u8131\u8D70\u3057\u305F\u3002\u4ECA\u306F\u6700\u3082\u9AD8\u304F\u6255\u3046\u8005\u306B\u5263\u3092\u58F2\u308B\u3002"
+  bodySprite: {fileID: -61658325613052343, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  walkFrames:
+  - {fileID: 7058896693074660722, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: 6793664497766571849, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: 2088087271881163726, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: 29019523715486000, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: 3665987958203505978, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: 1924599575409959655, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: -8880786866442751405, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: 9134135404258823969, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: -5079202124888346798, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: -9144778308106006023, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: 7669359802364189730, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: 5795523717434142850, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: -2714342715655438389, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: -5318353340606647816, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: -7106382844050997131, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: 5988638131270865553, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: -1375146859935920339, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: 1666912002990641037, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: -61658325613052343, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: -8438733582973402690, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: -3688577839603662612, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: 3289499787962329473, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: -5768142381712026485, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: -6130589528515630522, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: 3682225415841217236, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: -7770910403322309483, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: 8198374322179521901, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: 469750753786838906, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: 3277230542773513528, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: 153961497844125113, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: -2349074873291966570, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: -2319328150139691246, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: 7013366843024981520, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: -3758940721428706251, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: -2869000633823754522, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  - {fileID: 4202246465370603449, guid: 983ab518f95274945a61e206260c5319, type: 3}
+  starRank: 1
+  maxHealth: 94
+  maxMP: 50
+  baseAttack: 19
+  baseDefense: 4
+  moveSpeed: 2.8

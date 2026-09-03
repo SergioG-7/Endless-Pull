@@ -18,14 +18,18 @@ public class BossHealthBarUI : MonoBehaviour
     [Tooltip("Tamaño de la barra de vida en sí.")]
     [SerializeField] private Vector2 barSize = new Vector2(560f, 28f);
 
-    [Tooltip("Posición del panel, anclado arriba y centrado. Por debajo del TopBar (que ocupa hasta y=-104) para no solaparse con los recursos ni el botón de menú.")]
-    [SerializeField] private Vector2 panelPosition = new Vector2(0f, -120f);
+    [Tooltip("Posición del panel, anclado arriba y centrado. Por debajo de Txt_Status (banner de piso/derrota/retirada, hasta y=-150) para no solaparse con él.")]
+    [SerializeField] private Vector2 panelPosition = new Vector2(0f, -180f);
+
+    [Tooltip("Segundos que se espera tras aparecer el jefe antes de mostrar la barra, para que dé tiempo a que la cámara llegue a la arena.")]
+    [SerializeField] private float showDelay = 2.6f;
 
     private RectTransform root;
     private Image fill;
     private TMP_Text nameLabel;
     private TMP_Text hpLabel;
     private EnemyController bound;
+    private float boundTimer;
 
     void Awake()
     {
@@ -46,7 +50,9 @@ public class BossHealthBarUI : MonoBehaviour
         var boss = waves.CurrentBoss;
         if (boss != bound) Rebind(boss);
 
-        bool show = boss != null;
+        if (boss != null) boundTimer += Time.deltaTime;
+
+        bool show = boss != null && boundTimer >= showDelay;
         if (root.gameObject.activeSelf != show) root.gameObject.SetActive(show);
     }
 
@@ -55,6 +61,7 @@ public class BossHealthBarUI : MonoBehaviour
         Unbind();
 
         bound = boss;
+        boundTimer = 0f;
         if (bound == null) return;
 
         bound.HealthChanged += OnHealthChanged;

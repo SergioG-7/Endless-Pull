@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Farin_1Star
+  m_EditorClassIdentifier: EndlessPull.Runtime::HeroData
+  heroName: Farin
+  title: Piedra de Molino
+  origin: Bosque de Alder
+  bio: Muele grano desde antes del amanecer, fuerte de espalda y de palabra corta.
+  bioEn: He grinds grain before dawn, strong of back and short of words.
+  bioJa: "\u591C\u660E\u3051\u524D\u304B\u3089\u7A40\u7269\u3092\u633D\u304F\u3002\u80CC\u306F\u5F37\u304F\u3001\u53E3\u6570\u306F\u5C11\u306A\u3044\u3002"
+  bodySprite: {fileID: 3215003506607705051, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  walkFrames:
+  - {fileID: -2327296265587317975, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: 6680077073992236369, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: -2394375072331709415, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: 5668160025743639643, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: -8804512518208184645, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: 7202671113642989438, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: 306014334558095986, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: 5269409140591525738, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: 470641337242649687, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: 8489362024374702564, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: 2430305748401480874, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: 7911388630902149388, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: -2142038047136916543, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: 7257246741524749569, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: -284766776256357334, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: 2011764260279779099, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: 500332636172785123, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: -178280992508264914, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: 3215003506607705051, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: 7409790666884444927, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: -8166991165439788932, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: 6907774223902018751, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: 5333187670321570369, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: -4193087540820572151, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: -7454004728583944091, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: 537065473712899928, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: -7910140727278352003, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: -3931770615864150119, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: 1951967857195358719, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: 4676034664833490379, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: 5472782979560567823, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: 4593521753581380705, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: -6601777339732392003, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: -5445486738900574162, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: -3930682453420944093, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  - {fileID: 4045583992042709993, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
+  starRank: 1
+  maxHealth: 104
+  maxMP: 50
+  baseAttack: 16
+  baseDefense: 6
+  moveSpeed: 2.3

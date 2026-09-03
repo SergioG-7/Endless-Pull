@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Hero_Iselia_4Star
   m_EditorClassIdentifier: Assembly-CSharp::HeroData
   heroName: Iselia
-  title: Novato de la Vanguardia
+  title: Defensora del Pueblo
   origin: Reino Fronterizo
   bio: "Iselia dirigió la defensa de un pueblo fronterizo contra un asalto que nadie esperaba que sobreviviera, y lo consiguió sin perder una sola casa. En los cuarteles todavía brindan por ella."
   bioEn: "Iselia led the defense of a border town against a raid nobody expected it to survive, and pulled it off without losing a single house. Soldiers still raise a toast to her in the barracks."

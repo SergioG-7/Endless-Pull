@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Cael_1Star
+  m_EditorClassIdentifier: EndlessPull.Runtime::HeroData
+  heroName: Cael
+  title: Pico y Pala
+  origin: Reino Fronterizo
+  bio: Excava pozos para aldeas sin agua; terco como la roca que rompe.
+  bioEn: He digs wells for villages without water; stubborn as the rock he breaks.
+  bioJa: "\u6C34\u306E\u306A\u3044\u6751\u306E\u305F\u3081\u306B\u4E95\u6238\u3092\u6398\u308B\u3002\u7815\u304F\u5CA9\u3068\u540C\u3058\u304F\u3089\u3044\u9811\u56FA\u3060\u3002"
+  bodySprite: {fileID: -3842410386321376848, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  walkFrames:
+  - {fileID: -5295072444465940225, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: 2982904374911454707, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: 7507767646061771272, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: 4528189849055799709, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: 4238105241139601284, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: -7313423330240129085, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: -2561104445231579148, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: -1540847262049132416, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: 8172077767777493215, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: 8842068940372324257, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: -4073070880624645607, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: -8273383447259984441, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: -9065914012688033571, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: 2463099127478518918, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: -2130719038226800773, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: -8410890533186294996, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: -4751647006441044443, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: 1677946246515969430, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: -3842410386321376848, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: 2367582448929368941, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: 7489184030610529109, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: 8045922189659791195, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: 8885753398550655462, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: -7296317788489398729, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: 8217420919803156367, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: -4551167884695518002, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: -6719610446031585509, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: -8461905698981292808, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: 7780598736123446768, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: -3613556034279661608, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: 2457475425051110963, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: -252563560270417040, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: 2854394488324286175, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: -1281168700111183827, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: 3968589813738908624, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  - {fileID: 5759442978657410805, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
+  starRank: 1
+  maxHealth: 104
+  maxMP: 50
+  baseAttack: 16
+  baseDefense: 6
+  moveSpeed: 2.3

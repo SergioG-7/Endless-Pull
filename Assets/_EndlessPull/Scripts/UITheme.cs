@@ -59,6 +59,8 @@ public static class UITheme
             case 3: return Hex("3B82F6");
             case 4: return Hex("A855F7");
             case 5: return Hex("FFD700");
+            case 6: return Hex("FF5B3D");
+            case 7: return Hex("7DF9FF");
         }
         return Hex("B2B6CA");
     }

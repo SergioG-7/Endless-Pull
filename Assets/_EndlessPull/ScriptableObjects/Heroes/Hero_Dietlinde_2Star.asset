@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Dietlinde_2Star
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: Dietlinde
+  title: Miliciana del Molino Alto
+  origin: Molino Alto
+  bio: "Dietlinde dejó el molino de su familia para alistarse en la milicia el mismo día que los bandidos quemaron el granero del vecino. Carga el hacha de leñador de su padre como si fuera un arma de guerra."
+  bioEn: "Dietlinde left her family's mill to join the militia the same day bandits burned the neighbor's barn. She carries her father's woodcutting axe like it was forged for war."
+  bioJa: "ディートリンデは隣人の納屋が盗賊に焼かれたその日、家業の水車小屋を離れて民兵に加わった。父の木こり斧を、まるで戦のために鍛えられた武器のように携えている。"
+  bodySprite: {fileID: -4072329463152777348, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  walkFrames:
+  - {fileID: -3584330500966727569, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: 1742292842017312246, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: -9042230787879329488, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: -1345575949659348577, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: 2779575107799511568, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: 6199948157729741139, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: 4463919404104229762, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: 2037512399916389177, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: 7523649489567878523, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: -86410387984444615, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: -8970782208418305389, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: 6729759967573450102, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: -300647815127593637, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: 783745386437315806, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: -1436111437761474432, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: 8647162140385562890, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: 2453034954219204422, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: 1966625333773226552, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: -4072329463152777348, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: 2586021175713835813, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: 6327167409155578369, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: 7419293702321339315, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: 1226874291104906054, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: -1721260354360413651, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: 3265886784611585372, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: 5359060161994612492, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: -7993249052147579536, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: -5726979929554966493, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: 6473626522232592562, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: -8302009939227377930, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: -6342530244154230471, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: -6906341740325105916, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: -1262729015102754320, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: 3053630289307944967, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: -2945289963415947356, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  - {fileID: -8681624640970761725, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
+  starRank: 2
+  maxHealth: 165
+  maxMP: 50
+  baseAttack: 26
+  baseDefense: 8
+  moveSpeed: 2.3

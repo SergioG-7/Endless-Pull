@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Hero_Xander_3Star
   m_EditorClassIdentifier: Assembly-CSharp::HeroData
   heroName: Xander
-  title: Novato de la Vanguardia
+  title: Guardián de las Caravanas
   origin: Reino Fronterizo
   bio: "Xander lleva escoltando caravanas fronterizas más tiempo del que ha durado ninguno de sus tres últimos patronos. Sobrevive donde otros solo contratan."
   bioEn: "Xander has been escorting frontier caravans longer than any of his last three employers lasted. He survives where others just hire."

@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3df8cd4782577a84fa7afa24c51b6e8f, type: 3}
+  m_Name: Hero_Ysolde_1Star
+  m_EditorClassIdentifier: EndlessPull.Runtime::HeroData
+  heroName: Ysolde
+  title: Cuenco de Barro
+  origin: Reino Fronterizo
+  bio: Moldea vasijas para toda la aldea; dicen que sus manos calman a los asustados.
+  bioEn: She shapes pottery for the whole village; they say her hands calm the frightened.
+  bioJa: "\u6751\u4E2D\u306E\u9676\u5668\u3092\u4F5C\u308B\u3002\u305D\u306E\u624B\u306F\u6050\u308C\u308B\u8005\u3092\u843D\u3061\u7740\u304B\u305B\u308B\u3068\u8A00\u308F\u308C\u3066\u3044\u308B\u3002"
+  bodySprite: {fileID: -2411272614709255442, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  walkFrames:
+  - {fileID: -484094655651941106, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: 6469033529885805584, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: 7676038526511835056, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: -3787230109824607529, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: -5078286632017512020, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: -8339297811738513565, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: -103439106431501246, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: 5567418522699802765, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: 4149437556634649390, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: 7615112266240141724, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: 4709942177692714570, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: 3788244646218389634, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: 588654265544535408, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: -6100737542950800831, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: 8750597640273308801, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: -7875459053164138006, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: -1490992816540004799, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: 5422313418128660414, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: -2411272614709255442, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: 212855721481862758, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: 111563529115119942, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: 8861258636115743379, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: -4154352969573432592, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: 8805776189101879639, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: -6446635101049077328, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: 5512666208389126415, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: 8612559892334044809, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: 1240383795869973882, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: -1707379693631184050, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: 537661447685805545, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: 3567978466996362980, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: 4548653057534344007, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: 2883895135710704942, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: -2310352091695178682, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: 1264094212259808123, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  - {fileID: 5985081553005525798, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
+  starRank: 1
+  maxHealth: 96
+  maxMP: 50
+  baseAttack: 13
+  baseDefense: 5
+  moveSpeed: 2.5
