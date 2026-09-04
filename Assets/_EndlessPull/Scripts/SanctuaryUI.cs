@@ -185,11 +185,12 @@ public class SanctuaryUI : MonoBehaviour
     {
         if (content == null) return;
 
-        var todos = UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None);
+        var todos = UnityEngine.Object.FindObjectsByType<HeroController>(
+            FindObjectsInactive.Include, FindObjectsSortMode.None);
 
         scratch.Clear();
         foreach (var hero in todos)
-            if (hero != null && hero.Data != null) scratch.Add(hero);
+            if (hero != null && hero.Data != null && !hero.Discarded) scratch.Add(hero);
 
         scratch.Sort(CompareHeroes);
 

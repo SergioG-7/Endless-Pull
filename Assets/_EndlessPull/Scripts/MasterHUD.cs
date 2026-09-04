@@ -204,7 +204,8 @@ void Start()
         if (starCountLabel == null) return;
 
         var counts = new int[6];
-        foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None))
+        foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(
+            FindObjectsInactive.Include, FindObjectsSortMode.None))
             if (hero != null && hero.StarRank >= 1 && hero.StarRank <= 5) counts[hero.StarRank]++;
 
         var sb = new System.Text.StringBuilder();

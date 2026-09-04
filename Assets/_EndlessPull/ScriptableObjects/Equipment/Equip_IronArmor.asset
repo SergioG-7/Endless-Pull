@@ -15,6 +15,7 @@ MonoBehaviour:
   equipName: Armadura de Hierro
   nameKey: EQUIP_IRON_ARMOR
   slotType: 1
+  tier: 2
   weaponType: 5
   bonusATK: 0
   bonusDEF: 8

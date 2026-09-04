@@ -280,11 +280,12 @@ public class RosterUI : MonoBehaviour
     {
         if (content == null) return;
 
-        var todos = UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None);
+        var todos = UnityEngine.Object.FindObjectsByType<HeroController>(
+            FindObjectsInactive.Include, FindObjectsSortMode.None);
 
         scratch.Clear();
         foreach (var hero in todos)
-            if (hero != null && hero.Data != null && PassesFilter(hero)) scratch.Add(hero);
+            if (hero != null && hero.Data != null && !hero.Discarded && PassesFilter(hero)) scratch.Add(hero);
 
         // FindObjectsByType no garantiza orden y las filas no deben bailar entre refrescos.
         scratch.Sort(CompareHeroes);

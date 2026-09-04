@@ -219,10 +219,12 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
     // Pasivas y equipo son por instancia; el HeroData compartido no se toca nunca.
     private readonly List<PassiveSkill> passives = new List<PassiveSkill>();
-    private EquipmentData weapon;
-    private EquipmentData shield;
-    private EquipmentData armor;
-    private EquipmentData accessory;
+    // Instancias, no el asset: el desgaste, el nivel de mejora y el afijo forjado son de
+    // ESTA copia de la pieza, y el EquipmentData lo comparten todas las copias del juego.
+    private EquipmentInstance weapon;
+    private EquipmentInstance shield;
+    private EquipmentInstance armor;
+    private EquipmentInstance accessory;
 
     // Identidad de esta unidad concreta; sobrevive al guardado y no depende del orden del array.
     private string heroInstanceId;
@@ -267,7 +269,8 @@ public class HeroController : MonoBehaviour, IHealthOwner
     private HeroSubclass subclass = HeroSubclass.None;
 
     // Durabilidad por instancia: el EquipmentData es compartido y no se puede tocar.
-    private readonly Dictionary<EquipmentSlot, int> durability = new Dictionary<EquipmentSlot, int>();
+    // El desgaste y el nivel de mejora viajan con la pieza (EquipmentInstance), no con el
+    // hueco: así una pieza guardada en el almacén conserva lo suyo al volver a equiparse.
 
     // Bonus de sinergia por compartir origen con la escuadra, en tanto por uno.
     private float originSynergy;
@@ -335,10 +338,10 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
     public WeaponMastery Mastery => mastery;
     public IReadOnlyList<PassiveSkill> Passives => passives;
-    public EquipmentData Weapon => weapon;
-    public EquipmentData Shield => shield;
-    public EquipmentData Armor => armor;
-    public EquipmentData Accessory => accessory;
+    public EquipmentInstance Weapon => weapon;
+    public EquipmentInstance Shield => shield;
+    public EquipmentInstance Armor => armor;
+    public EquipmentInstance Accessory => accessory;
 
     public string HeroInstanceId => heroInstanceId;
     public bool IsLocked => isLocked;
@@ -374,7 +377,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
     public float AffinityAtkBonus => affinity >= affinityAtkThreshold ? affinityAtkBonus : 0f;
     public float AffinityExpBonus => affinity >= 100f ? affinityExpBonus : 0f;
 
-    public WeaponType EquippedWeaponType => weapon != null ? weapon.weaponType : WeaponType.None;
+    public WeaponType EquippedWeaponType => weapon != null ? weapon.WeaponType : WeaponType.None;
 
     public HeroSubclass Subclass => subclass;
     public string SubclassName => HeroSubclasses.DisplayName(subclass);
@@ -423,13 +426,14 @@ public class HeroController : MonoBehaviour, IHealthOwner
     public int EquipBonusHP => BonusOf(EquipmentSlot.Weapon, 2) + BonusOf(EquipmentSlot.Shield, 2)
                              + BonusOf(EquipmentSlot.Armor, 2) + BonusOf(EquipmentSlot.Accessory, 2);
 
-    // 0 = ataque, 1 = defensa, 2 = vida; una sola tabla evita repetir el chequeo de rotura.
+    // 0 = ataque, 1 = defensa, 2 = vida. La instancia ya aplica el nivel de mejora y descuenta
+    // la pieza rota, así que aquí solo queda elegir la cifra.
     private int BonusOf(EquipmentSlot slot, int kind)
     {
         var item = GetEquipped(slot);
-        if (item == null || IsBroken(slot)) return 0;
+        if (item == null) return 0;
 
-        return kind == 0 ? item.bonusATK : kind == 1 ? item.bonusDEF : item.bonusHP;
+        return kind == 0 ? item.BonusATK : kind == 1 ? item.BonusDEF : item.BonusHP;
     }
 
     // Suma el afijo entre las piezas sanas; una rota no aporta nada, como sus cifras.
@@ -441,18 +445,20 @@ public class HeroController : MonoBehaviour, IHealthOwner
         foreach (EquipmentSlot slot in System.Enum.GetValues(typeof(EquipmentSlot)))
         {
             var item = GetEquipped(slot);
-            if (item == null || IsBroken(slot) || item.passiveTrait != affix) continue;
+            if (item == null) continue;
 
-            total += item.passiveValue;
+            total += item.AffixValue(affix);
         }
 
         return total;
     }
 
-    // Los afijos van en porcentaje: aquí se pasan a tanto por uno una sola vez. La pericia de
-    // arma suma su propio bonus de esquiva (rango F=0 ... S=tope), sin depender de la pasiva.
+    // Cada fuente aporta su parte y se suman; quien no tiene ninguna se queda en cero. El grueso
+    // es la pasiva innata: el afijo y la pericia de arma (rango F=0 ... S=tope) suman encima.
+    // Los afijos van en porcentaje, así que aquí se pasan a tanto por uno una sola vez.
     public float EffectiveEvasionChance
-        => Mathf.Clamp01(evasionChance + AffixTotal(EquipmentAffix.EvasionBoost) * 0.01f
+        => Mathf.Clamp01((HasPassive(PassiveSkill.Evasion) ? evasionChance : 0f)
+                          + AffixTotal(EquipmentAffix.EvasionBoost) * 0.01f
                           + mastery.EvasionBonus(EquippedWeaponType));
 
     public float ArmorPierce
@@ -511,14 +517,35 @@ public class HeroController : MonoBehaviour, IHealthOwner
     }
 
     public int DurabilityOf(EquipmentSlot slot)
-        => durability.TryGetValue(slot, out int value) ? value : 0;
+    {
+        var item = GetEquipped(slot);
+        return item != null ? item.durability : 0;
+    }
 
     public bool IsBroken(EquipmentSlot slot)
-        => GetEquipped(slot) != null && DurabilityOf(slot) <= 0;
+    {
+        var item = GetEquipped(slot);
+        return item != null && item.IsBroken;
+    }
 
-    // La usa el SaveManager al restaurar y Equip al colocar una pieza nueva.
     public void SetDurability(EquipmentSlot slot, int value)
-        => durability[slot] = Mathf.Max(0, value);
+    {
+        var item = GetEquipped(slot);
+        if (item != null) item.durability = Mathf.Max(0, value);
+    }
+
+    public int GearLevelOf(EquipmentSlot slot)
+    {
+        var item = GetEquipped(slot);
+        return item != null ? item.gearLevel : 0;
+    }
+
+    // La usa el Taller al mejorar una pieza concreta.
+    public void SetGearLevel(EquipmentSlot slot, int value)
+    {
+        var item = GetEquipped(slot);
+        if (item != null) item.gearLevel = Mathf.Max(0, value);
+    }
 
     // Cada expedición pasa factura a todo lo que lleve puesto.
     public void WearEquipment(int amount)
@@ -533,7 +560,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
             SetDurability(slot, antes - amount);
             if (DurabilityOf(slot) <= 0)
-                Debug.LogWarning($"[Desgaste] {data.heroName}: {item.equipName} se ha roto.", this);
+                Debug.LogWarning($"[Desgaste] {data.heroName}: {item.LocalizedName()} se ha roto.", this);
         }
 
         ClampHealthToMax();
@@ -543,9 +570,9 @@ public class HeroController : MonoBehaviour, IHealthOwner
     public bool RepairSlot(EquipmentSlot slot)
     {
         var item = GetEquipped(slot);
-        if (item == null || DurabilityOf(slot) >= item.maxDurability) return false;
+        if (item == null || item.durability >= item.MaxDurability) return false;
 
-        SetDurability(slot, item.maxDurability);
+        item.durability = item.MaxDurability;
         ClampHealthToMax();
         return true;
     }
@@ -775,6 +802,9 @@ public void DeployViaGateway(Vector2 destination)
         yield return TravelRoutine(destination, gatewayTravelSeconds);
     }
 
+    // La usa la carga de partida: sin esto los héroes reaparecían todos encima del altar.
+    public void ScatterInBaseArea() => TeleportToBaseArea();
+
     // La arena está a decenas de unidades: volver andando serían medio minuto de paseo.
     private void TeleportToBaseArea()
     {
@@ -909,7 +939,14 @@ public void DeployViaGateway(Vector2 destination)
             if (!passives.Contains(p)) passives.Add(p);
     }
 
-    public EquipmentData GetEquipped(EquipmentSlot slot)
+    // La marca el SaveManager en los héroes que va a destruir al recargar la partida. Destroy
+    // es diferido: hasta el final del frame las búsquedas con FindObjectsInactive.Include los
+    // siguen devolviendo, y sin esta marca contarían como vivos y bloquearían invocarlos.
+    public bool Discarded { get; private set; }
+
+    public void MarkDiscarded() => Discarded = true;
+
+    public EquipmentInstance GetEquipped(EquipmentSlot slot)
     {
         switch (slot)
         {
@@ -921,22 +958,25 @@ public void DeployViaGateway(Vector2 destination)
         return null;
     }
 
-    // Coloca la pieza en su hueco y devuelve la que estuviera puesta.
-    public EquipmentData Equip(EquipmentData item)
+    // Coloca la pieza en su hueco y devuelve la que estuviera puesta. El desgaste y el nivel
+    // viajan dentro de la propia pieza, así que aquí ya no hay nada que reponer ni resetear.
+    public EquipmentInstance Equip(EquipmentInstance item)
     {
-        if (item == null) return null;
+        if (item == null || !item.IsValid) return null;
 
-        var replaced = GetEquipped(item.slotType);
-        SetSlot(item.slotType, item);
-
-        // Una pieza recién colocada entra entera; el desgaste guardado es por instancia.
-        if (DurabilityOf(item.slotType) <= 0) SetDurability(item.slotType, item.maxDurability);
+        var replaced = GetEquipped(item.SlotType);
+        SetSlot(item.SlotType, item);
 
         ClampHealthToMax();
         return replaced;
     }
 
-    public EquipmentData Unequip(EquipmentSlot slot)
+    // Atajo para quien todavía trabaja con el asset suelto (gacha, arma inicial): envuelve la
+    // pieza en una instancia nueva y entera.
+    public EquipmentInstance Equip(EquipmentData item)
+        => item == null ? null : Equip(new EquipmentInstance(item));
+
+    public EquipmentInstance Unequip(EquipmentSlot slot)
     {
         var removed = GetEquipped(slot);
         if (removed == null) return null;
@@ -946,7 +986,7 @@ public void DeployViaGateway(Vector2 destination)
         return removed;
     }
 
-    private void SetSlot(EquipmentSlot slot, EquipmentData item)
+    private void SetSlot(EquipmentSlot slot, EquipmentInstance item)
     {
         switch (slot)
         {
@@ -1677,12 +1717,13 @@ public void DeployViaGateway(Vector2 destination)
         if (UnityEngine.Random.value < chance)
         {
             var building = PickRandomBuilding();
-            if (building != null)
+
+            // Cada héroe reserva su propio punto de llegada alrededor del edificio; si no
+            // quedaba hueco de verdad se pasea sin rumbo, en vez de sumarse al corrillo.
+            if (building != null && building.TryClaimSlot(this, out Vector2 hueco))
             {
                 destinationBuilding = building;
-
-                // Cada héroe reserva su propio punto de llegada alrededor del edificio.
-                wanderTarget = building.ClaimSlot(this);
+                wanderTarget = hueco;
                 return;
             }
         }
@@ -1723,21 +1764,28 @@ public void DeployViaGateway(Vector2 destination)
         var all = BaseBuilding.All;
         if (all == null || all.Count == 0) return null;
 
+        // El sorteo tiene que recorrer el MISMO subconjunto con el que se sumaron los pesos:
+        // acumulando sobre la lista entera se elegían edificios llenos o aún bloqueados, y por
+        // eso se amontonaba media base encima del campo de entrenamiento.
         float total = 0f;
         foreach (var b in all)
-            if (b.IsUnlocked && b.HasRoom) total += HeroTraits.BuildingWeight(trait, b.Type);
+            if (b != null && b.IsUnlocked && b.HasRoom) total += HeroTraits.BuildingWeight(trait, b.Type);
         if (total <= 0f) return null;
 
         float roll = UnityEngine.Random.Range(0f, total);
         float acc = 0f;
 
+        BaseBuilding ultimo = null;
         foreach (var b in all)
         {
+            if (b == null || !b.IsUnlocked || !b.HasRoom) continue;
+
+            ultimo = b;
             acc += HeroTraits.BuildingWeight(trait, b.Type);
             if (roll < acc) return b;
         }
 
-        return all[all.Count - 1];
+        return ultimo;
     }
 
     private void MoveTowards(Vector2 destination)
@@ -1809,12 +1857,7 @@ public void DeployViaGateway(Vector2 destination)
         if (frozen) return;
 
         // Evasión: el golpe no llega, así que no hay daño, ni fatiga, ni moral perdida.
-        // La pasiva innata da el grueso y el afijo de la pieza suma encima.
-        bool puedeEsquivar = HasPassive(PassiveSkill.Evasion)
-                             || AffixTotal(EquipmentAffix.EvasionBoost) > 0f
-                             || mastery.EvasionBonus(EquippedWeaponType) > 0f;
-
-        if (puedeEsquivar && UnityEngine.Random.value < EffectiveEvasionChance)
+        if (UnityEngine.Random.value < EffectiveEvasionChance)
         {
             DamageTextManager.ShowDodge(transform.position);
             Debug.Log($"[Pasiva] {data.heroName} esquiva el golpe.", this);

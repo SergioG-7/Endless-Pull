@@ -20053,6 +20053,10 @@ GameObject:
   - component: {fileID: 1930413756}
   - component: {fileID: 1930413757}
   - component: {fileID: 1930413758}
+  - component: {fileID: 1930413760}
+  - component: {fileID: 1930413759}
+  - component: {fileID: 1930413761}
+  - component: {fileID: 1930413762}
   m_Layer: 0
   m_Name: Master
   m_TagString: Untagged
@@ -20372,6 +20376,7 @@ MonoBehaviour:
   crafting: {fileID: 1930413724}
   party: {fileID: 1930413723}
   expeditions: {fileID: 0}
+  offline: {fileID: 1930413759}
   prettyPrint: 1
   loadOnStart: 0
 --- !u!114 &1930413721
@@ -20407,6 +20412,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: b89d079caba1711489ba6bc78d4d938f, type: 2}
   equipmentPullCost: 150
   economy: {fileID: 1930413716}
+  crafting: {fileID: 1930413724}
+  gacha: {fileID: 1930413714}
 --- !u!114 &1930413723
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20455,6 +20462,9 @@ MonoBehaviour:
   weaponWoodCost: 60
   weaponIronCost: 45
   weaponFoodCost: 20
+  floorsPerTier: 5
+  costPerTier: 0.8
+  forgedAffixBaseValue: 8
   potionWoodCostByTier: 0a0000001400000028000000
   potionFoodCostByTier: 140000002800000050000000
   potionHealFractionByTier:
@@ -20470,8 +20480,8 @@ MonoBehaviour:
   upgradeWoodCost: 50
   upgradeIronCost: 50
   upgradeFoodCost: 30
-  upgradeAttackBonus: 3
-  upgradeDefenseBonus: 2
+  maxGearLevel: 10
+  upgradeCostPerLevel: 0.55
   artisanDiscount: 0.05
   artisanLevelDiscount: 0.005
   artisanSuccessBonus: 0.03
@@ -20623,14 +20633,15 @@ MonoBehaviour:
   arenaEntryDelay: 1.5
   baseOrthographicSize: 12
   arenaOrthographicSize: 8.5
-  hubBoundsCenter: {x: 0, y: -1.6}
-  hubBoundsSize: {x: 10.4, y: 8.6}
+  hubBoundsCenter: {x: 0, y: -1.9}
+  hubBoundsSize: {x: 40, y: 40}
   minZoom: 6
   maxZoom: 18
   mouseZoomSpeed: 0.15
   pinchZoomSpeed: 0.02
   dragScreenDeadzone: 8
   arenaGround: {fileID: 1259623039}
+  boundsOverscan: 10
 --- !u!114 &1930413732
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20647,10 +20658,8 @@ MonoBehaviour:
   expeditions: {fileID: 1930413730}
   party: {fileID: 1930413723}
   squadUI: {fileID: 0}
-  readyColor: {r: 0.25, g: 0.45, b: 0.35, a: 1}
-  bonusColor: {r: 0.55, g: 0.42, b: 0.15, a: 1}
-  busyColor: {r: 0.28, g: 0.28, b: 0.32, a: 1}
   rowHeight: 88
+  size: {x: 1100, y: 700}
 --- !u!114 &1930413733
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20668,8 +20677,7 @@ MonoBehaviour:
   party: {fileID: 1930413723}
   squadUI: {fileID: 0}
   rowHeight: 64
-  clearedColor: {r: 0.22, g: 0.42, b: 0.3, a: 1}
-  freshColor: {r: 0.55, g: 0.42, b: 0.15, a: 1}
+  size: {x: 1100, y: 700}
 --- !u!114 &1930413734
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20776,7 +20784,6 @@ MonoBehaviour:
   canvas: {fileID: 1301986964}
   economy: {fileID: 1930413716}
   size: {x: 880, y: 700}
-  rowHeight: 52
   crafting: {fileID: 0}
 --- !u!114 &1930413740
 MonoBehaviour:
@@ -20871,6 +20878,7 @@ MonoBehaviour:
   quickCard: {fileID: 0}
   size: {x: 920, y: 660}
   rowHeight: 66
+  crafting: {fileID: 1930413724}
 --- !u!114 &1930413745
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21174,6 +21182,75 @@ MonoBehaviour:
   m_EditorClassIdentifier: EndlessPull.Runtime::HeroSkillsModalUI
   canvas: {fileID: 0}
   size: {x: 640, y: 740}
+  quickCard: {fileID: 1930413740}
+--- !u!114 &1930413759
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1930413711}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5809fb17aa149e645a4e3bd5b7e47a79, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: EndlessPull.Runtime::OfflineProgressManager
+  maxOfflineHours: 8
+  offlineEfficiency: 0.1
+  maxOfflineFood: 800
+  minOfflineSeconds: 60
+  reportSeconds: 6
+  economy: {fileID: 0}
+  expeditions: {fileID: 0}
+--- !u!114 &1930413760
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1930413711}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e1fb737a18c4a64584e49315b7f7574, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: EndlessPull.Runtime::WorkerAssignUI
+  canvas: {fileID: 0}
+  size: {x: 900, y: 700}
+  rowsPerPage: 7
+--- !u!114 &1930413761
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1930413711}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f50ba437e4033d4687dc348b967000f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: EndlessPull.Runtime::ForgeUI
+  canvas: {fileID: 0}
+  crafting: {fileID: 0}
+  size: {x: 1100, y: 700}
+  tiersShown: 4
+--- !u!114 &1930413762
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1930413711}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae2f5c5eb6559f54fafa5679a694d0ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: EndlessPull.Runtime::HammerMinigameUI
+  canvas: {fileID: 0}
+  crafting: {fileID: 0}
+  size: {x: 880, y: 420}
+  barWidth: 760
+  speed: 0.85
+  critHalfWidth: 0.09
 --- !u!1 &1931634823
 GameObject:
   m_ObjectHideFlags: 0

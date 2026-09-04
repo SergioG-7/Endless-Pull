@@ -136,7 +136,9 @@ public class CameraDirector : MonoBehaviour
 
     void Start()
     {
-        SnapTo(baseView, baseOrthographicSize);
+        // También al arrancar: con baseOrthographicSize por encima del tope, la cámara nacía ya
+        // fuera de límites y el clamp la reenganchaba al centro en cuanto se tocaba el paneo.
+        SnapTo(baseView, Mathf.Min(baseOrthographicSize, MaxUsableZoom()));
     }
 
 void Update()
@@ -186,7 +188,10 @@ void Update()
     [SerializeField] private SpriteRenderer arenaGround;
 
     public void GoToArena() => TravelTo(ArenaPoint, arenaOrthographicSize);
-    public void GoToBase() => TravelTo(baseView, baseOrthographicSize);
+
+    // El encuadre de vuelta también respeta el tope: si no, al soltar el control la cámara
+    // aparecía ya más alejada de lo que el zoom manual permite.
+    public void GoToBase() => TravelTo(baseView, Mathf.Min(baseOrthographicSize, MaxUsableZoom()));
 
 private void OnExpeditionChanged(ExpeditionState state, string message)
     {
@@ -238,7 +243,7 @@ private void OnExpeditionChanged(ExpeditionState state, string message)
         float sizeDelta = ReadOrthoSizeDelta();
         if (Mathf.Abs(sizeDelta) > 0.0001f)
         {
-            target.orthographicSize = Mathf.Clamp(target.orthographicSize + sizeDelta, minZoom, maxZoom);
+            target.orthographicSize = Mathf.Clamp(target.orthographicSize + sizeDelta, minZoom, MaxUsableZoom());
             changed = true;
         }
 
@@ -322,13 +327,41 @@ private void OnExpeditionChanged(ExpeditionState state, string message)
         return true;
     }
 
-    // Restringe basePosition a los límites del hub más los cuadrantes ya desbloqueados (decisión de diseño).
-    private void ClampToUnlockedBounds()
+    [Tooltip("Unidades que la cámara puede rebasar los muros por cada lado; da aire para alejarse y ver la base entera con margen.")]
+    [SerializeField] private float boundsOverscan = 10f;
+
+    // Hub más los cuadrantes ya desbloqueados, con un margen alrededor: ceñir la cámara justo
+    // a los muros dejaba un zoom de alejar demasiado corto para ver la base de un vistazo.
+    private Bounds UnlockedBounds()
     {
         var bounds = new Bounds(hubBoundsCenter, new Vector3(hubBoundsSize.x, hubBoundsSize.y, 0f));
         foreach (var quadrant in QuadrantController.All)
             if (quadrant != null && quadrant.IsUnlocked)
                 bounds.Encapsulate(quadrant.ZoneBounds);
+
+        // Expand suma al TAMAÑO total, o sea la mitad por cada lado: se dobla para que el
+        // margen configurado sea el de cada lado y no el repartido entre los dos.
+        bounds.Expand(new Vector3(boundsOverscan * 2f, boundsOverscan * 2f, 0f));
+        return bounds;
+    }
+
+    // Zoom máximo que todavía cabe dentro de la zona desbloqueada. Sin este tope se podía alejar
+    // hasta que el encuadre superaba los límites, y entonces el clamp daba un salto seco al
+    // centro de la base: se perdía el paneo y parecía que la cámara se recolocase sola.
+    private float MaxUsableZoom()
+    {
+        var bounds = UnlockedBounds();
+        float porAlto = bounds.extents.y;
+        float porAncho = target.aspect > 0f ? bounds.extents.x / target.aspect : porAlto;
+
+        // El mínimo manda siempre: con muy poca base desbloqueada el zoom seguiría siendo usable.
+        return Mathf.Max(minZoom, Mathf.Min(maxZoom, Mathf.Min(porAlto, porAncho)));
+    }
+
+    // Restringe basePosition a los límites del hub más los cuadrantes ya desbloqueados (decisión de diseño).
+    private void ClampToUnlockedBounds()
+    {
+        var bounds = UnlockedBounds();
 
         float halfHeight = target.orthographicSize;
         float halfWidth = halfHeight * target.aspect;
@@ -338,9 +371,10 @@ private void OnExpeditionChanged(ExpeditionState state, string message)
         float minY = bounds.min.y + halfHeight;
         float maxY = bounds.max.y - halfHeight;
 
-        // Si el encuadre es más grande que la zona desbloqueada, pivota sobre el centro real de la
-        // base (baseView) en vez de bounds.center, que se desplaza al encapsular cuadrantes
-        // desbloqueados de forma asimétrica y cortaba el lateral izquierdo del campamento.
+        // Con el tope de MaxUsableZoom esta rama ya casi no se pisa; queda de red por si la zona
+        // desbloqueada es más pequeña que minZoom. Pivota sobre el centro real de la base
+        // (baseView) y no sobre bounds.center, que se desplaza al encapsular cuadrantes de forma
+        // asimétrica y cortaba el lateral izquierdo del campamento.
         float clampedX = minX <= maxX ? Mathf.Clamp(basePosition.x, minX, maxX) : baseView.x;
         float clampedY = minY <= maxY ? Mathf.Clamp(basePosition.y, minY, maxY) : baseView.y;
 

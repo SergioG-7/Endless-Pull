@@ -71,7 +71,8 @@ public class GachaManager : MonoBehaviour
 
         if (starterWeapon == null) yield break;
 
-        foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None))
+        foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(
+            FindObjectsInactive.Include, FindObjectsSortMode.None))
             if (GrantStarterWeapon(hero))
                 Debug.Log($"[Gacha] {hero.Data.heroName} empieza con {starterWeapon.equipName}.", hero);
     }
@@ -131,8 +132,9 @@ public class GachaManager : MonoBehaviour
     {
         var names = new HashSet<string>();
 
-        foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None))
-            if (hero.Data != null) names.Add(hero.Data.heroName);
+        foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(
+            FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (hero.Data != null && !hero.Discarded) names.Add(hero.Data.heroName);
 
         return names;
     }

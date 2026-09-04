@@ -33,6 +33,23 @@ public class SquadManagementUI : MonoBehaviour
     private TMP_Text etiquetaCerrar;
     private RectTransform lista;
 
+    // Una fila reutilizable: se crea vacía y cambia de héroe entre refrescos, en vez de
+    // destruirse y recrearse (patrón de RosterUI).
+    private class RowWidgets
+    {
+        public GameObject root;
+        public TMP_Text nombre;
+        public TMP_Text estado;
+        public Button botonTorre;
+        public TMP_Text etiquetaTorre;
+        public Button botonRecoger;
+        public TMP_Text etiquetaRecoger;
+        public HeroController hero;
+    }
+
+    private readonly List<RowWidgets> pool = new List<RowWidgets>();
+    private readonly List<HeroController> scratch = new List<HeroController>();
+
     private readonly List<Button> presetApply = new List<Button>();
     private readonly List<Button> presetSave = new List<Button>();
     private readonly List<TMP_Text> presetApplyLabel = new List<TMP_Text>();
@@ -152,7 +169,7 @@ public class SquadManagementUI : MonoBehaviour
     // la lista en el mismo frame, y eso era el parpadeo de los botones Tower/Gather.
     private void OnTowerPressed(HeroController hero)
     {
-        if (party == null) return;
+        if (party == null || hero == null) return;
 
         bool dentro = party.IsInParty(hero);
 
@@ -173,7 +190,7 @@ public class SquadManagementUI : MonoBehaviour
 
     private void OnGatherPressed(HeroController hero)
     {
-        if (party == null) return;
+        if (party == null || hero == null) return;
 
         bool dentro = party.IsInExpedition(hero);
         party.ToggleExpedition(hero);
@@ -200,8 +217,6 @@ public class SquadManagementUI : MonoBehaviour
     private void Rebuild()
     {
         if (lista == null) return;
-
-        for (int i = lista.childCount - 1; i >= 0; i--) Destroy(lista.GetChild(i).gameObject);
 
         titulo.text = LocalizationManager.Get("UI_SQUADS");
         etiquetaCerrar.text = LocalizationManager.Get("UI_CLOSE");
@@ -245,17 +260,33 @@ public class SquadManagementUI : MonoBehaviour
             presetSave[i].interactable = party != null;
         }
 
-        var heroes = new List<HeroController>(
-            UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None));
+        scratch.Clear();
+        foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(
+            FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (hero != null && hero.Data != null && !hero.Discarded) scratch.Add(hero);
 
         // FindObjectsByType no garantiza orden y las filas llevan botón: sin ordenar, bailan.
-        heroes.Sort(Compare);
+        scratch.Sort(Compare);
 
-        vacio.gameObject.SetActive(heroes.Count == 0);
+        vacio.gameObject.SetActive(scratch.Count == 0);
         vacio.text = LocalizationManager.Get("UI_NO_HEROES");
 
-        foreach (var hero in heroes)
-            if (hero != null && hero.Data != null) CreateRow(hero, recolectando);
+        // Misma estrategia de pooling que RosterUI: se actualizan las filas ya creadas en vez de
+        // destruirlas y recrearlas, que con un roster grande costaba cientos de GameObjects por clic.
+        for (int i = 0; i < scratch.Count; i++)
+        {
+            if (i >= pool.Count) pool.Add(CreateRow());
+
+            var row = pool[i];
+            row.root.SetActive(true);
+            UpdateRow(row, scratch[i], recolectando);
+        }
+
+        for (int i = scratch.Count; i < pool.Count; i++)
+        {
+            pool[i].root.SetActive(false);
+            pool[i].hero = null;
+        }
     }
 
     private static int Compare(HeroController a, HeroController b)
@@ -274,13 +305,38 @@ public class SquadManagementUI : MonoBehaviour
         return string.Compare(a.Data.heroName, b.Data.heroName, System.StringComparison.Ordinal);
     }
 
-    // Una fila por héroe: identidad, puesto actual y los dos botones de escuadra.
-    private void CreateRow(HeroController hero, bool recolectando)
+    // Una fila por héroe: identidad, puesto actual y los dos botones de escuadra. Se crea vacía
+    // una sola vez; UpdateRow la rellena con el héroe que toque en cada refresco.
+    private RowWidgets CreateRow()
     {
-        var go = new GameObject($"Row_{hero.name}", typeof(RectTransform), typeof(Image));
+        var go = new GameObject("Row", typeof(RectTransform), typeof(Image));
         go.transform.SetParent(lista, false);
         go.GetComponent<RectTransform>().sizeDelta = new Vector2(0f, rowHeight);
         UITheme.Surface(go, UITheme.Card, UITheme.BorderSoft, UITheme.RadiusItem);
+
+        var row = new RowWidgets { root = go };
+
+        row.nombre = RowLabel(go.transform, "Name", 16f, 320f, UITheme.SizeName,
+            TextAlignmentOptions.Left);
+        row.estado = RowLabel(go.transform, "Duty", 350f, 300f, UITheme.SizeBody,
+            TextAlignmentOptions.Left);
+
+        // El listener lee row.hero en el momento del clic: capturar el héroe aquí lo dejaría
+        // pegado a la fila para siempre, y la fila se reutiliza con otro héroe distinto.
+        row.botonTorre = CreateToggle(go.transform, "Btn_Tower", -172f,
+            () => OnTowerPressed(row.hero));
+        row.etiquetaTorre = row.botonTorre.GetComponentInChildren<TMP_Text>();
+
+        row.botonRecoger = CreateToggle(go.transform, "Btn_Gather", -16f,
+            () => OnGatherPressed(row.hero));
+        row.etiquetaRecoger = row.botonRecoger.GetComponentInChildren<TMP_Text>();
+
+        return row;
+    }
+
+    private void UpdateRow(RowWidgets row, HeroController hero, bool recolectando)
+    {
+        row.hero = hero;
 
         var duty = HeroAssignment.DutyOf(hero);
         bool bloqueado = recolectando && duty == HeroDuty.Expedition;
@@ -296,22 +352,18 @@ public class SquadManagementUI : MonoBehaviour
         // El humor puede venir vacio: sin esto quedaba un punto suelto tras el nivel.
         string humor = string.IsNullOrEmpty(hero.MoodName) ? string.Empty : " · " + hero.MoodName;
 
-        var nombre = RowLabel(go.transform, "Name", 16f, 320f, UITheme.SizeName,
-            TextAlignmentOptions.Left);
-        nombre.text = $"<size={UITheme.SizeCaption}><color={UITheme.Tag(rareza)}>{estrellas}</color></size>  " +
-                      $"<b>{hero.Data.heroName}</b>\n" +
-                      $"<size={UITheme.SizeCaption}><color={UITheme.Tag(UITheme.TextMuted)}>" +
-                      $"{LocalizationManager.Get("UI_LEVEL_ABBR")}{nivel}{humor}</color></size>";
+        row.nombre.text = $"<size={UITheme.SizeCaption}><color={UITheme.Tag(rareza)}>{estrellas}</color></size>  " +
+                          $"<b>{hero.Data.heroName}</b>\n" +
+                          $"<size={UITheme.SizeCaption}><color={UITheme.Tag(UITheme.TextMuted)}>" +
+                          $"{LocalizationManager.Get("UI_LEVEL_ABBR")}{nivel}{humor}</color></size>";
 
         // El puesto que ocupa ahora: nombre del edificio si trabaja, o el rótulo del deber.
         string puesto = duty == HeroDuty.Building
             ? HeroAssignment.WorkplaceName(hero)
             : HeroAssignment.DutyName(duty);
 
-        var estado = RowLabel(go.transform, "Duty", 350f, 300f, UITheme.SizeBody,
-            TextAlignmentOptions.Left);
-        estado.color = duty == HeroDuty.Free ? UITheme.TextMuted : UITheme.Text;
-        estado.text = bloqueado
+        row.estado.color = duty == HeroDuty.Free ? UITheme.TextMuted : UITheme.Text;
+        row.estado.text = bloqueado
             ? $"<color={UITheme.Tag(UITheme.Cyan)}>{puesto} · {LocalizationManager.Get("UI_LOCKED")}</color>"
             : puesto;
 
@@ -322,18 +374,16 @@ public class SquadManagementUI : MonoBehaviour
         bool puedeTorre = !bloqueado && (enTorre || duty == HeroDuty.Free);
         bool puedeRecoger = !bloqueado && (enRecoleccion || duty == HeroDuty.Free);
 
-        CreateToggle(go.transform, "Btn_Tower", -172f, LocalizationManager.Get("UI_TOWER_SQUAD"),
-            enTorre, puedeTorre, UITheme.Amber, () => OnTowerPressed(hero));
-
-        CreateToggle(go.transform, "Btn_Gather", -16f, LocalizationManager.Get("UI_GATHER_SQUAD"),
-            enRecoleccion, puedeRecoger, UITheme.Teal, () => OnGatherPressed(hero));
+        StyleToggle(row.botonTorre, row.etiquetaTorre, LocalizationManager.Get("UI_TOWER_SQUAD"),
+            enTorre, puedeTorre, UITheme.Amber);
+        StyleToggle(row.botonRecoger, row.etiquetaRecoger, LocalizationManager.Get("UI_GATHER_SQUAD"),
+            enRecoleccion, puedeRecoger, UITheme.Teal);
     }
 
-    private void CreateToggle(Transform row, string name, float x, string text, bool activo,
-                              bool interactuable, Color color,
-                              UnityEngine.Events.UnityAction onClick)
+    private Button CreateToggle(Transform row, string name, float x,
+                                UnityEngine.Events.UnityAction onClick)
     {
-        var boton = UIBuild.Button(row, name, text, activo ? color : UITheme.Neutral,
+        var boton = UIBuild.Button(row, name, string.Empty, UITheme.Neutral,
             new Vector2(148f, 44f), Vector2.zero, onClick);
 
         var rt = boton.GetComponent<RectTransform>();
@@ -342,10 +392,17 @@ public class SquadManagementUI : MonoBehaviour
         rt.pivot = new Vector2(1f, 0.5f);
         rt.anchoredPosition = new Vector2(x, 0f);
 
+        boton.GetComponentInChildren<TMP_Text>().fontSize = UITheme.SizeBody;
+        return boton;
+    }
+
+    private static void StyleToggle(Button boton, TMP_Text label, string text, bool activo,
+                                    bool interactuable, Color color)
+    {
+        boton.targetGraphic.color = activo ? color : UITheme.Neutral;
         boton.interactable = interactuable;
 
-        var label = boton.GetComponentInChildren<TMP_Text>();
-        label.fontSize = UITheme.SizeBody;
+        label.text = text;
         label.fontStyle = activo ? FontStyles.Bold : FontStyles.Normal;
         label.color = interactuable ? UITheme.Text : UITheme.TextFaint;
     }

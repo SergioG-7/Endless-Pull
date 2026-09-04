@@ -15,6 +15,7 @@ MonoBehaviour:
   equipName: Escudo de Roble
   nameKey: EQUIP_OAK_SHIELD
   slotType: 3
+  tier: 1
   weaponType: 4
   bonusATK: 0
   bonusDEF: 6

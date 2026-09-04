@@ -45,6 +45,9 @@ public class HeroSkillsModalUI : MonoBehaviour
         if (IsOpen) Refresh();
     }
 
+    [Tooltip("Ficha de héroe a la que se vuelve al cerrar este modal.")]
+    [SerializeField] private HeroQuickCardUI quickCard;
+
     public void Open(HeroController target)
     {
         if (panel == null || target == null) return;
@@ -54,10 +57,15 @@ public class HeroSkillsModalUI : MonoBehaviour
         Refresh();
     }
 
+    // Este modal solo lo abre la ficha de héroe: al cerrarlo, vuelve a ella. Sin esto se
+    // cerraba a secas y el jugador acababa en la base, perdiendo el hilo de dónde estaba.
     public void Close()
     {
         if (panel != null) panel.SetActive(false);
         hero = null;
+
+        if (quickCard == null) quickCard = UnityEngine.Object.FindFirstObjectByType<HeroQuickCardUI>();
+        if (quickCard != null) quickCard.Reopen();
     }
 
     private void RefreshStaticLabels()

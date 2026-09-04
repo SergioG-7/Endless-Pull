@@ -90,6 +90,16 @@ public class CraftingManager : MonoBehaviour
     [Tooltip("Comida que consume la cuadrilla mientras fabrica un arma.")]
     [SerializeField] private int weaponFoodCost = 20;
 
+    [Tooltip("Pisos de torre superados que hacen falta por cada gama extra de equipo, poción y piedra.")]
+    [Min(1)]
+    [SerializeField] private int floorsPerTier = 5;
+
+    [Tooltip("Cuánto sube el coste de forja por cada gama por encima de la primera, en tanto por uno.")]
+    [SerializeField] private float costPerTier = 0.8f;
+
+    [Tooltip("Porcentaje base del afijo que da un golpe perfecto en el minijuego; se multiplica por la gama de la pieza.")]
+    [SerializeField] private float forgedAffixBaseValue = 8f;
+
     [Tooltip("Madera que cuesta cada tier de Poción de Curación: Menor, Media, Mayor.")]
     [SerializeField] private int[] potionWoodCostByTier = { 10, 20, 40 };
 
@@ -108,20 +118,25 @@ public class CraftingManager : MonoBehaviour
     [Tooltip("Fracción de maná máximo que restaura cada tier de Poción de Maná: Menor, Media, Mayor.")]
     [SerializeField] private float[] manaPotionRestoreFractionByTier = { 0.4f, 0.7f, 1f };
 
-    [Tooltip("Madera que cuesta una mejora de equipo básico.")]
+    [Tooltip("Madera que cuesta subir una pieza de +0 a +1; los niveles siguientes escalan sobre esto.")]
     [SerializeField] private int upgradeWoodCost = 50;
 
-    [Tooltip("Hierro que cuesta una mejora de equipo básico.")]
+    [Tooltip("Hierro que cuesta subir una pieza de +0 a +1; los niveles siguientes escalan sobre esto.")]
     [SerializeField] private int upgradeIronCost = 50;
 
-    [Tooltip("Comida que cuesta una mejora de equipo básico.")]
+    [Tooltip("Comida que cuesta subir una pieza de +0 a +1; los niveles siguientes escalan sobre esto.")]
     [SerializeField] private int upgradeFoodCost = 30;
 
-    [Tooltip("Ataque plano que suma cada mejora de equipo básico.")]
-    [SerializeField] private int upgradeAttackBonus = 3;
+    [Tooltip("Nivel máximo de mejora que puede alcanzar una pieza equipada.")]
+    [Min(1)]
+    [SerializeField] private int maxGearLevel = 10;
 
-    [Tooltip("Defensa plana que suma cada mejora de equipo básico.")]
-    [SerializeField] private int upgradeDefenseBonus = 2;
+    [Tooltip("Rebaja máxima que puede dar la Forja sobre la mejora de equipo, en tanto por uno.")]
+    [Range(0f, 0.9f)]
+    [SerializeField] private float maxForgeDiscount = 0.30f;
+
+    [Tooltip("Cuánto sube el coste de mejorar por cada nivel ya alcanzado, en tanto por uno.")]
+    [SerializeField] private float upgradeCostPerLevel = 0.55f;
 
     [Tooltip("Rebaja de materiales por cada artesano asignado al Taller, en tanto por uno.")]
     [SerializeField] private float artisanDiscount = 0.05f;
@@ -169,6 +184,59 @@ public class CraftingManager : MonoBehaviour
     public float SuccessChance => successChance;
 
     // Los costes que se cobran de verdad ya llevan la rebaja de los artesanos.
+    // Gama mas alta desbloqueada por progreso de torre. Gama 1 desde el principio; cada
+    // floorsPerTier pisos superados abre una mas, para equipo, pociones y piedras por igual.
+    public int MaxUnlockedTier => 1 + Mathf.Max(0, BaseBuilding.TowerFloor) / Mathf.Max(1, floorsPerTier);
+
+    // tier es 1-based (gama 1 = la primera). Los enums de poción/piedra son 0-based.
+    public bool IsTierUnlocked(int tier) => tier <= MaxUnlockedTier;
+    public bool IsTierUnlocked(PotionTier tier) => IsTierUnlocked((int)tier + 1);
+    public bool IsTierUnlocked(AscensionStoneTier tier) => IsTierUnlocked((int)tier + 1);
+
+    // Piso a partir del cual se abre una gama concreta; lo enseña la UI en lo aún bloqueado.
+    public int FloorForTier(int tier) => Mathf.Max(0, tier - 1) * Mathf.Max(1, floorsPerTier);
+
+    // Gama más alta que existe de verdad en el catálogo, para no ofrecer huecos vacíos.
+    public int HighestTierInCatalog
+    {
+        get
+        {
+            int mayor = 1;
+            if (craftableWeapons != null)
+                foreach (var pieza in craftableWeapons)
+                    if (pieza != null && pieza.tier > mayor) mayor = pieza.tier;
+            return mayor;
+        }
+    }
+
+    // Multiplicador de coste de la gama: la 1 vale lo de siempre y cada una sube costPerTier.
+    private float TierCostFactor(int tier) => 1f + costPerTier * Mathf.Max(0, tier - 1);
+
+    public int EquipmentWoodCost(int tier) => Mathf.RoundToInt(WeaponWoodCost * TierCostFactor(tier));
+    public int EquipmentIronCost(int tier) => Mathf.RoundToInt(WeaponIronCost * TierCostFactor(tier));
+    public int EquipmentFoodCost(int tier) => Mathf.RoundToInt(WeaponFoodCost * TierCostFactor(tier));
+
+    // Recetas de forja; la carga de partida las consulta para resolver una pieza guardada que
+    // no venda la tienda.
+    public IReadOnlyList<EquipmentData> CraftableWeapons => craftableWeapons;
+
+    // Piezas que pueden salir al forjar ese hueco en esa gama.
+    public List<EquipmentData> EquipmentPool(EquipmentSlot slot, int tier)
+    {
+        var pool = new List<EquipmentData>();
+        if (craftableWeapons == null) return pool;
+
+        foreach (var pieza in craftableWeapons)
+            if (pieza != null && pieza.slotType == slot && pieza.tier == tier) pool.Add(pieza);
+
+        return pool;
+    }
+
+    public bool CanCraftEquipment(EquipmentSlot slot, int tier)
+        => IsTierUnlocked(tier) && economy != null && EquipmentPool(slot, tier).Count > 0
+           && economy.CanAffordMaterials(EquipmentWoodCost(tier), EquipmentIronCost(tier))
+           && economy.CanAffordFood(EquipmentFoodCost(tier));
+
     public int WeaponWoodCost => Discounted(weaponWoodCost);
     public int WeaponIronCost => Discounted(weaponIronCost);
     public int WeaponFoodCost => Discounted(weaponFoodCost);
@@ -201,7 +269,8 @@ public class CraftingManager : MonoBehaviour
             foreach (var b in BaseBuilding.All)
                 if (b != null && b.IsUnlocked && b.Type == BuildingType.Forge) bonus += 0.05f * b.Level;
 
-            return Mathf.Clamp01(bonus);
+            // Tope duro: sin él una Forja de nivel alto dejaba las mejoras completamente gratis.
+            return Mathf.Clamp(bonus, 0f, maxForgeDiscount);
         }
     }
 
@@ -266,7 +335,7 @@ public class CraftingManager : MonoBehaviour
     public int StoneWoodCost(AscensionStoneTier tier) => Discounted(stoneWoodCostByTier[(int)tier]);
     public int StoneIronCost(AscensionStoneTier tier) => Discounted(stoneIronCostByTier[(int)tier]);
 
-    public bool CanCraftStone(AscensionStoneTier tier) => economy != null
+    public bool CanCraftStone(AscensionStoneTier tier) => IsTierUnlocked(tier) && economy != null
         && economy.CanAffordMaterials(StoneWoodCost(tier), StoneIronCost(tier));
 
     public bool CanCraftWeapon => economy != null
@@ -274,15 +343,12 @@ public class CraftingManager : MonoBehaviour
         && economy.CanAffordMaterials(WeaponWoodCost, WeaponIronCost)
         && economy.CanAffordFood(WeaponFoodCost);
 
-    public bool CanCraftPotion(PotionTier tier) => economy != null
+    public bool CanCraftPotion(PotionTier tier) => IsTierUnlocked(tier) && economy != null
         && economy.CanAffordMaterials(PotionWoodCost(tier), 0) && economy.CanAffordFood(PotionFoodCost(tier));
 
-    public bool CanCraftManaPotion(PotionTier tier) => economy != null
+    public bool CanCraftManaPotion(PotionTier tier) => IsTierUnlocked(tier) && economy != null
         && economy.CanAffordMaterials(ManaPotionWoodCost(tier), 0) && economy.CanAffordFood(ManaPotionFoodCost(tier));
 
-    public bool CanUpgradeGear => ForgeUnlocked && economy != null
-        && economy.CanAffordMaterials(UpgradeWoodCost, UpgradeIronCost)
-        && economy.CanAffordFood(UpgradeFoodCost);
 
     // Se dispara con (éxito, mensaje) tras cada intento.
     public event System.Action<bool, string> CraftResolved;
@@ -324,6 +390,13 @@ public class CraftingManager : MonoBehaviour
     // Los materiales se cobran siempre; solo el resultado va a suerte. Las gemas no entran.
     public bool TryCraftStone(AscensionStoneTier tier)
     {
+        if (!IsTierUnlocked(tier))
+        {
+            CraftResolved?.Invoke(false, string.Format(
+                LocalizationManager.Get("UI_TIER_LOCKED"), FloorForTier((int)tier + 1)));
+            return false;
+        }
+
         int madera = StoneWoodCost(tier);
         int hierro = StoneIronCost(tier);
 
@@ -355,8 +428,9 @@ public class CraftingManager : MonoBehaviour
         return success;
     }
 
-    // Fabricar un arma no falla: cuesta madera, hierro y comida, y la pieza va al almacén.
-    public EquipmentData TryCraftWeapon()
+    // Atajo histórico: forja de la gama más baja sin elegir hueco. Se conserva para no romper
+    // las llamadas que ya existían; la forja de verdad es TryCraftEquipment.
+    public EquipmentInstance TryCraftWeapon()
     {
         if (craftableWeapons == null || craftableWeapons.Count == 0)
         {
@@ -364,9 +438,31 @@ public class CraftingManager : MonoBehaviour
             return null;
         }
 
-        int madera = WeaponWoodCost;
-        int hierro = WeaponIronCost;
-        int comida = WeaponFoodCost;
+        var cualquiera = craftableWeapons[Random.Range(0, craftableWeapons.Count)];
+        return TryCraftEquipment(cualquiera.slotType, cualquiera.tier);
+    }
+
+    // Forja eligiendo hueco y gama: sale una pieza al azar de ese grupo. No falla, pero la
+    // gama tiene que estar desbloqueada por progreso de torre y tiene que haber con qué pagar.
+    public EquipmentInstance TryCraftEquipment(EquipmentSlot slot, int tier)
+    {
+        if (!IsTierUnlocked(tier))
+        {
+            CraftResolved?.Invoke(false, string.Format(
+                LocalizationManager.Get("UI_TIER_LOCKED"), FloorForTier(tier)));
+            return null;
+        }
+
+        var pool = EquipmentPool(slot, tier);
+        if (pool.Count == 0)
+        {
+            CraftResolved?.Invoke(false, LocalizationManager.Get("UI_NO_RECIPES"));
+            return null;
+        }
+
+        int madera = EquipmentWoodCost(tier);
+        int hierro = EquipmentIronCost(tier);
+        int comida = EquipmentFoodCost(tier);
 
         if (economy == null || !economy.CanAffordMaterials(madera, hierro)
             || !economy.CanAffordFood(comida))
@@ -381,7 +477,8 @@ public class CraftingManager : MonoBehaviour
         if (!economy.TrySpendMaterials(madera, hierro)) return null;
         economy.TrySpendFood(comida);
 
-        var pieza = craftableWeapons[Random.Range(0, craftableWeapons.Count)];
+        var asset = pool[Random.Range(0, pool.Count)];
+        var pieza = new EquipmentInstance(asset);
         if (shop != null) shop.AddToInventory(pieza);
 
         Debug.Log($"[Taller] Fabricada {pieza.ShortLabel()} por {madera} madera, " +
@@ -393,9 +490,53 @@ public class CraftingManager : MonoBehaviour
         return pieza;
     }
 
+    // Afijo que puede salir del minijuego del martillo. El valor sube con la gama de la pieza:
+    // un golpe perfecto en una pieza buena vale mas que en una de gama 1.
+    public EquipmentAffix RollForgedAffix(EquipmentInstance pieza, float quality, out float value)
+    {
+        value = 0f;
+        if (pieza == null || !pieza.IsValid || quality <= 0f) return EquipmentAffix.None;
+
+        // Se sortea entre los afijos reales, sin None.
+        var todos = (EquipmentAffix[])System.Enum.GetValues(typeof(EquipmentAffix));
+        var opciones = new List<EquipmentAffix>();
+        foreach (var a in todos) if (a != EquipmentAffix.None) opciones.Add(a);
+        if (opciones.Count == 0) return EquipmentAffix.None;
+
+        var elegido = opciones[Random.Range(0, opciones.Count)];
+
+        // quality es 0-1: lo bien que se acerto el golpe. La gama multiplica el resultado.
+        value = Mathf.Round(forgedAffixBaseValue * quality * pieza.Tier * 10f) / 10f;
+        return value > 0f ? elegido : EquipmentAffix.None;
+    }
+
+    // La llama el minijuego tras un golpe acertado: escribe el afijo en ESA copia de la pieza.
+    public bool ApplyForgedAffix(EquipmentInstance pieza, float quality)
+    {
+        if (pieza == null || !pieza.IsValid) return false;
+
+        var afijo = RollForgedAffix(pieza, quality, out float valor);
+        if (afijo == EquipmentAffix.None) return false;
+
+        // Si ya traia ese mismo afijo forjado, se queda el mejor de los dos.
+        if (pieza.forgedAffix == afijo) pieza.forgedValue = Mathf.Max(pieza.forgedValue, valor);
+        else { pieza.forgedAffix = afijo; pieza.forgedValue = valor; }
+
+        Debug.Log($"[Forja] {pieza.LocalizedName()} sale con {pieza.ForgedAffixLabel()}.", this);
+        SaveManager.RequestSave();
+        return true;
+    }
+
     // La comida se cobra siempre que hay madera; fabricar una poción no falla.
     public bool TryCraftPotion(PotionTier tier)
     {
+        if (!IsTierUnlocked(tier))
+        {
+            CraftResolved?.Invoke(false, string.Format(
+                LocalizationManager.Get("UI_TIER_LOCKED"), FloorForTier((int)tier + 1)));
+            return false;
+        }
+
         int madera = PotionWoodCost(tier);
         int comida = PotionFoodCost(tier);
 
@@ -446,6 +587,13 @@ public class CraftingManager : MonoBehaviour
     // La comida se cobra siempre que hay madera; fabricar una poción no falla.
     public bool TryCraftManaPotion(PotionTier tier)
     {
+        if (!IsTierUnlocked(tier))
+        {
+            CraftResolved?.Invoke(false, string.Format(
+                LocalizationManager.Get("UI_TIER_LOCKED"), FloorForTier((int)tier + 1)));
+            return false;
+        }
+
         int madera = ManaPotionWoodCost(tier);
         int comida = ManaPotionFoodCost(tier);
 
@@ -493,22 +641,63 @@ public class CraftingManager : MonoBehaviour
 
     // Mejora a todo el roster de una vez: bonus plano de ataque/defensa a coste fijo,
     // así la tarjeta del Taller no necesita un selector de héroe.
-    public bool TryUpgradeAllGear()
+    public int MaxGearLevel => maxGearLevel;
+
+    // El coste sube con el nivel que YA tiene la pieza: subir de +0 a +1 es barato, de +9 a +10 no.
+    private float UpgradeLevelFactor(int currentLevel)
+        => 1f + upgradeCostPerLevel * Mathf.Max(0, currentLevel);
+
+    public int PieceUpgradeWoodCost(int currentLevel)
+        => Mathf.RoundToInt(UpgradeWoodCost * UpgradeLevelFactor(currentLevel));
+    public int PieceUpgradeIronCost(int currentLevel)
+        => Mathf.RoundToInt(UpgradeIronCost * UpgradeLevelFactor(currentLevel));
+    public int PieceUpgradeFoodCost(int currentLevel)
+        => Mathf.RoundToInt(UpgradeFoodCost * UpgradeLevelFactor(currentLevel));
+
+    public bool CanUpgradePiece(HeroController hero, EquipmentSlot slot)
+    {
+        if (!ForgeUnlocked || hero == null || economy == null) return false;
+        if (hero.GetEquipped(slot) == null) return false;
+
+        int nivel = hero.GearLevelOf(slot);
+        if (nivel >= maxGearLevel) return false;
+
+        return economy.CanAffordMaterials(PieceUpgradeWoodCost(nivel), PieceUpgradeIronCost(nivel))
+               && economy.CanAffordFood(PieceUpgradeFoodCost(nivel));
+    }
+
+    // Mejora UNA pieza equipada de UN héroe. Sustituye a la antigua mejora global, que aplicaba
+    // un bonus plano y sin tope a toda la base y no miraba el equipo de nadie.
+    public bool TryUpgradePiece(HeroController hero, EquipmentSlot slot)
     {
         if (!ForgeUnlocked)
         {
-            Debug.LogWarning("[Forja] Aún no está construida.", this);
             CraftResolved?.Invoke(false, LocalizationManager.Get("UI_FORGE_LOCKED"));
             return false;
         }
 
-        int madera = UpgradeWoodCost;
-        int hierro = UpgradeIronCost;
-        int comida = UpgradeFoodCost;
-
-        if (economy == null || !economy.CanAffordMaterials(madera, hierro) || !economy.CanAffordFood(comida))
+        var pieza = hero != null ? hero.GetEquipped(slot) : null;
+        if (pieza == null)
         {
-            Debug.LogWarning($"[Taller] Mejora: hacen falta {madera} madera, {hierro} hierro y {comida} comida.", this);
+            CraftResolved?.Invoke(false, LocalizationManager.Get("UI_UPGRADE_NO_PIECE"));
+            return false;
+        }
+
+        int nivel = hero.GearLevelOf(slot);
+        if (nivel >= maxGearLevel)
+        {
+            CraftResolved?.Invoke(false, string.Format(
+                LocalizationManager.Get("UI_UPGRADE_MAXED"), maxGearLevel));
+            return false;
+        }
+
+        int madera = PieceUpgradeWoodCost(nivel);
+        int hierro = PieceUpgradeIronCost(nivel);
+        int comida = PieceUpgradeFoodCost(nivel);
+
+        if (economy == null || !economy.CanAffordMaterials(madera, hierro)
+            || !economy.CanAffordFood(comida))
+        {
             CraftResolved?.Invoke(false, LocalizationManager.Get("UI_NO_MATERIALS"));
             return false;
         }
@@ -516,18 +705,11 @@ public class CraftingManager : MonoBehaviour
         economy.TrySpendMaterials(madera, hierro);
         economy.TrySpendFood(comida);
 
-        int heroes = 0;
-        foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None))
-        {
-            if (hero == null) continue;
+        hero.SetGearLevel(slot, nivel + 1);
 
-            hero.ApplyGearUpgrade(upgradeAttackBonus, upgradeDefenseBonus);
-            heroes++;
-        }
-
-        Debug.Log($"[Taller] Equipo mejorado para {heroes} héroe(s) (+{upgradeAttackBonus} ATQ, " +
-                  $"+{upgradeDefenseBonus} DEF).", this);
-        CraftResolved?.Invoke(true, LocalizationManager.Get("UI_ALL_GEAR_UPGRADED"));
+        Debug.Log($"[Forja] {pieza.LocalizedName()} de {hero.Data.heroName} sube a +{nivel + 1}.", this);
+        CraftResolved?.Invoke(true, string.Format(LocalizationManager.Get("UI_UPGRADE_DONE"),
+            pieza.LocalizedName(), nivel + 1));
         AudioManager.Play(SfxId.CraftSuccess);
 
         SaveManager.RequestSave();
@@ -562,8 +744,8 @@ public class CraftingManager : MonoBehaviour
         hero.RepairSlot(slot.Value);
 
         QuestManager.Report(QuestKind.RepairGear);
-        Debug.Log($"[Taller] {pieza.equipName} de {hero.Data.heroName} reparada " +
-                  $"({hero.DurabilityOf(slot.Value)}/{pieza.maxDurability}).", this);
+        Debug.Log($"[Taller] {pieza.LocalizedName()} de {hero.Data.heroName} reparada " +
+                  $"({pieza.durability}/{pieza.MaxDurability}).", this);
         CraftResolved?.Invoke(true, string.Format(LocalizationManager.Get("UI_PIECE_REPAIRED"), pieza.LocalizedName()));
         AudioManager.Play(SfxId.CraftSuccess);
 
@@ -576,7 +758,8 @@ public class CraftingManager : MonoBehaviour
     {
         int total = 0;
 
-        foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None))
+        foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(
+            FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
             if (hero == null) continue;
 
@@ -585,7 +768,7 @@ public class CraftingManager : MonoBehaviour
                 var item = hero.GetEquipped(slot);
                 if (item == null) continue;
 
-                total += Mathf.Max(0, item.maxDurability - hero.DurabilityOf(slot));
+                total += Mathf.Max(0, item.MaxDurability - item.durability);
             }
         }
 
@@ -617,7 +800,8 @@ public class CraftingManager : MonoBehaviour
         }
 
         int piezas = 0;
-        foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None))
+        foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(
+            FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
             if (hero == null) continue;
 

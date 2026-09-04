@@ -30,8 +30,7 @@ public class HeroAgent : Agent
     [Tooltip("Escribe por consola el resultado de cada episodio.")]
     [SerializeField] private bool logEpisodes = true;
 
-    [Header("Pesos de entrenamiento (Fase 25)")]
-    [Tooltip("Multiplica hitReward y wastedSkillPenalty: cuánto se premia/castiga la agresividad de la política.")]
+    [Tooltip("Peso de entrenamiento. Multiplica hitReward y wastedSkillPenalty: cuánto se premia/castiga la agresividad de la política.")]
     [SerializeField] private float aggressionWeight = 1f;
 
     [Tooltip("Multiplica dodgeReward: cuánto pesa mantener la distancia de seguridad ante el golpe en área.")]

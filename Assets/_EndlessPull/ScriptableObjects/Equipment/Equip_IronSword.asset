@@ -15,6 +15,7 @@ MonoBehaviour:
   equipName: Espada de Hierro
   nameKey: EQUIP_IRON_SWORD
   slotType: 0
+  tier: 2
   weaponType: 1
   bonusATK: 8
   bonusDEF: 0

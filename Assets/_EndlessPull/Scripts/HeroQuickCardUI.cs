@@ -261,7 +261,7 @@ public class HeroQuickCardUI : MonoBehaviour
         if (equipModal != null) { equipModal.Open(hero); return; }
         if (shop == null) return;
 
-        shop.EquipFromInventory(hero, shop.FirstEquippableFor(hero));
+        shop.AutoEquipBest(hero);
         Refresh();
     }
 
@@ -292,7 +292,7 @@ public class HeroQuickCardUI : MonoBehaviour
         return hero.IsBroken(slot)
             ? string.Format(LocalizationManager.Get("UI_GEAR_PIECE_BROKEN"), item.LocalizedName())
             : string.Format(LocalizationManager.Get("UI_GEAR_PIECE"), item.LocalizedName(),
-                hero.DurabilityOf(slot), item.maxDurability);
+                item.durability, item.MaxDurability);
     }
 
 private void Build()

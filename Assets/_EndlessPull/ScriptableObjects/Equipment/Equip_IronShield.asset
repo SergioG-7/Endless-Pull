@@ -15,6 +15,7 @@ MonoBehaviour:
   equipName: Escudo de Hierro
   nameKey: EQUIP_IRON_SHIELD
   slotType: 3
+  tier: 2
   weaponType: 4
   bonusATK: 0
   bonusDEF: 10

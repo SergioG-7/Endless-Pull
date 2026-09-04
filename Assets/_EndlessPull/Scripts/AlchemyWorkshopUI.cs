@@ -11,7 +11,7 @@ public enum WorkshopTab
 }
 
 // Taller de Alquimia: tarjetas compactas para las 4 Piedras de Ascensión, armas, reparación,
-// pociones y mejora de equipo. Todo se paga con madera, hierro y comida; las gemas quedan
+// pociones y reparación. Todo se paga con madera, hierro y comida; las gemas quedan
 // para el gacha y las recargas. Repartido en 3 pestañas para que ninguna tarjeta se solape.
 public class AlchemyWorkshopUI : MonoBehaviour
 {
@@ -53,7 +53,6 @@ public class AlchemyWorkshopUI : MonoBehaviour
 
     private Ficha armas;
     private Ficha reparar;
-    private Ficha mejora;
 
     // Pociones de Curación y de Maná, cada una en sus 3 tiers (Menor/Media/Mayor);
     // paginadas de a 3 igual que forgePager, mismo ancho de tarjeta.
@@ -216,10 +215,14 @@ public class AlchemyWorkshopUI : MonoBehaviour
         Refresh();
     }
 
-    public void OnUpgradeGearPressed()
+    // La mejora ya no es global: se hace pieza a pieza desde el equipo de cada héroe, así que
+    // esta tarjeta desaparece de la fila de forja.
+    private ForgeUI forgeUI;
+
+    public void OnOpenForgePressed()
     {
-        if (crafting != null) crafting.TryUpgradeAllGear();
-        Refresh();
+        if (forgeUI == null) forgeUI = UnityEngine.Object.FindFirstObjectByType<ForgeUI>();
+        forgeUI?.Open();
     }
 
     private void OnResolved(bool success, string message)
@@ -249,11 +252,11 @@ public class AlchemyWorkshopUI : MonoBehaviour
         for (int i = 0; i < tiers.Length && i < piedras.Length; i++)
             RefreshStoneCard(piedras[i], tiers[i]);
 
-        // Fabricación de Armas
-        armas.titulo.text = LocalizationManager.Get("UI_FORGE_WEAPONS");
+        // Forja: la elección de hueco y gama vive en su propio panel.
+        armas.titulo.text = LocalizationManager.Get("UI_FORGE_TITLE");
         armas.cuerpo.text = LocalizationManager.Get("UI_FORGE_WEAPONS_HELP");
         armas.coste.text = Cost(crafting.WeaponWoodCost, crafting.WeaponIronCost, crafting.WeaponFoodCost);
-        SetButton(armas, LocalizationManager.Get("UI_CRAFT_EQUIPMENT"), crafting.CanCraftWeapon, UITheme.Teal);
+        SetButton(armas, LocalizationManager.Get("UI_CRAFT_EQUIPMENT"), true, UITheme.Teal);
 
         // Reparación de Equipo
         int desgaste = crafting.TotalWear();
@@ -275,13 +278,6 @@ public class AlchemyWorkshopUI : MonoBehaviour
         for (int i = 0; i < potionTiers.Length && i < pocionesMana.Length; i++)
             RefreshManaPotionCard(pocionesMana[i], potionTiers[i]);
 
-        // Mejora de Equipo
-        mejora.titulo.text = LocalizationManager.Get("UI_UPGRADE_GEAR");
-        mejora.cuerpo.text = LocalizationManager.Get("UI_UPGRADE_GEAR_HELP");
-        mejora.coste.text = crafting.ForgeUnlocked
-            ? Cost(crafting.UpgradeWoodCost, crafting.UpgradeIronCost, crafting.UpgradeFoodCost)
-            : $"<color={UITheme.Tag(UITheme.TextFaint)}>{LocalizationManager.Get("UI_FORGE_LOCKED")}</color>";
-        SetButton(mejora, LocalizationManager.Get("UI_UPGRADE_BUTTON"), crafting.CanUpgradeGear, UITheme.Teal);
     }
 
     private void RefreshStoneCard(Ficha ficha, AscensionStoneTier tier)
@@ -367,10 +363,9 @@ public class AlchemyWorkshopUI : MonoBehaviour
                 StoneCardWidth, () => OnCraftStonePressed(tier));
         }
 
-        // Forja/Reparación: 3 tarjetas (Armas, Mejora, Reparar). Alquimia: Poción de Curación y
+        // Forja/Reparación: 2 tarjetas (Forja, Reparar). Alquimia: Poción de Curación y
         // de Maná. Mismo motivo: la posición real la fija el pager de cada fila, no CreateCard.
-        armas = CreateCard("Card_Weapons", 0f, 0f, OnCraftWeaponPressed);
-        mejora = CreateCard("Card_Upgrade", 0f, 0f, OnUpgradeGearPressed);
+        armas = CreateCard("Card_Weapons", 0f, 0f, OnOpenForgePressed);
         reparar = CreateCard("Card_Repair", 0f, 0f, OnRepairAllPressed);
 
         var potionTiers = (PotionTier[])System.Enum.GetValues(typeof(PotionTier));
@@ -398,16 +393,16 @@ public class AlchemyWorkshopUI : MonoBehaviour
         stonesPager = new UIPager(panel.transform, new Vector2(0f, pagerY));
         stonesPager.Setup(System.Array.ConvertAll(piedras, f => f.root), stoneSlots);
 
-        float step3 = CardWidth + CardGap;
+        float medio = (CardWidth + CardGap) * 0.5f;
         forgePager = new UIPager(panel.transform, new Vector2(0f, pagerY));
-        forgePager.Setup(new[] { armas.root, mejora.root, reparar.root }, new[] { -step3, 0f, step3 });
+        forgePager.Setup(new[] { armas.root, reparar.root }, new[] { -medio, medio });
 
         var potionCards = new GameObject[pociones.Length + pocionesMana.Length];
         for (int i = 0; i < pociones.Length; i++) potionCards[i] = pociones[i].root;
         for (int i = 0; i < pocionesMana.Length; i++) potionCards[pociones.Length + i] = pocionesMana[i].root;
 
         var potionSlots = new float[PotionPageSize];
-        for (int i = 0; i < PotionPageSize; i++) potionSlots[i] = (i - (PotionPageSize - 1) / 2f) * step3;
+        for (int i = 0; i < PotionPageSize; i++) potionSlots[i] = (i - (PotionPageSize - 1) / 2f) * (CardWidth + CardGap);
 
         alchemyPager = new UIPager(panel.transform, new Vector2(0f, pagerY));
         alchemyPager.Setup(potionCards, potionSlots);

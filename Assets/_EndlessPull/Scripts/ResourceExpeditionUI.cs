@@ -18,17 +18,11 @@ public class ResourceExpeditionUI : MonoBehaviour
     [Tooltip("Modal de escuadra: confirma quién sale antes de arrancar la expedición.")]
     [SerializeField] private SquadManagementUI squadUI;
 
-    [Tooltip("Color de un destino disponible.")]
-    [SerializeField] private Color readyColor = new Color(0.25f, 0.45f, 0.35f);
-
-    [Tooltip("Color de un destino disponible que además da el bono del día.")]
-    [SerializeField] private Color bonusColor = new Color(0.55f, 0.42f, 0.15f);
-
-    [Tooltip("Color de un destino que ahora mismo no se puede elegir.")]
-    [SerializeField] private Color busyColor = new Color(0.28f, 0.28f, 0.32f);
-
     [Tooltip("Alto de cada fila de destino, en píxeles de UI.")]
     [SerializeField] private float rowHeight = UITheme.MinTouchTarget;
+
+    [Tooltip("Tamaño del modal; el mismo rango que el resto de paneles del juego.")]
+    [SerializeField] private Vector2 size = new Vector2(1100f, 700f);
 
     private static readonly ResourceExpeditionType[] Types =
         (ResourceExpeditionType[])System.Enum.GetValues(typeof(ResourceExpeditionType));
@@ -40,7 +34,6 @@ public class ResourceExpeditionUI : MonoBehaviour
     private TMP_Text status;
     private readonly Button[] buttons = new Button[Types.Length];
     private readonly TMP_Text[] buttonLabels = new TMP_Text[Types.Length];
-    private TMP_Text closeLabel;
     private Button claimButton;
     private TMP_Text claimLabel;
 
@@ -116,7 +109,6 @@ public class ResourceExpeditionUI : MonoBehaviour
     private void Refresh()
     {
         title.text = LocalizationManager.Get("UI_EXPEDITIONS");
-        closeLabel.text = LocalizationManager.Get("UI_CLOSE");
         claimLabel.text = LocalizationManager.Get("UI_CLAIM_REWARD");
 
         var bonusType = ResourceExpeditionManager.TodaysBonusType();
@@ -152,7 +144,8 @@ public class ResourceExpeditionUI : MonoBehaviour
                 + (isBonus ? LocalizationManager.Get("UI_EXPEDITION_BONUS_TAG") : string.Empty);
             buttons[i].gameObject.SetActive(!ready);
             buttons[i].interactable = notBusy;
-            buttons[i].targetGraphic.color = !notBusy ? busyColor : (isBonus ? bonusColor : readyColor);
+            buttons[i].targetGraphic.color = !notBusy ? UITheme.Neutral
+                : (isBonus ? UITheme.Amber : UITheme.Teal);
         }
     }
 
@@ -163,39 +156,42 @@ public class ResourceExpeditionUI : MonoBehaviour
     {
         if (canvas == null) return;
 
-        panel = new GameObject("ExpeditionPanel", typeof(RectTransform), typeof(Image));
-        panel.transform.SetParent(canvas.transform, false);
+        // Mismo constructor que el resto de modales: fondo del tema, esquinas redondeadas y
+        // aspa arriba a la derecha, en vez del Image plano con "Cerrar" morado abajo de antes.
+        panel = UIBuild.Panel(canvas.transform, "ExpeditionPanel", size, UITheme.Bg);
 
-        var prt = panel.GetComponent<RectTransform>();
-        prt.anchorMin = new Vector2(0.5f, 0.5f);
-        prt.anchorMax = new Vector2(0.5f, 0.5f);
-        prt.pivot = new Vector2(0.5f, 0.5f);
-        prt.sizeDelta = UITheme.ModalSize;
-        prt.anchoredPosition = Vector2.zero;
-        panel.GetComponent<Image>().color = new Color(0.10f, 0.12f, 0.14f, 0.98f);
+        title = UIBuild.TopLabel(panel.transform, "Title", UITheme.SizeTitle, 34f, -20f,
+            TextAlignmentOptions.Left);
 
-        title = NewLabel(panel.transform, "Title", 44f);
-        Place(title.rectTransform, 1f, new Vector2(0f, 60f), new Vector2(0f, 0f));
+        bonusInfo = UIBuild.TopLabel(panel.transform, "BonusInfo", UITheme.SizeBody, 28f, -60f,
+            TextAlignmentOptions.Left);
+        bonusInfo.color = UITheme.TextMuted;
 
-        bonusInfo = NewLabel(panel.transform, "BonusInfo", 24f);
-        Place(bonusInfo.rectTransform, 1f, new Vector2(0f, 34f), new Vector2(0f, -60f));
+        status = UIBuild.TopLabel(panel.transform, "Status", UITheme.SizeBody, 28f, -90f,
+            TextAlignmentOptions.Left);
+        status.color = UITheme.TextMuted;
 
-        status = NewLabel(panel.transform, "Status", 26f);
-        Place(status.rectTransform, 1f, new Vector2(0f, 36f), new Vector2(0f, -96f));
+        // Reclamar: solo aparece con cosecha pendiente, con el acento del tema.
+        claimButton = UIBuild.Button(panel.transform, "Btn_ClaimExpedition", string.Empty,
+            UITheme.AccentPick, new Vector2(size.x - 40f, rowHeight), new Vector2(0f, -126f),
+            OnClaimPressed);
+        claimLabel = claimButton.GetComponentInChildren<TMP_Text>();
+        claimButton.gameObject.SetActive(false);
 
-        var viewport = new GameObject("Viewport", typeof(RectTransform), typeof(Image),
-                                      typeof(Mask), typeof(ScrollRect));
-        viewport.transform.SetParent(panel.transform, false);
-        var vrt = viewport.GetComponent<RectTransform>();
-        vrt.anchorMin = new Vector2(0f, 0f);
-        vrt.anchorMax = new Vector2(1f, 1f);
-        vrt.offsetMin = new Vector2(12f, 96f);
-        vrt.offsetMax = new Vector2(-12f, -134f);
-        viewport.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.25f);
-        viewport.GetComponent<Mask>().showMaskGraphic = true;
+        var viewGo = new GameObject("Viewport", typeof(RectTransform), typeof(Image),
+                                    typeof(Mask), typeof(ScrollRect));
+        viewGo.transform.SetParent(panel.transform, false);
+        UITheme.Surface(viewGo, UITheme.BgPanel, UITheme.BorderSoft, UITheme.RadiusCard);
+        viewGo.GetComponent<Mask>().showMaskGraphic = true;
+
+        var vrt = viewGo.GetComponent<RectTransform>();
+        vrt.anchorMin = Vector2.zero;
+        vrt.anchorMax = Vector2.one;
+        vrt.offsetMin = new Vector2(20f, 20f);
+        vrt.offsetMax = new Vector2(-20f, -226f);
 
         var contentGo = new GameObject("Content", typeof(RectTransform));
-        contentGo.transform.SetParent(viewport.transform, false);
+        contentGo.transform.SetParent(viewGo.transform, false);
         content = contentGo.GetComponent<RectTransform>();
         content.anchorMin = new Vector2(0f, 1f);
         content.anchorMax = new Vector2(1f, 1f);
@@ -205,15 +201,18 @@ public class ResourceExpeditionUI : MonoBehaviour
 
         var layout = contentGo.AddComponent<VerticalLayoutGroup>();
         layout.spacing = 8f;
-        layout.padding = new RectOffset(8, 8, 8, 8);
+        layout.padding = new RectOffset(10, 10, 10, 10);
+        layout.childControlWidth = true;
+        layout.childForceExpandWidth = true;
         layout.childControlHeight = false;
         layout.childForceExpandHeight = false;
         contentGo.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-        var scroll = viewport.GetComponent<ScrollRect>();
+        var scroll = viewGo.GetComponent<ScrollRect>();
         scroll.viewport = vrt;
         scroll.content = content;
         scroll.horizontal = false;
+        scroll.scrollSensitivity = 34f;
 
         for (int i = 0; i < Types.Length; i++)
         {
@@ -228,16 +227,13 @@ public class ResourceExpeditionUI : MonoBehaviour
             rt.pivot = new Vector2(0.5f, 1f);
             rt.sizeDelta = new Vector2(0f, rowHeight);
 
-            go.GetComponent<Image>().color = readyColor;
+            var image = UITheme.Surface(go, UITheme.Teal, UITheme.BorderSoft, UITheme.RadiusItem);
 
-            var label = NewLabel(go.transform, "Label", 30f);
-            label.rectTransform.anchorMin = Vector2.zero;
-            label.rectTransform.anchorMax = Vector2.one;
-            label.rectTransform.offsetMin = Vector2.zero;
-            label.rectTransform.offsetMax = Vector2.zero;
+            var label = UIBuild.Label(go.transform, "Label", UITheme.SizeName, TextAlignmentOptions.Center);
+            UIBuild.Stretch(label.rectTransform);
 
             var button = go.GetComponent<Button>();
-            button.targetGraphic = go.GetComponent<Image>();
+            button.targetGraphic = image;
             button.onClick.AddListener(() => AudioManager.Play(SfxId.UiClick));
             button.onClick.AddListener(() => OnDestinationPressed(type));
             ButtonPressFeedback.Attach(go);
@@ -246,71 +242,6 @@ public class ResourceExpeditionUI : MonoBehaviour
             buttonLabels[i] = label;
         }
 
-        var claim = new GameObject("Btn_ClaimExpedition", typeof(RectTransform), typeof(Image), typeof(Button));
-        claim.transform.SetParent(panel.transform, false);
-        var clrt = claim.GetComponent<RectTransform>();
-        clrt.anchorMin = new Vector2(0.5f, 1f);
-        clrt.anchorMax = new Vector2(0.5f, 1f);
-        clrt.pivot = new Vector2(0.5f, 1f);
-        clrt.sizeDelta = new Vector2(760f, rowHeight);
-        clrt.anchoredPosition = new Vector2(0f, -104f);
-        claim.GetComponent<Image>().color = new Color(0.55f, 0.42f, 0.15f);
-
-        claimLabel = NewLabel(claim.transform, "Label", 30f);
-        claimLabel.rectTransform.anchorMin = Vector2.zero;
-        claimLabel.rectTransform.anchorMax = Vector2.one;
-        claimLabel.rectTransform.offsetMin = Vector2.zero;
-        claimLabel.rectTransform.offsetMax = Vector2.zero;
-
-        claimButton = claim.GetComponent<Button>();
-        claimButton.targetGraphic = claim.GetComponent<Image>();
-        claimButton.onClick.AddListener(() => AudioManager.Play(SfxId.UiClick));
-        claimButton.onClick.AddListener(OnClaimPressed);
-        ButtonPressFeedback.Attach(claim);
-        claim.SetActive(false);
-
-        var close = new GameObject("Btn_CloseExpedition", typeof(RectTransform), typeof(Image), typeof(Button));
-        close.transform.SetParent(panel.transform, false);
-        var crt = close.GetComponent<RectTransform>();
-        crt.anchorMin = new Vector2(0.5f, 0f);
-        crt.anchorMax = new Vector2(0.5f, 0f);
-        crt.pivot = new Vector2(0.5f, 0f);
-        crt.sizeDelta = new Vector2(280f, UITheme.MinTouchTarget);
-        crt.anchoredPosition = new Vector2(0f, 12f);
-        close.GetComponent<Image>().color = new Color(0.32f, 0.28f, 0.36f);
-
-        closeLabel = NewLabel(close.transform, "Label", 26f);
-        closeLabel.rectTransform.anchorMin = Vector2.zero;
-        closeLabel.rectTransform.anchorMax = Vector2.one;
-        closeLabel.rectTransform.offsetMin = Vector2.zero;
-        closeLabel.rectTransform.offsetMax = Vector2.zero;
-
-        var closeButton = close.GetComponent<Button>();
-        closeButton.targetGraphic = close.GetComponent<Image>();
-        closeButton.onClick.AddListener(() => AudioManager.Play(SfxId.UiClick));
-        closeButton.onClick.AddListener(Close);
-        ButtonPressFeedback.Attach(close);
-    }
-
-    private static void Place(RectTransform rt, float anchorY, Vector2 size, Vector2 position)
-    {
-        rt.anchorMin = new Vector2(0f, anchorY);
-        rt.anchorMax = new Vector2(1f, anchorY);
-        rt.pivot = new Vector2(0.5f, 1f);
-        rt.sizeDelta = size;
-        rt.anchoredPosition = position;
-    }
-
-    private static TMP_Text NewLabel(Transform parent, string name, float size)
-    {
-        var go = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
-        go.transform.SetParent(parent, false);
-
-        var tmp = go.GetComponent<TextMeshProUGUI>();
-        tmp.fontSize = size;
-        tmp.alignment = TextAlignmentOptions.Center;
-        tmp.color = Color.white;
-        tmp.raycastTarget = false;
-        return tmp;
+        UIBuild.CloseButtonTopRight(panel.transform, Close);
     }
 }

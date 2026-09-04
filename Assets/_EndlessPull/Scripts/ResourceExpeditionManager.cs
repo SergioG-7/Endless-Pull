@@ -225,6 +225,20 @@ public class ResourceExpeditionManager : MonoBehaviour
         ExpeditionChanged?.Invoke(message);
     }
 
+    // Progresión offline: adelanta el temporizador los segundos que el juego estuvo cerrado.
+    // Devuelve true si la expedición terminó durante ese rato y quedó lista para reclamar.
+    public bool AdvanceOffline(float seconds)
+    {
+        if (seconds <= 0f || remaining <= 0f) return false;
+
+        remaining -= seconds;
+        if (remaining > 0f) return false;
+
+        remaining = 0f;
+        readyToClaim = true;
+        return true;
+    }
+
     // La usa el SaveManager: recupera el temporizador exactamente donde se dejó.
     public void LoadState(int type, float savedRemaining, int savedHeroesSent, bool savedReadyToClaim)
     {

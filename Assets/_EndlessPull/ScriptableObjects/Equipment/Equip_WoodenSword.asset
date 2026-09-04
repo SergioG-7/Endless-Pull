@@ -15,6 +15,7 @@ MonoBehaviour:
   equipName: Espada de Madera
   nameKey: EQUIP_WOODEN_SWORD
   slotType: 0
+  tier: 1
   weaponType: 1
   bonusATK: 3
   bonusDEF: 0

@@ -257,8 +257,9 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Enemigos del piso 1; cada piso suma uno más.")]
     [SerializeField] private int baseEnemyCount = 2;
 
-    [Tooltip("Incremento de vida y ataque por cada piso superado.")]
-    [SerializeField] private float statGrowthPerFloor = 0.2f;
+    [Tooltip("Crecimiento compuesto de vida y ataque por cada piso; el poder del héroe también es multiplicativo.")]
+    [Range(0f, 0.5f)]
+    [SerializeField] private float statCompoundGrowth = 0.08f;
 
     [Tooltip("Gemas que da superar un piso.")]
     [SerializeField] private int floorReward = 100;
@@ -392,7 +393,11 @@ public class WaveManager : MonoBehaviour
     public ExpeditionState State => state;
     public int EnemyCountForFloor => baseEnemyCount + (currentFloor - 1);
     public bool IsBossFloor => bossEveryFloors > 0 && currentFloor % bossEveryFloors == 0;
-    public float StatMultiplierForFloor(int floor) => 1f + statGrowthPerFloor * (floor - 1)
+    // Base compuesta: en linea recta la Torre se aplanaba frente al equipo, la maestria y los
+    // niveles del heroe, que si multiplican entre si.
+    private float CompoundFor(int floor) => Mathf.Pow(1f + statCompoundGrowth, Mathf.Max(0, floor - 1));
+
+    public float StatMultiplierForFloor(int floor) => CompoundFor(floor)
                                             + hardHealthGrowth * HardFloorsFor(floor);
 
     // Pisos por encima del umbral duro; a partir de ahí el rusheo automático deja de valer.
@@ -401,7 +406,8 @@ public class WaveManager : MonoBehaviour
     private int HardFloorsFor(int floor) => Mathf.Max(0, floor - hardFloorFrom + 1);
 
     // El ataque sube más deprisa que la vida: obliga a provocar, curar y retirarse a tiempo.
-    public float AttackMultiplierForFloor(int floor) => 1f + hardAttackGrowth * HardFloorsFor(floor);
+    public float AttackMultiplierForFloor(int floor) => CompoundFor(floor)
+                                            + hardAttackGrowth * HardFloorsFor(floor);
 
     // Punto medio entre la línea de la escuadra y la de los enemigos; ahí encuadra la cámara.
 public Vector2 ArenaFocus => arenaCenter + new Vector2((heroSpawnOffset.x + spawnAreaCenter.x) * 0.5f, spawnAreaCenter.y);

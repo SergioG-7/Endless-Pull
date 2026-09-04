@@ -55,7 +55,16 @@ public class HeroSaveData
     public string armorAssetName;
     public string accessoryAssetName;
 
-    // Durabilidad por hueco: el EquipmentData es compartido y no puede guardarla.
+    // Formato nuevo: cada pieza equipada con lo suyo (afijo forjado, desgaste, nivel).
+    public List<EquipmentInstanceSaveData> equipped = new List<EquipmentInstanceSaveData>();
+
+    // --- Formato antiguo, anterior al equipo instanciado. Ya no se rellena al guardar, pero
+    // se conserva para poder migrar partidas guardadas antes (ver MigrateLegacyEquipment). ---
+    public int weaponGearLevel;
+    public int shieldGearLevel;
+    public int armorGearLevel;
+    public int accessoryGearLevel;
+
     public int weaponDurability;
     public int shieldDurability;
     public int armorDurability;
@@ -84,6 +93,10 @@ public class GameSaveData
 {
     // Version del esquema de guardado; permite migrar formatos antiguos en el futuro.
     public int saveVersion = 1;
+
+    // Momento del guardado en UTC (ISO-8601). Vacío en partidas anteriores al progreso offline:
+    // sin marca no se acredita nada, que es lo correcto para un save de antes.
+    public string lastSaveUtc = string.Empty;
 
     public int gems;
     public int wood;
@@ -128,7 +141,10 @@ public class GameSaveData
     public List<BuildingSaveData> buildings = new List<BuildingSaveData>();
     public List<HeroSaveData> heroes = new List<HeroSaveData>();
 
-    // Piezas que no lleva nadie puesto, por nombre de asset.
+    // Piezas que no lleva nadie puesto, cada una con lo suyo.
+    public List<EquipmentInstanceSaveData> inventoryItems = new List<EquipmentInstanceSaveData>();
+
+    // Formato antiguo del almacén (solo nombres de asset); se migra al cargar y ya no se escribe.
     public List<string> inventory = new List<string>();
 }
 
@@ -161,6 +177,9 @@ public class SaveManager : MonoBehaviour
 
     [Tooltip("Expediciones de recursos: guarda el temporizador y si hay recompensa pendiente.")]
     [SerializeField] private ResourceExpeditionManager expeditions;
+
+    [Tooltip("Progreso offline: acredita al cargar lo que la base produjo con el juego cerrado.")]
+    [SerializeField] private OfflineProgressManager offline;
 
     [Tooltip("Escribe el JSON indentado para poder leerlo a mano.")]
     [SerializeField] private bool prettyPrint = true;
@@ -240,7 +259,11 @@ public class SaveManager : MonoBehaviour
             return;
         }
 
-        var save = new GameSaveData { saveVersion = CurrentSaveVersion };
+        var save = new GameSaveData
+        {
+            saveVersion = CurrentSaveVersion,
+            lastSaveUtc = System.DateTime.UtcNow.ToString("o", System.Globalization.CultureInfo.InvariantCulture)
+        };
 
         if (economy != null)
         {
@@ -284,7 +307,8 @@ public class SaveManager : MonoBehaviour
             });
         }
 
-        var heroes = UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None);
+        var heroes = UnityEngine.Object.FindObjectsByType<HeroController>(
+            FindObjectsInactive.Include, FindObjectsSortMode.None);
         foreach (var hero in heroes)
         {
             if (hero.Data == null) continue;
@@ -308,20 +332,19 @@ public class SaveManager : MonoBehaviour
                 skillThreshold = progress != null ? progress.SkillThreshold : 0.15f,
                 skillRefinement = progress != null ? progress.SkillRefinement : 0f,
                 assignedBuilding = hero.AssignedBuilding != null ? hero.AssignedBuilding.SaveId : string.Empty,
-                shieldAssetName = AssetNameOf(hero.Shield),
-                weaponDurability = hero.DurabilityOf(EquipmentSlot.Weapon),
-                shieldDurability = hero.DurabilityOf(EquipmentSlot.Shield),
-                armorDurability = hero.DurabilityOf(EquipmentSlot.Armor),
-                accessoryDurability = hero.DurabilityOf(EquipmentSlot.Accessory),
                 bonusStarRank = hero.BonusStarRank,
                 ascensionMultiplier = hero.AscensionMultiplier,
                 affinity = hero.Affinity,
                 gearUpgradeAttack = hero.GearUpgradeAttack,
-                gearUpgradeDefense = hero.GearUpgradeDefense,
-                weaponAssetName = AssetNameOf(hero.Weapon),
-                armorAssetName = AssetNameOf(hero.Armor),
-                accessoryAssetName = AssetNameOf(hero.Accessory)
+                gearUpgradeDefense = hero.GearUpgradeDefense
             };
+
+            // Cada pieza equipada va entera: asset base, afijo forjado, desgaste y nivel.
+            foreach (EquipmentSlot slot in System.Enum.GetValues(typeof(EquipmentSlot)))
+            {
+                var pieza = ToSaveData(hero.GetEquipped(slot));
+                if (pieza != null) entry.equipped.Add(pieza);
+            }
 
             foreach (var passive in hero.Passives) entry.passives.Add((int)passive);
 
@@ -332,7 +355,11 @@ public class SaveManager : MonoBehaviour
         }
 
         if (shop != null)
-            foreach (var item in shop.Inventory) save.inventory.Add(item.name);
+            foreach (var item in shop.Inventory)
+            {
+                var pieza = ToSaveData(item);
+                if (pieza != null) save.inventoryItems.Add(pieza);
+            }
 
         if (party != null)
         {
@@ -457,6 +484,10 @@ public class SaveManager : MonoBehaviour
 
         Debug.Log($"[Guardado] Partida cargada: {save.heroes.Count} héroe(s), piso {save.currentFloor}, " +
                   $"{save.gems} gemas, {save.wood}M/{save.iron}H.", this);
+
+        // Lo último: necesita el roster y los edificios ya restaurados para saber quién descansaba.
+        if (offline == null) offline = UnityEngine.Object.FindFirstObjectByType<OfflineProgressManager>();
+        if (offline != null) offline.ApplySince(save.lastSaveUtc);
     }
 
     // Borra el fichero; útil para empezar de cero sin tocar la escena.
@@ -468,7 +499,46 @@ public class SaveManager : MonoBehaviour
         Debug.Log($"[Guardado] Partida borrada: {SavePath}", this);
     }
 
-    private static string AssetNameOf(EquipmentData item) => item != null ? item.name : string.Empty;
+    private static EquipmentInstanceSaveData ToSaveData(EquipmentInstance item)
+    {
+        if (item == null || !item.IsValid) return null;
+
+        return new EquipmentInstanceSaveData
+        {
+            instanceId = item.instanceId,
+            assetName = item.data.name,
+            slot = (int)item.SlotType,
+            forgedAffix = (int)item.forgedAffix,
+            forgedValue = item.forgedValue,
+            durability = item.durability,
+            gearLevel = item.gearLevel
+        };
+    }
+
+    // Vuelve a atar la pieza guardada con su asset del catálogo; null si ese asset ya no existe.
+    private EquipmentInstance FromSaveData(EquipmentInstanceSaveData saved)
+    {
+        if (saved == null || shop == null) return null;
+
+        var asset = shop.FindByAssetName(saved.assetName);
+        if (asset == null)
+        {
+            Debug.LogWarning($"[Guardado] {saved.assetName} ya no está en el catálogo de equipo.", this);
+            return null;
+        }
+
+        return new EquipmentInstance
+        {
+            instanceId = string.IsNullOrEmpty(saved.instanceId)
+                ? System.Guid.NewGuid().ToString() : saved.instanceId,
+            data = asset,
+            forgedAffix = (EquipmentAffix)saved.forgedAffix,
+            forgedValue = saved.forgedValue,
+            // 0 de desgaste en un save viejo significaba "sin estrenar", no "rota".
+            durability = saved.durability > 0 ? saved.durability : asset.maxDurability,
+            gearLevel = Mathf.Max(0, saved.gearLevel)
+        };
+    }
 
     // El inventario se rehace antes que el roster: equipar saca piezas de él.
     private void RestoreInventory(GameSaveData save)
@@ -476,10 +546,24 @@ public class SaveManager : MonoBehaviour
         if (shop == null) return;
 
         shop.ClearInventory();
-        foreach (var assetName in save.inventory)
+
+        foreach (var saved in save.inventoryItems)
         {
-            var item = shop.FindByAssetName(assetName);
-            if (item != null) shop.AddToInventory(item);
+            var pieza = FromSaveData(saved);
+            if (pieza != null) shop.AddToInventory(pieza);
+        }
+
+        // Migración: una partida anterior al equipo instanciado solo guardaba nombres de asset.
+        // Sin esto el almacén se vaciaría en silencio al cargarla.
+        if (save.inventoryItems.Count == 0 && save.inventory.Count > 0)
+        {
+            foreach (var assetName in save.inventory)
+            {
+                var asset = shop.FindByAssetName(assetName);
+                if (asset != null) shop.AddToInventory(asset);
+            }
+
+            Debug.Log($"[Guardado] Almacén migrado al formato nuevo: {save.inventory.Count} pieza(s).", this);
         }
     }
 
@@ -498,40 +582,52 @@ public class SaveManager : MonoBehaviour
     }
 
     // Lo equipado se guarda aparte y no está en la lista de inventario, así que solo se coloca.
+    // Cada pieza llega entera (afijo forjado, desgaste y nivel incluidos), sin retoques después.
     private void RestoreEquipment(HeroController hero, HeroSaveData entry)
     {
         if (shop == null) return;
 
-        EquipOne(hero, entry.weaponAssetName);
-        EquipOne(hero, entry.shieldAssetName);
-        EquipOne(hero, entry.armorAssetName);
-        EquipOne(hero, entry.accessoryAssetName);
-
-        // La durabilidad se escribe después de equipar: Equip deja la pieza entera por defecto.
-        Restore(hero, EquipmentSlot.Weapon, entry.weaponDurability);
-        Restore(hero, EquipmentSlot.Shield, entry.shieldDurability);
-        Restore(hero, EquipmentSlot.Armor, entry.armorDurability);
-        Restore(hero, EquipmentSlot.Accessory, entry.accessoryDurability);
+        if (entry.equipped.Count > 0)
+        {
+            foreach (var saved in entry.equipped)
+            {
+                var pieza = FromSaveData(saved);
+                if (pieza != null) hero.Equip(pieza);
+            }
+        }
+        else
+        {
+            MigrateLegacyEquipment(hero, entry);
+        }
 
         // Partidas guardadas antes del arma inicial: se les repone la espada de madera.
         if (gacha != null) gacha.GrantStarterWeapon(hero);
     }
 
-    // Las partidas anteriores al desgaste traen 0; sin esto todo saldría roto de golpe.
-    private static void Restore(HeroController hero, EquipmentSlot slot, int saved)
+    // Partidas anteriores al equipo instanciado: el equipo eran cuatro nombres de asset sueltos
+    // más su desgaste y su nivel en campos aparte. Se reconstruye una instancia por hueco para
+    // no perder ni las piezas ni lo que ya costaron.
+    private void MigrateLegacyEquipment(HeroController hero, HeroSaveData entry)
     {
-        var item = hero.GetEquipped(slot);
-        if (item == null) return;
-
-        hero.SetDurability(slot, saved > 0 ? saved : item.maxDurability);
+        EquipLegacy(hero, entry.weaponAssetName, entry.weaponDurability, entry.weaponGearLevel);
+        EquipLegacy(hero, entry.shieldAssetName, entry.shieldDurability, entry.shieldGearLevel);
+        EquipLegacy(hero, entry.armorAssetName, entry.armorDurability, entry.armorGearLevel);
+        EquipLegacy(hero, entry.accessoryAssetName, entry.accessoryDurability, entry.accessoryGearLevel);
     }
 
-    private void EquipOne(HeroController hero, string assetName)
+    private void EquipLegacy(HeroController hero, string assetName, int durability, int gearLevel)
     {
-        var item = shop.FindByAssetName(assetName);
-        if (item == null) return;
+        var asset = shop.FindByAssetName(assetName);
+        if (asset == null) return;
 
-        hero.Equip(item);
+        var pieza = new EquipmentInstance(asset)
+        {
+            // 0 de desgaste en el formato viejo significaba "sin estrenar", no "rota".
+            durability = durability > 0 ? durability : asset.maxDurability,
+            gearLevel = Mathf.Max(0, gearLevel)
+        };
+
+        hero.Equip(pieza);
     }
 
     private void RestoreRoster(GameSaveData save)
@@ -543,10 +639,14 @@ public class SaveManager : MonoBehaviour
         }
 
         // Los héroes que trae la escena sobran: manda el roster guardado.
-        var existing = UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None);
+        var existing = UnityEngine.Object.FindObjectsByType<HeroController>(
+            FindObjectsInactive.Include, FindObjectsSortMode.None);
         foreach (var hero in existing)
         {
-            // Se desactiva antes de destruir para que FindObjectsByType deje de verlo ya en este frame.
+            // Desactivar ya no basta: las búsquedas del roster incluyen inactivos a propósito
+            // (los héroes de expedición lo están). Se marcan como descartados para que nadie
+            // los cuente durante el frame que tardan en desaparecer de verdad.
+            hero.MarkDiscarded();
             hero.gameObject.SetActive(false);
             Destroy(hero.gameObject);
         }
@@ -596,11 +696,32 @@ public class SaveManager : MonoBehaviour
             hero.SetLocked(entry.isLocked);
             hero.SetSubclass((HeroSubclass)entry.subclass);
             RestoreWorkplace(hero, entry.assignedBuilding);
+            PlaceOnLoad(hero, entry.assignedBuilding);
             spawned.Add(hero);
         }
 
         RestoreParty(save, spawned);
         RosterLoaded?.Invoke();
+    }
+
+    // Al cargar, todos nacían en el punto del altar y quedaban amontonados. Cada uno vuelve a
+    // donde estaba: al hueco de su edificio si trabajaba, o repartido por su zona de deambular.
+    private static void PlaceOnLoad(HeroController hero, string buildingId)
+    {
+        if (hero == null) return;
+
+        if (!string.IsNullOrEmpty(buildingId))
+        {
+            foreach (var building in BaseBuilding.All)
+            {
+                if (building == null || building.SaveId != buildingId) continue;
+
+                hero.transform.position = building.ClaimSlot(hero);
+                return;
+            }
+        }
+
+        hero.ScatterInBaseArea();
     }
 
     // El puesto de trabajo se cotejaba por nombre de GameObject, igual que el nivel del edificio.

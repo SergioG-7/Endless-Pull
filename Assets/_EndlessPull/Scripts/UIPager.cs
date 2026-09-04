@@ -18,6 +18,11 @@ public class UIPager
     private int currentPage;
     private bool tabActive = true;
 
+    // Modo virtual: el pager no conoce las tarjetas, solo cuántas hay. Lo usan las listas
+    // largas (roster de 100 héroes) que solo crean los widgets de una página.
+    private int virtualCount = -1;
+    private System.Action<int, int> renderPage;
+
     public UIPager(Transform parent, Vector2 anchoredPositionFromBottom)
     {
         row = new GameObject("Pagination", typeof(RectTransform));
@@ -56,6 +61,19 @@ public class UIPager
         Refresh();
     }
 
+    // Variante para listas largas: en vez de la lista de tarjetas recibe cuántos elementos hay
+    // y un callback que pinta el rango (primero, cuántos) de la página activa.
+    public void SetupVirtual(int totalItems, int itemsPerPage, System.Action<int, int> onRenderPage)
+    {
+        cards = null;
+        slotX = null;
+        virtualCount = Mathf.Max(0, totalItems);
+        renderPage = onRenderPage;
+        pageSize = Mathf.Max(1, itemsPerPage);
+        currentPage = 0;
+        Refresh();
+    }
+
     // La llama el panel dueño al cambiar de pestaña: oculta esta fila entera si no es la activa,
     // y al volver a activarse reaplica la página en la que se había quedado.
     public void SetTabActive(bool active)
@@ -76,6 +94,10 @@ public class UIPager
     // La llama el panel dueño en OnLanguageChanged: solo el texto "Página X/Y" necesita releerse.
     public void RefreshLocalization() => Refresh();
 
+    // Repinta la página activa sin cambiar de página: para cuando cambia el contenido de una
+    // fila (asignar/desasignar) pero no el total de elementos.
+    public void RefreshPage() => Refresh();
+
     private void OnPrevPressed()
     {
         currentPage--;
@@ -90,6 +112,7 @@ public class UIPager
 
     private void Refresh()
     {
+        if (virtualCount >= 0) { RefreshVirtual(); return; }
         if (cards == null || slotX == null) return;
 
         int totalPages = Mathf.Max(1, Mathf.CeilToInt(cards.Count / (float)pageSize));
@@ -117,5 +140,24 @@ public class UIPager
             prevButton.interactable = currentPage > 0;
             nextButton.interactable = currentPage < totalPages - 1;
         }
+    }
+
+    // Misma cuenta de páginas y misma fila de flechas, pero delegando el pintado al dueño.
+    private void RefreshVirtual()
+    {
+        int totalPages = Mathf.Max(1, Mathf.CeilToInt(virtualCount / (float)pageSize));
+        currentPage = Mathf.Clamp(currentPage, 0, totalPages - 1);
+
+        int start = currentPage * pageSize;
+        int count = tabActive ? Mathf.Clamp(virtualCount - start, 0, pageSize) : 0;
+        renderPage?.Invoke(start, count);
+
+        bool needsPagination = tabActive && totalPages > 1;
+        row.SetActive(needsPagination);
+        if (!needsPagination) return;
+
+        indicator.text = string.Format(LocalizationManager.Get("UI_PAGE_INDICATOR"), currentPage + 1, totalPages);
+        prevButton.interactable = currentPage > 0;
+        nextButton.interactable = currentPage < totalPages - 1;
     }
 }

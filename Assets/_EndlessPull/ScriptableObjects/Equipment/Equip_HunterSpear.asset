@@ -15,6 +15,7 @@ MonoBehaviour:
   equipName: Lanza de Cazador
   nameKey: EQUIP_HUNTER_SPEAR
   slotType: 0
+  tier: 2
   weaponType: 2
   bonusATK: 10
   bonusDEF: 0

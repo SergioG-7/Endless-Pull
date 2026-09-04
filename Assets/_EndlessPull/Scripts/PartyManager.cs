@@ -241,7 +241,8 @@ public class PartyManager : MonoBehaviour
         if (index < 0 || index >= PresetCount) return;
 
         var pool = new List<HeroController>(
-            UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None));
+            UnityEngine.Object.FindObjectsByType<HeroController>(
+            FindObjectsInactive.Include, FindObjectsSortMode.None));
 
         // Con la recolección en marcha esa escuadra no se toca; la de torre sí se puede rehacer.
         var running = UnityEngine.Object.FindFirstObjectByType<ResourceExpeditionManager>();

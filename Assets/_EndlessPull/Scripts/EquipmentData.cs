@@ -100,6 +100,10 @@ public class EquipmentData : ScriptableObject
     [Tooltip("Hueco del héroe en el que se coloca.")]
     public EquipmentSlot slotType = EquipmentSlot.Weapon;
 
+    [Tooltip("Gama de la pieza; la forja agrupa por hueco y gama, y el coste sube con ella.")]
+    [Min(1)]
+    public int tier = 1;
+
     [Tooltip("Tipo de arma; solo cuenta para la maestría si va en el hueco de arma.")]
     public WeaponType weaponType = WeaponType.Sword;
 

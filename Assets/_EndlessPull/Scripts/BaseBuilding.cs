@@ -155,8 +155,10 @@ public class BaseBuilding : MonoBehaviour
     public float PassiveManaPerSecond => passiveManaPerSecond * LevelFactor;
     public int HealPerTick => Mathf.RoundToInt(healPerTick * LevelFactor);
     public float MoralePerTick => moralePerTick;
-    public int NextWoodCost => woodCostPerLevel * level;
-    public int NextIronCost => ironCostPerLevel * level;
+    // El coste crece con el triangular del nivel, no en linea recta: la produccion por nivel es
+    // cuadratica, y un coste lineal dejaba que la base se pagase sus propias mejoras sola.
+    public int NextWoodCost => woodCostPerLevel * level * (level + 1) / 2;
+    public int NextIronCost => ironCostPerLevel * level * (level + 1) / 2;
 
     public int RequiredFloor => requiredFloor;
     public bool IsUnlocked => TowerFloor >= requiredFloor;
@@ -175,6 +177,15 @@ public class BaseBuilding : MonoBehaviour
 
     // A partir del piso 5 cada instalación admite el doble de gente.
     public static int FloorCapacity => TowerFloor >= 5 ? 2 : 1;
+
+    // Nivel maximo por edificio: la base crece al subir la Torre, un nivel mas cada 5 pisos.
+    // Los materiales son el coste secundario, no la puerta.
+    public const int FloorsPerLevelCap = 5;
+    public static int MaxLevel => 1 + TowerFloor / FloorsPerLevelCap;
+
+    // Piso que hace falta superar para el siguiente nivel; 0 si ya no hay tope que esperar.
+    public int NextLevelFloor => level < MaxLevel ? 0 : level * FloorsPerLevelCap;
+    public bool CanUpgrade => level < MaxLevel;
 
     public int Capacity => Mathf.Min(capacityCap, FloorCapacity + (level - 1));
 
@@ -250,10 +261,14 @@ public class BaseBuilding : MonoBehaviour
 
     // Jerarquía: escuadra primero, luego estrellas y luego nivel.
     public static int Rank(HeroController hero)
+        => Rank(hero, UnityEngine.Object.FindFirstObjectByType<PartyManager>());
+
+    // Sobrecarga con la escuadra ya resuelta: ordenar un roster grande hacía una búsqueda de
+    // PartyManager por héroe, y eso solo costaba 75 ms al abrir el panel de asignación.
+    public static int Rank(HeroController hero, PartyManager party)
     {
         if (hero == null) return -1;
 
-        var party = UnityEngine.Object.FindFirstObjectByType<PartyManager>();
         int enEscuadra = party != null && party.IsInParty(hero) ? 1000 : 0;
 
         var progress = hero.GetComponent<HeroProgress>();
@@ -439,10 +454,20 @@ void Start()
                + new Vector2(Mathf.Cos(angulo), Mathf.Sin(angulo)) * slotRadius;
     }
 
-    // Reserva el hueco libre más cercano al héroe; sin huecos, se cae al centro de siempre.
+    // Reserva el hueco libre más cercano al héroe. Sin huecos devuelve un punto del anillo
+    // exterior, NO el centro: caer al centro plantaba a los sobrantes justo encima del sprite
+    // del edificio y lo dejaba imposible de clicar con la base llena.
     public Vector2 ClaimSlot(HeroController hero)
     {
-        if (hero == null) return transform.position;
+        TryClaimSlot(hero, out Vector2 destino);
+        return destino;
+    }
+
+    // Igual, pero dice si de verdad consiguió hueco: quien pueda elegir otro sitio (el paseo
+    // sin rumbo) debería irse a otra parte en vez de hacer corrillo alrededor.
+    public bool TryClaimSlot(HeroController hero, out Vector2 position)
+    {
+        if (hero == null) { position = transform.position; return false; }
 
         ReleaseSlot(hero);
         PruneSlots();
@@ -461,10 +486,26 @@ void Start()
             mejor = i;
         }
 
-        if (mejor < 0) return transform.position;
+        if (mejor < 0)
+        {
+            position = OuterRingPosition(hero);
+            return false;
+        }
 
         slotOwner[mejor] = hero;
-        return SlotPosition(mejor);
+        position = SlotPosition(mejor);
+        return true;
+    }
+
+    // Anillo de espera, más ancho que los huecos y por el lado desde el que llega el héroe:
+    // ni tapa el edificio ni obliga a rodearlo para quedarse esperando.
+    private Vector2 OuterRingPosition(HeroController hero)
+    {
+        Vector2 centro = transform.position;
+        Vector2 desde = (Vector2)hero.transform.position - centro;
+        Vector2 direccion = desde.sqrMagnitude > 0.0001f ? desde.normalized : Vector2.up;
+
+        return centro + direccion * (slotRadius * 2.2f);
     }
 
     public void ReleaseSlot(HeroController hero)
@@ -536,10 +577,62 @@ void Start()
         return false;
     }
 
+    // Comida que la granja habría cosechado con el juego cerrado; no la abona, solo la calcula.
+    public int OfflineHarvest(float seconds)
+    {
+        if (type != BuildingType.Farm || !IsUnlocked || harvestInterval <= 0f) return 0;
+
+        int cosechas = Mathf.FloorToInt(seconds / harvestInterval);
+        if (cosechas <= 0) return 0;
+
+        PruneWorkers();
+        return Mathf.RoundToInt(FoodPerHarvest * (1f + workers.Count * 0.5f) * cosechas);
+    }
+
+    // Descanso y maná que sus trabajadores fijos habrían recuperado estando el juego cerrado.
+    // El campo de entrenamiento queda fuera a propósito: la EXP no se regala sin jugar.
+    public int OfflineRecover(float seconds)
+    {
+        if (!IsUnlocked || seconds <= 0f) return 0;
+        if (type != BuildingType.Canteen && type != BuildingType.RestArea
+            && type != BuildingType.ManaWell) return 0;
+
+        PruneWorkers();
+        if (workers.Count == 0) return 0;
+
+        // Se aplica el total de una vez en vez de simular tick a tick: son las mismas cuentas
+        // y evita miles de iteraciones por cada héroe tras una noche entera fuera.
+        int ticks = tickInterval > 0f ? Mathf.FloorToInt(seconds / tickInterval) : 0;
+
+        foreach (var worker in workers)
+        {
+            if (worker == null) continue;
+
+            if (type == BuildingType.ManaWell)
+            {
+                worker.RestoreMP(PassiveManaPerSecond * seconds);
+                continue;
+            }
+
+            if (ticks <= 0) continue;
+
+            worker.AddMorale(moralePerTick * ticks);
+            worker.Heal(Mathf.RoundToInt(HealPerTick * HeroTraits.HealMultiplier(worker.Trait, type) * ticks));
+        }
+
+        return workers.Count;
+    }
+
     // Mejora el edificio si hay materiales; sube el efecto por tick.
     public bool TryUpgrade(EconomyManager economy)
     {
         if (economy == null) return false;
+
+        if (!CanUpgrade)
+        {
+            Debug.LogWarning($"[Edificio] {buildingName} está en el tope de nivel {MaxLevel}; supera el piso {NextLevelFloor} de la Torre.", this);
+            return false;
+        }
 
         int wood = NextWoodCost;
         int iron = NextIronCost;

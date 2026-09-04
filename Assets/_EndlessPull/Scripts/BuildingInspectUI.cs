@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,11 +11,15 @@ public class BuildingInspectUI : MonoBehaviour
     [Tooltip("Economía que paga las mejoras.")]
     [SerializeField] private EconomyManager economy;
 
-    [Tooltip("Tamaño de la ficha.")]
+    [Tooltip("Tamaño de la ficha; solo se usa el ancho, el alto se ajusta a los botones visibles.")]
     [SerializeField] private Vector2 size = new Vector2(880f, 700f);
 
-    [Tooltip("Alto de cada fila de héroe asignable.")]
-    [SerializeField] private float rowHeight = 52f;
+    // La ficha ya no lleva la lista de héroes: el alto se recorta a los botones que de verdad
+    // se enseñan, para que no quede un hueco muerto debajo del último.
+    private const float SecondRowY = -200f;
+    private const float RowStep = 64f;
+    private const float BottomMargin = 24f;
+    private const float ButtonHeight = 56f;
 
     private GameObject panel;
     private BaseBuilding building;
@@ -24,19 +27,20 @@ public class BuildingInspectUI : MonoBehaviour
     private TMP_Text titulo;
     private TMP_Text ocupacion;
     private TMP_Text produccion;
-    private RectTransform lista;
-    private GameObject listaViewport;
     [Tooltip("Taller que repara el equipo desgastado.")]
     [SerializeField] private CraftingManager crafting;
 
     private Button botonMejora;
     private Button botonReparar;
     private Button botonAbrir;
+    private Button botonAsignar;
     private TMP_Text etiquetaReparar;
     private TMP_Text etiquetaMejora;
+    private TMP_Text etiquetaAsignar;
 
     private SquadManagementUI squadUI;
     private SanctuaryArchiveUI archiveUI;
+    private WorkerAssignUI assignUI;
 
     public bool IsOpen => panel != null && panel.activeSelf;
 
@@ -86,14 +90,6 @@ public class BuildingInspectUI : MonoBehaviour
         Refresh();
     }
 
-    private void OnWorkerPressed(HeroController hero)
-    {
-        if (building == null) return;
-
-        building.ToggleWorker(hero);
-        Refresh();
-    }
-
     private void Refresh()
     {
         if (building == null) return;
@@ -105,22 +101,75 @@ public class BuildingInspectUI : MonoBehaviour
             BuildingTypes.DisplayName(building.Type));
         produccion.text = string.Format(LocalizationManager.Get("UI_PER_TICK"), BeneficioPorTick());
 
-        bool puede = economy != null && economy.CanAffordMaterials(building.NextWoodCost, building.NextIronCost);
+        // El tope de nivel lo abre la Torre, no los materiales: si está topado se dice qué piso falta.
+        bool tope = !building.CanUpgrade;
+        bool puede = !tope && economy != null
+                     && economy.CanAffordMaterials(building.NextWoodCost, building.NextIronCost);
         botonMejora.interactable = puede;
         botonMejora.targetGraphic.color = puede
             ? new Color(0.30f, 0.52f, 0.32f)
             : new Color(0.28f, 0.28f, 0.32f);
-        etiquetaMejora.text = string.Format(LocalizationManager.Get("UI_UPGRADE_BUILDING"),
-            building.NextWoodCost, building.NextIronCost);
+        etiquetaMejora.text = tope
+            ? string.Format(LocalizationManager.Get("UI_UPGRADE_BUILDING_CAP"), building.NextLevelFloor)
+            : string.Format(LocalizationManager.Get("UI_UPGRADE_BUILDING"),
+                building.NextWoodCost, building.NextIronCost);
 
         RefreshMaintenance();
         RefreshOpenButton();
+        RefreshAssignButton();
+        ResizeToContent();
+    }
 
-        // Sala de Guerra y Archivo no usan trabajadores fijos: la lista de asignación
-        // se quedaba debajo del botón de abrir panel, duplicando el acceso a Escuadras.
-        bool usaTrabajadores = building.Type != BuildingType.WarRoom && building.Type != BuildingType.Archive;
-        if (listaViewport != null) listaViewport.SetActive(usaTrabajadores);
-        if (usaTrabajadores) RebuildWorkerList();
+    // El alto se recorta al botón visible más bajo; sin esto la ficha de una granja (que no
+    // enseña mantenimiento) dejaba una franja vacía debajo del botón de asignar.
+    private void ResizeToContent()
+    {
+        float masBajo = SecondRowY;
+
+        foreach (var boton in new[] { botonReparar, botonAbrir, botonAsignar })
+        {
+            if (boton == null || !boton.gameObject.activeSelf) continue;
+
+            float y = boton.GetComponent<RectTransform>().anchoredPosition.y;
+            if (y < masBajo) masBajo = y;
+        }
+
+        var rt = panel.GetComponent<RectTransform>();
+        rt.sizeDelta = new Vector2(size.x, -masBajo + ButtonHeight + BottomMargin);
+    }
+
+    // Sala de Guerra y Archivo no usan trabajadores fijos: ahí el botón de asignar no aparece.
+    private void RefreshAssignButton()
+    {
+        if (botonAsignar == null) return;
+
+        bool usaTrabajadores = building.Type != BuildingType.WarRoom
+                               && building.Type != BuildingType.Archive;
+
+        if (botonAsignar.gameObject.activeSelf != usaTrabajadores)
+            botonAsignar.gameObject.SetActive(usaTrabajadores);
+        if (!usaTrabajadores) return;
+
+        // Va pegado al de mejorar, como el de Sala de Guerra; solo baja un hueco en el Taller,
+        // que es el único que además enseña la fila de mantenimiento.
+        bool hayMantenimiento = botonReparar != null && botonReparar.gameObject.activeSelf;
+        var rt = botonAsignar.GetComponent<RectTransform>();
+        rt.anchoredPosition = new Vector2(0f, hayMantenimiento ? SecondRowY - RowStep : SecondRowY);
+
+        etiquetaAsignar.text = string.Format(LocalizationManager.Get("UI_ASSIGN_STAFF"),
+            building.Workers.Count, building.Capacity);
+    }
+
+    // El panel de asignación es exclusivo, así que cierra esta ficha; al cerrarse la reabre.
+    public void OnAssignPressed()
+    {
+        if (building == null) return;
+
+        if (assignUI == null) assignUI = UnityEngine.Object.FindFirstObjectByType<WorkerAssignUI>();
+        if (assignUI == null) return;
+
+        var objetivo = building;
+        assignUI.Show(objetivo, () => Show(objetivo));
     }
 
     // Sala de Guerra y Archivo abren su propio panel dedicado en vez de solo mostrar texto.
@@ -225,47 +274,13 @@ public class BuildingInspectUI : MonoBehaviour
         return "-";
     }
 
-    private void RebuildWorkerList()
-    {
-        for (int i = lista.childCount - 1; i >= 0; i--)
-            Destroy(lista.GetChild(i).gameObject);
-
-        var heroes = new List<HeroController>(
-            UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None));
-
-        // Se ordena por rango para que la jerarquía se vea en el propio listado.
-        heroes.Sort((a, b) => BaseBuilding.Rank(b).CompareTo(BaseBuilding.Rank(a)));
-
-        lista.sizeDelta = new Vector2(lista.sizeDelta.x, heroes.Count * (rowHeight + 6f) + 8f);
-
-        foreach (var hero in heroes)
-        {
-            if (hero == null || hero.Data == null) continue;
-
-            bool dentro = building.IsWorker(hero);
-            bool hayHueco = building.Workers.Count < building.Capacity;
-
-            string etiquetaAsignar = LocalizationManager.Get(dentro ? "BTN_UNASSIGN" : "BTN_ASSIGN");
-            var fila = UIBuild.Button(lista, "Row_" + hero.name,
-                $"{hero.Data.heroName}  {hero.StarRank}★  ·  {etiquetaAsignar}",
-                dentro ? new Color(0.30f, 0.52f, 0.32f) : new Color(0.28f, 0.28f, 0.34f),
-                new Vector2(0f, rowHeight), Vector2.zero, () => OnWorkerPressed(hero));
-
-            var rt = fila.GetComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0f, 1f);
-            rt.anchorMax = new Vector2(1f, 1f);
-            rt.pivot = new Vector2(0.5f, 1f);
-            rt.sizeDelta = new Vector2(0f, rowHeight);
-
-            fila.interactable = dentro || hayHueco;
-        }
-    }
 
     private void Build()
     {
         if (canvas == null) return;
 
-        panel = UIBuild.Panel(canvas.transform, "BuildingInspect", size, new Color(0.10f, 0.13f, 0.12f, 0.98f));
+        panel = UIBuild.Panel(canvas.transform, "BuildingInspect", new Vector2(size.x, -SecondRowY + ButtonHeight + BottomMargin),
+            new Color(0.10f, 0.13f, 0.12f, 0.98f));
 
         titulo = UIBuild.TopLabel(panel.transform, "Title", UIBuild.TitleSize, 46f, -14f,
             TextAlignmentOptions.Left);
@@ -281,49 +296,20 @@ public class BuildingInspectUI : MonoBehaviour
 
         // Mantenimiento: solo tiene sentido en el taller, así que se enseña y esconde según el tipo.
         botonReparar = UIBuild.Button(panel.transform, "Btn_RepairAll", string.Empty,
-            UITheme.AccentSoft, new Vector2(size.x - 40f, 56f), new Vector2(0f, -200f),
+            UITheme.AccentSoft, new Vector2(size.x - 40f, ButtonHeight), new Vector2(0f, SecondRowY),
             OnRepairAllPressed);
         etiquetaReparar = botonReparar.GetComponentInChildren<TMP_Text>();
 
         // Sala de Guerra/Archivo: abre su propio panel en vez del texto de mantenimiento.
         botonAbrir = UIBuild.Button(panel.transform, "Btn_OpenBuilding", string.Empty,
-            UITheme.AccentSoft, new Vector2(size.x - 40f, 56f), new Vector2(0f, -200f),
+            UITheme.AccentSoft, new Vector2(size.x - 40f, ButtonHeight), new Vector2(0f, SecondRowY),
             OnOpenPressed);
 
-        // Lista de asignación con scroll: el roster puede ser largo.
-        var viewport = new GameObject("Viewport", typeof(RectTransform), typeof(Image),
-                                      typeof(Mask), typeof(ScrollRect));
-        viewport.transform.SetParent(panel.transform, false);
-        listaViewport = viewport;
-
-        var vrt = viewport.GetComponent<RectTransform>();
-        vrt.anchorMin = Vector2.zero;
-        vrt.anchorMax = Vector2.one;
-        vrt.offsetMin = new Vector2(20f, 90f);
-        vrt.offsetMax = new Vector2(-20f, -210f);
-        viewport.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.25f);
-        viewport.GetComponent<Mask>().showMaskGraphic = true;
-
-        var contentGo = new GameObject("Content", typeof(RectTransform));
-        contentGo.transform.SetParent(viewport.transform, false);
-        lista = contentGo.GetComponent<RectTransform>();
-        lista.anchorMin = new Vector2(0f, 1f);
-        lista.anchorMax = new Vector2(1f, 1f);
-        lista.pivot = new Vector2(0.5f, 1f);
-        lista.anchoredPosition = Vector2.zero;
-        lista.sizeDelta = new Vector2(0f, 100f);
-
-        var layout = contentGo.AddComponent<VerticalLayoutGroup>();
-        layout.spacing = 6f;
-        layout.padding = new RectOffset(6, 6, 6, 6);
-        layout.childControlHeight = false;
-        layout.childForceExpandHeight = false;
-        contentGo.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-        var scroll = viewport.GetComponent<ScrollRect>();
-        scroll.viewport = vrt;
-        scroll.content = lista;
-        scroll.horizontal = false;
+        // Asignar Personal: abre el panel compartido en vez de listar aquí el roster entero.
+        botonAsignar = UIBuild.Button(panel.transform, "Btn_AssignStaff", string.Empty,
+            UITheme.AccentSoft, new Vector2(size.x - 40f, ButtonHeight), new Vector2(0f, SecondRowY),
+            OnAssignPressed);
+        etiquetaAsignar = botonAsignar.GetComponentInChildren<TMP_Text>();
 
         UIBuild.CloseButtonTopRight(panel.transform, Close);
     }

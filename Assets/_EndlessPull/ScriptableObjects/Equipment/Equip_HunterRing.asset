@@ -15,6 +15,7 @@ MonoBehaviour:
   equipName: Anillo del Cazador
   nameKey: EQUIP_HUNTER_RING
   slotType: 2
+  tier: 1
   weaponType: 6
   bonusATK: 2
   bonusDEF: 0

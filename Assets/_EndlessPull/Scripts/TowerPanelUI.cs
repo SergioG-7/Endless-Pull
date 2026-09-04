@@ -20,17 +20,13 @@ public class TowerPanelUI : MonoBehaviour
     [Tooltip("Alto de cada fila de piso, en píxeles de UI (min. área táctil ~88px a 1920 de referencia).")]
     [SerializeField] private float rowHeight = UITheme.MinTouchTarget;
 
-    [Tooltip("Color de un piso ya superado, que solo se puede repetir.")]
-    [SerializeField] private Color clearedColor = new Color(0.22f, 0.42f, 0.30f);
-
-    [Tooltip("Color del piso nuevo, el único que da gemas.")]
-    [SerializeField] private Color freshColor = new Color(0.55f, 0.42f, 0.15f);
+    [Tooltip("Tamaño del modal; el mismo rango que el resto de paneles del juego.")]
+    [SerializeField] private Vector2 size = new Vector2(1100f, 700f);
 
     private GameObject panel;
     private RectTransform content;
     private TMP_Text title;
     private TMP_Text info;
-    private TMP_Text closeLabel;
 
     public bool IsOpen => panel != null && panel.activeSelf;
 
@@ -56,7 +52,6 @@ public class TowerPanelUI : MonoBehaviour
     // abierto, título/cabecera/filas se quedaban en el idioma anterior.
     private void OnLanguageChanged()
     {
-        if (closeLabel != null) closeLabel.text = LocalizationManager.Get("UI_CLOSE");
         if (IsOpen) Rebuild();
     }
 
@@ -117,21 +112,14 @@ public class TowerPanelUI : MonoBehaviour
         rt.pivot = new Vector2(0.5f, 1f);
         rt.sizeDelta = new Vector2(0f, rowHeight);
 
-        var image = go.GetComponent<Image>();
-        image.color = cleared ? clearedColor : freshColor;
+        // Mismos tokens del tema que el resto de listas: ámbar para lo que da recompensa,
+        // teal para lo ya superado. Antes eran verdes/naranjas planos propios de este panel.
+        var image = UITheme.Surface(go, cleared ? UITheme.Teal : UITheme.Amber,
+            UITheme.BorderSoft, UITheme.RadiusItem);
 
-        var labelGo = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
-        labelGo.transform.SetParent(go.transform, false);
-        var lrt = labelGo.GetComponent<RectTransform>();
-        lrt.anchorMin = Vector2.zero;
-        lrt.anchorMax = Vector2.one;
-        lrt.offsetMin = Vector2.zero;
-        lrt.offsetMax = Vector2.zero;
-
-        var tmp = labelGo.GetComponent<TextMeshProUGUI>();
-        tmp.fontSize = 24f;
-        tmp.alignment = TextAlignmentOptions.Center;
-        tmp.color = Color.white;
+        var tmp = UIBuild.Label(go.transform, "Label", UITheme.SizeName, TextAlignmentOptions.Center);
+        UIBuild.Stretch(tmp.rectTransform);
+        tmp.color = cleared ? UITheme.TextMuted : UITheme.Text;
         tmp.text = text;
 
         int chosen = floor;
@@ -169,44 +157,32 @@ public class TowerPanelUI : MonoBehaviour
     {
         if (canvas == null) return;
 
-        panel = new GameObject("TowerPanel", typeof(RectTransform), typeof(Image));
-        panel.transform.SetParent(canvas.transform, false);
+        // Mismo constructor que el resto de modales: fondo del tema, esquinas redondeadas y
+        // aspa arriba a la derecha. Antes era un Image plano con su propio color y un botón
+        // "Cerrar" morado abajo, que no se parecía a ningún otro panel.
+        panel = UIBuild.Panel(canvas.transform, "TowerPanel", size, UITheme.Bg);
 
-        var prt = panel.GetComponent<RectTransform>();
-        prt.anchorMin = new Vector2(0.5f, 0.5f);
-        prt.anchorMax = new Vector2(0.5f, 0.5f);
-        prt.pivot = new Vector2(0.5f, 0.5f);
-        prt.sizeDelta = UITheme.ModalSize;
-        prt.anchoredPosition = Vector2.zero;
-        panel.GetComponent<Image>().color = new Color(0.10f, 0.10f, 0.16f, 0.98f);
+        title = UIBuild.TopLabel(panel.transform, "Title", UITheme.SizeTitle, 34f, -20f,
+            TextAlignmentOptions.Left);
 
-        title = NewLabel(panel.transform, "Title", 44f);
-        title.rectTransform.anchorMin = new Vector2(0f, 1f);
-        title.rectTransform.anchorMax = new Vector2(1f, 1f);
-        title.rectTransform.pivot = new Vector2(0.5f, 1f);
-        title.rectTransform.sizeDelta = new Vector2(0f, 70f);
-        title.rectTransform.anchoredPosition = Vector2.zero;
+        info = UIBuild.TopLabel(panel.transform, "Info", UITheme.SizeBody, 30f, -60f,
+            TextAlignmentOptions.Left);
+        info.color = UITheme.TextMuted;
 
-        info = NewLabel(panel.transform, "Info", 26f);
-        info.rectTransform.anchorMin = new Vector2(0f, 1f);
-        info.rectTransform.anchorMax = new Vector2(1f, 1f);
-        info.rectTransform.pivot = new Vector2(0.5f, 1f);
-        info.rectTransform.sizeDelta = new Vector2(0f, 40f);
-        info.rectTransform.anchoredPosition = new Vector2(0f, -70f);
+        var viewGo = new GameObject("Viewport", typeof(RectTransform), typeof(Image),
+                                    typeof(Mask), typeof(ScrollRect));
+        viewGo.transform.SetParent(panel.transform, false);
+        UITheme.Surface(viewGo, UITheme.BgPanel, UITheme.BorderSoft, UITheme.RadiusCard);
+        viewGo.GetComponent<Mask>().showMaskGraphic = true;
 
-        var viewport = new GameObject("Viewport", typeof(RectTransform), typeof(Image),
-                                      typeof(Mask), typeof(ScrollRect));
-        viewport.transform.SetParent(panel.transform, false);
-        var vrt = viewport.GetComponent<RectTransform>();
-        vrt.anchorMin = new Vector2(0f, 0f);
-        vrt.anchorMax = new Vector2(1f, 1f);
-        vrt.offsetMin = new Vector2(12f, 112f);
-        vrt.offsetMax = new Vector2(-12f, -114f);
-        viewport.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.25f);
-        viewport.GetComponent<Mask>().showMaskGraphic = true;
+        var vrt = viewGo.GetComponent<RectTransform>();
+        vrt.anchorMin = Vector2.zero;
+        vrt.anchorMax = Vector2.one;
+        vrt.offsetMin = new Vector2(20f, 20f);
+        vrt.offsetMax = new Vector2(-20f, -100f);
 
         var contentGo = new GameObject("Content", typeof(RectTransform));
-        contentGo.transform.SetParent(viewport.transform, false);
+        contentGo.transform.SetParent(viewGo.transform, false);
         content = contentGo.GetComponent<RectTransform>();
         content.anchorMin = new Vector2(0f, 1f);
         content.anchorMax = new Vector2(1f, 1f);
@@ -215,51 +191,20 @@ public class TowerPanelUI : MonoBehaviour
         content.sizeDelta = new Vector2(0f, 100f);
 
         var layout = contentGo.AddComponent<VerticalLayoutGroup>();
-        layout.spacing = 6f;
-        layout.padding = new RectOffset(6, 6, 6, 6);
+        layout.spacing = 8f;
+        layout.padding = new RectOffset(10, 10, 10, 10);
+        layout.childControlWidth = true;
+        layout.childForceExpandWidth = true;
         layout.childControlHeight = false;
         layout.childForceExpandHeight = false;
         contentGo.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-        var scroll = viewport.GetComponent<ScrollRect>();
+        var scroll = viewGo.GetComponent<ScrollRect>();
         scroll.viewport = vrt;
         scroll.content = content;
         scroll.horizontal = false;
+        scroll.scrollSensitivity = 34f;
 
-        var close = new GameObject("Btn_CloseTower", typeof(RectTransform), typeof(Image), typeof(Button));
-        close.transform.SetParent(panel.transform, false);
-        var crt = close.GetComponent<RectTransform>();
-        crt.anchorMin = new Vector2(0.5f, 0f);
-        crt.anchorMax = new Vector2(0.5f, 0f);
-        crt.pivot = new Vector2(0.5f, 0f);
-        crt.sizeDelta = new Vector2(280f, UITheme.MinTouchTarget);
-        crt.anchoredPosition = new Vector2(0f, 12f);
-        close.GetComponent<Image>().color = new Color(0.32f, 0.28f, 0.36f);
-
-        closeLabel = NewLabel(close.transform, "Label", 26f);
-        closeLabel.rectTransform.anchorMin = Vector2.zero;
-        closeLabel.rectTransform.anchorMax = Vector2.one;
-        closeLabel.rectTransform.offsetMin = Vector2.zero;
-        closeLabel.rectTransform.offsetMax = Vector2.zero;
-        closeLabel.text = LocalizationManager.Get("UI_CLOSE");
-
-        var closeButton = close.GetComponent<Button>();
-        closeButton.targetGraphic = close.GetComponent<Image>();
-        closeButton.onClick.AddListener(() => AudioManager.Play(SfxId.UiClick));
-        closeButton.onClick.AddListener(Close);
-        ButtonPressFeedback.Attach(close);
-    }
-
-    private static TMP_Text NewLabel(Transform parent, string name, float size)
-    {
-        var go = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
-        go.transform.SetParent(parent, false);
-
-        var tmp = go.GetComponent<TextMeshProUGUI>();
-        tmp.fontSize = size;
-        tmp.alignment = TextAlignmentOptions.Center;
-        tmp.color = Color.white;
-        tmp.raycastTarget = false;
-        return tmp;
+        UIBuild.CloseButtonTopRight(panel.transform, Close);
     }
 }

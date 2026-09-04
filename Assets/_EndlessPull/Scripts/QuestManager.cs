@@ -164,7 +164,8 @@ public class QuestManager : MonoBehaviour
     private static int MaxStarRank()
     {
         int mejor = 0;
-        foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None))
+        foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(
+            FindObjectsInactive.Include, FindObjectsSortMode.None))
             if (hero != null && hero.StarRank > mejor) mejor = hero.StarRank;
 
         return mejor;

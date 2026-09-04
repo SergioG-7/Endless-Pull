@@ -28,6 +28,16 @@ public class EquipmentSelectModalUI : MonoBehaviour
     private TMP_Text etiquetaAuto;
     private TMP_Text etiquetaCerrar;
     private Button botonAuto;
+
+    [Tooltip("Forja que cobra la mejora de cada pieza equipada.")]
+    [SerializeField] private CraftingManager crafting;
+
+    // Un botón de mejora por hueco: la mejora es de la pieza concreta que lleva este héroe.
+    private static readonly EquipmentSlot[] UpgradeSlots =
+        { EquipmentSlot.Weapon, EquipmentSlot.Shield, EquipmentSlot.Armor, EquipmentSlot.Accessory };
+
+    private Button[] upgradeButtons;
+    private TMP_Text[] upgradeLabels;
     private RectTransform lista;
 
     private HeroController hero;
@@ -95,10 +105,66 @@ public class EquipmentSelectModalUI : MonoBehaviour
     {
         if (shop == null || hero == null) return;
 
-        shop.EquipFromInventory(hero, shop.FirstEquippableFor(hero));
+        shop.AutoEquipBest(hero);
         Rebuild();
     }
 
+
+    private void OnUpgradePressed(EquipmentSlot slot)
+    {
+        if (crafting == null) crafting = UnityEngine.Object.FindFirstObjectByType<CraftingManager>();
+        if (crafting == null || hero == null) return;
+
+        crafting.TryUpgradePiece(hero, slot);
+        Rebuild();
+    }
+
+    // Cada botón enseña el nivel de la pieza y lo que cuesta el siguiente; apagado si no hay
+    // pieza, si ya está al tope o si no llega el material.
+    private void RefreshUpgradeButtons()
+    {
+        if (upgradeButtons == null) return;
+        if (crafting == null) crafting = UnityEngine.Object.FindFirstObjectByType<CraftingManager>();
+
+        for (int i = 0; i < UpgradeSlots.Length; i++)
+        {
+            var slot = UpgradeSlots[i];
+            var pieza = hero != null ? hero.GetEquipped(slot) : null;
+
+            if (crafting == null || pieza == null)
+            {
+                upgradeLabels[i].text = SlotShortName(slot) + "  -";
+                upgradeLabels[i].color = UITheme.TextFaint;
+                upgradeButtons[i].interactable = false;
+                upgradeButtons[i].targetGraphic.color = UITheme.Neutral;
+                continue;
+            }
+
+            int nivel = hero.GearLevelOf(slot);
+            bool tope = nivel >= crafting.MaxGearLevel;
+            bool sePuede = crafting.CanUpgradePiece(hero, slot);
+
+            upgradeLabels[i].text = tope
+                ? $"{SlotShortName(slot)} +{nivel}  {LocalizationManager.Get("UI_UPGRADE_MAX")}"
+                : $"{SlotShortName(slot)} +{nivel}  ({crafting.PieceUpgradeWoodCost(nivel)}M/" +
+                  $"{crafting.PieceUpgradeIronCost(nivel)}H)";
+
+            upgradeLabels[i].color = sePuede ? UITheme.Text : UITheme.TextFaint;
+            upgradeButtons[i].interactable = sePuede;
+            upgradeButtons[i].targetGraphic.color = sePuede ? UITheme.AccentSoft : UITheme.Neutral;
+        }
+    }
+
+    private static string SlotShortName(EquipmentSlot slot)
+    {
+        switch (slot)
+        {
+            case EquipmentSlot.Weapon: return LocalizationManager.Get("UI_SLOT_WEAPON");
+            case EquipmentSlot.Shield: return LocalizationManager.Get("UI_SLOT_SHIELD");
+            case EquipmentSlot.Armor: return LocalizationManager.Get("UI_SLOT_ARMOR");
+        }
+        return LocalizationManager.Get("UI_SLOT_ACCESSORY");
+    }
 
     private void OnUnequipPressed(EquipmentSlot slot)
     {
@@ -133,7 +199,7 @@ public class EquipmentSelectModalUI : MonoBehaviour
 
 
 
-    private void OnPiecePressed(EquipmentData item)
+    private void OnPiecePressed(EquipmentInstance item)
     {
         if (shop == null || hero == null || item == null) return;
 
@@ -157,10 +223,10 @@ private void Rebuild()
 
         RefreshFilterButtons();
 
-        var filtrado = new System.Collections.Generic.List<EquipmentData>();
+        var filtrado = new System.Collections.Generic.List<EquipmentInstance>();
         if (shop != null)
             foreach (var item in shop.Inventory)
-                if (item != null && (!filterSlot.HasValue || item.slotType == filterSlot.Value))
+                if (item != null && (!filterSlot.HasValue || item.SlotType == filterSlot.Value))
                     filtrado.Add(item);
 
         vacio.gameObject.SetActive(filtrado.Count == 0);
@@ -168,6 +234,8 @@ private void Rebuild()
 
         botonAuto.interactable = shop != null && shop.Inventory.Count > 0 && hero != null;
         botonAuto.targetGraphic.color = botonAuto.interactable ? UITheme.Neutral : UITheme.Neutral;
+
+        RefreshUpgradeButtons();
 
         foreach (var item in filtrado) CreateRow(item);
     }
@@ -213,25 +281,25 @@ private string Worn(EquipmentSlot slot)
 
         return hero.IsBroken(slot)
             ? $"{item.LocalizedName()} [{LocalizationManager.Get("UI_BROKEN")}]"
-            : $"{item.LocalizedName()} ({hero.DurabilityOf(slot)}/{item.maxDurability})";
+            : $"{item.LocalizedName()} ({item.durability}/{item.MaxDurability})";
     }
 
     // Una fila por pieza: nombre y tipo a la izquierda, cifras en medio, botón a la derecha.
-private void CreateRow(EquipmentData item)
+private void CreateRow(EquipmentInstance item)
     {
-        var go = new GameObject($"Row_{item.name}", typeof(RectTransform), typeof(Image));
+        var go = new GameObject($"Row_{item.data.name}", typeof(RectTransform), typeof(Image));
         go.transform.SetParent(lista, false);
         go.GetComponent<RectTransform>().sizeDelta = new Vector2(0f, rowHeight);
         UITheme.Surface(go, UITheme.Card, UITheme.BorderSoft, UITheme.RadiusItem);
 
-        bool estaEquipada = hero != null && hero.GetEquipped(item.slotType) == item;
-        bool ocupado = hero != null && hero.GetEquipped(item.slotType) != null;
+        bool estaEquipada = hero != null && hero.GetEquipped(item.SlotType) == item;
+        bool ocupado = hero != null && hero.GetEquipped(item.SlotType) != null;
 
         var nombre = RowLabel(go.transform, "Name", 16f, 300f, UITheme.SizeName,
             TextAlignmentOptions.Left);
         nombre.text = $"<b>{item.LocalizedName()}</b>\n" +
                       $"<size={UITheme.SizeCaption}><color={UITheme.Tag(UITheme.TextMuted)}>" +
-                      $"{WeaponTypes.DisplayName(item.weaponType)}" +
+                      $"{WeaponTypes.DisplayName(item.WeaponType)}" +
                       (ocupado ? $" · {LocalizationManager.Get("UI_SLOT_TAKEN")}" : string.Empty) +
                       $"</color></size>";
 
@@ -239,24 +307,29 @@ private void CreateRow(EquipmentData item)
             TextAlignmentOptions.Left);
         cifras.color = UITheme.TextSoft;
 
-        // El afijo va en su propio color, en la segunda línea; sin afijo no ocupa nada.
-        string afijo = item.HasAffix
-            ? $"\n<color={UITheme.Tag(EquipmentAffixes.Color(item.passiveTrait))}>" +
-              $"◆ {item.AffixLabel()}</color>"
-            : string.Empty;
+        // Los afijos van en su propio color, en la segunda línea: primero el del asset y luego
+        // el que salió al forjar esta copia concreta, que es lo que la distingue de las demás.
+        string afijo = string.Empty;
+        if (item.data.HasAffix)
+            afijo += $"\n<color={UITheme.Tag(EquipmentAffixes.Color(item.data.passiveTrait))}>" +
+                     $"◆ {item.data.AffixLabel()}</color>";
+        if (item.HasForgedAffix)
+            afijo += $"\n<color={UITheme.Tag(EquipmentAffixes.Color(item.forgedAffix))}>" +
+                     $"★ {item.ForgedAffixLabel()}</color>";
 
-        cifras.text = $"<color={UITheme.Tag(UITheme.BarHP)}>ATK</color> {item.bonusATK}   " +
-                      $"<color={UITheme.Tag(UITheme.BarMP)}>DEF</color> {item.bonusDEF}   " +
-                      $"<color={UITheme.Tag(UITheme.BarMorale)}>HP</color> {item.bonusHP}   " +
+        cifras.text = $"<color={UITheme.Tag(UITheme.BarHP)}>ATK</color> {item.BonusATK}   " +
+                      $"<color={UITheme.Tag(UITheme.BarMP)}>DEF</color> {item.BonusDEF}   " +
+                      $"<color={UITheme.Tag(UITheme.BarMorale)}>HP</color> {item.BonusHP}   " +
                       $"<color={UITheme.Tag(UITheme.TextFaint)}>" +
-                      $"{LocalizationManager.Get("UI_DURABILITY")}</color> {item.maxDurability}" +
+                      $"{LocalizationManager.Get("UI_DURABILITY")}</color> " +
+                      $"{item.durability}/{item.MaxDurability}" +
                       afijo;
 
         // La pieza puesta ahora mismo se puede desequipar desde aquí; el resto se equipa.
         string textoBoton = estaEquipada ? LocalizationManager.Get("UI_UNEQUIP") : LocalizationManager.Get("UI_EQUIP");
         Color colorBoton = estaEquipada ? UITheme.DangerSoft : UITheme.Teal;
         UnityEngine.Events.UnityAction accion = estaEquipada
-            ? (UnityEngine.Events.UnityAction)(() => OnUnequipPressed(item.slotType))
+            ? (UnityEngine.Events.UnityAction)(() => OnUnequipPressed(item.SlotType))
             : (() => OnPiecePressed(item));
 
         var boton = UIBuild.Button(go.transform, "Btn_Pick", textoBoton, colorBoton, new Vector2(140f, 42f), Vector2.zero, accion);
@@ -326,6 +399,29 @@ private void Build()
             filterButtonLabels[i] = btnFiltro.GetComponentInChildren<TMP_Text>();
         }
 
+        // Mejora por pieza: un botón por hueco, con el nivel actual y lo que cuesta subirlo.
+        upgradeButtons = new Button[UpgradeSlots.Length];
+        upgradeLabels = new TMP_Text[UpgradeSlots.Length];
+
+        float anchoMejora = (size.x - 40f - 3f * 8f) / UpgradeSlots.Length;
+        for (int i = 0; i < UpgradeSlots.Length; i++)
+        {
+            var slot = UpgradeSlots[i];
+            var boton = UIBuild.Button(panel.transform, "Btn_Upgrade_" + slot, string.Empty,
+                UITheme.Neutral, new Vector2(anchoMejora, 40f), Vector2.zero,
+                () => OnUpgradePressed(slot));
+
+            var urt = boton.GetComponent<RectTransform>();
+            urt.anchorMin = new Vector2(0f, 1f);
+            urt.anchorMax = new Vector2(0f, 1f);
+            urt.pivot = new Vector2(0f, 1f);
+            urt.anchoredPosition = new Vector2(20f + i * (anchoMejora + 8f), -156f);
+
+            upgradeButtons[i] = boton;
+            upgradeLabels[i] = boton.GetComponentInChildren<TMP_Text>();
+            upgradeLabels[i].fontSize = UITheme.SizeCaption;
+        }
+
         // Viewport con scroll: el almacén puede pasar de diez piezas sin problema.
         var viewGo = new GameObject("Viewport", typeof(RectTransform), typeof(Image),
                                     typeof(Mask), typeof(ScrollRect));
@@ -339,8 +435,8 @@ private void Build()
         vrt.pivot = new Vector2(0.5f, 1f);
         vrt.offsetMin = new Vector2(20f, 0f);
         vrt.offsetMax = new Vector2(-20f, 0f);
-        vrt.sizeDelta = new Vector2(-40f, size.y - 156f - 90f);
-        vrt.anchoredPosition = new Vector2(0f, -156f);
+        vrt.sizeDelta = new Vector2(-40f, size.y - 212f - 90f);
+        vrt.anchoredPosition = new Vector2(0f, -212f);
 
         var contenido = new GameObject("Content", typeof(RectTransform));
         contenido.transform.SetParent(viewGo.transform, false);
