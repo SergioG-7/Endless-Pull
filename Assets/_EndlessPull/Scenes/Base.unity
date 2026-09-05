@@ -21653,6 +21653,8 @@ GameObject:
   - component: {fileID: 1930413765}
   - component: {fileID: 1930413764}
   - component: {fileID: 1930413763}
+  - component: {fileID: 1930413766}
+  - component: {fileID: 1930413767}
   m_Layer: 0
   m_Name: Master
   m_TagString: Untagged
@@ -21820,6 +21822,12 @@ MonoBehaviour:
   spawnJitter: {x: 2.5, y: 1.5}
   wanderSize: {x: 8, y: 5}
   starterWeapon: {fileID: 11400000, guid: 6bf07f70526e4f37ad3e55ac4af5ac42, type: 2}
+  starterWeapons:
+  - {fileID: 11400000, guid: 6bf07f70526e4f37ad3e55ac4af5ac42, type: 2}
+  - {fileID: 11400000, guid: 3f3ad2be4f783824d9323b7c4403916a, type: 2}
+  - {fileID: 11400000, guid: d77cbeb9761afa14c843280fcb24e28a, type: 2}
+  - {fileID: 11400000, guid: 371207b390651084faa0c49f03f07cb9, type: 2}
+  - {fileID: 11400000, guid: 481795b89da8e984395d4713d9a93d36, type: 2}
   pullCost: 100
   economy: {fileID: 1930413716}
 --- !u!114 &1930413715
@@ -21878,6 +21886,7 @@ MonoBehaviour:
   skeletonData: {fileID: 11400000, guid: e82df21f1ae84164ba279313194093da, type: 2}
   shamanData: {fileID: 11400000, guid: c1d38eb2bad450b4eb8aabed0cf8cffb, type: 2}
   combatCountdown: 3
+  choreographer: {fileID: 1930413767}
   highestClearedFloor: 0
   repeatMaterialFactor: 0.4
   expReward: 15
@@ -22395,7 +22404,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SideMenuUI
   sidebar: {fileID: 1106973369}
-  startCollapsed: 1
+  startCollapsed: 0
   drawerWidth: 216
   toggleHeight: 64
   headerHeight: 22
@@ -22973,6 +22982,45 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f767b378f65d96e4fbc0d6f66a21e794, type: 3}
   m_Name: 
   m_EditorClassIdentifier: EndlessPull.Runtime::MemorialManager
+--- !u!114 &1930413766
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1930413711}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4b1f009adf91174b8c6c8e81aa40ab0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: EndlessPull.Runtime::SquadTactics
+  evaluationInterval: 2.5
+  threatWeight: 40
+  finishWeight: 35
+  distancePenalty: 6
+  almostDeadRatio: 0.2
+--- !u!114 &1930413767
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1930413711}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 596a1a11eeea9344db5ace14ff7efc8c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: EndlessPull.Runtime::BattleChoreographer
+  scoutSeconds: 2.5
+  formSeconds: 2.5
+  meleeGap: 1.6
+  rangedGap: 3.2
+  supportGap: 4.4
+  rowSpacing: 1.3
+  formingSpeed: 3.5
+  overwhelmedRatio: 2
+  retreatStep: 2
+  reformInterval: 3
 --- !u!1 &1931634823
 GameObject:
   m_ObjectHideFlags: 0

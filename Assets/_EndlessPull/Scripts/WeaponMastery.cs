@@ -108,4 +108,21 @@ public class WeaponMastery
         // Vacio en vez de un texto: el rotulo del roster ya pone "Maestria" delante.
         return parts.Count == 0 ? "-" : string.Join(", ", parts);
     }
+
+    // Igual pero una por linea y con el formato "Arma: Nv.N (rango)" del resto del modal.
+    public string DescribeLines()
+    {
+        var sb = new System.Text.StringBuilder();
+
+        foreach (var pair in points)
+        {
+            if (pair.Value <= 0) continue;
+            if (sb.Length > 0) sb.Append('\n');
+
+            sb.Append($"<b>{WeaponTypes.DisplayName(pair.Key)}</b>: Nv.{LevelOf(pair.Key)} " +
+                      $"({MasteryRanks.DisplayName(RankOf(pair.Key))})");
+        }
+
+        return sb.ToString();
+    }
 }

@@ -31,6 +31,9 @@ public class GachaManager : MonoBehaviour
     [Tooltip("Arma con la que sale todo héroe nuevo: espada de madera.")]
     [SerializeField] private EquipmentData starterWeapon;
 
+    [Tooltip("Armas de inicio, una por arquetipo; se sortea una por héroe invocado.")]
+    [SerializeField] private EquipmentData[] starterWeapons = new EquipmentData[0];
+
     [Tooltip("Gemas que cuesta cada tirada.")]
     [SerializeField] private int pullCost = 100;
 
@@ -46,10 +49,18 @@ public class GachaManager : MonoBehaviour
     // Todo héroe empieza empuñando algo: sin arma no entrena maestría ni elige subclase.
     public bool GrantStarterWeapon(HeroController hero)
     {
-        if (hero == null || starterWeapon == null) return false;
+        if (hero == null) return false;
         if (hero.GetEquipped(EquipmentSlot.Weapon) != null) return false;
 
-        hero.Equip(starterWeapon);
+        // Se sortea entre las de inicio para que la base tenga arqueros, magos y clérigos y no
+        // cien espadachines. Sin lista configurada se cae al arma única de siempre.
+        var elegida = starterWeapons != null && starterWeapons.Length > 0
+            ? starterWeapons[Random.Range(0, starterWeapons.Length)]
+            : starterWeapon;
+
+        if (elegida == null) return false;
+
+        hero.Equip(elegida);
         return true;
     }
 
@@ -239,6 +250,10 @@ public class GachaManager : MonoBehaviour
         // un modal de elección (se puede cambiar luego desde el panel del héroe).
         var progress = hero.GetComponent<HeroProgress>();
         if (progress != null) progress.GrantSubclassIfDue(allowUiOffer: false);
+
+        // Los que nacen sin subclase (1★ y 2★ nunca la tienen) se quedaban con el golpe
+        // genérico: la habilidad sale del arma que acaban de recibir.
+        hero.EnsureLoadout();
 
         DamageTextManager.Show(hero.transform.position, LocalizationManager.Get("FX_NEW_HERO"),
             new Color(1f, 0.9f, 0.4f));

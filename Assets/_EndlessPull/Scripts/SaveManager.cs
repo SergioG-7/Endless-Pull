@@ -26,6 +26,7 @@ public class HeroSaveData
     public bool isLocked;
     public int subclass;
     public int ability;
+    public List<int> abilities = new List<int>();
     public string assignedBuilding = string.Empty;
 
     // Personalidad de combate: agresividad, distancia de seguridad, umbral de habilidad.
@@ -359,6 +360,9 @@ public class SaveManager : MonoBehaviour
             }
 
             foreach (var passive in hero.Passives) entry.passives.Add((int)passive);
+
+            foreach (var aprendida in hero.Skills)
+                if (aprendida != null) entry.abilities.Add((int)aprendida.ability);
 
             foreach (var pair in hero.Mastery.AllPoints)
                 entry.mastery.Add(new MasterySaveData { weaponType = (int)pair.Key, points = pair.Value });
@@ -711,10 +715,25 @@ public class SaveManager : MonoBehaviour
             hero.SetLocked(entry.isLocked);
             hero.SetSubclass((HeroSubclass)entry.subclass);
 
-            // Los saves anteriores no guardaban la habilidad: ahí SetSubclass ya dejó una del
-            // arquetipo y no hay nada que restaurar.
-            if (entry.ability != (int)ActiveSkill.None)
+            // El repertorio manda. Los saves anteriores solo traían una habilidad suelta en
+            // 'ability', y los de antes de eso ninguna: ahí EnsureLoadout se encarga más abajo.
+            if (entry.abilities != null && entry.abilities.Count > 0)
+            {
+                hero.ClearAbilities();
+                foreach (int valor in entry.abilities) hero.LearnAbility((ActiveSkill)valor);
+            }
+            else if (entry.ability != (int)ActiveSkill.None)
+            {
                 hero.LearnAbility((ActiveSkill)entry.ability);
+            }
+
+            // Lo último: con arma, subclase y repertorio ya restaurados. Antes corría aquí arriba
+            // y la propia restauración lo pisaba, dejando a todo el mundo con el golpe genérico.
+            hero.EnsureLoadout();
+
+            // Un 3★+ sin subclase nunca llegó a especializarse; se le sortea una sin modal, que
+            // al cargar la partida no es momento de preguntar.
+            if (progress != null) progress.GrantSubclassIfDue(allowUiOffer: false);
             RestoreWorkplace(hero, entry.assignedBuilding);
             PlaceOnLoad(hero, entry.assignedBuilding);
             spawned.Add(hero);

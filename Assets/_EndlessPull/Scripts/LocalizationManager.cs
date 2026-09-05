@@ -148,6 +148,10 @@ public static class LocalizationManager
 
         // Nombres de piezas de equipo (Fase 39): claves opcionales via EquipmentData.nameKey.
         { "EQUIP_WOODEN_SWORD",  new[] { "Espada de Madera", "Wooden Sword", "木の剣" } },
+        { "EQUIP_SHORT_BOW", new[] { "Arco Corto", "Short Bow", "短弓" } },
+        { "EQUIP_APPRENTICE_STAFF", new[] { "Bastón de Aprendiz", "Apprentice Staff", "見習いの杖" } },
+        { "EQUIP_WOODEN_MACE", new[] { "Maza de Madera", "Wooden Mace", "木のメイス" } },
+        { "EQUIP_TRAINING_SPEAR", new[] { "Lanza de Entreno", "Training Spear", "訓練用の槍" } },
         { "EQUIP_IRON_SWORD",    new[] { "Espada de Hierro", "Iron Sword", "鉄の剣" } },
         { "EQUIP_OAK_SHIELD",    new[] { "Escudo de Roble", "Oak Shield", "オークの盾" } },
         { "EQUIP_IRON_SHIELD",   new[] { "Escudo de Hierro", "Iron Shield", "鉄の盾" } },
@@ -1053,6 +1057,9 @@ public static class LocalizationManager
         { "UI_NO_HEROES",    new[] { "No hay héroes en la base", "No heroes at the base", "拠点にヒーローがいない" } },
         { "UI_GATHERING_NOW", new[] { "Recolección en curso: {0}s", "Gathering in progress: {0}s", "採集中：{0}秒" } },
         { "UI_GATHER_READY", new[] { "Recolección lista", "Gathering ready", "採集完了" } },
+        { "BATTLE_SIGHTING_MELEE", new[] { "{0} enfrente. Sin tiradores.", "{0} ahead. No shooters.", "前方に{0}体。射手なし。" } },
+        { "BATTLE_SIGHTING_MIXED", new[] { "{0} enfrente y {1} tirando desde atrás.", "{0} ahead, {1} shooting from the back.", "前方に{0}体、後方に射手{1}体。" } },
+        { "BATTLE_PLAN_HOLD", new[] { "Yo aguanto el frente. Vosotros, detrás.", "I hold the front. Stay behind me.", "前は俺が持つ。後ろにいろ。" } },
         { "ABILITY_POISONCUT", new[] { "Corte Ponzoñoso", "Venom Cut", "毒断ち" } },
         { "ABILITY_IRONGUARD", new[] { "Guardia de Hierro", "Iron Guard", "鉄の構え" } },
         { "ABILITY_BLADEDANCE", new[] { "Danza de Cortes", "Blade Dance", "斬撃乱舞" } },

@@ -110,6 +110,12 @@ public class HeroController : MonoBehaviour, IHealthOwner
     [Tooltip("Habilidad activa que gasta maná y entra en enfriamiento.")]
     [SerializeField] private HeroSkill skill = new HeroSkill();
 
+    [Tooltip("Cuántas habilidades activas puede llevar a la vez un héroe.")]
+    [SerializeField] private int maxSkills = 3;
+
+    // Repertorio aprendido. 'skill' es siempre una de estas: la que toca lanzar ahora.
+    private readonly List<HeroSkill> skills = new List<HeroSkill>();
+
     [Tooltip("Fatiga que se acumula por segundo moviéndose en combate.")]
     [SerializeField] private float fatiguePerSecondMoving = 2f;
 
@@ -211,6 +217,14 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
     [Tooltip("Vida restante del objetivo por debajo de la cual no se le suelta aunque la escuadra mande otro.")]
     [SerializeField, Range(0f, 1f)] private float intentSwitchKeepRatio = 0.35f;
+
+    [Tooltip("Velocidad a partir de la cual un héroe puede rodear por el flanco en vez de aguantar la línea.")]
+    [SerializeField] private float flankSpeedThreshold = 3f;
+
+    [Tooltip("Vida base a partir de la cual un héroe es corpulento y aguanta el frente sin escudo.")]
+    [SerializeField] private int tankHealthThreshold = 260;
+
+    private BattleChoreographer choreographer;
 
     [Tooltip("Defensa extra mientras dura el decreto de posición defensiva.")]
     [SerializeField] private int defensiveStanceBonus = 5;
@@ -353,6 +367,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
     public HeroTrait Trait => trait;
     public BaseBuilding CurrentBuilding => currentBuilding;
     public HeroSkill Skill => skill;
+    public IReadOnlyList<HeroSkill> Skills => skills;
 
     public WeaponMastery Mastery => mastery;
     public IReadOnlyList<PassiveSkill> Passives => passives;
@@ -377,7 +392,10 @@ public class HeroController : MonoBehaviour, IHealthOwner
     public bool HasGuaranteedDodge => Time.time < guaranteedDodgeUntil;
     public bool IsDead => currentHealth <= 0;
     public bool AttackReady => attackTimer <= 0f;
-    public bool CanCastSkill => skill != null && skill.IsReady && CurrentMP >= SkillManaCost;
+    // Mira todo el repertorio, no solo la última aprendida, y de paso deja elegida la que toca.
+    public bool CanCastSkill => skills.Count > 0
+        ? SelectBestSkill()
+        : skill != null && skill.IsReady && CurrentMP >= SkillManaCost;
     // Arcos y báculos pegan de lejos; el resto tiene que plantarse delante.
     public bool IsRanged
         => EquippedWeaponType == WeaponType.Bow || EquippedWeaponType == WeaponType.Staff
@@ -438,7 +456,11 @@ public class HeroController : MonoBehaviour, IHealthOwner
     public HeroSubclass Subclass => subclass;
     public string SubclassName => HeroSubclasses.DisplayName(subclass);
     public bool IsSupport => HeroSubclasses.IsSupport(subclass);
-    public bool IsTank => shield != null || HeroSubclasses.IsTank(subclass);
+    // Aguanta el frente quien lleva escudo, quien tiene subclase de escudo, o quien simplemente
+    // es corpulento: con solo el escudo casi ninguna escuadra tenía línea que sostener.
+    public bool IsTank => shield != null
+                          || HeroSubclasses.IsTank(subclass)
+                          || (data != null && data.maxHealth >= tankHealthThreshold);
     public float OriginSynergy => originSynergy;
     public BaseBuilding AssignedBuilding => assignedBuilding;
     public float IdleSeconds => idleSeconds;
@@ -984,20 +1006,93 @@ public void DeployViaGateway(Vector2 destination)
     {
         subclass = value;
 
-        LearnAbility(HeroSubclasses.DefaultAbility(value));
+        // Sin subclase no hay habilidad de rol: dejar caer aquí el golpe genérico ensuciaba el
+        // repertorio de los héroes que aún no se han especializado.
+        if (value != HeroSubclass.None) LearnAbility(HeroSubclasses.DefaultAbility(value));
     }
 
-    // Le cambia la habilidad activa. La usan la subclase, el guardado y el despertar.
+    // Añade una habilidad al repertorio. Si ya la tiene no hace nada; si está lleno, la nueva
+    // desplaza a la más antigua. La usan la subclase, el guardado y el despertar.
     public void LearnAbility(ActiveSkill ability)
     {
         var hecha = ActiveSkills.Make(ability);
         if (hecha == null) return;
 
+        if (skills.Exists(s => s.ability == ability)) return;
+
+        // El golpe genérico es solo el relleno de quien no tiene nada: si ya lleva una de verdad
+        // no se añade, y si entra una de verdad se va. Su multiplicador (x2) es el más alto del
+        // catálogo, así que colarse en el repertorio le hacía ganar siempre la selección.
+        if (ability == ActiveSkill.BasicStrike)
+        {
+            if (skills.Count > 0) return;
+        }
+        else skills.RemoveAll(s => s.ability == ActiveSkill.BasicStrike);
+
         hecha.subclass = subclass;
+        skills.Add(hecha);
+
+        if (skills.Count > Mathf.Max(1, maxSkills)) skills.RemoveAt(0);
+
         skill = hecha;
     }
 
+    // Deja el repertorio en una sola habilidad; la usa el guardado antes de restaurar la lista.
+    public void ClearAbilities()
+    {
+        skills.Clear();
+        skill = new HeroSkill();
+    }
+
+    // De las aprendidas, la que más pega entre las que están listas y con maná de sobra. Fija
+    // 'skill' para que el resto del combate (daño, coste, rótulo) hable de esa misma.
+    private bool SelectBestSkill()
+    {
+        HeroSkill mejor = null;
+
+        foreach (var candidata in skills)
+        {
+            if (candidata == null || !candidata.IsReady) continue;
+
+            int coste = Mathf.Max(1, Mathf.RoundToInt(candidata.mpCost * PassiveSkills.MpCostMultiplier(passives)));
+            if (CurrentMP < coste) continue;
+
+            if (mejor == null || candidata.damageMultiplier > mejor.damageMultiplier) mejor = candidata;
+        }
+
+        if (mejor == null) return false;
+
+        skill = mejor;
+        return true;
+    }
+
     public ActiveSkill Ability => skill != null ? skill.ability : ActiveSkill.None;
+
+    // Un héroe sin subclase se quedaba con el golpe genérico para siempre. Como la habilidad ya
+    // no depende de la subclase sino del arma, aquí se le da una del pool de lo que empuña, y
+    // sus pasivas de salida si nunca llegó a tenerlas. Lo llama el guardado al restaurar.
+    public void EnsureLoadout()
+    {
+        bool sinRepertorio = skills.Count == 0
+                             || (skills.Count == 1 && skills[0].ability == ActiveSkill.BasicStrike);
+
+        if (sinRepertorio)
+        {
+            var arma = EquippedWeaponType;
+            if (arma != WeaponType.None)
+            {
+                var opciones = ActiveSkills.ForArchetype(arma);
+                opciones.Remove(ActiveSkill.BasicStrike);
+
+                if (opciones.Count > 0)
+                    LearnAbility(opciones[UnityEngine.Random.Range(0, opciones.Count)]);
+            }
+        }
+
+        // Los 1★ nacen sin pasivas a propósito: aquí no se les regala ninguna.
+        if (passives.Count == 0 && StarRank >= PassiveSkills.MinStarRankForInnate)
+            SetPassives(PassiveSkills.RandomSet(StarRank));
+    }
 
     // Compartir origen con al menos un compañero de escuadra da un bonus pasivo en combate.
     public void SetOriginSynergy(float value) => originSynergy = Mathf.Max(0f, value);
@@ -1265,7 +1360,11 @@ public void DeployViaGateway(Vector2 destination)
         if (defensiveTimer > 0f) defensiveTimer -= Time.deltaTime;
 
         RegenerateMana();
-        skill?.Tick(Time.deltaTime);
+        if (skills.Count > 0)
+        {
+            foreach (var s in skills) s?.Tick(Time.deltaTime);
+        }
+        else skill?.Tick(Time.deltaTime);
         if (attackTimer > 0f) attackTimer -= Time.deltaTime;
         TickApathy();
 
@@ -2073,8 +2172,42 @@ public void DeployViaGateway(Vector2 destination)
     {
         transform.position = Vector2.MoveTowards(
             transform.position,
-            destination,
+            HoldTheLine(destination),
             EffectiveMoveSpeed * Time.deltaTime);
+    }
+
+    // Aguantar la línea: quien no es tanque no rebasa a los tanques, que para eso están delante.
+    // Meterse entre los enemigos es como te rodean y te pegan por la espalda.
+    private Vector2 HoldTheLine(Vector2 destination)
+    {
+        if (CanFlank) return destination;
+
+        var choreo = Choreographer;
+        if (choreo == null || !choreo.HasFrontLine) return destination;
+
+        // Los del frente son quienes marcan la línea: ellos sí avanzan.
+        if (choreo.IsFrontliner(this)) return destination;
+
+        float tope = choreo.FrontLineX;
+        if (destination.x <= tope) return destination;
+
+        // Se queda en el borde de la línea, pero sigue ajustando el lado por el que encara.
+        return new Vector2(tope, destination.y);
+    }
+
+    // Los ligeros sí rodean: velocidad de sobra y nada que aguantar en el frente.
+    private bool CanFlank
+        => !IsSupport && data != null && data.moveSpeed >= flankSpeedThreshold;
+
+    private BattleChoreographer Choreographer
+    {
+        get
+        {
+            if (choreographer == null)
+                choreographer = UnityEngine.Object.FindFirstObjectByType<BattleChoreographer>();
+
+            return choreographer;
+        }
     }
 
     // Igual que MoveTowards pero en la dirección contraria: mantener las distancias de rango.

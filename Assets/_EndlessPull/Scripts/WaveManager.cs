@@ -103,6 +103,9 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Segundos de preparación táctica antes de que empiece el combate (cuenta atrás 3-2-1-¡Lucha!).")]
     [SerializeField] private float combatCountdown = 3f;
 
+    [Tooltip("Coreografía de entrada: reconocimiento y formación antes de pelear.")]
+    [SerializeField] private BattleChoreographer choreographer;
+
     [Tooltip("Piso más alto superado; manda sobre qué pisos se pueden elegir.")]
     [SerializeField] private int highestClearedFloor;
 
@@ -775,6 +778,10 @@ void Awake()
     {
         MissionStarted?.Invoke(currentMissionType, currentFloor);
 
+        // Reconocimiento y formación antes de los golpes; mientras dure, nadie pelea.
+        if (choreographer == null) choreographer = GetComponent<BattleChoreographer>();
+        if (choreographer != null) choreographer.BeginEncounter();
+
         countdownTimer = Mathf.Max(0f, combatCountdown);
         lastCountdownTick = Mathf.CeilToInt(countdownTimer);
 
@@ -1259,6 +1266,15 @@ void Awake()
             }
 
             if (countdownTimer > 0f) return;
+
+            // La escuadra sigue reconociendo o colocándose: se estira la preparación en vez de
+            // soltar la oleada. Hay que mantener el reloj por encima de 0 o este bloque deja de
+            // entrar y la oleada no se suelta nunca.
+            if (choreographer != null && !choreographer.CombatReady)
+            {
+                countdownTimer = 0.1f;
+                return;
+            }
 
             countdownTimer = 0f;
             ReleaseWave();

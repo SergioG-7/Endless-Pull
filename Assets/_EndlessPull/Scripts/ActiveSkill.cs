@@ -153,16 +153,23 @@ public static class ActiveSkills
     // y la otra mitad se reparte entre las demás.
     private const float RoleWeight = 5f;
 
-    // Cambia la habilidad del héroe por otra de su misma arma, distinta de la que ya lleva. Es
-    // lo que hace que dos héroes de la misma subclase dejen de pelear igual: la subclase da el
-    // rol de salida y esto lo va separando del molde.
+    // Le enseña una habilidad más de su misma arma, de las que aún no lleva. Es lo que hace que
+    // dos héroes que empezaron igual dejen de pelear igual.
     public static bool TryAwaken(HeroController hero)
     {
         if (hero == null || hero.Data == null) return false;
 
-        var opciones = ForArchetype(ArchetypeOf(hero.Ability));
+        // El arquetipo sale del arma que empuña; si no lleva, del que tenga aprendido.
+        var arma = hero.EquippedWeaponType != WeaponType.None
+            ? hero.EquippedWeaponType
+            : ArchetypeOf(hero.Ability);
+
+        var opciones = ForArchetype(arma);
         opciones.Remove(ActiveSkill.BasicStrike);
-        opciones.Remove(hero.Ability);
+
+        foreach (var aprendida in hero.Skills)
+            if (aprendida != null) opciones.Remove(aprendida.ability);
+
         if (opciones.Count == 0) return false;
 
         var elegida = opciones[Random.Range(0, opciones.Count)];

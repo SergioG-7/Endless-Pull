@@ -80,13 +80,28 @@ public class HeroSkillsModalUI : MonoBehaviour
     {
         if (hero == null) return;
 
-        // Habilidad activa: nombre + descripción + coste/enfriamiento, igual que la oferta de subclase.
-        if (hero.Skill != null)
+        // Habilidades activas: todas las del repertorio, una por línea y en el mismo formato
+        // compacto que las pasivas, que con tres habilidades el bloque de antes no cabía.
+        if (hero.Skills.Count == 0)
         {
-            activeBody.text = $"<b>{hero.Skill.GetDisplayName()}</b>\n{hero.Skill.GetDescription()}\n" +
-                               $"{hero.Skill.mpCost} MP · {hero.Skill.cooldown:0.#}s";
+            activeBody.text = hero.Skill != null
+                ? $"<b>{hero.Skill.GetDisplayName()}</b>: {hero.Skill.GetDescription()}"
+                : string.Empty;
         }
-        else activeBody.text = string.Empty;
+        else
+        {
+            var activas = new StringBuilder();
+            foreach (var aprendida in hero.Skills)
+            {
+                if (aprendida == null) continue;
+                if (activas.Length > 0) activas.Append('\n');
+
+                activas.Append($"<b>{aprendida.GetDisplayName()}</b>: {aprendida.GetDescription()}  " +
+                               $"<color={UITheme.Tag(UITheme.TextMuted)}>{aprendida.mpCost} MP · " +
+                               $"{aprendida.cooldown:0.#}s</color>");
+            }
+            activeBody.text = activas.ToString();
+        }
 
         // Pasivas: una por línea, con su explicación — no solo el nombre.
         if (hero.Passives.Count == 0)
@@ -104,10 +119,12 @@ public class HeroSkillsModalUI : MonoBehaviour
             passiveBody.text = sb.ToString();
         }
 
-        // Pericia de arma: nivel y rango por tipo de arma entrenado, más la explicación general.
-        string maestria = hero.Mastery.Describe();
-        masteryBody.text = (maestria == "-" ? LocalizationManager.Get("UI_MASTERY_NONE") : maestria) +
-                            "\n\n" + LocalizationManager.Get("UI_MASTERY_EXPLANATION");
+        // Pericia de arma: una por línea, mismo formato que el resto. La explicación general baja
+        // a letra pequeña, que ocupaba tanto como la propia lista.
+        string maestria = hero.Mastery.DescribeLines();
+        masteryBody.text = (string.IsNullOrEmpty(maestria) ? LocalizationManager.Get("UI_MASTERY_NONE") : maestria) +
+                            $"\n<size={UITheme.SizeCaption}><color={UITheme.Tag(UITheme.TextMuted)}>" +
+                            $"{LocalizationManager.Get("UI_MASTERY_EXPLANATION")}</color></size>";
     }
 
     private void Build()
@@ -126,25 +143,25 @@ public class HeroSkillsModalUI : MonoBehaviour
             TextAlignmentOptions.Left);
         sectionActiveTitle.color = UITheme.AccentPick;
         y -= 34f;
-        activeBody = UIBuild.TopLabel(panel.transform, "ActiveBody", UIBuild.BodySize, 100f, y,
+        activeBody = UIBuild.TopLabel(panel.transform, "ActiveBody", UIBuild.BodySize, 190f, y,
             TextAlignmentOptions.TopLeft);
         activeBody.color = UITheme.TextSoft;
-        y -= 116f;
+        y -= 206f;
 
         sectionPassiveTitle = UIBuild.TopLabel(panel.transform, "SectionPassive", UIBuild.NameSize, 30f, y,
             TextAlignmentOptions.Left);
         sectionPassiveTitle.color = UITheme.AccentPick;
         y -= 34f;
-        passiveBody = UIBuild.TopLabel(panel.transform, "PassiveBody", UIBuild.BodySize, 140f, y,
+        passiveBody = UIBuild.TopLabel(panel.transform, "PassiveBody", UIBuild.BodySize, 210f, y,
             TextAlignmentOptions.TopLeft);
         passiveBody.color = UITheme.TextSoft;
-        y -= 156f;
+        y -= 226f;
 
         sectionMasteryTitle = UIBuild.TopLabel(panel.transform, "SectionMastery", UIBuild.NameSize, 30f, y,
             TextAlignmentOptions.Left);
         sectionMasteryTitle.color = UITheme.AccentPick;
         y -= 34f;
-        masteryBody = UIBuild.TopLabel(panel.transform, "MasteryBody", UIBuild.BodySize, 190f, y,
+        masteryBody = UIBuild.TopLabel(panel.transform, "MasteryBody", UIBuild.BodySize, 130f, y,
             TextAlignmentOptions.TopLeft);
         masteryBody.color = UITheme.TextSoft;
 

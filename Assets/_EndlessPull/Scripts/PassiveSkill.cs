@@ -235,6 +235,13 @@ public static class PassiveSkills
         return true;
     }
 
+    // Estrellas a partir de las cuales un héroe puede nacer ya con alguna pasiva. Un 1★ no trae
+    // ninguna: si quiere una, se la gana peleando o entrenando.
+    public const int MinStarRankForInnate = 2;
+
+    // Probabilidad de que un 2★ nazca con una; por encima de esa rareza siempre traen alguna.
+    private const float TwoStarChance = 0.6f;
+
     // Sortea las pasivas de salida de un héroe recién invocado: cuantas más estrellas, más
     // arranca sabiendo. El resto las tiene que despertar peleando o entrenando.
     public static List<PassiveSkill> RandomSet(int starRank = 1)
@@ -242,10 +249,12 @@ public static class PassiveSkills
         var pool = new List<PassiveSkill>(All);
         var picked = new List<PassiveSkill>();
 
-        // 1★-2★ una, 3★-4★ una o dos, 5★+ dos o tres.
+        if (starRank < MinStarRankForInnate) return picked;
+
+        // 2★ una o ninguna, 3★-4★ una o dos, 5★+ dos o tres.
         int count = starRank >= 5 ? Random.Range(2, 4)
                   : starRank >= 3 ? Random.Range(1, 3)
-                  : 1;
+                  : (Random.value < TwoStarChance ? 1 : 0);
 
         for (int i = 0; i < count && pool.Count > 0; i++)
         {

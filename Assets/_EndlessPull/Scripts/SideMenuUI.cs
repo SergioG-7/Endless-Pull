@@ -9,8 +9,8 @@ public class SideMenuUI : MonoBehaviour
     [Tooltip("Contenedor con los botones que se van a agrupar.")]
     [SerializeField] private RectTransform sidebar;
 
-    [Tooltip("Arranca plegado; en móvil deja la pantalla despejada.")]
-    [SerializeField] private bool startCollapsed = true;
+    [Tooltip("Arranca plegado; por defecto no, para que el menú se vea nada más entrar.")]
+    [SerializeField] private bool startCollapsed;
 
     [Tooltip("Ancho del cajón, según el mockup.")]
     [SerializeField] private float drawerWidth = 216f;
