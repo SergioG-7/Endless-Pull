@@ -64,6 +64,31 @@ public class GachaManager : MonoBehaviour
         return true;
     }
 
+    // Le pone el arma que le pega a la habilidad que ya tiene aprendida. La usa la migración del
+    // save: los héroes de partidas anteriores a las armas variadas salieron todos con espada.
+    public bool RerollWeaponToArchetype(HeroController hero)
+    {
+        if (hero == null || starterWeapons == null || starterWeapons.Length == 0) return false;
+
+        var arquetipo = ActiveSkills.ArchetypeOf(hero.Ability);
+
+        // Escudo y golpe genérico no tienen arma propia en la lista de inicio: se quedan con
+        // la espada que ya llevan, que es justo lo que les corresponde.
+        if (arquetipo == WeaponType.None || arquetipo == WeaponType.Shield) return false;
+
+        var actual = hero.GetEquipped(EquipmentSlot.Weapon);
+        if (actual != null && actual.WeaponType == arquetipo) return false;
+
+        foreach (var arma in starterWeapons)
+        {
+            if (arma == null || arma.weaponType != arquetipo) continue;
+            hero.Equip(arma);
+            return true;
+        }
+
+        return false;
+    }
+
     void Awake()
     {
         if (economy == null) economy = UnityEngine.Object.FindFirstObjectByType<EconomyManager>();

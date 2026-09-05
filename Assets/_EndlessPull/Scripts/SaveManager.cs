@@ -152,8 +152,15 @@ public class GameSaveData
     // Piezas del Guardián ya conseguidas; sin esto la suelta segura volvería a caer cada vez.
     public List<string> wardenGranted = new List<string>();
 
+    // Resorteo de arma por arquetipo ya aplicado. En false (saves anteriores a las armas
+    // variadas) todo el roster salió con espada y se le reparte arma al cargar, una sola vez.
+    public bool weaponsRerolled;
+
     // Galería Memorial: los héroes perdidos y cómo se perdieron.
     public List<MemorialRecord> memorial = new List<MemorialRecord>();
+
+    // Equipo que se quedó en un piso al caer su portador, a la espera de recuperarlo.
+    public List<LostGearStash> lostGear = new List<LostGearStash>();
 }
 
 // Guarda y restaura la partida en JSON dentro de Application.persistentDataPath.
@@ -207,6 +214,9 @@ public class SaveManager : MonoBehaviour
     public static event System.Action RosterLoaded;
 
     public string SavePath => Path.Combine(Application.persistentDataPath, fileName);
+
+    // Espejo en memoria del flag del save: se pone a true en cuanto la migración de armas corre.
+    private bool weaponRerollApplied;
     public string TempSavePath => SavePath + ".tmp";
     public string BackupSavePath => SavePath + ".bak";
     public bool HasSave => File.Exists(SavePath);
@@ -270,7 +280,8 @@ public class SaveManager : MonoBehaviour
         var save = new GameSaveData
         {
             saveVersion = CurrentSaveVersion,
-            lastSaveUtc = System.DateTime.UtcNow.ToString("o", System.Globalization.CultureInfo.InvariantCulture)
+            lastSaveUtc = System.DateTime.UtcNow.ToString("o", System.Globalization.CultureInfo.InvariantCulture),
+            weaponsRerolled = weaponRerollApplied
         };
 
         if (economy != null)
@@ -303,6 +314,9 @@ public class SaveManager : MonoBehaviour
 
         var memorial = UnityEngine.Object.FindFirstObjectByType<MemorialManager>();
         if (memorial != null) save.memorial = memorial.Snapshot();
+
+        var lostGear = UnityEngine.Object.FindFirstObjectByType<LostGearManager>();
+        if (lostGear != null) save.lostGear = lostGear.Snapshot();
 
         save.quadrantEastRevealed = QuadrantController.Find(QuadrantId.East)?.Revealed ?? false;
         save.quadrantSouthRevealed = QuadrantController.Find(QuadrantId.South)?.Revealed ?? false;
@@ -455,6 +469,7 @@ public class SaveManager : MonoBehaviour
         }
 
         UnityEngine.Object.FindFirstObjectByType<MemorialManager>()?.LoadRecords(save.memorial);
+        UnityEngine.Object.FindFirstObjectByType<LostGearManager>()?.LoadStashes(save.lostGear);
 
         // El piso ya está publicado en BaseBuilding.TowerFloor: los cuadrantes pueden calcular su IsUnlocked.
         QuadrantController.Find(QuadrantId.East)?.LoadRevealed(save.quadrantEastRevealed);
@@ -518,7 +533,7 @@ public class SaveManager : MonoBehaviour
         Debug.Log($"[Guardado] Partida borrada: {SavePath}", this);
     }
 
-    private static EquipmentInstanceSaveData ToSaveData(EquipmentInstance item)
+    public static EquipmentInstanceSaveData ToSaveData(EquipmentInstance item)
     {
         if (item == null || !item.IsValid) return null;
 
@@ -534,15 +549,19 @@ public class SaveManager : MonoBehaviour
         };
     }
 
-    // Vuelve a atar la pieza guardada con su asset del catálogo; null si ese asset ya no existe.
     private EquipmentInstance FromSaveData(EquipmentInstanceSaveData saved)
+        => FromSaveData(saved, shop);
+
+    // Vuelve a atar la pieza guardada con su asset del catálogo; null si ese asset ya no existe.
+    // La versión estática la usa también el alijo de equipo perdido.
+    public static EquipmentInstance FromSaveData(EquipmentInstanceSaveData saved, ShopManager shop)
     {
         if (saved == null || shop == null) return null;
 
         var asset = shop.FindByAssetName(saved.assetName);
         if (asset == null)
         {
-            Debug.LogWarning($"[Guardado] {saved.assetName} ya no está en el catálogo de equipo.", this);
+            Debug.LogWarning($"[Guardado] {saved.assetName} ya no está en el catálogo de equipo.");
             return null;
         }
 
@@ -672,6 +691,7 @@ public class SaveManager : MonoBehaviour
 
         // Se guarda el orden de creación para poder rehacer la escuadra por índice.
         var spawned = new List<HeroController>();
+        int rearmados = 0;
 
         foreach (var entry in save.heroes)
         {
@@ -731,6 +751,10 @@ public class SaveManager : MonoBehaviour
             // y la propia restauración lo pisaba, dejando a todo el mundo con el golpe genérico.
             hero.EnsureLoadout();
 
+            // Armas variadas: los saves anteriores dejaron a todo el roster con espada, aunque
+            // su habilidad fuera de arco, báculo o maza. Se reparte arma por arquetipo una vez.
+            if (!save.weaponsRerolled && gacha.RerollWeaponToArchetype(hero)) rearmados++;
+
             // Un 3★+ sin subclase nunca llegó a especializarse; se le sortea una sin modal, que
             // al cargar la partida no es momento de preguntar.
             if (progress != null) progress.GrantSubclassIfDue(allowUiOffer: false);
@@ -738,6 +762,10 @@ public class SaveManager : MonoBehaviour
             PlaceOnLoad(hero, entry.assignedBuilding);
             spawned.Add(hero);
         }
+
+        weaponRerollApplied = true;
+        if (rearmados > 0)
+            Debug.Log($"[Guardado] Armas repartidas por arquetipo a {rearmados} héroes.", this);
 
         RestoreParty(save, spawned);
         RosterLoaded?.Invoke();

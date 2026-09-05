@@ -53,8 +53,16 @@ public class BattleChoreographer : MonoBehaviour
     [Tooltip("Cada cuánto se recolocan las líneas durante el combate.")]
     [SerializeField] private float reformInterval = 3f;
 
+    [Tooltip("Cuánto se adelanta o retrasa cada héroe dentro de su fila; 0 la deja recta.")]
+    [SerializeField] private float rowStagger = 0.55f;
+
     private float timer;
     private float reformTimer;
+
+    // Reagrupamiento entre tandas de refuerzo: la escuadra vuelve a un punto fijo y rehace la
+    // línea en vez de quedarse donde la dejó el último enemigo que mató.
+    private bool regrouping;
+    private Vector2 rallyPoint;
     private readonly Dictionary<HeroController, Vector2> puestos = new Dictionary<HeroController, Vector2>();
 
     // Quiénes aguantan el frente en este encuentro. Sale de aquí y no de HeroController.IsTank,
@@ -100,9 +108,13 @@ public class BattleChoreographer : MonoBehaviour
         foreach (var hero in squad)
             if (hero.EffectiveDetectionRange > vigia.EffectiveDetectionRange) vigia = hero;
 
+        string clave = aDistancia > 0
+            ? Una("BATTLE_SIGHTING_MIXED", "BATTLE_SIGHTING_MIXED_2", "BATTLE_SIGHTING_MIXED_3")
+            : Una("BATTLE_SIGHTING_MELEE", "BATTLE_SIGHTING_MELEE_2", "BATTLE_SIGHTING_MELEE_3");
+
         string texto = aDistancia > 0
-            ? string.Format(LocalizationManager.Get("BATTLE_SIGHTING_MIXED"), cuerpoACuerpo, aDistancia)
-            : string.Format(LocalizationManager.Get("BATTLE_SIGHTING_MELEE"), cuerpoACuerpo);
+            ? string.Format(LocalizationManager.Get(clave), cuerpoACuerpo, aDistancia)
+            : string.Format(LocalizationManager.Get(clave), cuerpoACuerpo);
 
         Say(vigia, texto);
     }
@@ -116,7 +128,37 @@ public class BattleChoreographer : MonoBehaviour
 
         if (frente == null) return;
 
-        Say(frente, LocalizationManager.Get("BATTLE_PLAN_HOLD"));
+        // Con jefe delante el aviso es otro: no es un piso cualquiera.
+        if (HayJefe())
+        {
+            Say(frente, LocalizationManager.Get(
+                Una("BATTLE_BOSS_1", "BATTLE_BOSS_2", "BATTLE_BOSS_3")));
+            return;
+        }
+
+        Say(frente, LocalizationManager.Get(
+            Una("BATTLE_PLAN_HOLD", "BATTLE_PLAN_HOLD_2", "BATTLE_PLAN_HOLD_3", "BATTLE_PLAN_HOLD_4")));
+    }
+
+    private static string Una(params string[] keys) => keys[Random.Range(0, keys.Length)];
+
+    // Un enemigo mucho más gordo que el resto de la oleada es el jefe del piso.
+    private static bool HayJefe()
+    {
+        var enemigos = Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None);
+        if (enemigos.Length == 0) return false;
+
+        int mayor = 0, total = 0, vivos = 0;
+        foreach (var e in enemigos)
+        {
+            if (e == null || e.CurrentHealth <= 0) continue;
+
+            vivos++;
+            total += e.MaxHealth;
+            if (e.MaxHealth > mayor) mayor = e.MaxHealth;
+        }
+
+        return vivos > 1 && mayor > (total / (float)vivos) * 2.5f;
     }
 
     // Bocadillo sobre el héroe. Los rótulos de intención van más abajo, así que no se pisan.
@@ -127,11 +169,35 @@ public class BattleChoreographer : MonoBehaviour
         DamageTextManager.Show(hero.transform.position + Vector3.up * 1.25f, texto, UITheme.Text);
     }
 
+    // La llama el WaveManager cuando la oleada se queda sin enemigos en pantalla pero aún faltan
+    // refuerzos por entrar. La escuadra tiene el avance frenado (holdPosition) mientras dure.
+    public void BeginRegroup(Vector2 rally)
+    {
+        if (regrouping) return;
+
+        regrouping = true;
+        rallyPoint = rally;
+        AssignPosts();
+    }
+
+    // Mueve el punto de reunión sin reiniciar el reagrupamiento; lo usa la escolta, que puede
+    // no estar donde estaba cuando empezó.
+    public void SetRallyPoint(Vector2 rally) => rallyPoint = rally;
+
+    public void EndRegroup()
+    {
+        if (!regrouping) return;
+
+        regrouping = false;
+        AssignPosts();
+    }
+
     public void EndEncounter()
     {
         Phase = BattlePhase.Idle;
         puestos.Clear();
         HasFrontLine = false;
+        regrouping = false;
     }
 
     void Update()
@@ -150,6 +216,10 @@ public class BattleChoreographer : MonoBehaviour
                 reformTimer = Mathf.Max(0.5f, reformInterval);
                 AssignPosts();
             }
+
+            // En combate normal los mueve su propia IA; esperando refuerzos la tiene frenada,
+            // así que aquí es donde vuelven andando a su sitio.
+            if (regrouping) MoveToPosts();
 
             return;
         }
@@ -200,6 +270,10 @@ public class BattleChoreographer : MonoBehaviour
         foreach (var hero in squad) centroEscuadra += (Vector2)hero.transform.position;
         centroEscuadra /= squad.Count;
 
+        // Esperando refuerzos la línea se rehace en el punto de despliegue, no donde acabaron
+        // persiguiendo al último enemigo.
+        if (regrouping) centroEscuadra = rallyPoint;
+
         // Sin enemigos a la vista se forma mirando al frente de siempre (la arena va de izquierda
         // a derecha), que es mejor que no formar nada.
         Vector2 haciaElEnemigo = Vector2.right;
@@ -231,8 +305,14 @@ public class BattleChoreographer : MonoBehaviour
         foreach (var e in enemigos)
             if (e != null && e.CurrentHealth > 0) enemigosVivos++;
 
+        bool desbordadosAntes = Overwhelmed;
         Overwhelmed = squad.Count > 0 && enemigosVivos > squad.Count * overwhelmedRatio;
         if (Overwhelmed) frente -= haciaElEnemigo * retreatStep;
+
+        // Solo al cruzar el umbral: repetirlo en cada recolocación sería un bucle de gritos.
+        if (Overwhelmed && !desbordadosAntes && squad.Count > 0)
+            squad[Random.Range(0, squad.Count)].Bark(1f,
+                "BATTLE_OVERWHELMED_1", "BATTLE_OVERWHELMED_2", "BATTLE_OVERWHELMED_3");
 
         var tanques = new List<HeroController>();
         var cuerpoACuerpo = new List<HeroController>();
@@ -261,20 +341,52 @@ public class BattleChoreographer : MonoBehaviour
         frontliners.Clear();
         foreach (var hero in tanques) frontliners.Add(hero);
 
-        Colocar(tanques, frente, lateral);
-        Colocar(cuerpoACuerpo, frente - haciaElEnemigo * meleeGap, lateral);
-        Colocar(distancia, frente - haciaElEnemigo * rangedGap, lateral);
-        Colocar(soporte, frente - haciaElEnemigo * supportGap, lateral);
+        ColocarFila(tanques, frente, lateral, haciaElEnemigo);
+        ColocarFila(cuerpoACuerpo, frente - haciaElEnemigo * meleeGap, lateral, haciaElEnemigo);
+        ColocarFila(distancia, frente - haciaElEnemigo * rangedGap, lateral, haciaElEnemigo);
+        ColocarFila(soporte, frente - haciaElEnemigo * supportGap, lateral, haciaElEnemigo);
     }
 
     // Reparte una fila a lo ancho, centrada en su línea.
-    private void Colocar(List<HeroController> fila, Vector2 centroLinea, Vector2 lateral)
+    private void Colocar(List<HeroController> fila, Vector2 centroLinea, Vector2 lateral,
+                         Vector2 haciaElEnemigo)
     {
         for (int i = 0; i < fila.Count; i++)
         {
             float desplazamiento = (i - (fila.Count - 1) * 0.5f) * rowSpacing;
-            puestos[fila[i]] = centroLinea + lateral * desplazamiento;
+
+            // La fila no se cuadra a escuadra: el que mejor aguanta pisa medio paso por delante
+            // y el que menos se queda algo atrás, para que se lea una línea de combate y no una
+            // formación de desfile.
+            float adelanto = Escalon(fila[i]) * rowStagger;
+
+            puestos[fila[i]] = centroLinea + lateral * desplazamiento + haciaElEnemigo * adelanto;
         }
+    }
+
+    // De -1 (se queda atrás) a +1 (pisa delante), según lo que aguante el héroe respecto a la
+    // media de su fila. Sin fila que comparar, todos a la misma altura.
+    private float Escalon(HeroController hero)
+    {
+        if (hero == null || filaVidaMedia <= 0f) return 0f;
+
+        float relativo = (hero.MaxHealth - filaVidaMedia) / filaVidaMedia;
+        return Mathf.Clamp(relativo * 2f, -1f, 1f);
+    }
+
+    // Vida media de la fila que se está colocando; la fija Colocar antes de repartir puestos.
+    private float filaVidaMedia;
+
+    private void ColocarFila(List<HeroController> fila, Vector2 centroLinea, Vector2 lateral,
+                             Vector2 haciaElEnemigo)
+    {
+        filaVidaMedia = 0f;
+        foreach (var hero in fila)
+            if (hero != null) filaVidaMedia += hero.MaxHealth;
+
+        if (fila.Count > 0) filaVidaMedia /= fila.Count;
+
+        Colocar(fila, centroLinea, lateral, haciaElEnemigo);
     }
 
     // Devuelve true cuando ya están todos en su sitio.

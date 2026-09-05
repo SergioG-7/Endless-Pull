@@ -43,6 +43,11 @@ public class MasterHUD : MonoBehaviour
     // en el panel de Escuadras, donde compartía etiqueta con el aviso de "héroe ocupado".
     private TMP_Text expeditionLabel;
 
+    // Volver a la base desde el claro; el botón de ir vive en el panel de expediciones, que ya
+    // no está a la vista cuando la cámara se ha ido al bosque.
+    private Button expeditionBackButton;
+    private CameraDirector camera3rd;
+
 
     void OnEnable()
     {
@@ -185,10 +190,20 @@ void Start()
         if (expeditionLabel == null) return;
 
         bool fuera = expeditions != null && expeditions.IsRunning;
-        if (expeditionLabel.gameObject.activeSelf != fuera)
-            expeditionLabel.gameObject.SetActive(fuera);
 
-        if (!fuera) return;
+        // Volver solo se ofrece si de verdad estamos mirando el claro, y ocupa el sitio del
+        // rótulo de "recolección en curso" en vez de invadir la franja de los recursos: los dos
+        // se excluyen, así que la visibilidad se decide de una vez y no se pisan entre frames.
+        bool enClaro = camera3rd != null && camera3rd.InExpeditionView;
+        bool mostrarRotulo = fuera && !enClaro;
+
+        if (expeditionLabel.gameObject.activeSelf != mostrarRotulo)
+            expeditionLabel.gameObject.SetActive(mostrarRotulo);
+
+        if (expeditionBackButton != null && expeditionBackButton.gameObject.activeSelf != enClaro)
+            expeditionBackButton.gameObject.SetActive(enClaro);
+
+        if (!mostrarRotulo) return;
 
         expeditionLabel.text = expeditions.ReadyToClaim
             ? $"<color={UITheme.Tag(UITheme.Cyan)}>{LocalizationManager.Get("UI_GATHER_READY")}</color>"
@@ -246,6 +261,32 @@ void Start()
 
         ConfigureNoClip((TextMeshProUGUI)expeditionLabel);
         expeditionLabel.gameObject.SetActive(false);
+
+        BuildExpeditionButtons(topBar);
+    }
+
+    // Volver a la base: el único botón que tiene sentido en la barra, porque estando en el
+    // claro el panel de expediciones ya no se ve.
+    private void BuildExpeditionButtons(Transform topBar)
+    {
+        if (camera3rd == null) camera3rd = UnityEngine.Object.FindFirstObjectByType<CameraDirector>();
+
+        expeditionBackButton = UIBuild.Button(topBar, "Btn_ExpeditionBack",
+            LocalizationManager.Get("UI_EXPEDITION_BACK"), UITheme.Card,
+            new Vector2(170f, 34f), Vector2.zero,
+            () => { if (camera3rd != null) camera3rd.GoToBase(); });
+
+        Anclar(expeditionBackButton, 356f);
+        expeditionBackButton.gameObject.SetActive(false);
+    }
+
+    private static void Anclar(Button boton, float x)
+    {
+        var rt = boton.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0f, 0.5f);
+        rt.anchorMax = new Vector2(0f, 0.5f);
+        rt.pivot = new Vector2(0f, 0.5f);
+        rt.anchoredPosition = new Vector2(x, 0f);
     }
 
     // El hueco vacío a la izquierda de la TopBar (todo lo demás cuelga anclado a la derecha).

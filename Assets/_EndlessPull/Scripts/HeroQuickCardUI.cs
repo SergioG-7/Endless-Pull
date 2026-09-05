@@ -31,6 +31,7 @@ public class HeroQuickCardUI : MonoBehaviour
 
     [Tooltip("Modal de habilidad activa, pasivas y pericia de arma que abre el botón Habilidades.")]
     [SerializeField] private HeroSkillsModalUI skillsModal;
+    [SerializeField] private HeroMemoriesModalUI memoriesModal;
 
     [Tooltip("Tamaño de la ficha.")]
     [SerializeField] private Vector2 size = new Vector2(760f, 620f);
@@ -66,6 +67,7 @@ public class HeroQuickCardUI : MonoBehaviour
     private Button btnLock, btnEquip, btnGift;
     private TMP_Text seeRosterLabel;
     private TMP_Text skillsButtonLabel;
+    private TMP_Text memoriesButtonLabel;
 
     public bool IsOpen => panel != null && panel.activeSelf;
 
@@ -77,6 +79,7 @@ public class HeroQuickCardUI : MonoBehaviour
         if (shop == null) shop = UnityEngine.Object.FindFirstObjectByType<ShopManager>();
         if (equipModal == null) equipModal = UnityEngine.Object.FindFirstObjectByType<EquipmentSelectModalUI>();
         if (skillsModal == null) skillsModal = UnityEngine.Object.FindFirstObjectByType<HeroSkillsModalUI>();
+        if (memoriesModal == null) memoriesModal = UnityEngine.Object.FindFirstObjectByType<HeroMemoriesModalUI>();
         if (economy == null) economy = UnityEngine.Object.FindFirstObjectByType<EconomyManager>();
 
         Build();
@@ -227,6 +230,7 @@ public class HeroQuickCardUI : MonoBehaviour
 
         if (seeRosterLabel != null) seeRosterLabel.text = LocalizationManager.Get("UI_SEE_ROSTER");
         if (skillsButtonLabel != null) skillsButtonLabel.text = LocalizationManager.Get("UI_SKILLS_BUTTON");
+        if (memoriesButtonLabel != null) memoriesButtonLabel.text = LocalizationManager.Get("UI_MEMORIES");
     }
 
     private static void SetActionButton(Button button, string text, Color color, bool interactable)
@@ -271,6 +275,12 @@ public class HeroQuickCardUI : MonoBehaviour
     {
         if (hero == null || skillsModal == null) return;
         skillsModal.Open(hero);
+    }
+
+    private void OnMemoriesPressed()
+    {
+        if (hero == null || memoriesModal == null) return;
+        memoriesModal.Open(hero);
     }
 
     // Comida especial a cambio de afecto (ATK a partir de 50, EXP de entrenamiento al máximo).
@@ -371,13 +381,21 @@ private void Build()
             OnSeeInRosterPressed);
         seeRosterLabel = btnSeeRoster.GetComponentInChildren<TMP_Text>();
 
-        // 3ª fila, un solo botón ancho y centrado: abre el modal aparte de Habilidad activa,
-        // Pasivas y Pericia de Arma (demasiado contenido para meterlo aquí sin desbordar).
+        // 3ª fila: Habilidades y Recuerdos, cada uno con su pantalla. Los dos tienen demasiado
+        // contenido para meterlo en la ficha sin desbordar las barras.
         float row3Y = row2Y - ActionBtnHeight - ActionBtnGap;
+        float anchoMitad = (ActionBtnWidth * 3f + ActionBtnGap * 2f - ActionBtnGap) * 0.5f;
+        float xMitad = (anchoMitad + ActionBtnGap) * 0.5f;
+
         var btnSkills = UIBuild.Button(panel.transform, "Btn_Skills", LocalizationManager.Get("UI_SKILLS_BUTTON"),
-            new Color(0.55f, 0.35f, 0.20f), new Vector2(ActionBtnWidth * 3f + ActionBtnGap * 2f, ActionBtnHeight),
-            new Vector2(0f, row3Y), OnSkillsPressed);
+            new Color(0.55f, 0.35f, 0.20f), new Vector2(anchoMitad, ActionBtnHeight),
+            new Vector2(-xMitad, row3Y), OnSkillsPressed);
         skillsButtonLabel = btnSkills.GetComponentInChildren<TMP_Text>();
+
+        var btnMemories = UIBuild.Button(panel.transform, "Btn_Memories", LocalizationManager.Get("UI_MEMORIES"),
+            new Color(0.35f, 0.30f, 0.52f), new Vector2(anchoMitad, ActionBtnHeight),
+            new Vector2(xMitad, row3Y), OnMemoriesPressed);
+        memoriesButtonLabel = btnMemories.GetComponentInChildren<TMP_Text>();
     }
 
 

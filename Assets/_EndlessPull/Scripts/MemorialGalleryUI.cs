@@ -3,8 +3,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-// Galería Memorial: panel de honores con los héroes que ya no están, su último equipo y cómo
-// se perdieron. Construida por código como el resto de modales, sin cableado en el Inspector.
+// Galería Memorial: panel de honores con los héroes que ya no están y cómo se perdieron.
+// Construida por código como el resto de modales, sin cableado en el Inspector.
 public class MemorialGalleryUI : MonoBehaviour
 {
     [SerializeField] private Canvas canvas;
@@ -18,6 +18,8 @@ public class MemorialGalleryUI : MonoBehaviour
 
     // Una fila por ficha; se reutilizan para no destruir y recrear en cada refresco.
     private readonly List<TMP_Text> pool = new List<TMP_Text>();
+
+    private MemorialManager memorial;
 
     public bool IsOpen => panel != null && panel.activeSelf;
 
@@ -64,11 +66,16 @@ public class MemorialGalleryUI : MonoBehaviour
 
         titulo.text = LocalizationManager.Get("BLD_GALLERY");
 
-        var memorial = Object.FindFirstObjectByType<MemorialManager>();
-        var fichas = memorial != null ? memorial.Records : new List<MemorialRecord>();
+        // La referencia se cachea: buscarla en cada refresco daba una lista vacia si la
+        // busqueda fallaba justo en ese momento, y salia el aviso de Galeria vacia con
+        // fichas dentro.
+        if (memorial == null) memorial = Object.FindFirstObjectByType<MemorialManager>();
+        IReadOnlyList<MemorialRecord> fichas = memorial != null
+            ? memorial.Records : new List<MemorialRecord>();
 
         // Sin nadie perdido todavía, una sola línea explicándolo en vez de una lista vacía.
-        int filas = Mathf.Max(1, fichas.Count);
+        bool vacia = fichas.Count == 0;
+        int filas = vacia ? 1 : fichas.Count;
         while (pool.Count < filas) pool.Add(NewRow());
 
         for (int i = 0; i < pool.Count; i++)
@@ -77,7 +84,7 @@ public class MemorialGalleryUI : MonoBehaviour
             pool[i].gameObject.SetActive(usada);
             if (!usada) continue;
 
-            if (fichas.Count == 0)
+            if (vacia)
             {
                 pool[i].text = LocalizationManager.Get("UI_MEMORIAL_EMPTY");
                 pool[i].color = UITheme.TextMuted;
@@ -88,17 +95,14 @@ public class MemorialGalleryUI : MonoBehaviour
             var estrellas = new System.Text.StringBuilder();
             for (int e = 0; e < ficha.starRank; e++) estrellas.Append('★');
 
-            string equipo = string.IsNullOrEmpty(ficha.lastEquipment)
-                ? string.Empty
-                : $"\n<size={UITheme.SizeCaption}><color={UITheme.Tag(UITheme.TextFaint)}>" +
-                  $"{ficha.lastEquipment}</color></size>";
-
+            // El equipo del caído ya no se lista: no vuelve con él, se queda en el piso donde
+            // cayó hasta que se vuelva a despejar (ver LostGearManager).
             pool[i].color = UITheme.Text;
             pool[i].text = $"<color={UITheme.Tag(UITheme.Rarity(ficha.starRank))}>{estrellas}</color>  " +
                            $"<b>{ficha.heroName}</b>  " +
                            $"<size={UITheme.SizeCaption}>{LocalizationManager.Get("UI_LEVEL_ABBR")}{ficha.level}</size>\n" +
                            $"<size={UITheme.SizeCaption}><color={UITheme.Tag(UITheme.TextMuted)}>" +
-                           $"{ficha.CauseLabel()}</color></size>{equipo}";
+                           $"{ficha.CauseLabel()}</color></size>";
         }
     }
 

@@ -165,13 +165,21 @@ public class WorkerAssignUI : MonoBehaviour
             ? HeroAssignment.WorkplaceName(hero)
             : HeroAssignment.DutyName(duty);
 
-        row.duty.text = puesto;
-        row.duty.color = duty == HeroDuty.Free ? UITheme.TextMuted : UITheme.Text;
-
         bool dentro = building != null && building.IsWorker(hero);
         bool hayHueco = building != null && building.Workers.Count < building.Capacity;
 
-        row.toggleLabel.text = LocalizationManager.Get(dentro ? "BTN_UNASSIGN" : "BTN_ASSIGN");
+        // Ya curra en OTRO edificio: se marca en ámbar y se dice de dónde vendría, porque
+        // asignarlo aquí se lo quita a aquel (ToggleWorker desasigna del previo).
+        bool enOtro = duty == HeroDuty.Building && !dentro;
+        if (enOtro) puesto = string.Format(LocalizationManager.Get("UI_WORKER_ELSEWHERE"), puesto);
+
+        row.duty.text = puesto;
+        row.duty.color = enOtro ? UITheme.Amber
+                       : duty == HeroDuty.Free ? UITheme.TextMuted
+                       : UITheme.Text;
+
+        row.toggleLabel.text = LocalizationManager.Get(dentro ? "BTN_UNASSIGN"
+                                                     : enOtro ? "BTN_MOVE_HERE" : "BTN_ASSIGN");
         row.toggleLabel.fontStyle = dentro ? FontStyles.Bold : FontStyles.Normal;
         row.toggle.interactable = dentro || hayHueco;
         row.toggleLabel.color = row.toggle.interactable ? UITheme.Text : UITheme.TextFaint;

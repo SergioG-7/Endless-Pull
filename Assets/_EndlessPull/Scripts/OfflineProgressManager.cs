@@ -15,6 +15,9 @@ public class OfflineProgressManager : MonoBehaviour
     [Tooltip("Tope duro de comida que puede traer una sola vuelta, pase el tiempo que pase.")]
     [SerializeField] private int maxOfflineFood = 800;
 
+    [Tooltip("Mismo tope, por separado, para la madera y el hierro de vuelta.")]
+    [SerializeField] private int maxOfflineMaterials = 400;
+
     [Tooltip("Ausencia mínima, en segundos, para acreditar nada; por debajo se ignora.")]
     [SerializeField] private float minOfflineSeconds = 60f;
 
@@ -42,6 +45,8 @@ public class OfflineProgressManager : MonoBehaviour
         if (segundos < minOfflineSeconds) return;
 
         int comida = 0;
+        int madera = 0;
+        int hierro = 0;
         int descansados = 0;
 
         foreach (var building in BaseBuilding.All)
@@ -49,6 +54,8 @@ public class OfflineProgressManager : MonoBehaviour
             if (building == null) continue;
 
             comida += building.OfflineHarvest(segundos);
+            madera += building.OfflineWood(segundos);
+            hierro += building.OfflineIron(segundos);
             descansados += building.OfflineRecover(segundos);
         }
 
@@ -56,7 +63,13 @@ public class OfflineProgressManager : MonoBehaviour
         // a pleno rendimiento una noche fuera daría decenas de miles y rompería la economía.
         comida = Mathf.Min(Mathf.RoundToInt(comida * offlineEfficiency), maxOfflineFood);
 
+        // Mismo recorte y mismo tope para los materiales: sin él una noche fuera pagaría la
+        // Forja entera sin haber jugado.
+        madera = Mathf.Min(Mathf.RoundToInt(madera * offlineEfficiency), maxOfflineMaterials);
+        hierro = Mathf.Min(Mathf.RoundToInt(hierro * offlineEfficiency), maxOfflineMaterials);
+
         if (comida > 0 && economy != null) economy.AddFood(comida);
+        if ((madera > 0 || hierro > 0) && economy != null) economy.AddMaterials(madera, hierro);
 
         bool expedicionLista = expeditions != null && expeditions.AdvanceOffline(segundos);
 

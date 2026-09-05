@@ -45,7 +45,12 @@ public enum PassiveSkill
     Judgement = 30,
     Observation = 31,
     Indomitable = 32,
-    Strategist = 33
+    Strategist = 33,
+
+    // Sinergias de escuadra: miran a los compañeros, no al propio héroe.
+    Vanguard = 34,
+    Bannerman = 35,
+    Lonewolf = 36
 }
 
 // Lo que aporta una pasiva, por canales. Los que multiplican arrancan en 1 y los que suman en 0,
@@ -77,6 +82,35 @@ public class PassiveMods
 
     // Pega más fuerte cuanto peor está; el umbral y el bonus los pone HeroController.
     public bool Berserk;
+
+    // --- Canales de disposición: cambian CÓMO decide el héroe, no cuánto pega ---
+
+    // Empuja el perfil táctico (agresividad / distancia segura / umbral de habilidad) del héroe.
+    // Suman sobre el valor guardado en HeroProgress, que sigue siendo la base.
+    public float Aggression;
+    public float SafeDistance;
+    public float SkillThreshold;
+
+    // Aguanta la línea aunque su velocidad le permitiera flanquear: disciplina por encima de
+    // oportunidad. Es lo contrario de lanzarse a rodear en cuanto se puede.
+    public bool HoldsLine;
+
+    // Lee el campo y va a por el objetivo que más conviene (el más tocado) en vez del más
+    // cercano, que es lo que hace todo el mundo por defecto.
+    public bool ReadsField;
+
+    // Se crece con los compañeros al lado y se encoge solo; el número lo pone HeroController.
+    public bool Leads;
+
+    // No pierde la cabeza: la moral y la fatiga le afectan menos a la hora de decidir.
+    public bool KeepsCool;
+
+    // --- Sinergias de escuadra: por cada compañero cerca, no por sí mismo ---
+    public float SquadAttack;
+    public float SquadDefense;
+
+    // Al revés: rinde más cuanto MENOS compañeros tenga al lado.
+    public float SoloBonus;
 }
 
 // Tabla central de pasivas, al estilo de HeroTraits.
@@ -99,7 +133,9 @@ public static class PassiveSkills
 
         PassiveSkill.MentalFortitude, PassiveSkill.Adaptability, PassiveSkill.MonstrousGrowth,
         PassiveSkill.Leadership, PassiveSkill.Judgement, PassiveSkill.Observation,
-        PassiveSkill.Indomitable, PassiveSkill.Strategist
+        PassiveSkill.Indomitable, PassiveSkill.Strategist,
+
+        PassiveSkill.Vanguard, PassiveSkill.Bannerman, PassiveSkill.Lonewolf
     };
 
     // Neutro compartido: lo devuelve Mods() para una pasiva sin entrada, y así nadie tiene que
@@ -114,9 +150,11 @@ public static class PassiveSkills
         { PassiveSkill.PainTolerance, new PassiveMods { Fatigue = 0.5f } },
         { PassiveSkill.Evasion,       new PassiveMods { Evasion = 0.15f } },
         { PassiveSkill.EagleEye,      new PassiveMods { DetectionRange = 3f } },
-        { PassiveSkill.Bloodlust,     new PassiveMods { Attack = 1.12f } },
+        { PassiveSkill.Bloodlust,     new PassiveMods { Attack = 1.12f, Aggression = 0.25f,
+                                                SafeDistance = -0.15f } },
         { PassiveSkill.Precision,     new PassiveMods { CritChance = 0.10f } },
-        { PassiveSkill.Executioner,   new PassiveMods { CritDamage = 0.35f } },
+        { PassiveSkill.Executioner,   new PassiveMods { CritDamage = 0.35f, SkillThreshold = 0.25f,
+                                                ReadsField = true } },
         { PassiveSkill.ArmorBreaker,  new PassiveMods { ArmorPierce = 0.12f } },
         { PassiveSkill.Vampiric,      new PassiveMods { LifeSteal = 0.08f } },
         { PassiveSkill.Swiftblade,    new PassiveMods { AttackCooldown = 0.85f } },
@@ -129,28 +167,43 @@ public static class PassiveSkills
         { PassiveSkill.LastStand,     new PassiveMods { LastStand = true } },
         { PassiveSkill.Regeneration,  new PassiveMods { Healing = 1.60f } },
         { PassiveSkill.Counterstrike, new PassiveMods { Evasion = 0.10f, Attack = 1.08f } },
-        { PassiveSkill.Bulwark,       new PassiveMods { Defense = 1.14f, MoveSpeed = 0.90f } },
+        { PassiveSkill.Bulwark,       new PassiveMods { Defense = 1.14f, MoveSpeed = 0.90f,
+                                                HoldsLine = true, Aggression = -0.15f } },
         { PassiveSkill.Unbreakable,   new PassiveMods { MaxHealth = 1.10f, Defense = 1.08f } },
 
         // --- Tácticas y utilidad ---
-        { PassiveSkill.Tactician,     new PassiveMods { SkillCooldown = 0.15f } },
+        { PassiveSkill.Tactician,     new PassiveMods { SkillCooldown = 0.15f, HoldsLine = true } },
         { PassiveSkill.ManaFlow,      new PassiveMods { ManaRegen = 1.50f } },
         { PassiveSkill.ArcaneEconomy, new PassiveMods { MpCost = 0.75f } },
         { PassiveSkill.Fleetfoot,     new PassiveMods { MoveSpeed = 1.20f } },
-        { PassiveSkill.Scout,         new PassiveMods { MoveSpeed = 1.10f, DetectionRange = 2f } },
+        { PassiveSkill.Scout,         new PassiveMods { MoveSpeed = 1.10f, DetectionRange = 2f,
+                                                SafeDistance = 0.15f } },
         { PassiveSkill.Opportunist,   new PassiveMods { CritChance = 0.08f, ArmorPierce = 0.10f } },
-        { PassiveSkill.Duelist,       new PassiveMods { Attack = 1.10f, Evasion = 0.08f } },
-        { PassiveSkill.Ambusher,      new PassiveMods { Attack = 1.08f, AttackCooldown = 0.92f } },
+        { PassiveSkill.Duelist,       new PassiveMods { Attack = 1.10f, Evasion = 0.08f,
+                                                Aggression = 0.15f, ReadsField = true } },
+        { PassiveSkill.Ambusher,      new PassiveMods { Attack = 1.08f, AttackCooldown = 0.92f,
+                                                Aggression = 0.20f } },
 
         // --- Carácter ---
-        { PassiveSkill.MentalFortitude, new PassiveMods { MoraleLoss = 0.5f } },
-        { PassiveSkill.Adaptability,    new PassiveMods { Attack = 1.08f, Defense = 1.08f } },
+        { PassiveSkill.MentalFortitude, new PassiveMods { MoraleLoss = 0.5f, KeepsCool = true } },
+        { PassiveSkill.Adaptability,    new PassiveMods { Attack = 1.05f, Defense = 1.05f,
+                                                  ReadsField = true } },
         { PassiveSkill.MonstrousGrowth, new PassiveMods { Exp = 1.40f } },
-        { PassiveSkill.Leadership,      new PassiveMods { Attack = 1.10f, MoraleLoss = 0.85f } },
-        { PassiveSkill.Judgement,       new PassiveMods { CritChance = 0.05f, CritDamage = 0.15f } },
-        { PassiveSkill.Observation,     new PassiveMods { DetectionRange = 2.5f, CritDamage = 0.10f } },
-        { PassiveSkill.Indomitable,     new PassiveMods { MaxHealth = 1.12f, Fatigue = 0.70f } },
-        { PassiveSkill.Strategist,      new PassiveMods { SkillCooldown = 0.12f, Attack = 1.06f } }
+        { PassiveSkill.Leadership,      new PassiveMods { Attack = 1.06f, MoraleLoss = 0.85f,
+                                                  Leads = true } },
+        { PassiveSkill.Judgement,       new PassiveMods { CritChance = 0.05f, CritDamage = 0.15f,
+                                                  SkillThreshold = 0.20f } },
+        { PassiveSkill.Observation,     new PassiveMods { DetectionRange = 2.5f, CritDamage = 0.10f,
+                                                  ReadsField = true } },
+        { PassiveSkill.Indomitable,     new PassiveMods { MaxHealth = 1.12f, Fatigue = 0.70f,
+                                                  KeepsCool = true, Aggression = 0.15f } },
+        { PassiveSkill.Strategist,      new PassiveMods { SkillCooldown = 0.12f, Attack = 1.04f,
+                                                  HoldsLine = true, ReadsField = true } },
+
+        // --- Sinergias de escuadra. El número lo pone HeroController contando compañeros. ---
+        { PassiveSkill.Vanguard,        new PassiveMods { SquadAttack = 0.05f, HoldsLine = true } },
+        { PassiveSkill.Bannerman,       new PassiveMods { SquadDefense = 0.05f, Leads = true } },
+        { PassiveSkill.Lonewolf,        new PassiveMods { SoloBonus = 0.30f, Aggression = 0.20f } }
     };
 
     public static PassiveMods Mods(PassiveSkill passive)
@@ -180,6 +233,20 @@ public static class PassiveSkills
 
     public static bool HasLastStand(IReadOnlyList<PassiveSkill> p) => Any(p, m => m.LastStand);
     public static bool HasBerserk(IReadOnlyList<PassiveSkill> p) => Any(p, m => m.Berserk);
+
+    // --- Disposición ---
+    public static float AggressionBonus(IReadOnlyList<PassiveSkill> p) => Sum(p, m => m.Aggression);
+    public static float SafeDistanceBonus(IReadOnlyList<PassiveSkill> p) => Sum(p, m => m.SafeDistance);
+    public static float SkillThresholdBonus(IReadOnlyList<PassiveSkill> p) => Sum(p, m => m.SkillThreshold);
+
+    public static bool HoldsLine(IReadOnlyList<PassiveSkill> p) => Any(p, m => m.HoldsLine);
+    public static bool ReadsField(IReadOnlyList<PassiveSkill> p) => Any(p, m => m.ReadsField);
+    public static bool Leads(IReadOnlyList<PassiveSkill> p) => Any(p, m => m.Leads);
+    public static bool KeepsCool(IReadOnlyList<PassiveSkill> p) => Any(p, m => m.KeepsCool);
+
+    public static float SquadAttackPerAlly(IReadOnlyList<PassiveSkill> p) => Sum(p, m => m.SquadAttack);
+    public static float SquadDefensePerAlly(IReadOnlyList<PassiveSkill> p) => Sum(p, m => m.SquadDefense);
+    public static float SoloBonus(IReadOnlyList<PassiveSkill> p) => Sum(p, m => m.SoloBonus);
 
     private static float Product(IReadOnlyList<PassiveSkill> passives, System.Func<PassiveMods, float> canal)
     {

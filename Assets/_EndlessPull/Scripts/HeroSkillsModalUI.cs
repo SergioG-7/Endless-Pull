@@ -96,7 +96,11 @@ public class HeroSkillsModalUI : MonoBehaviour
                 if (aprendida == null) continue;
                 if (activas.Length > 0) activas.Append('\n');
 
-                activas.Append($"<b>{aprendida.GetDisplayName()}</b>: {aprendida.GetDescription()}  " +
+                string papel = ActiveSkills.RoleName(ActiveSkills.RoleOf(aprendida.ability));
+
+                activas.Append($"<b>{aprendida.GetDisplayName()}</b>  " +
+                               $"<color={UITheme.Tag(UITheme.Accent)}>[{papel}]</color>: " +
+                               $"{aprendida.GetDescription()}  " +
                                $"<color={UITheme.Tag(UITheme.TextMuted)}>{aprendida.mpCost} MP · " +
                                $"{aprendida.cooldown:0.#}s</color>");
             }

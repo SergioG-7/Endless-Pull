@@ -294,6 +294,29 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Enemigos del piso 1; cada piso suma uno más.")]
     [SerializeField] private int baseEnemyCount = 2;
 
+    [Tooltip("Enemigos vivos como mucho a la vez; el resto de la oleada entra como refuerzo.")]
+    [Min(1)]
+    [SerializeField] private int maxConcurrentEnemies = 12;
+
+    [Tooltip("Segundos entre tandas de refuerzo en el piso 1; se acorta según se sube.")]
+    [SerializeField] private float reinforcementInterval = 1.5f;
+
+    [Tooltip("Cuánto se acorta el hueco entre tandas por cada piso.")]
+    [SerializeField] private float reinforcementIntervalPerFloor = 0.02f;
+
+    [Tooltip("Suelo del hueco entre tandas; por debajo dejan de verse llegar.")]
+    [SerializeField] private float minReinforcementInterval = 0.5f;
+
+    [Tooltip("Refuerzos que entran juntos en el piso 1; una tanda no es un enemigo suelto.")]
+    [Min(1)]
+    [SerializeField] private int reinforcementBatch = 2;
+
+    [Tooltip("Pisos que hacen falta para que entre un refuerzo más por tanda.")]
+    [SerializeField] private int reinforcementFloorsPerExtra = 10;
+
+    [Tooltip("Cuánto más atrás de la zona de aparición entran los refuerzos, por la retaguardia enemiga.")]
+    [SerializeField] private float reinforcementBackOffset = 4f;
+
     [Tooltip("Crecimiento compuesto de vida y ataque por cada piso; el poder del héroe también es multiplicativo.")]
     [Range(0f, 0.5f)]
     [SerializeField] private float statCompoundGrowth = 0.08f;
@@ -361,6 +384,18 @@ public class WaveManager : MonoBehaviour
     private float combatElapsed;
     private int deployedStartCount;
     private bool heroDownOccurred;
+
+    // Quién se ha quedado en este piso para siempre; se resume al terminar, gane o pierda.
+    private readonly List<string> fallenThisFloor = new List<string>();
+
+    // Resto de la oleada que aún no ha entrado por el tope de simultáneos, con el escalado del
+    // piso ya resuelto para que un refuerzo salga idéntico a los que salieron al principio.
+    private readonly List<EnemyData> pendingReinforcements = new List<EnemyData>();
+    private float reinforcementTimer;
+    private bool regrouping;
+    private float waveStatMultiplier = 1f;
+    private float waveAttackMultiplier = 1f;
+    private int waveSpawnedTotal;
 
     // Pisos que ya han pagado su reto oculto alguna vez; no se vuelve a sortear ahí, para que no
     // se pueda farmear el mismo piso en bucle por materiales/gemas gratis.
@@ -545,6 +580,29 @@ void Awake()
         PublishFloor();
     }
 
+    void OnEnable() => HeroController.HeroFallen += OnHeroFallen;
+
+    void OnDisable() => HeroController.HeroFallen -= OnHeroFallen;
+
+    private void OnHeroFallen(string heroName)
+    {
+        if (!string.IsNullOrEmpty(heroName)) fallenThisFloor.Add(heroName);
+    }
+
+    // Resumen de bajas del piso, gane o pierda: el banner del momento se lo puede haber comido
+    // el ritmo del combate, así que al volver se dice otra vez y con la lista entera.
+    private void ReportFallen()
+    {
+        if (fallenThisFloor.Count == 0) return;
+
+        ScreenBanner.ShowCompact(
+            string.Format(LocalizationManager.Get("UI_FLOOR_FALLEN_SUMMARY"),
+                          string.Join(", ", fallenThisFloor)),
+            4f, UITheme.Danger);
+
+        fallenThisFloor.Clear();
+    }
+
     // Valla perimetral visible: marco de piedra/madera oscura integrado con el bioma, no una
     // línea de depuración. Marca en el suelo dónde el clamp físico detiene a las unidades.
     private void DrawArenaFence()
@@ -611,6 +669,8 @@ void Awake()
         // Con huecos reales entre oleadas, dejar que la IA idle avance a ciegas la saca de la
         // línea; en Supervivencia se aguanta el sitio hasta que aparezca el próximo objetivo.
         bool hold = currentMissionType == FloorMissionType.Survival;
+        regrouping = false;
+        fallenThisFloor.Clear();
         foreach (var hero in deployed)
             if (hero != null) hero.SetHoldPosition(hold);
 
@@ -618,24 +678,21 @@ void Awake()
         float mult = StatMultiplierForFloor(currentFloor);
         float atk = AttackMultiplierForFloor(currentFloor);
 
+        waveStatMultiplier = mult;
+        waveAttackMultiplier = atk;
+        waveSpawnedTotal = 0;
+        pendingReinforcements.Clear();
+        reinforcementTimer = reinforcementInterval;
+
+        // Solo entra de golpe lo que cabe en el tope; el resto espera turno. Sin esto, un piso
+        // alto suelta decenas de enemigos a la vez y la escuadra cae antes de poder leer nada.
+        int deGolpe = Mathf.Min(count, maxConcurrentEnemies);
+
         for (int i = 0; i < count; i++)
         {
-            Vector2 half = spawnAreaSize * 0.5f;
-            Vector2 pos = arenaCenter + spawnAreaCenter + new Vector2(
-                Random.Range(-half.x, half.x),
-                Random.Range(-half.y, half.y));
-
             var datos = PickEnemyData(i);
-
-            // Cada rol en su línea: los tanques delante y los de rango detrás.
-            pos += new Vector2(LineOffset(datos), 0f);
-
-            var go = Instantiate(enemyPrefab, pos, Quaternion.identity);
-            go.name = $"Enemy_{SafeName(datos)}_F{currentFloor}_{i + 1}";
-
-            var enemy = go.GetComponent<EnemyController>();
-            enemy.Initialize(datos, mult, atk);
-            wave.Add(enemy);
+            if (i < deGolpe) SpawnEnemy(datos);
+            else pendingReinforcements.Add(datos);
         }
 
         AssignHiddenChallenge();
@@ -728,6 +785,101 @@ void Awake()
 
     // Grupo de enemigos de golpe cada intervalo, no de uno en uno, con más integrantes cuanto
     // más alto el piso, para mantener la presión hasta agotar el cronómetro.
+    // Un enemigo de la oleada del piso, con el escalado ya resuelto en SpawnWave. Lo usan tanto
+    // el reparto inicial como los refuerzos que van entrando al abrirse hueco.
+    private void SpawnEnemy(EnemyData datos, float backOffsetX = 0f)
+    {
+        if (enemyPrefab == null || datos == null) return;
+
+        Vector2 half = spawnAreaSize * 0.5f;
+        Vector2 pos = arenaCenter + spawnAreaCenter + new Vector2(
+            Random.Range(-half.x, half.x),
+            Random.Range(-half.y, half.y));
+
+        // Cada rol en su línea: los tanques delante y los de rango detrás.
+        // El refuerzo entra además desde más atrás, por la retaguardia de los suyos.
+        pos += new Vector2(LineOffset(datos) + backOffsetX, 0f);
+
+        waveSpawnedTotal++;
+        var go = Instantiate(enemyPrefab, pos, Quaternion.identity);
+        go.name = $"Enemy_{SafeName(datos)}_F{currentFloor}_{waveSpawnedTotal}";
+
+        var enemy = go.GetComponent<EnemyController>();
+        enemy.Initialize(datos, waveStatMultiplier, waveAttackMultiplier);
+        wave.Add(enemy);
+    }
+
+    // Refuerzos que entran juntos: uno más cada reinforcementFloorsPerExtra pisos, para que un
+    // piso alto se note en la presión y no solo en las cifras de los enemigos.
+    private int ReinforcementBatchNow
+        => reinforcementBatch + (reinforcementFloorsPerExtra > 0
+            ? currentFloor / reinforcementFloorsPerExtra
+            : 0);
+
+    // El hueco entre tandas se acorta con el piso, con suelo para que sigan viéndose llegar.
+    private float ReinforcementIntervalNow
+        => Mathf.Max(minReinforcementInterval,
+                     reinforcementInterval - currentFloor * reinforcementIntervalPerFloor);
+
+    // Deja entrar refuerzos por tandas mientras quede sitio bajo el tope de simultáneos. Entran
+    // por detrás de la zona de aparición, no en medio del combate que ya está en marcha.
+    private void TickReinforcements()
+    {
+        if (pendingReinforcements.Count == 0) return;
+
+        PruneWave();
+        int hueco = maxConcurrentEnemies - wave.Count;
+        if (hueco <= 0) return;
+
+        reinforcementTimer -= Time.deltaTime;
+        if (reinforcementTimer > 0f) return;
+
+        reinforcementTimer = ReinforcementIntervalNow;
+
+        int tanda = Mathf.Min(ReinforcementBatchNow, hueco, pendingReinforcements.Count);
+        for (int i = 0; i < tanda; i++)
+        {
+            SpawnEnemy(pendingReinforcements[0], reinforcementBackOffset);
+            pendingReinforcements.RemoveAt(0);
+        }
+    }
+
+    // Sitio de la escuadra cuando no hay a quien pegar: alrededor de Friacis si la hay que
+    // escoltar, y si no el punto de despliegue del piso.
+    private Vector2 RallyPoint => currentEscort != null
+        ? (Vector2)currentEscort.transform.position
+        : arenaCenter + heroSpawnOffset;
+
+    // Sin nadie a quien pegar, la escuadra no puede seguir avanzando sola hacia el lado enemigo:
+    // vuelve al punto de reunión y rehace la línea. Escoltando eso pasa siempre que el campo
+    // queda despejado, no solo entre tandas de refuerzo: el sitio de la guardia es con Friacis.
+    private void UpdateRegroup()
+    {
+        if (currentMissionType == FloorMissionType.Survival) return;
+
+        bool esperando = AliveEnemies == 0
+                         && (pendingReinforcements.Count > 0 || currentEscort != null);
+
+        if (esperando != regrouping)
+        {
+            regrouping = esperando;
+
+            foreach (var hero in deployed)
+                if (hero != null) hero.SetHoldPosition(esperando);
+
+            if (choreographer != null)
+            {
+                if (esperando) choreographer.BeginRegroup(RallyPoint);
+                else choreographer.EndRegroup();
+            }
+        }
+
+        // Si el escoltado llegase a moverse, el punto de reunión lo sigue en vez de quedarse
+        // donde apareció.
+        if (regrouping && currentEscort != null && choreographer != null)
+            choreographer.SetRallyPoint(RallyPoint);
+    }
+
     private void SpawnSurvivalWave()
     {
         int size = Mathf.Max(1, survivalWaveBaseSize + survivalWaveGrowthPerFloor * Mathf.Max(0, currentFloor - 5));
@@ -941,6 +1093,8 @@ void Awake()
         }
 
         int rescatados = CountAliveDeployed();
+        LogFloorPace("retirada");
+        ReportFallen();
 
         foreach (var hero in deployed)
             if (hero != null) hero.LoseMorale(retreatMoraleLoss);
@@ -965,6 +1119,16 @@ void Awake()
     private void RecallParty()
     {
         int gatewayCount = 0;
+        regrouping = false;
+
+        // Cerrar el encuentro es lo que devuelve al coreografo a Idle. Sin esto se quedaba en
+        // Engaging para siempre tras el primer piso: seguia repartiendo puestos cada 3 s y
+        // HasFrontLine no volvia a false, asi que la base entera formaba en linea.
+        if (choreographer != null)
+        {
+            choreographer.EndRegroup();
+            choreographer.EndEncounter();
+        }
 
         foreach (var hero in deployed)
         {
@@ -1058,6 +1222,7 @@ void Awake()
 
         string npcName = currentEscort != null ? currentEscort.NpcName : "Friacis";
         int floor = currentFloor;
+        LogFloorPace("escolta caída");
 
         DespawnWave();
         RecallParty();
@@ -1284,6 +1449,8 @@ void Awake()
         if (!heroDownOccurred && CountAliveDeployed() < deployedStartCount) heroDownOccurred = true;
 
         TickAutoPotions();
+        TickReinforcements();
+        UpdateRegroup();
 
         int aliveNow = AliveEnemies;
 
@@ -1316,12 +1483,16 @@ void Awake()
             }
         }
 
-        bool normalClear = currentMissionType != FloorMissionType.Survival && aliveNow == 0;
+        // El piso no está despejado mientras queden refuerzos por entrar, aunque no haya nadie
+        // vivo en pantalla en este instante.
+        bool normalClear = currentMissionType != FloorMissionType.Survival
+                           && aliveNow == 0 && pendingReinforcements.Count == 0;
         bool survivalClear = currentMissionType == FloorMissionType.Survival && survivalTimer <= 0f;
 
         if (normalClear || survivalClear)
         {
             int cleared = currentFloor;
+            LogFloorPace("victoria");
 
             // La primera vez paga gemas y abre el piso siguiente; repetir solo da EXP y algo de material.
             bool firstClear = cleared > highestClearedFloor;
@@ -1382,6 +1553,24 @@ void Awake()
                 ? LocalizationManager.Get("UI_FIRST_CLEAR")
                 : LocalizationManager.Get("UI_REPEAT");
 
+            // Lo que se quedó en este piso al caer alguien vuelve al almacén al despejarlo.
+            int rescatadas = LostGearManager.Reclaim(cleared, shop);
+            if (rescatadas > 0)
+                ScreenBanner.ShowCompact(
+                    string.Format(LocalizationManager.Get("UI_GEAR_RECOVERED"), cleared, rescatadas),
+                    3f, UITheme.Accent);
+
+            ReportFallen();
+
+            // Uno de los que siguen en pie lo celebra; con todos hablando no se leería nada.
+            var enPie = new List<HeroController>();
+            foreach (var hero in deployed)
+                if (hero != null && hero.CurrentHealth > 0) enPie.Add(hero);
+
+            if (enPie.Count > 0)
+                enPie[Random.Range(0, enPie.Count)].Bark(1f,
+                    "BATTLE_VICTORY_1", "BATTLE_VICTORY_2", "BATTLE_VICTORY_3", "BATTLE_VICTORY_4");
+
             AudioManager.Play(SfxId.Victory);
             FloorCleared?.Invoke(new FloorRewardInfo
             {
@@ -1405,6 +1594,8 @@ void Awake()
         // Se pierde cuando cae toda la escuadra, no cuando cae todo el roster.
         if (CountAliveDeployed() == 0)
         {
+            LogFloorPace("derrota");
+            ReportFallen();
             DespawnWave();
             RecallParty();
             SetBossFloor(false);
@@ -1466,8 +1657,21 @@ void Awake()
             if (e != null) Destroy(e.gameObject);
 
         wave.Clear();
+        pendingReinforcements.Clear();
         currentBoss = null;
         DespawnEscort();
+    }
+
+    // Cronómetro de piso: la única lectura fiable del ritmo real de combate. Sale por consola
+    // con lo que hace falta para saber por qué duró lo que duró, no solo cuánto.
+    private void LogFloorPace(string desenlace)
+    {
+        PruneWave();
+        Debug.Log($"[Ritmo] Piso {currentFloor} | {desenlace} | {combatElapsed:0.0}s | "
+                  + $"oleada {waveSpawnedTotal + pendingReinforcements.Count} "
+                  + $"(vivos {wave.Count}, sin entrar {pendingReinforcements.Count}) | "
+                  + $"héroes {CountAliveDeployed()}/{deployedStartCount} | "
+                  + $"multVida x{waveStatMultiplier:0.00} multATK x{waveAttackMultiplier:0.00}", this);
     }
 
     private void Report(ExpeditionState newState, string message)

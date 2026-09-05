@@ -13,7 +13,9 @@ public enum BuildingType
     Forge,
     WarRoom,
     Archive,
-    Lodging
+    Lodging,
+    WoodworkingShop,
+    MetalProcessing
 }
 
 // Nombres visibles de los tipos de edificio.
@@ -33,6 +35,8 @@ public static class BuildingTypes
             case BuildingType.WarRoom: return LocalizationManager.Get("BLD_WARROOM");
             case BuildingType.Archive: return LocalizationManager.Get("BLD_ARCHIVE");
             case BuildingType.Lodging: return LocalizationManager.Get("BLD_LODGING");
+            case BuildingType.WoodworkingShop: return LocalizationManager.Get("BLD_WOODWORKING");
+            case BuildingType.MetalProcessing: return LocalizationManager.Get("BLD_METALWORKS");
         }
         return type.ToString();
     }
@@ -53,6 +57,8 @@ public static class BuildingTypes
             case BuildingType.WarRoom: return new Color(0.70f, 0.25f, 0.30f);
             case BuildingType.Archive: return new Color(0.55f, 0.50f, 0.60f);
             case BuildingType.Lodging: return new Color(0.45f, 0.40f, 0.65f);
+            case BuildingType.WoodworkingShop: return new Color(0.55f, 0.42f, 0.25f);
+            case BuildingType.MetalProcessing: return new Color(0.50f, 0.52f, 0.56f);
         }
         return Color.white;
     }
@@ -115,6 +121,9 @@ public class BaseBuilding : MonoBehaviour
     [Tooltip("Segundos entre cosechas de la granja.")]
     [SerializeField] private float harvestInterval = 10f;
 
+    [Tooltip("Material que produce por cosecha la Carpintería (madera) o la Fundición (hierro).")]
+    [SerializeField] private int materialPerHarvest = 3;
+
     [Tooltip("Fatiga que quita cada tick en los Dormitorios; dormir cansa menos que descansar de pie.")]
     [SerializeField] private float fatigueRecoveryPerTick = 20f;
 
@@ -132,6 +141,9 @@ public class BaseBuilding : MonoBehaviour
 
     [Tooltip("Tope de ocupantes por edificio, por muy alto que sea el nivel.")]
     [SerializeField] private int capacityCap = 4;
+
+    [Tooltip("Plazas extra de salida; los sitios de descanso y entrenamiento admiten más gente.")]
+    [SerializeField] private int capacityBonus;
 
     private float harvestTimer;
     private EconomyManager economy;
@@ -159,6 +171,12 @@ public class BaseBuilding : MonoBehaviour
 
     public int ExpPerTick => Mathf.RoundToInt(expPerTick * LevelFactor);
     public int FoodPerHarvest => Mathf.RoundToInt(foodPerHarvest * LevelFactor);
+    public int MaterialPerHarvest => Mathf.RoundToInt(materialPerHarvest * LevelFactor);
+
+    // Los tres que producen solos con el tiempo, sin que nadie los visite.
+    public bool IsProducer => type == BuildingType.Farm
+                              || type == BuildingType.WoodworkingShop
+                              || type == BuildingType.MetalProcessing;
     public float HarvestInterval => harvestInterval;
     public int ManaPerVisitTick => Mathf.RoundToInt(manaPerVisitTick * LevelFactor);
     public float FatigueRecoveryPerTick => fatigueRecoveryPerTick * LevelFactor;
@@ -213,7 +231,7 @@ public class BaseBuilding : MonoBehaviour
     public int NextLevelFloor => level < MaxLevel ? 0 : level * FloorsPerLevelCap;
     public bool CanUpgrade => level < MaxLevel;
 
-    public int Capacity => Mathf.Min(capacityCap, FloorCapacity + (level - 1));
+    public int Capacity => Mathf.Min(capacityCap, FloorCapacity + (level - 1) + capacityBonus);
 
     public IReadOnlyList<HeroController> Workers => workers;
 
@@ -409,7 +427,7 @@ void Start()
         if (requiredFloor > 0) BuildLockOverlay();
         RefreshUnlock();
 
-        if (type == BuildingType.Farm)
+        if (IsProducer)
         {
             economy = UnityEngine.Object.FindFirstObjectByType<EconomyManager>();
             harvestTimer = harvestInterval;
@@ -420,12 +438,12 @@ void Start()
     {
         if (!IsUnlocked) return;
 
-        if (type == BuildingType.Farm && economy != null) TickFarm();
+        if (IsProducer && economy != null) TickProduction();
         else if (type == BuildingType.ManaWell) TickManaWell();
     }
 
-    // La granja produce sola, sin que nadie la visite.
-    private void TickFarm()
+    // Granja, Carpintería y Fundición producen solas, sin que nadie las visite.
+    private void TickProduction()
     {
         harvestTimer -= Time.deltaTime;
         if (harvestTimer > 0f) return;
@@ -435,7 +453,19 @@ void Start()
         // Cada trabajador asignado suma media cosecha extra.
         PruneWorkers();
         float factor = 1f + workers.Count * 0.5f;
-        economy.AddFood(Mathf.RoundToInt(FoodPerHarvest * factor));
+
+        switch (type)
+        {
+            case BuildingType.Farm:
+                economy.AddFood(Mathf.RoundToInt(FoodPerHarvest * factor));
+                break;
+            case BuildingType.WoodworkingShop:
+                economy.AddMaterials(Mathf.RoundToInt(MaterialPerHarvest * factor), 0);
+                break;
+            case BuildingType.MetalProcessing:
+                economy.AddMaterials(0, Mathf.RoundToInt(MaterialPerHarvest * factor));
+                break;
+        }
     }
 
     // El Pozo de Maná recarga a sus trabajadores fijos aunque nadie lo esté visitando ahora mismo.
@@ -621,14 +651,24 @@ void Start()
 
     // Comida que la granja habría cosechado con el juego cerrado; no la abona, solo la calcula.
     public int OfflineHarvest(float seconds)
+        => type == BuildingType.Farm ? OfflineYield(seconds, FoodPerHarvest) : 0;
+
+    // Lo mismo para los dos que dan material: madera la Carpintería, hierro la Fundición.
+    public int OfflineWood(float seconds)
+        => type == BuildingType.WoodworkingShop ? OfflineYield(seconds, MaterialPerHarvest) : 0;
+
+    public int OfflineIron(float seconds)
+        => type == BuildingType.MetalProcessing ? OfflineYield(seconds, MaterialPerHarvest) : 0;
+
+    private int OfflineYield(float seconds, int porCosecha)
     {
-        if (type != BuildingType.Farm || !IsUnlocked || harvestInterval <= 0f) return 0;
+        if (!IsUnlocked || harvestInterval <= 0f) return 0;
 
         int cosechas = Mathf.FloorToInt(seconds / harvestInterval);
         if (cosechas <= 0) return 0;
 
         PruneWorkers();
-        return Mathf.RoundToInt(FoodPerHarvest * (1f + workers.Count * 0.5f) * cosechas);
+        return Mathf.RoundToInt(porCosecha * (1f + workers.Count * 0.5f) * cosechas);
     }
 
     // Descanso y maná que sus trabajadores fijos habrían recuperado estando el juego cerrado.

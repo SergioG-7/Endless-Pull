@@ -1,4 +1,5 @@
 using TMPro;
+using System.Collections.Generic;
 using UnityEngine;
 
 // Bocadillo flotante de los héroes en la base; lo que dicen depende de cómo estén.
@@ -68,37 +69,125 @@ public class SpeechBubble : MonoBehaviour
         hideTimer = showSeconds;
     }
 
-    // Lo que más le pesa al héroe manda sobre lo que dice; todo sale del diccionario.
+    // Lo que dice sale de un sorteo entre TODO lo que le viene a cuento, no de la primera
+    // condición que se cumpla: la cascada rígida de antes hacía que un héroe hambriento dijera
+    // siempre lo mismo y no llegara a contar nunca dónde está ni quién es.
+    private readonly List<string> candidatas = new List<string>();
+
     private string PickLine()
     {
-        // La despensa vacía preocupa a toda la base, no solo al que come mucho.
+        candidatas.Clear();
+
+        // Urgencias: pesan más porque se añaden varias veces al sorteo.
         if (economy != null && economy.Food < lowFoodThreshold)
-            return Pick("SAY_HUNGRY_1", "SAY_HUNGRY_2");
+            Añadir(3, "SAY_HUNGRY_1", "SAY_HUNGRY_2", "SAY_HUNGRY_3", "SAY_HUNGRY_4", "SAY_HUNGRY_5");
 
         if (hero.IsExhausted)
-            return Pick("SAY_TIRED_1", "SAY_TIRED_2");
+            Añadir(3, "SAY_TIRED_1", "SAY_TIRED_2", "SAY_TIRED_3", "SAY_TIRED_4", "SAY_TIRED_5");
 
-        if (hero.MoralePercent < 30)
-            return Pick("SAY_LOWMORALE_1", "SAY_LOWMORALE_2");
+        if (hero.IsDemoralized || hero.MoralePercent < 30)
+            Añadir(3, "SAY_LOWMORALE_1", "SAY_LOWMORALE_2", "SAY_LOWMORALE_3",
+                      "SAY_LOWMORALE_4", "SAY_LOWMORALE_5");
 
-        if (hero.CurrentHealth < hero.MaxHealth / 2)
-            return Pick("SAY_HURT_1", "SAY_HURT_2");
+        if (hero.MaxHealth > 0 && hero.CurrentHealth < hero.MaxHealth / 2)
+            Añadir(3, "SAY_HURT_1", "SAY_HURT_2", "SAY_HURT_3", "SAY_HURT_4", "SAY_HURT_5");
 
         if (hero.HasBrokenGear)
-            return Pick("SAY_BROKEN_GEAR_1", "SAY_BROKEN_GEAR_2");
+            Añadir(3, "SAY_BROKEN_GEAR_1", "SAY_BROKEN_GEAR_2", "SAY_BROKEN_GEAR_3", "SAY_BROKEN_GEAR_4");
+
+        // En el claro de recolección solo habla de eso: no está en la base.
+        if (hero.GlobalState == HeroGlobalState.OnExpedition)
+        {
+            Añadir(4, "SAY_GATHERING_1", "SAY_GATHERING_2", "SAY_GATHERING_3",
+                      "SAY_GATHERING_4", "SAY_GATHERING_5");
+            return Sortear();
+        }
+
+        // Dónde está currando: es lo que más ancla al héroe en el mundo.
+        AñadirPorEdificio();
+
+        // Quién es: rareza, pericia y lo que te tiene cogido.
+        if (hero.StarRank >= 5)
+            Añadir(2, "SAY_PROUD_1", "SAY_PROUD_2", "SAY_PROUD_3");
+        else if (hero.StarRank <= 2)
+            Añadir(2, "SAY_ROOKIE_1", "SAY_ROOKIE_2", "SAY_ROOKIE_3");
+
+        if (hero.EquippedWeaponType != WeaponType.None
+            && hero.Mastery.RankOf(hero.EquippedWeaponType) >= MasteryRank.A)
+            Añadir(2, "SAY_MASTERY_1", "SAY_MASTERY_2");
+
+        if (hero.AffinityAtkBonus > 0f)
+            Añadir(2, "SAY_AFFINITY_1", "SAY_AFFINITY_2", "SAY_AFFINITY_3");
+
+        // La Galería pesa sobre los vivos.
+        if (MemorialManager.LostCount > 0)
+            Añadir(1, "SAY_MOURNING_1", "SAY_MOURNING_2", "SAY_MOURNING_3");
 
         if (hero.MoralePercent > 80)
-            return Pick("SAY_HAPPY_1", "SAY_HAPPY_2");
+            Añadir(2, "SAY_HAPPY_1", "SAY_HAPPY_2", "SAY_HAPPY_3", "SAY_HAPPY_4", "SAY_HAPPY_5");
 
         switch (hero.Trait)
         {
-            case HeroTrait.Glutton: return Pick("SAY_GLUTTON");
-            case HeroTrait.Slacker: return Pick("SAY_SLACKER");
-            case HeroTrait.Fierce: return Pick("SAY_FIERCE");
+            case HeroTrait.Glutton: Añadir(2, "SAY_GLUTTON", "SAY_GLUTTON_2", "SAY_GLUTTON_3"); break;
+            case HeroTrait.Slacker: Añadir(2, "SAY_SLACKER", "SAY_SLACKER_2", "SAY_SLACKER_3"); break;
+            case HeroTrait.Fierce:  Añadir(2, "SAY_FIERCE", "SAY_FIERCE_2", "SAY_FIERCE_3"); break;
+            default: Añadir(2, "SAY_DILIGENT_1", "SAY_DILIGENT_2", "SAY_DILIGENT_3"); break;
         }
 
-        return Pick("SAY_IDLE_1", "SAY_IDLE_2");
+        // Relleno: siempre hay algo que decir aunque no pase nada.
+        Añadir(1, "SAY_IDLE_1", "SAY_IDLE_2", "SAY_IDLE_3", "SAY_IDLE_4", "SAY_IDLE_5", "SAY_IDLE_6");
+
+        return Sortear();
     }
+
+    private void AñadirPorEdificio()
+    {
+        var edificio = hero.CurrentBuilding != null ? hero.CurrentBuilding : hero.AssignedBuilding;
+        if (edificio == null) return;
+
+        switch (edificio.Type)
+        {
+            case BuildingType.TrainingDummy: Añadir(3, "SAY_AT_TRAINING_1", "SAY_AT_TRAINING_2"); break;
+            case BuildingType.Canteen: Añadir(3, "SAY_AT_CANTEEN_1", "SAY_AT_CANTEEN_2"); break;
+            case BuildingType.Forge: Añadir(3, "SAY_AT_FORGE_1", "SAY_AT_FORGE_2"); break;
+            case BuildingType.Farm: Añadir(3, "SAY_AT_FARM_1", "SAY_AT_FARM_2"); break;
+            case BuildingType.Lodging: Añadir(3, "SAY_AT_LODGING_1", "SAY_AT_LODGING_2"); break;
+            case BuildingType.ManaWell: Añadir(3, "SAY_AT_MANAWELL_1", "SAY_AT_MANAWELL_2"); break;
+            case BuildingType.Workshop: Añadir(3, "SAY_AT_WORKSHOP_1", "SAY_AT_WORKSHOP_2"); break;
+            case BuildingType.Archive: Añadir(3, "SAY_AT_ARCHIVE_1", "SAY_AT_ARCHIVE_2"); break;
+            case BuildingType.WarRoom: Añadir(3, "SAY_AT_WARROOM_1", "SAY_AT_WARROOM_2"); break;
+            case BuildingType.WoodworkingShop: Añadir(3, "SAY_AT_WOODWORKING_1", "SAY_AT_WOODWORKING_2"); break;
+            case BuildingType.MetalProcessing: Añadir(3, "SAY_AT_METALWORKS_1", "SAY_AT_METALWORKS_2"); break;
+        }
+    }
+
+    // Repetir la clave es lo que le da peso: cuanto más veces entra, más probable sale.
+    private void Añadir(int peso, params string[] keys)
+    {
+        for (int p = 0; p < peso; p++)
+            for (int i = 0; i < keys.Length; i++) candidatas.Add(keys[i]);
+    }
+
+    private string Sortear()
+    {
+        if (candidatas.Count == 0) return LocalizationManager.Get("SAY_IDLE_1");
+
+        // No repetir la última: con el mismo héroe hablando cada 8-20 s, oírla dos veces
+        // seguidas se nota mucho más que la falta de variedad.
+        for (int intento = 0; intento < 4; intento++)
+        {
+            string key = candidatas[Random.Range(0, candidatas.Count)];
+            if (key != ultimaClave || candidatas.Count == 1)
+            {
+                ultimaClave = key;
+                return LocalizationManager.Get(key);
+            }
+        }
+
+        return LocalizationManager.Get(ultimaClave);
+    }
+
+    private string ultimaClave = string.Empty;
 
     private static string Pick(params string[] keys)
         => LocalizationManager.Get(keys[Random.Range(0, keys.Length)]);

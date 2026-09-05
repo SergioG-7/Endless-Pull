@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 // Destinos de recolección; cada uno trae un recurso distinto. Rift va al final para no
@@ -42,6 +43,9 @@ public class ResourceExpeditionManager : MonoBehaviour
 
     [Tooltip("Multiplicador de recompensa cuando el destino elegido es el bono rotativo del día.")]
     [SerializeField] private float dailyBonusMultiplier = 1.5f;
+
+    [Tooltip("Segundos hasta colocar a la escuadra en el claro; lo que tardan en cruzar el Portal.")]
+    [SerializeField] private float mapEntryDelay = 2f;
 
     private ResourceExpeditionType currentType;
     private float remaining;
@@ -152,9 +156,24 @@ public class ResourceExpeditionManager : MonoBehaviour
             hero.SendOnExpedition();
         }
 
+        // El claro los recoge cuando terminan de salir por el Portal; sin él, siguen
+        // desapareciendo como antes.
+        if (ExpeditionMap.Instance != null)
+            StartCoroutine(OpenMapWhenGone(new List<HeroController>(party.ExpeditionSquad), type));
+
         Report(string.Format(LocalizationManager.Get("UI_EXPEDITION_SENT"),
             heroesSent, DisplayName(type), durationSeconds));
         return true;
+    }
+
+    // Los héroes tardan un momento en llegar al Portal (ExpeditionDepartRoutine): hasta que no
+    // se han ido de la base no tiene sentido colocarlos en el claro.
+    private System.Collections.IEnumerator OpenMapWhenGone(List<HeroController> squad,
+                                                           ResourceExpeditionType type)
+    {
+        yield return new WaitForSeconds(mapEntryDelay);
+
+        if (ExpeditionMap.Instance != null) ExpeditionMap.Instance.Open(squad, type);
     }
 
     // La cosecha escala con cuánta gente fue, no con cuánto se tardó. Llamado a mano por la UI:
@@ -209,6 +228,10 @@ public class ResourceExpeditionManager : MonoBehaviour
         readyToClaim = false;
         heroesSent = 0;
 
+        // El claro se vacía antes de devolverlos: si no, seguirían paseando por el bosque
+        // mientras el Portal los escupe en la base.
+        if (ExpeditionMap.Instance != null) ExpeditionMap.Instance.Close();
+
         // La escuadra se mantiene asignada tras reclamar: vuelve visible por el Portal y
         // queda lista para la siguiente ronda sin que el jugador tenga que reasignarla.
         if (party != null)
@@ -246,5 +269,19 @@ public class ResourceExpeditionManager : MonoBehaviour
         remaining = Mathf.Max(0f, savedRemaining);
         heroesSent = Mathf.Max(0, savedHeroesSent);
         readyToClaim = savedReadyToClaim;
+    }
+
+    void OnEnable() => SaveManager.RosterLoaded += RestoreMapOnLoad;
+
+    void OnDisable() => SaveManager.RosterLoaded -= RestoreMapOnLoad;
+
+    // Al cargar una partida con recolección a medias, la escuadra tiene que volver al claro:
+    // se guardó estando fuera, y sin esto el mapa quedaría vacío hasta la siguiente salida.
+    private void RestoreMapOnLoad()
+    {
+        if (remaining <= 0f || readyToClaim) return;
+        if (ExpeditionMap.Instance == null || party == null) return;
+
+        ExpeditionMap.Instance.Open(new List<HeroController>(party.ExpeditionSquad), currentType);
     }
 }

@@ -37,6 +37,9 @@ public class ResourceExpeditionUI : MonoBehaviour
     private Button claimButton;
     private TMP_Text claimLabel;
 
+    // Ver el claro de recolección; solo tiene sentido con gente fuera.
+    private Button viewMapButton;
+
     public bool IsOpen => panel != null && panel.activeSelf;
 
     void Awake()
@@ -75,6 +78,16 @@ public class ResourceExpeditionUI : MonoBehaviour
         // confirmación de escuadra (una sola vez).
         UIManager.OpenExclusive(panel);
         Refresh();
+    }
+
+    // Lleva la cámara al claro y quita el panel de en medio.
+    private void OnViewMapPressed()
+    {
+        var camara = UnityEngine.Object.FindFirstObjectByType<CameraDirector>();
+        if (camara == null) return;
+
+        Close();
+        camara.GoToExpedition();
     }
 
     public void Close()
@@ -135,6 +148,17 @@ public class ResourceExpeditionUI : MonoBehaviour
         // Con recompensa lista, el hueco de destinos se convierte en el botón de reclamo.
         claimButton.gameObject.SetActive(ready);
 
+        // El claro solo existe mientras la escuadra esté fuera trabajando.
+        if (viewMapButton != null)
+        {
+            bool puedeVerse = running && !ready && ExpeditionMap.Instance != null;
+            if (viewMapButton.gameObject.activeSelf != puedeVerse)
+                viewMapButton.gameObject.SetActive(puedeVerse);
+
+            var etiqueta = viewMapButton.GetComponentInChildren<TMP_Text>();
+            if (etiqueta != null) etiqueta.text = LocalizationManager.Get("UI_EXPEDITION_VIEW");
+        }
+
         for (int i = 0; i < Types.Length; i++)
         {
             var type = Types[i];
@@ -177,6 +201,15 @@ public class ResourceExpeditionUI : MonoBehaviour
             OnClaimPressed);
         claimLabel = claimButton.GetComponentInChildren<TMP_Text>();
         claimButton.gameObject.SetActive(false);
+
+        // Ver el claro: centrado, justo encima de la lista de destinos y a la altura del botón
+        // de reclamar, que nunca coinciden (uno sale en curso y el otro al terminar).
+        // Cierra el panel al ir, que si no tapa justo lo que se quiere mirar.
+        viewMapButton = UIBuild.Button(panel.transform, "Btn_ExpeditionView",
+            LocalizationManager.Get("UI_EXPEDITION_VIEW"), UITheme.Card,
+            new Vector2(size.x - 40f, rowHeight), new Vector2(0f, -126f),
+            OnViewMapPressed);
+        viewMapButton.gameObject.SetActive(false);
 
         var viewGo = new GameObject("Viewport", typeof(RectTransform), typeof(Image),
                                     typeof(Mask), typeof(ScrollRect));

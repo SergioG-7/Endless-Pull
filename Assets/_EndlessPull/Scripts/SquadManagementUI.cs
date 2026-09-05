@@ -148,7 +148,7 @@ public class SquadManagementUI : MonoBehaviour
         int count = confirmForTower ? party.Party.Count : party.ExpeditionSquad.Count;
         if (count <= 0)
         {
-            aviso.text = LocalizationManager.Get("UI_CONFIRM_NEED_HEROES");
+            Avisar(LocalizationManager.Get("UI_CONFIRM_NEED_HEROES"), true);
             return;
         }
 
@@ -176,16 +176,17 @@ public class SquadManagementUI : MonoBehaviour
         // Insubordinación: no se le deja subir a la escuadra de Torre hasta que se resuelva.
         if (!dentro && hero != null && hero.IsInsubordinate)
         {
-            aviso.text = string.Format(LocalizationManager.Get("UI_INSUBORDINATE_WARNING"),
-                hero.Data.heroName, LocalizationManager.Get(hero.InsubordinationReasonKey()));
+            AvisarBloqueo(string.Format(LocalizationManager.Get("UI_INSUBORDINATE_WARNING"),
+                hero.Data.heroName, LocalizationManager.Get(hero.InsubordinationReasonKey())));
             return;
         }
 
         party.Toggle(hero);
 
         // Si no ha cambiado nada es que el héroe ya tenía otro puesto: se explica en el aviso.
-        if (!dentro && !party.IsInParty(hero)) aviso.text = HeroAssignment.BusyWarning(hero);
-        else aviso.text = string.Empty;
+        // "Ya está en X" es información, no un error: se dice en tono neutro, no en rojo.
+        if (!dentro && !party.IsInParty(hero)) Avisar(HeroAssignment.BusyWarning(hero), false);
+        else Avisar(string.Empty, false);
     }
 
     private void OnGatherPressed(HeroController hero)
@@ -195,16 +196,28 @@ public class SquadManagementUI : MonoBehaviour
         bool dentro = party.IsInExpedition(hero);
         party.ToggleExpedition(hero);
 
-        if (!dentro && !party.IsInExpedition(hero)) aviso.text = HeroAssignment.BusyWarning(hero);
-        else aviso.text = string.Empty;
+        if (!dentro && !party.IsInExpedition(hero)) Avisar(HeroAssignment.BusyWarning(hero), false);
+        else Avisar(string.Empty, false);
     }
+
+    // Un aviso puede ser un bloqueo (rojo) o solo información (apagado). Antes todo salía en
+    // rojo, así que "ya está en la escuadra" parecía un error.
+    private void Avisar(string texto, bool bloqueo)
+    {
+        if (aviso == null) return;
+
+        aviso.text = texto;
+        aviso.color = bloqueo ? UITheme.DangerLight : UITheme.TextMuted;
+    }
+
+    private void AvisarBloqueo(string texto) => Avisar(texto, true);
 
     private void OnApplyPreset(int index)
     {
         if (party == null) return;
 
         party.ApplyPreset(index);
-        aviso.text = string.Empty;
+        Avisar(string.Empty, false);
     }
 
     private void OnSavePreset(int index)
@@ -462,7 +475,7 @@ public class SquadManagementUI : MonoBehaviour
 
         aviso = UIBuild.TopLabel(panel.transform, "Notice", UITheme.SizeBody, 26f, -66f,
             TextAlignmentOptions.Right);
-        aviso.color = UITheme.DangerLight;
+        aviso.color = UITheme.TextMuted;
 
         var viewGo = new GameObject("Viewport", typeof(RectTransform), typeof(Image),
                                     typeof(Mask), typeof(ScrollRect));

@@ -363,6 +363,14 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
     public HeroData Data => data;
     public bool IsDeployed => deployed;
+
+    // Esta fuera de la base: peleando en la Torre o recolectando en el claro. Mientras lo este,
+    // su ficha no se abre — no se cura a mano ni se le cambia el equipo a mitad de faena.
+    public bool IsBusyAway
+        => globalState == HeroGlobalState.InCombat
+           || globalState == HeroGlobalState.OnExpedition
+           || globalState == HeroGlobalState.HeadingToPortal
+           || deployed;
     public HeroState State => state;
     public HeroTrait Trait => trait;
     public BaseBuilding CurrentBuilding => currentBuilding;
@@ -405,9 +413,62 @@ public class HeroController : MonoBehaviour, IHealthOwner
     public float EffectiveAttackRange => IsRanged ? rangedAttackRange : attackRange;
 
     // Personalidad de combate; sin HeroProgress (agentes de prueba) se queda en los valores neutros.
-    public float Aggression => progress != null ? progress.Aggression : 0.5f;
-    public float SafeDistance => progress != null ? progress.SafeDistance : 0.5f;
-    public float SkillThreshold => progress != null ? progress.SkillThreshold : 0.15f;
+    // El perfil táctico guardado es la base; encima pesan el carácter (pasivas disposicionales)
+    // y el estado de ánimo. Un héroe desmoralizado o agotado pelea más corto aunque su ficha
+    // diga que es agresivo — salvo que tenga temple, que es justo lo que hace KeepsCool.
+    public float Aggression
+    {
+        get
+        {
+            float baseValue = progress != null ? progress.Aggression : 0.5f;
+            float valor = baseValue + PassiveSkills.AggressionBonus(passives);
+
+            if (!PassiveSkills.KeepsCool(passives))
+            {
+                if (IsDemoralized) valor -= 0.20f;
+                if (IsExhausted) valor -= 0.15f;
+                if (IsInspired) valor += 0.10f;
+            }
+
+            // Liderazgo: se crece rodeado y se encoge solo.
+            if (PassiveSkills.Leads(passives)) valor += 0.06f * NearbyAllies();
+
+            return Mathf.Clamp01(valor);
+        }
+    }
+
+    public float SafeDistance
+    {
+        get
+        {
+            float baseValue = progress != null ? progress.SafeDistance : 0.5f;
+            float valor = baseValue + PassiveSkills.SafeDistanceBonus(passives);
+
+            if (!PassiveSkills.KeepsCool(passives) && (IsDemoralized || IsExhausted)) valor += 0.15f;
+
+            return Mathf.Clamp01(valor);
+        }
+    }
+
+    public float SkillThreshold => Mathf.Clamp01(
+        (progress != null ? progress.SkillThreshold : 0.15f)
+        + PassiveSkills.SkillThresholdBonus(passives));
+
+    // Compañeros desplegados a tiro de vista; lo usan las pasivas de escuadra.
+    public int NearbyAllies()
+    {
+        int total = 0;
+        foreach (var other in UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None))
+        {
+            if (other == null || other == this || !other.IsDeployed || other.CurrentHealth <= 0) continue;
+            if (Vector2.Distance(other.transform.position, transform.position) <= allyBondRadius) total++;
+        }
+
+        return total;
+    }
+
+    [Tooltip("Radio en el que un compañero cuenta para las pasivas de escuadra.")]
+    [SerializeField] private float allyBondRadius = 4f;
 
     public float AttackReach => EffectiveAttackRange;
     public float DetectionReach => EffectiveDetectionRange;
@@ -570,6 +631,22 @@ public class HeroController : MonoBehaviour, IHealthOwner
         => skill == null ? 0
            : Mathf.Max(1, Mathf.RoundToInt(skill.mpCost * PassiveSkills.MpCostMultiplier(passives)));
 
+    // Sinergias de escuadra: Vanguardia se crece por cada compañero al lado y Lobo Solitario
+    // justo al revés, solo cuando no tiene a nadie cerca. Fuera de combate no cuentan.
+    private float SquadBondMultiplier
+    {
+        get
+        {
+            if (!deployed) return 1f;
+
+            int cerca = NearbyAllies();
+            float bono = PassiveSkills.SquadAttackPerAlly(passives) * cerca;
+            if (cerca == 0) bono += PassiveSkills.SoloBonus(passives);
+
+            return 1f + bono;
+        }
+    }
+
     // Berserker: pega más fuerte cuanto peor está. Fuera del umbral no multiplica nada.
     private float BerserkMultiplier
         => PassiveSkills.HasBerserk(passives)
@@ -596,6 +673,10 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
         AudioManager.PlayAt(SfxId.MeleeHit, enemy.transform.position);
         enemy.TakeDamage(damage, ignoresDefense, ArmorPierce);
+
+        // Rematar a alguien se canta; encajar y quedarse en las ultimas, tambien.
+        if (antes > 0 && enemy.CurrentHealth <= 0)
+            Bark(0.30f, "BATTLE_KILL_1", "BATTLE_KILL_2", "BATTLE_KILL_3", "BATTLE_KILL_4");
 
         if (critico) DamageTextManager.Show(enemy.transform.position, LocalizationManager.Get("FX_CRITICAL"), UITheme.BarMorale);
         if (critico) AudioManager.Play(SfxId.Critical);
@@ -693,7 +774,8 @@ public class HeroController : MonoBehaviour, IHealthOwner
     public int Defense => data != null
         ? Mathf.RoundToInt((Mathf.RoundToInt(data.baseDefense * ascensionMultiplier) + EquipBonusDEF
           + gearUpgradeDefense + (IsInDefensiveStance ? defensiveStanceBonus : 0)) * (1f + originSynergy)
-          * PassiveSkills.DefenseMultiplier(passives))
+          * PassiveSkills.DefenseMultiplier(passives)
+          * (1f + PassiveSkills.SquadDefensePerAlly(passives) * NearbyAllies()))
         : 0;
 
     // Ascensión, nivel, rasgo y equipo suman; moral y maestría multiplican.
@@ -711,6 +793,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
                                * (1f + originSynergy)
                                * (1f + AffinityAtkBonus)
                                * PassiveSkills.AttackMultiplier(passives)
+                               * SquadBondMultiplier
                                * BerserkMultiplier;
 
             return Mathf.RoundToInt(raw * multiplier);
@@ -805,6 +888,10 @@ public class HeroController : MonoBehaviour, IHealthOwner
     }
 
     public event Action<int, int> HealthChanged;
+
+    // Salta con el nombre del héroe al caer para siempre; lo escucha el WaveManager para
+    // resumir al final del piso quién no vuelve.
+    public static event Action<string> HeroFallen;
 
     // Vida y maná se fijan en Awake para que la barra ya los lea válidos en su Start.
     void Awake()
@@ -958,6 +1045,9 @@ public void DeployViaGateway(Vector2 destination)
         yield return new WaitForSeconds(gatewayHoldSeconds);
 
         traveling = false;
+
+        // Sin claro de recolección en la escena se cae al comportamiento de siempre: el héroe
+        // simplemente desaparece mientras dura la expedición.
         gameObject.SetActive(false);
     }
 
@@ -965,7 +1055,49 @@ public void DeployViaGateway(Vector2 destination)
     public void ReturnFromExpedition()
     {
         gameObject.SetActive(true);
+
+        // Recupera su rincón de la base; mientras recolectaba paseaba por el del claro.
+        if (homeAreaSize.sqrMagnitude > 0f)
+        {
+            baseAreaCenter = homeAreaCenter;
+            baseAreaSize = homeAreaSize;
+            homeAreaSize = Vector2.zero;
+        }
+
+        // Vuelve a estar en casa: EnterBaseWander ya no toca este estado (respeta el claro), así
+        // que el que lo saca de la expedición es este punto y ningún otro.
+        globalState = HeroGlobalState.InBase;
+
         EnterViaGatewayAnimated();
+    }
+
+    // Zona de paseo de la base, guardada mientras el héroe está en el claro de recolección.
+    private Vector2 homeAreaCenter;
+    private Vector2 homeAreaSize;
+
+    // La llama ExpeditionMap: el héroe pasea por el claro en vez de desaparecer del mundo.
+    public void EnterGathering(Vector2 center, Vector2 size)
+    {
+        if (homeAreaSize.sqrMagnitude <= 0f)
+        {
+            homeAreaCenter = baseAreaCenter;
+            homeAreaSize = baseAreaSize;
+        }
+
+        StopAllCoroutines();
+        traveling = false;
+        target = null;
+        destinationBuilding = null;
+        BaseBuilding.ReleaseSlotEverywhere(this);
+        currentBuilding = null;
+
+        globalState = HeroGlobalState.OnExpedition;
+        baseAreaCenter = center;
+        baseAreaSize = size;
+        transform.position = center;
+
+        state = HeroState.BaseWander;
+        PickNewWanderTarget();
     }
 
 
@@ -1044,11 +1176,20 @@ public void DeployViaGateway(Vector2 destination)
         skill = new HeroSkill();
     }
 
-    // De las aprendidas, la que más pega entre las que están listas y con maná de sobra. Fija
-    // 'skill' para que el resto del combate (daño, coste, rótulo) hable de esa misma.
+    // De las aprendidas, la que MEJOR VIENE ahora, no la que más pega: elegir siempre por daño
+    // dejaba la curación y el área sin usar nunca. Fija 'skill' para que el resto del combate
+    // (daño, coste, rótulo) hable de esa misma.
     private bool SelectBestSkill()
     {
         HeroSkill mejor = null;
+        float mejorNota = float.MinValue;
+
+        // El campo, leído una vez para no recorrer enemigos por cada candidata.
+        int agrupados = EnemiesNearTarget();
+        bool rematable = target != null && target.MaxHealth > 0
+                         && (float)target.CurrentHealth / target.MaxHealth < executeThreshold;
+        bool tocado = MaxHealth > 0 && (float)CurrentHealth / MaxHealth < 0.55f;
+        bool escuadraTocada = SquadNeedsHealing();
 
         foreach (var candidata in skills)
         {
@@ -1057,13 +1198,76 @@ public void DeployViaGateway(Vector2 destination)
             int coste = Mathf.Max(1, Mathf.RoundToInt(candidata.mpCost * PassiveSkills.MpCostMultiplier(passives)));
             if (CurrentMP < coste) continue;
 
-            if (mejor == null || candidata.damageMultiplier > mejor.damageMultiplier) mejor = candidata;
+            float nota = candidata.damageMultiplier;
+
+            switch (ActiveSkills.RoleOf(candidata.ability))
+            {
+                case SkillRole.Area:
+                    // Vale lo que enemigos alcance; con uno solo es peor que un golpe normal.
+                    nota *= Mathf.Max(0.5f, agrupados);
+                    break;
+
+                case SkillRole.Execute:
+                    nota *= rematable ? 3f : 0.7f;
+                    break;
+
+                case SkillRole.Defensive:
+                    nota = tocado ? nota + 3f : nota - 2f;
+                    break;
+
+                case SkillRole.Heal:
+                    nota = escuadraTocada ? nota + 4f : nota - 3f;
+                    break;
+            }
+
+            // Quien lee el campo afina; quien no, tira más de lo que tiene delante.
+            if (!PassiveSkills.ReadsField(passives)) nota += candidata.damageMultiplier * 0.5f;
+
+            if (nota <= mejorNota) continue;
+
+            mejorNota = nota;
+            mejor = candidata;
         }
 
         if (mejor == null) return false;
 
         skill = mejor;
         return true;
+    }
+
+    [Tooltip("Vida del objetivo por debajo de la cual una habilidad de remate vale la pena.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float executeThreshold = 0.35f;
+
+    [Tooltip("Radio en el que se cuentan enemigos agrupados para decidir si compensa un área.")]
+    [SerializeField] private float clusterRadius = 2.5f;
+
+    // Cuántos enemigos hay pegados al objetivo: lo que decide si un área compensa.
+    private int EnemiesNearTarget()
+    {
+        if (target == null) return 0;
+
+        int total = 0;
+        foreach (var enemy in UnityEngine.Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None))
+        {
+            if (enemy == null || enemy.CurrentHealth <= 0) continue;
+            if (Vector2.Distance(enemy.transform.position, target.transform.position) <= clusterRadius) total++;
+        }
+
+        return total;
+    }
+
+    // Alguien de la escuadra (él incluido) lo bastante tocado como para que curar sea lo mejor.
+    private bool SquadNeedsHealing()
+    {
+        foreach (var other in UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None))
+        {
+            if (other == null || !other.IsDeployed || other.CurrentHealth <= 0) continue;
+            if (other.MaxHealth <= 0) continue;
+            if ((float)other.CurrentHealth / other.MaxHealth < 0.6f) return true;
+        }
+
+        return false;
     }
 
     public ActiveSkill Ability => skill != null ? skill.ability : ActiveSkill.None;
@@ -1392,12 +1596,27 @@ public void DeployViaGateway(Vector2 destination)
             case HeroState.CombatAttack: TickCombatAttack(); break;
         }
 
+        if (barkCooldown > 0f) barkCooldown -= Time.deltaTime;
+
         // Muro físico: en la arena ninguna unidad puede salir de sus límites.
         if (deployed)
         {
             Vector3 pos = transform.position;
             pos.x = Mathf.Clamp(pos.x, WaveManager.ArenaWallMin.x, WaveManager.ArenaWallMax.x);
             pos.y = Mathf.Clamp(pos.y, WaveManager.ArenaWallMin.y, WaveManager.ArenaWallMax.y);
+            transform.position = pos;
+        }
+        else if (ExpeditionMap.Instance != null && ExpeditionMap.Instance.Contains(transform.position))
+        {
+            // Cerco del claro, con el mismo criterio que el muro de la arena. Se decide por
+            // POSICIÓN y no por estado: quien esté físicamente dentro del claro no sale de él,
+            // pase lo que pase con su FSM.
+            Vector2 min = ExpeditionMap.Instance.WalkableMin;
+            Vector2 max = ExpeditionMap.Instance.WalkableMax;
+
+            Vector3 pos = transform.position;
+            pos.x = Mathf.Clamp(pos.x, min.x, max.x);
+            pos.y = Mathf.Clamp(pos.y, min.y, max.y);
             transform.position = pos;
         }
     }
@@ -1504,14 +1723,33 @@ public void DeployViaGateway(Vector2 destination)
         float range = EffectiveDetectionRange;
         float bestSqr = range * range;
 
+        // Observación y Análisis: en vez del más cercano, el más tocado de los que tiene a la
+        // vista. Es la diferencia entre rematar y repartir golpes al azar.
+        bool leeElCampo = PassiveSkills.ReadsField(passives);
+        float mejorValor = float.MaxValue;
+
         foreach (var enemy in enemies)
         {
+            if (enemy == null || enemy.CurrentHealth <= 0) continue;
+
             float sqr = ((Vector2)(enemy.transform.position - transform.position)).sqrMagnitude;
-            if (sqr <= bestSqr)
+            if (sqr > range * range) continue;
+
+            if (!leeElCampo)
             {
+                if (sqr > bestSqr) continue;
                 bestSqr = sqr;
                 nearest = enemy;
+                continue;
             }
+
+            // Vida que le queda, con un peso pequeño por distancia para no cruzar la arena
+            // entera detrás de un enemigo medio muerto.
+            float valor = enemy.CurrentHealth + Mathf.Sqrt(sqr) * 12f;
+            if (valor >= mejorValor) continue;
+
+            mejorValor = valor;
+            nearest = enemy;
         }
 
         return nearest;
@@ -1721,6 +1959,7 @@ public void DeployViaGateway(Vector2 destination)
         skill.PutOnCooldown(SkillCooldownReduction);
 
         AnnounceSkill();
+        Bark(0.35f, "BATTLE_SKILL_1", "BATTLE_SKILL_2", "BATTLE_SKILL_3", "BATTLE_SKILL_4");
 
         // Los golpes a distancia ya tienen su propio proyectil; el empujón es solo cuerpo a cuerpo.
         if (!IsRanged && animator != null) animator.PlayAttackLunge(victim.transform.position);
@@ -2071,7 +2310,12 @@ public void DeployViaGateway(Vector2 destination)
     private void EnterBaseWander()
     {
         target = null;
-        globalState = HeroGlobalState.InBase;
+
+        // Recolectando se sigue usando este mismo paseo, pero el héroe NO ha vuelto a la base:
+        // pisar el estado aquí le quitaba el cerco del claro, le devolvía los destinos de la
+        // base (se iba andando a casa) y desbloqueaba su ficha en cuanto se paraba un momento.
+        if (globalState != HeroGlobalState.OnExpedition)
+            globalState = HeroGlobalState.InBase;
 
         // Al soltar el edificio hay que devolver el punto de llegada que tenía reservado.
         BaseBuilding.ReleaseSlotEverywhere(this);
@@ -2083,6 +2327,17 @@ public void DeployViaGateway(Vector2 destination)
     private void PickNewWanderTarget()
     {
         destinationBuilding = null;
+
+        // En el claro de recolección no hay edificios a los que ir ni cuadrantes bloqueados
+        // que esquivar: solo se pasea por la zona que le asignó el mapa.
+        if (globalState == HeroGlobalState.OnExpedition)
+        {
+            Vector2 mitad = baseAreaSize * 0.5f;
+            wanderTarget = baseAreaCenter + new Vector2(
+                UnityEngine.Random.Range(-mitad.x, mitad.x),
+                UnityEngine.Random.Range(-mitad.y, mitad.y));
+            return;
+        }
 
         // Con puesto asignado no se vaga: se vuelve al trabajo.
         if (assignedBuilding != null && assignedBuilding.IsUnlocked)
@@ -2180,6 +2435,10 @@ public void DeployViaGateway(Vector2 destination)
     // Meterse entre los enemigos es como te rodean y te pegan por la espalda.
     private Vector2 HoldTheLine(Vector2 destination)
     {
+        // La linea es cosa del combate. Sin esta guarda, un coreografo que se quedase colgado
+        // en Engaging alineaba tambien a los heroes que estan en la base a sus cosas.
+        if (!deployed || globalState != HeroGlobalState.InCombat) return destination;
+
         if (CanFlank) return destination;
 
         var choreo = Choreographer;
@@ -2195,9 +2454,11 @@ public void DeployViaGateway(Vector2 destination)
         return new Vector2(tope, destination.y);
     }
 
-    // Los ligeros sí rodean: velocidad de sobra y nada que aguantar en el frente.
+    // Los ligeros sí rodean: velocidad de sobra y nada que aguantar en el frente. Táctico,
+    // Estratega y Baluarte son la excepción: aguantan la línea aunque pudieran salirse.
     private bool CanFlank
-        => !IsSupport && data != null && data.moveSpeed >= flankSpeedThreshold;
+        => !IsSupport && data != null && data.moveSpeed >= flankSpeedThreshold
+           && !PassiveSkills.HoldsLine(passives);
 
     private BattleChoreographer Choreographer
     {
@@ -2311,6 +2572,10 @@ public void DeployViaGateway(Vector2 destination)
 
         // Encajar golpes cansa; con Aguante, la mitad.
         AddFatigue(fatiguePerHitTaken * PassiveSkills.FatigueMultiplier(passives));
+
+        if (deployed && MaxHealth > 0 && currentHealth > 0
+            && currentHealth < MaxHealth * criticalHealthRatio)
+            Bark(0.45f, "BATTLE_LOWHP_1", "BATTLE_LOWHP_2", "BATTLE_LOWHP_3", "BATTLE_LOWHP_4");
         CheckCriticalMorale();
 
         Debug.Log($"[Hero] {data.heroName} recibe {finalDamage} ({currentHealth}/{MaxHealth})", this);
@@ -2323,10 +2588,21 @@ public void DeployViaGateway(Vector2 destination)
             // Permadeath: el héroe no vuelve. La ficha se toma con el héroe todavía en pie,
             // que es cuando aún se pueden leer equipo, nivel y rareza; sin ella su nombre queda
             // libre y el gacha lo vuelve a ofrecer como si no hubiera pasado nada.
-            MemorialManager.Record(this, MemorialCause.FallenInTower, BaseBuilding.TowerFloor);
+            int piso = BaseBuilding.TowerFloor;
+            MemorialManager.Record(this, MemorialCause.FallenInTower, piso);
+
+            // El equipo se queda donde cayó: volver a superar ese piso lo devuelve al almacén.
+            LostGearManager.DropFrom(this, piso);
 
             AudioManager.PlayAt(SfxId.Defeat, transform.position);
             NotifyAlliesOfDeath();
+
+            // Perder un héroe para siempre no puede pasar en silencio.
+            ScreenBanner.ShowCompact(
+                string.Format(LocalizationManager.Get("UI_HERO_FALLEN"), data.heroName),
+                3f, UITheme.Danger);
+            HeroFallen?.Invoke(data.heroName);
+
             Debug.Log($"[Hero] {data.heroName} ha muerto.", this);
             Destroy(gameObject);
 
@@ -2399,6 +2675,28 @@ public void DeployViaGateway(Vector2 destination)
     }
 
     // Ver caer a un compañero cercano hunde la moral del resto.
+    // --- Segunda capa de diálogo: frases sueltas en los momentos que se leen ---
+
+    private float barkCooldown;
+
+    [Tooltip("Segundos mínimos entre dos frases de combate del mismo héroe.")]
+    [SerializeField] private float barkInterval = 6f;
+
+    // Frase de combate con enfriamiento y probabilidad: si hablasen todos en cada golpe la
+    // pantalla sería ilegible. Devuelve true si llegó a decir algo.
+    public bool Bark(float chance, params string[] keys)
+    {
+        if (keys == null || keys.Length == 0) return false;
+        if (barkCooldown > 0f || UnityEngine.Random.value > chance) return false;
+
+        var bubble = GetComponent<SpeechBubble>();
+        if (bubble == null) return false;
+
+        barkCooldown = barkInterval;
+        bubble.Say(LocalizationManager.Get(keys[UnityEngine.Random.Range(0, keys.Length)]));
+        return true;
+    }
+
     private void NotifyAlliesOfDeath()
     {
         var heroes = UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None);
@@ -2410,6 +2708,8 @@ public void DeployViaGateway(Vector2 destination)
             if (((Vector2)(other.transform.position - transform.position)).sqrMagnitude > radiusSqr) continue;
 
             other.LoseMorale(moraleLossOnAllyDeath);
+            other.Bark(0.7f, "BATTLE_ALLY_DOWN_1", "BATTLE_ALLY_DOWN_2",
+                             "BATTLE_ALLY_DOWN_3", "BATTLE_ALLY_DOWN_4");
             Debug.Log($"[Moral] {other.Data.heroName} ve caer a {data.heroName}: " +
                       $"-{moraleLossOnAllyDeath} moral (queda {other.MoralePercent}).", other);
         }

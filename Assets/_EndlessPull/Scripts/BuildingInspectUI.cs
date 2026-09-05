@@ -256,6 +256,12 @@ public class BuildingInspectUI : MonoBehaviour
             case BuildingType.Farm:
                 return string.Format(LocalizationManager.Get("UI_PROD_FARM"),
                     building.FoodPerHarvest, building.HarvestInterval.ToString("0.#"));
+            case BuildingType.WoodworkingShop:
+                return string.Format(LocalizationManager.Get("UI_PROD_WOOD"),
+                    building.MaterialPerHarvest, building.HarvestInterval.ToString("0.#"));
+            case BuildingType.MetalProcessing:
+                return string.Format(LocalizationManager.Get("UI_PROD_IRON"),
+                    building.MaterialPerHarvest, building.HarvestInterval.ToString("0.#"));
             case BuildingType.Workshop:
                 return string.Format(LocalizationManager.Get("UI_PROD_WORKSHOP"), building.Level * 5);
             case BuildingType.ManaWell:

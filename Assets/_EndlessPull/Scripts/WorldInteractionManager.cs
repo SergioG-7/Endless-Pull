@@ -64,6 +64,15 @@ void Update()
 
         if (hero != null)
         {
+            // Fuera de la base no se le toca: ni curarlo a mano, ni desequiparlo, ni meterlo en
+            // la escuadra a mitad de piso. La ficha vuelve cuando el heroe vuelve.
+            if (hero.IsBusyAway)
+            {
+                ScreenBanner.ShowCompact(LocalizationManager.Get("UI_HERO_BUSY_AWAY"),
+                                         1.6f, UITheme.TextMuted);
+                return;
+            }
+
             if (heroCard != null) heroCard.Show(hero);
             return;
         }

@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// Cómo se perdió un héroe. Hoy solo la síntesis saca gente de la partida para siempre; la
-// caída en la Torre queda cableada para cuando se active la muerte permanente.
+// Cómo se perdió un héroe: sacrificado en la síntesis o caído en la Torre. Las dos son
+// definitivas — el nombre queda ocupado y el gacha no vuelve a ofrecerlo.
 public enum MemorialCause
 {
     Synthesis,
@@ -36,6 +36,16 @@ public class MemorialManager : MonoBehaviour
 
     private readonly List<MemorialRecord> records = new List<MemorialRecord>();
     public IReadOnlyList<MemorialRecord> Records => records;
+
+    // Cuantos se han perdido ya; lo consultan los bocadillos para hablar de los ausentes.
+    public static int LostCount
+    {
+        get
+        {
+            if (instance == null) instance = Object.FindFirstObjectByType<MemorialManager>();
+            return instance == null ? 0 : instance.records.Count;
+        }
+    }
 
     // Salta al añadir una ficha; la Galería se repinta sin sondear.
     public static event System.Action RecordsChanged;

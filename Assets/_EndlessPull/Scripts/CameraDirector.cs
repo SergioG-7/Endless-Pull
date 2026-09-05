@@ -68,6 +68,11 @@ public class CameraDirector : MonoBehaviour
 
     // Solo se admite zoom/paneo manual mientras el jugador está viendo la base, quieta y sin viajar.
     private bool inBaseView = true;
+
+    // Vista del claro de recolección: se pasea y se hace zoom igual que en la base, pero con
+    // los límites del claro en vez de los del campamento.
+    private bool inExpeditionView;
+    public bool InExpeditionView => inExpeditionView;
     private bool dragActive;
     private Vector2 dragStartScreen;
     private Vector2 lastDragScreen;
@@ -191,7 +196,27 @@ void Update()
 
     // El encuadre de vuelta también respeta el tope: si no, al soltar el control la cámara
     // aparecía ya más alejada de lo que el zoom manual permite.
-    public void GoToBase() => TravelTo(baseView, Mathf.Min(baseOrthographicSize, MaxUsableZoom()));
+    public void GoToBase()
+    {
+        inExpeditionView = false;
+        TravelTo(baseView, Mathf.Min(baseOrthographicSize, MaxUsableZoom()));
+    }
+
+    // Lo llama el botón de ver la recolección; el claro tiene su propio encuadre y sus límites.
+    public void GoToExpedition()
+    {
+        var map = ExpeditionMap.Instance;
+        if (map == null) return;
+
+        inExpeditionView = true;
+        TravelTo(map.Center, Mathf.Min(expeditionOrthographicSize, MaxUsableZoom()));
+    }
+
+    [Tooltip("Encuadre del claro de recolección.")]
+    [SerializeField] private float expeditionOrthographicSize = 9f;
+
+    [Tooltip("Aire alrededor del claro para poder alejarse; más corto que el de la base.")]
+    [SerializeField] private float expeditionOverscan = 4f;
 
 private void OnExpeditionChanged(ExpeditionState state, string message)
     {
@@ -199,6 +224,7 @@ private void OnExpeditionChanged(ExpeditionState state, string message)
 
         if (state == ExpeditionState.InProgress)
         {
+            inExpeditionView = false;
             // No cortar al instante: la escuadra aún está caminando desde sus zonas hasta el Portal.
             pendingArenaDelay = arenaEntryDelay;
         }
@@ -230,7 +256,7 @@ private void OnExpeditionChanged(ExpeditionState state, string message)
     // Zoom (rueda/pellizco) y paneo (arrastre) manuales; solo activos en la vista de base, quieta y sin viajar.
     private void HandleBaseViewControls()
     {
-        if (target == null || !inBaseView || IsTravelling) return;
+        if (target == null || (!inBaseView && !inExpeditionView) || IsTravelling) return;
 
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
         {
@@ -334,6 +360,16 @@ private void OnExpeditionChanged(ExpeditionState state, string message)
     // a los muros dejaba un zoom de alejar demasiado corto para ver la base de un vistazo.
     private Bounds UnlockedBounds()
     {
+        // En el claro la vista queda encerrada en el mapa; no se pasea de vuelta a la base.
+        // El margen es más corto que el de la base porque el claro es mucho más pequeño.
+        if (inExpeditionView && ExpeditionMap.Instance != null)
+        {
+            var claro = new Bounds(ExpeditionMap.Instance.Center,
+                new Vector3(ExpeditionMap.Instance.Size.x, ExpeditionMap.Instance.Size.y, 0f));
+            claro.Expand(new Vector3(expeditionOverscan * 2f, expeditionOverscan * 2f, 0f));
+            return claro;
+        }
+
         var bounds = new Bounds(hubBoundsCenter, new Vector3(hubBoundsSize.x, hubBoundsSize.y, 0f));
         foreach (var quadrant in QuadrantController.All)
             if (quadrant != null && quadrant.IsUnlocked)
@@ -372,11 +408,16 @@ private void OnExpeditionChanged(ExpeditionState state, string message)
         float maxY = bounds.max.y - halfHeight;
 
         // Con el tope de MaxUsableZoom esta rama ya casi no se pisa; queda de red por si la zona
-        // desbloqueada es más pequeña que minZoom. Pivota sobre el centro real de la base
-        // (baseView) y no sobre bounds.center, que se desplaza al encapsular cuadrantes de forma
-        // asimétrica y cortaba el lateral izquierdo del campamento.
-        float clampedX = minX <= maxX ? Mathf.Clamp(basePosition.x, minX, maxX) : baseView.x;
-        float clampedY = minY <= maxY ? Mathf.Clamp(basePosition.y, minY, maxY) : baseView.y;
+        // visible es más pequeña que minZoom. En la base pivota sobre baseView y no sobre
+        // bounds.center, que se desplaza al encapsular cuadrantes de forma asimétrica y cortaba
+        // el lateral izquierdo del campamento; en el claro el refugio es el propio claro, que si
+        // no cualquier toque al paneo devolvía la cámara a la base de un salto.
+        Vector2 refugio = inExpeditionView && ExpeditionMap.Instance != null
+            ? ExpeditionMap.Instance.Center
+            : baseView;
+
+        float clampedX = minX <= maxX ? Mathf.Clamp(basePosition.x, minX, maxX) : refugio.x;
+        float clampedY = minY <= maxY ? Mathf.Clamp(basePosition.y, minY, maxY) : refugio.y;
 
         basePosition = new Vector2(clampedX, clampedY);
         origin = basePosition;

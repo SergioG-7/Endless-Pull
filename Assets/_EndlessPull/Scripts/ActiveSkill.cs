@@ -52,6 +52,17 @@ public enum ActiveSkill
     IronPalm = 31
 }
 
+// Para qué sirve una habilidad. Sin esto la única forma de elegir era "la que más pega", que
+// tira la curación y el área a la basura.
+public enum SkillRole
+{
+    SingleTarget,   // daño a uno
+    Area,           // pega a varios: vale la pena con enemigos agrupados
+    Execute,        // remata: se guarda para el que está a punto de caer
+    Defensive,      // aguante propio: se usa estando tocado
+    Heal            // cura a la escuadra
+}
+
 // Tabla central de habilidades: coste, enfriamiento, multiplicador y a qué arma pertenecen.
 public static class ActiveSkills
 {
@@ -62,6 +73,9 @@ public static class ActiveSkills
         public float Cooldown;
         public float Multiplier;
         public WeaponType Archetype;
+
+        // Por defecto daño a uno; solo se declara cuando es otra cosa.
+        public SkillRole Role;
     }
 
     private static readonly Dictionary<ActiveSkill, Stats> Table = new Dictionary<ActiveSkill, Stats>
@@ -69,40 +83,40 @@ public static class ActiveSkills
         { ActiveSkill.BasicStrike,       new Stats { Mp = 20, Cooldown = 5f,  Multiplier = 2.0f, Archetype = WeaponType.None } },
 
         { ActiveSkill.PoisonCut,         new Stats { Mp = 18, Cooldown = 5f,  Multiplier = 1.6f, Archetype = WeaponType.Sword } },
-        { ActiveSkill.IronGuard,         new Stats { Mp = 15, Cooldown = 8f,  Multiplier = 1.2f, Archetype = WeaponType.Sword } },
-        { ActiveSkill.BladeDance,        new Stats { Mp = 22, Cooldown = 6f,  Multiplier = 1.1f, Archetype = WeaponType.Sword } },
-        { ActiveSkill.BloodHarvest,      new Stats { Mp = 20, Cooldown = 6f,  Multiplier = 1.5f, Archetype = WeaponType.Sword } },
-        { ActiveSkill.Riposte,           new Stats { Mp = 17, Cooldown = 5f,  Multiplier = 1.3f, Archetype = WeaponType.Sword } },
+        { ActiveSkill.IronGuard,         new Stats { Mp = 15, Cooldown = 8f,  Multiplier = 1.2f, Archetype = WeaponType.Sword , Role = SkillRole.Defensive } },
+        { ActiveSkill.BladeDance,        new Stats { Mp = 22, Cooldown = 6f,  Multiplier = 1.1f, Archetype = WeaponType.Sword , Role = SkillRole.Area } },
+        { ActiveSkill.BloodHarvest,      new Stats { Mp = 20, Cooldown = 6f,  Multiplier = 1.5f, Archetype = WeaponType.Sword , Role = SkillRole.Execute } },
+        { ActiveSkill.Riposte,           new Stats { Mp = 17, Cooldown = 5f,  Multiplier = 1.3f, Archetype = WeaponType.Sword , Role = SkillRole.Defensive } },
 
         { ActiveSkill.DragonThrust,      new Stats { Mp = 25, Cooldown = 7f,  Multiplier = 1.8f, Archetype = WeaponType.Spear } },
         { ActiveSkill.PikePush,          new Stats { Mp = 16, Cooldown = 5f,  Multiplier = 1.3f, Archetype = WeaponType.Spear } },
-        { ActiveSkill.StormPierce,       new Stats { Mp = 24, Cooldown = 8f,  Multiplier = 1.5f, Archetype = WeaponType.Spear } },
-        { ActiveSkill.HalberdSweep,      new Stats { Mp = 23, Cooldown = 7f,  Multiplier = 1.4f, Archetype = WeaponType.Spear } },
+        { ActiveSkill.StormPierce,       new Stats { Mp = 24, Cooldown = 8f,  Multiplier = 1.5f, Archetype = WeaponType.Spear , Role = SkillRole.Area } },
+        { ActiveSkill.HalberdSweep,      new Stats { Mp = 23, Cooldown = 7f,  Multiplier = 1.4f, Archetype = WeaponType.Spear , Role = SkillRole.Area } },
         { ActiveSkill.Skewer,            new Stats { Mp = 21, Cooldown = 6f,  Multiplier = 1.5f, Archetype = WeaponType.Spear } },
 
-        { ActiveSkill.LightCall,         new Stats { Mp = 20, Cooldown = 9f,  Multiplier = 0.9f, Archetype = WeaponType.Shield } },
+        { ActiveSkill.LightCall,         new Stats { Mp = 20, Cooldown = 9f,  Multiplier = 0.9f, Archetype = WeaponType.Shield , Role = SkillRole.Heal } },
         { ActiveSkill.UnstoppableCharge, new Stats { Mp = 22, Cooldown = 7f,  Multiplier = 1.4f, Archetype = WeaponType.Shield } },
-        { ActiveSkill.ImmortalWall,      new Stats { Mp = 18, Cooldown = 10f, Multiplier = 0.8f, Archetype = WeaponType.Shield } },
-        { ActiveSkill.SentinelWatch,     new Stats { Mp = 19, Cooldown = 9f,  Multiplier = 0.8f, Archetype = WeaponType.Shield } },
+        { ActiveSkill.ImmortalWall,      new Stats { Mp = 18, Cooldown = 10f, Multiplier = 0.8f, Archetype = WeaponType.Shield , Role = SkillRole.Defensive } },
+        { ActiveSkill.SentinelWatch,     new Stats { Mp = 19, Cooldown = 9f,  Multiplier = 0.8f, Archetype = WeaponType.Shield , Role = SkillRole.Defensive } },
         { ActiveSkill.Retribution,       new Stats { Mp = 21, Cooldown = 8f,  Multiplier = 1.2f, Archetype = WeaponType.Shield } },
 
         { ActiveSkill.ChargedShot,       new Stats { Mp = 26, Cooldown = 8f,  Multiplier = 2.6f, Archetype = WeaponType.Bow } },
-        { ActiveSkill.ArrowRain,         new Stats { Mp = 28, Cooldown = 9f,  Multiplier = 1.0f, Archetype = WeaponType.Bow } },
-        { ActiveSkill.ShadowBolt,        new Stats { Mp = 20, Cooldown = 6f,  Multiplier = 1.4f, Archetype = WeaponType.Bow } },
+        { ActiveSkill.ArrowRain,         new Stats { Mp = 28, Cooldown = 9f,  Multiplier = 1.0f, Archetype = WeaponType.Bow , Role = SkillRole.Area } },
+        { ActiveSkill.ShadowBolt,        new Stats { Mp = 20, Cooldown = 6f,  Multiplier = 1.4f, Archetype = WeaponType.Bow , Role = SkillRole.Execute } },
         { ActiveSkill.HuntingSnare,      new Stats { Mp = 18, Cooldown = 7f,  Multiplier = 1.3f, Archetype = WeaponType.Bow } },
-        { ActiveSkill.WindVolley,        new Stats { Mp = 25, Cooldown = 8f,  Multiplier = 0.8f, Archetype = WeaponType.Bow } },
+        { ActiveSkill.WindVolley,        new Stats { Mp = 25, Cooldown = 8f,  Multiplier = 0.8f, Archetype = WeaponType.Bow , Role = SkillRole.Area } },
 
-        { ActiveSkill.FireBurst,         new Stats { Mp = 30, Cooldown = 8f,  Multiplier = 1.5f, Archetype = WeaponType.Staff } },
+        { ActiveSkill.FireBurst,         new Stats { Mp = 30, Cooldown = 8f,  Multiplier = 1.5f, Archetype = WeaponType.Staff , Role = SkillRole.Area } },
         { ActiveSkill.TimeFracture,      new Stats { Mp = 26, Cooldown = 10f, Multiplier = 0.7f, Archetype = WeaponType.Staff } },
         { ActiveSkill.ArcaneRay,         new Stats { Mp = 32, Cooldown = 7f,  Multiplier = 1.2f, Archetype = WeaponType.Staff } },
-        { ActiveSkill.FrostShroud,       new Stats { Mp = 27, Cooldown = 9f,  Multiplier = 1.1f, Archetype = WeaponType.Staff } },
-        { ActiveSkill.WitheringTouch,    new Stats { Mp = 29, Cooldown = 8f,  Multiplier = 1.3f, Archetype = WeaponType.Staff } },
+        { ActiveSkill.FrostShroud,       new Stats { Mp = 27, Cooldown = 9f,  Multiplier = 1.1f, Archetype = WeaponType.Staff , Role = SkillRole.Defensive } },
+        { ActiveSkill.WitheringTouch,    new Stats { Mp = 29, Cooldown = 8f,  Multiplier = 1.3f, Archetype = WeaponType.Staff , Role = SkillRole.Execute } },
 
-        { ActiveSkill.GreaterBlessing,   new Stats { Mp = 22, Cooldown = 6f,  Multiplier = 0f,   Archetype = WeaponType.Mace } },
-        { ActiveSkill.OracleAegis,       new Stats { Mp = 26, Cooldown = 9f,  Multiplier = 0f,   Archetype = WeaponType.Mace } },
-        { ActiveSkill.WarHymn,           new Stats { Mp = 24, Cooldown = 10f, Multiplier = 0f,   Archetype = WeaponType.Mace } },
-        { ActiveSkill.PurgingRite,       new Stats { Mp = 23, Cooldown = 8f,  Multiplier = 0f,   Archetype = WeaponType.Mace } },
-        { ActiveSkill.IronPalm,          new Stats { Mp = 20, Cooldown = 7f,  Multiplier = 0f,   Archetype = WeaponType.Mace } }
+        { ActiveSkill.GreaterBlessing,   new Stats { Mp = 22, Cooldown = 6f,  Multiplier = 0f,   Archetype = WeaponType.Mace , Role = SkillRole.Heal } },
+        { ActiveSkill.OracleAegis,       new Stats { Mp = 26, Cooldown = 9f,  Multiplier = 0f,   Archetype = WeaponType.Mace , Role = SkillRole.Defensive } },
+        { ActiveSkill.WarHymn,           new Stats { Mp = 24, Cooldown = 10f, Multiplier = 0f,   Archetype = WeaponType.Mace , Role = SkillRole.Heal } },
+        { ActiveSkill.PurgingRite,       new Stats { Mp = 23, Cooldown = 8f,  Multiplier = 0f,   Archetype = WeaponType.Mace , Role = SkillRole.Area } },
+        { ActiveSkill.IronPalm,          new Stats { Mp = 20, Cooldown = 7f,  Multiplier = 0f,   Archetype = WeaponType.Mace , Role = SkillRole.Heal } }
     };
 
     public static readonly ActiveSkill[] All = BuildAll();
@@ -119,6 +133,23 @@ public static class ActiveSkills
     // Arma a la que pertenece; None en el golpe genérico, que lo puede llevar cualquiera.
     public static WeaponType ArchetypeOf(ActiveSkill ability)
         => Table.TryGetValue(ability, out var s) ? s.Archetype : WeaponType.None;
+
+    // Para qué sirve, en una palabra: es lo que explica por qué el héroe la lanza cuando la
+    // lanza, en vez de parecer que elige al azar.
+    public static string RoleName(SkillRole role)
+    {
+        switch (role)
+        {
+            case SkillRole.Area: return LocalizationManager.Get("ROLE_AREA");
+            case SkillRole.Execute: return LocalizationManager.Get("ROLE_EXECUTE");
+            case SkillRole.Defensive: return LocalizationManager.Get("ROLE_DEFENSIVE");
+            case SkillRole.Heal: return LocalizationManager.Get("ROLE_HEAL");
+        }
+        return LocalizationManager.Get("ROLE_SINGLE");
+    }
+
+    public static SkillRole RoleOf(ActiveSkill ability)
+        => Table.TryGetValue(ability, out var s) ? s.Role : SkillRole.SingleTarget;
 
     // Las de maza actúan sobre la escuadra, no sobre el enemigo.
     public static bool IsSupport(ActiveSkill ability) => ArchetypeOf(ability) == WeaponType.Mace;
