@@ -33,6 +33,9 @@ public class MasterHUD : MonoBehaviour
     // Cronómetro regresivo de Supervivencia (Piso 5); solo visible durante ese tipo de piso.
     private TMP_Text survivalTimerLabel;
 
+    // Nivel de Townia; hueco libre entre el separador y el botón de menú (construido por código).
+    private TMP_Text townLabel;
+
 
     void OnEnable()
     {
@@ -53,6 +56,7 @@ public class MasterHUD : MonoBehaviour
         SaveManager.RosterLoaded += RefreshStarCounts;
         GachaManager.HeroSummoned += RefreshStarCounts;
         LocalizationManager.LanguageChanged += OnLanguageChanged;
+        BaseBuilding.TownLevelChanged += OnTownLevelChanged;
     }
 
     void OnDisable()
@@ -74,6 +78,7 @@ public class MasterHUD : MonoBehaviour
         SaveManager.RosterLoaded -= RefreshStarCounts;
         GachaManager.HeroSummoned -= RefreshStarCounts;
         LocalizationManager.LanguageChanged -= OnLanguageChanged;
+        BaseBuilding.TownLevelChanged -= OnTownLevelChanged;
     }
 
     // Los rótulos de la TopBar solo se recalculaban con eventos de economía/piso: "TORRE Piso N"
@@ -88,6 +93,16 @@ public class MasterHUD : MonoBehaviour
     }
 
     private void OnHeroAscended(HeroController hero, int newStarRank) => RefreshStarCounts();
+
+    // Townia sube sola al superar un hito de Torre: se avisa en la barra de estado y se
+    // refresca el chip, que ya lleva el nivel.
+    private void OnTownLevelChanged(int newLevel)
+    {
+        if (statusLabel != null)
+            statusLabel.text = string.Format(LocalizationManager.Get("UI_TOWN_GREW"), newLevel);
+
+        RefreshFloor();
+    }
 
     private LastBattleResult lastBattleResult;
     private bool showingBattleResult;
@@ -129,6 +144,7 @@ void Start()
 
         BuildStarCountLabel();
         BuildSurvivalTimerLabel();
+        BuildTownLabel();
 
         if (economy != null) RefreshResources();
 
@@ -195,6 +211,41 @@ void Start()
         rt.anchoredPosition = new Vector2(20f, 0f);
 
         ConfigureNoClip((TextMeshProUGUI)starCountLabel);
+    }
+
+    // Hueco libre de la TopBar entre el separador y el botón de menú; el chip de la Torre se
+    // queda solo con el suyo para que su autosize no encoja "Piso N".
+    private void BuildTownLabel()
+    {
+        if (floorLabel == null) return;
+
+        var topBar = floorLabel.transform.parent;
+        if (topBar == null) return;
+
+        townLabel = UIBuild.Label(topBar, "Txt_Town", UITheme.SizeCaption, TextAlignmentOptions.Right);
+
+        // Mismo cuerpo que el chip de la Torre, leído de él para que no se separen si cambia
+        // en la escena. Va antes de ConfigureNoClip, que calcula el mínimo sobre este valor.
+        townLabel.fontSize = floorLabel.fontSize;
+
+        var rt = townLabel.rectTransform;
+        rt.anchorMin = new Vector2(1f, 0.5f);
+        rt.anchorMax = new Vector2(1f, 0.5f);
+        rt.pivot = new Vector2(1f, 0.5f);
+        rt.sizeDelta = new Vector2(160f, 46f);
+        // Separado del botón de menú (ocupa de -8 a -52) y sin pisar el separador de -244.
+        rt.anchoredPosition = new Vector2(-80f, 0f);
+
+        ConfigureNoClip((TextMeshProUGUI)townLabel);
+        RefreshTown();
+    }
+
+    private void RefreshTown()
+    {
+        if (townLabel == null) return;
+
+        townLabel.text = Chip(LocalizationManager.Get("UI_TOWN").ToUpperInvariant(),
+                              string.Format(LocalizationManager.Get("UI_TOWN_LEVEL"), BaseBuilding.TownLevel));
     }
 
     // Total de héroes por rareza; se refresca con las gemas (toda tirada/ascenso gasta gemas)
@@ -321,5 +372,7 @@ private void RefreshFloor()
             : Mathf.Max(1, waves.HighestClearedFloor);
         string piso = string.Format(LocalizationManager.Get("UI_QUADRANT_FLOOR_LABEL"), pisoMostrado);
         floorLabel.text = Chip(LocalizationManager.Get("UI_TOWER").ToUpperInvariant(), piso);
+
+        RefreshTown();
     }
 }

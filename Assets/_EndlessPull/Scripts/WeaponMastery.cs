@@ -30,7 +30,7 @@ public class WeaponMastery
     public int maxLevel = 10;
 
     [Tooltip("Daño extra en tanto por uno por cada nivel de maestría.")]
-    public float bonusPerLevel = 0.05f;
+    public float bonusPerLevel = 0.08f;
 
     [Tooltip("Bonus de evasión (probabilidad de esquiva) al llegar al rango de pericia S.")]
     public float maxEvasionBonusAtRankS = 0.08f;

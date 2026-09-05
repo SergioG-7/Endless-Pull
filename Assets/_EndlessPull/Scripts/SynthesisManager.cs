@@ -88,6 +88,10 @@ public class SynthesisManager : MonoBehaviour
         string fodderName = Describe(fodder);
         string targetName = Describe(targetHero);
 
+        // La ficha de la Galería se toma con el héroe entero todavía en pie: equipo, nivel y
+        // rareza dejan de poder leerse en cuanto se destruye.
+        MemorialManager.Record(fodder, MemorialCause.Synthesis);
+
         // Desvincular de escuadra/expedición/edificio ANTES de destruir: no depender del prune
         // periódico de cada manager, que solo corre en su propio Update() del frame siguiente.
         UnassignFromEverywhere(fodder);

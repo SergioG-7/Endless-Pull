@@ -1,5 +1,42 @@
 using UnityEngine;
 
+// Fragmento de memoria que se desbloquea al alcanzar una rareza concreta.
+[System.Serializable]
+public class HeroMemory
+{
+    [Tooltip("Estrellas que hacen falta para recordar esto.")]
+    [Range(1, 7)]
+    public int starRank = 2;
+
+    [Tooltip("Texto del recuerdo (español).")]
+    [TextArea(2, 4)]
+    public string text = string.Empty;
+
+    [Tooltip("Texto del recuerdo (inglés).")]
+    [TextArea(2, 4)]
+    public string textEn = string.Empty;
+
+    [Tooltip("Texto del recuerdo (japonés).")]
+    [TextArea(2, 4)]
+    public string textJa = string.Empty;
+
+    // Mismo criterio que la bio: si falta la traducción, se cae al español.
+    public string GetLocalized()
+    {
+        string localizado = LocalizationManager.Current switch
+        {
+            GameLanguage.English => textEn,
+            GameLanguage.Japanese => textJa,
+            _ => text
+        };
+
+        return string.IsNullOrEmpty(localizado) ? text : localizado;
+    }
+
+    public bool IsValid => !string.IsNullOrEmpty(text) || !string.IsNullOrEmpty(textEn)
+                           || !string.IsNullOrEmpty(textJa);
+}
+
 [CreateAssetMenu(fileName = "Hero_New", menuName = "Endless Pull/Hero Data")]
 public class HeroData : ScriptableObject
 {
@@ -23,6 +60,9 @@ public class HeroData : ScriptableObject
     [Tooltip("Trasfondo breve del héroe (japonés).")]
     [TextArea(2, 4)]
     public string bioJa = string.Empty;
+
+    [Tooltip("Recuerdos que va recuperando al ascender; vacío = este héroe aún no tiene escritos.")]
+    public HeroMemory[] memories = new HeroMemory[0];
 
     [Tooltip("Sprite del cuerpo, recortado del spritesheet LPC de este héroe.")]
     public Sprite bodySprite;

@@ -119,6 +119,9 @@ public class StatusEffectManager : MonoBehaviour
 
     public void Clear() => active.Clear();
 
+    // Quita un estado concreto sin tocar el resto; la usa la ruptura de barrera del Maestro.
+    public void Remove(StatusEffect type) => active.RemoveAll(s => s != null && s.type == type);
+
     void Update()
     {
         if (active.Count == 0) return;

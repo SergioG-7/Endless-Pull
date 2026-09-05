@@ -1,0 +1,97 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+// Cómo se perdió un héroe. Hoy solo la síntesis saca gente de la partida para siempre; la
+// caída en la Torre queda cableada para cuando se active la muerte permanente.
+public enum MemorialCause
+{
+    Synthesis,
+    FallenInTower
+}
+
+// Ficha de honor de un héroe que ya no está; se guarda tal cual estaba al perderlo.
+[System.Serializable]
+public class MemorialRecord
+{
+    public string heroName = string.Empty;
+    public int starRank = 1;
+    public int level = 1;
+    public int floor;
+    public MemorialCause cause;
+
+    // Último equipo que llevaba puesto, ya resuelto a texto: el asset puede desaparecer y la
+    // ficha tiene que seguir leyéndose igual dentro de un año.
+    public string lastEquipment = string.Empty;
+
+    public string CauseLabel()
+        => cause == MemorialCause.Synthesis
+           ? LocalizationManager.Get("UI_MEMORIAL_SYNTH")
+           : string.Format(LocalizationManager.Get("UI_MEMORIAL_FALLEN"), floor);
+}
+
+// Registro de los héroes perdidos; lo pinta la Galería Memorial y lo guarda el SaveManager.
+public class MemorialManager : MonoBehaviour
+{
+    private static MemorialManager instance;
+
+    private readonly List<MemorialRecord> records = new List<MemorialRecord>();
+    public IReadOnlyList<MemorialRecord> Records => records;
+
+    // Salta al añadir una ficha; la Galería se repinta sin sondear.
+    public static event System.Action RecordsChanged;
+
+    void Awake()
+    {
+        if (instance == null) instance = this;
+    }
+
+    void OnDestroy()
+    {
+        if (instance == this) instance = null;
+    }
+
+    // Punto de entrada para los sistemas que no tienen referencia al manager.
+    public static void Record(HeroController hero, MemorialCause cause, int floor = 0)
+    {
+        if (instance == null) instance = Object.FindFirstObjectByType<MemorialManager>();
+        if (instance == null || hero == null || hero.Data == null) return;
+
+        var progress = hero.GetComponent<HeroProgress>();
+
+        instance.records.Add(new MemorialRecord
+        {
+            heroName = hero.Data.heroName,
+            starRank = hero.StarRank,
+            level = progress != null ? progress.Level : 1,
+            floor = floor,
+            cause = cause,
+            lastEquipment = DescribeEquipment(hero)
+        });
+
+        RecordsChanged?.Invoke();
+        Debug.Log($"[Memorial] {hero.Data.heroName} pasa a la Galería ({cause}).", instance);
+    }
+
+    private static string DescribeEquipment(HeroController hero)
+    {
+        var piezas = new List<string>();
+
+        foreach (EquipmentSlot slot in System.Enum.GetValues(typeof(EquipmentSlot)))
+        {
+            var pieza = hero.GetEquipped(slot);
+            if (pieza != null && pieza.IsValid) piezas.Add(pieza.LocalizedName());
+        }
+
+        return piezas.Count > 0 ? string.Join(", ", piezas) : string.Empty;
+    }
+
+    // Las usa el SaveManager para conservar la Galería entre partidas.
+    public List<MemorialRecord> Snapshot() => new List<MemorialRecord>(records);
+
+    public void LoadRecords(List<MemorialRecord> saved)
+    {
+        records.Clear();
+        if (saved != null) records.AddRange(saved);
+        RecordsChanged?.Invoke();
+    }
+}

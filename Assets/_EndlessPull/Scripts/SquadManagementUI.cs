@@ -370,9 +370,11 @@ public class SquadManagementUI : MonoBehaviour
         bool enTorre = party != null && party.IsInParty(hero);
         bool enRecoleccion = party != null && party.IsInExpedition(hero);
 
-        // Se puede quitar siempre; para meter, el héroe tiene que estar libre.
-        bool puedeTorre = !bloqueado && (enTorre || duty == HeroDuty.Free);
-        bool puedeRecoger = !bloqueado && (enRecoleccion || duty == HeroDuty.Free);
+        // Se puede quitar siempre; para meter vale estar libre o currando en un edificio, del
+        // que se sale solo al asignarlo. Solo la otra escuadra bloquea de verdad.
+        bool disponible = duty == HeroDuty.Free || duty == HeroDuty.Building;
+        bool puedeTorre = !bloqueado && (enTorre || disponible);
+        bool puedeRecoger = !bloqueado && (enRecoleccion || disponible);
 
         StyleToggle(row.botonTorre, row.etiquetaTorre, LocalizationManager.Get("UI_TOWER_SQUAD"),
             enTorre, puedeTorre, UITheme.Amber);
@@ -433,25 +435,32 @@ public class SquadManagementUI : MonoBehaviour
         contadores = UIBuild.TopLabel(panel.transform, "Counters", UITheme.SizeBody, 30f, -22f,
             TextAlignmentOptions.Right);
 
-        // Barra de presets: aplicar y guardar, uno al lado del otro.
-        float x = -(size.x * 0.5f) + 24f;
+        // Barra de presets: aplicar y guardar, uno al lado del otro. Los anchos se reparten
+        // entre los presets que haya, así que subir PresetCount no se sale del panel.
+        const float margen = 24f, hueco = 8f;
+        float disponible = size.x - margen * 2f;
+        float porPreset = disponible / Mathf.Max(1, PartyManager.PresetCount);
+        float anchoAplicar = (porPreset - hueco * 2f) * 0.58f;
+        float anchoGuardar = (porPreset - hueco * 2f) * 0.42f;
+
+        float x = -(size.x * 0.5f) + margen;
         for (int i = 0; i < PartyManager.PresetCount; i++)
         {
             int indice = i;
 
             var aplicar = UIBuild.Button(panel.transform, $"Btn_Preset{i + 1}", string.Empty,
-                UITheme.AccentPick, new Vector2(180f, 42f),
-                new Vector2(x + 90f, -64f), () => OnApplyPreset(indice));
+                UITheme.AccentPick, new Vector2(anchoAplicar, 42f),
+                new Vector2(x + anchoAplicar * 0.5f, -64f), () => OnApplyPreset(indice));
             presetApply.Add(aplicar);
             presetApplyLabel.Add(aplicar.GetComponentInChildren<TMP_Text>());
-            x += 188f;
+            x += anchoAplicar + hueco;
 
             var guardar = UIBuild.Button(panel.transform, $"Btn_SavePreset{i + 1}", string.Empty,
-                UITheme.Neutral, new Vector2(150f, 42f),
-                new Vector2(x + 75f, -64f), () => OnSavePreset(indice));
+                UITheme.Neutral, new Vector2(anchoGuardar, 42f),
+                new Vector2(x + anchoGuardar * 0.5f, -64f), () => OnSavePreset(indice));
             presetSave.Add(guardar);
             presetSaveLabel.Add(guardar.GetComponentInChildren<TMP_Text>());
-            x += 166f;
+            x += anchoGuardar + hueco;
         }
 
         aviso = UIBuild.TopLabel(panel.transform, "Notice", UITheme.SizeBody, 26f, -66f,

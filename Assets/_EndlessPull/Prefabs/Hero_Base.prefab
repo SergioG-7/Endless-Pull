@@ -634,7 +634,7 @@ MonoBehaviour:
   mastery:
     pointsPerLevel: 10
     maxLevel: 10
-    bonusPerLevel: 0.05
+    bonusPerLevel: 0.08
   masteryPerHit: 1
   evasionChance: 0.15
   baseCritChance: 0.12
@@ -676,9 +676,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HeroProgress
   level: 1
   baseMaxEXP: 20
-  expGrowthPerLevel: 1.5
-  healthGrowthPerLevel: 0.1
-  attackGrowthPerLevel: 2
+  expGrowthPerLevel: 1.1
+  healthGrowthPerLevel: 0.06
+  attackGrowthPerLevel: 0.05
   levelsPerStar: 10
   ascendGemCostByStar: 64000000fa000000f4010000e803000008070000b80b0000
   ascensionStatMultiplier: 1.4

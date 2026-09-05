@@ -161,10 +161,18 @@ public class EnemyController : MonoBehaviour, IHealthOwner
     public int CurrentHealth => currentHealth;
     public int MaxHealth => data != null ? Mathf.RoundToInt(data.maxHealth * statMultiplier) : 0;
     public int Attack => data != null
-        ? Mathf.RoundToInt(data.baseAttack * statMultiplier * attackMultiplier * (IsRanged ? rangedDamageMultiplier : 1f))
+        ? Mathf.RoundToInt(data.baseAttack * attackMultiplier * (IsRanged ? rangedDamageMultiplier : 1f))
         : 0;
 
     public float AttackMultiplier => attackMultiplier;
+
+    // Intervención del Maestro: mientras dure, la armadura de este enemigo no descuenta nada.
+    private float armorBrokenUntil;
+
+    public void SetArmorBroken(float seconds)
+        => armorBrokenUntil = Mathf.Max(armorBrokenUntil, Time.time + Mathf.Max(0f, seconds));
+
+    public bool IsArmorBroken => Time.time < armorBrokenUntil;
     public event Action<int, int> HealthChanged;
 
     void Awake()
@@ -510,8 +518,12 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         // Congelado en la cuenta atrás: invulnerabilidad estricta, sin excepciones por origen del golpe.
         if (frozen) return;
 
-        int defensa = Mathf.RoundToInt(data.baseDefense * (1f - Mathf.Clamp01(armorPierce)));
-        int finalDamage = ignoresDefense ? Mathf.Max(1, amount) : Mathf.Max(1, amount - defensa);
+        int defensa = IsArmorBroken
+            ? 0
+            : Mathf.RoundToInt(data.baseDefense * (1f - Mathf.Clamp01(armorPierce)));
+        int finalDamage = ignoresDefense
+            ? Mathf.Max(1, amount)
+            : Mathf.Max(Mathf.RoundToInt(amount * CombatTuning.MinDamageFraction), amount - defensa, 1);
         currentHealth = Mathf.Max(0, currentHealth - finalDamage);
         HealthChanged?.Invoke(currentHealth, MaxHealth);
         TrackBurstDamage(finalDamage);

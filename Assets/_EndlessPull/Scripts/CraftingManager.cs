@@ -92,7 +92,7 @@ public class CraftingManager : MonoBehaviour
 
     [Tooltip("Pisos de torre superados que hacen falta por cada gama extra de equipo, poción y piedra.")]
     [Min(1)]
-    [SerializeField] private int floorsPerTier = 5;
+    [SerializeField] private int floorsPerTier = 10;
 
     [Tooltip("Cuánto sube el coste de forja por cada gama por encima de la primera, en tanto por uno.")]
     [SerializeField] private float costPerTier = 0.8f;
@@ -227,7 +227,8 @@ public class CraftingManager : MonoBehaviour
         if (craftableWeapons == null) return pool;
 
         foreach (var pieza in craftableWeapons)
-            if (pieza != null && pieza.slotType == slot && pieza.tier == tier) pool.Add(pieza);
+            if (pieza != null && !pieza.dropOnly && pieza.slotType == slot && pieza.tier == tier)
+                pool.Add(pieza);
 
         return pool;
     }

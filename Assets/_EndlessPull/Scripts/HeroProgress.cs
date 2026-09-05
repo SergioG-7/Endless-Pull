@@ -11,15 +11,18 @@ public class HeroProgress : MonoBehaviour
     [SerializeField] private int baseMaxEXP = 20;
 
     [Tooltip("Cuánto sube el requisito de EXP por cada nivel.")]
-    [SerializeField] private float expGrowthPerLevel = 1.5f;
+    [SerializeField] private float expGrowthPerLevel = 1.10f;
 
-    [Tooltip("Porcentaje de vida máxima que se gana por nivel.")]
-    [SerializeField] private float healthGrowthPerLevel = 0.10f;
+    [Tooltip("Porcentaje de la vida base que se gana por nivel.")]
+    [SerializeField] private float healthGrowthPerLevel = 0.06f;
 
-    [Tooltip("Ataque plano que se gana por nivel.")]
-    [SerializeField] private int attackGrowthPerLevel = 2;
+    [Tooltip("Porcentaje del ataque base que se gana por nivel; el grueso del daño lo pone el equipo.")]
+    [SerializeField] private float attackGrowthPerLevel = 0.05f;
 
-    [Tooltip("Niveles que da cada estrella: el tope es estrellas x este valor.")]
+    [Tooltip("Tope de nivel por rareza, del 1★ al 7★; la curva del manhwa no es lineal.")]
+    [SerializeField] private int[] levelCapByStar = { 10, 20, 40, 60, 80, 99, 110 };
+
+    [Tooltip("Niveles por estrella para rarezas fuera de la tabla de arriba.")]
     [SerializeField] private int levelsPerStar = 10;
 
     [Tooltip("Gemas que cuesta ascender según la rareza actual: índice 0 = 1★→2★ ... índice 5 = 6★→7★.")]
@@ -64,10 +67,28 @@ public class HeroProgress : MonoBehaviour
 
     public int Level => level;
     public int CurrentEXP => currentEXP;
-    public int MaxEXP => Mathf.RoundToInt(baseMaxEXP * Mathf.Pow(expGrowthPerLevel, level - 1));
+    public int MaxEXP
+    {
+        get
+        {
+            double requisito = baseMaxEXP * System.Math.Pow(expGrowthPerLevel, level - 1);
+            return (int)System.Math.Min(requisito, int.MaxValue);
+        }
+    }
 
     // El tope de nivel sale de la rareza actual: 1★ Nv.10, 2★ Nv.20, y así hasta 5★ Nv.50.
-    public int MaxLevel => hero != null ? Mathf.Max(1, hero.StarRank) * levelsPerStar : levelsPerStar;
+    // Tope por rareza leído de la tabla; fuera de ella se cae al reparto lineal de siempre.
+    public int MaxLevel
+    {
+        get
+        {
+            int estrellas = hero != null ? Mathf.Max(1, hero.StarRank) : 1;
+
+            return levelCapByStar != null && estrellas <= levelCapByStar.Length
+                ? levelCapByStar[estrellas - 1]
+                : estrellas * levelsPerStar;
+        }
+    }
     public bool IsMaxLevel => level >= MaxLevel;
 
     // Sube con la rareza: 1★→2★ es barato, 4★→5★ cuesta el doble que 3★→4★.
@@ -252,7 +273,8 @@ public class HeroProgress : MonoBehaviour
         LevelChanged?.Invoke(level);
 
         string who = hero != null && hero.Data != null ? hero.Data.heroName : name;
-        Debug.Log($"[Nivel] ¡Subida de Nivel! {who} -> Nv. {level} (+{healthGain} PV máx, +{attackGrowthPerLevel} ATK)", this);
+        int atk = hero != null ? hero.Attack : 0;
+        Debug.Log($"[Nivel] ¡Subida de Nivel! {who} -> Nv. {level} (+{healthGain} PV máx, ATK {atk})", this);
     }
 
     // El rótulo flotante identifica a la unidad de un vistazo en la base.

@@ -22,9 +22,17 @@ public class HammerMinigameUI : MonoBehaviour
     [Tooltip("Recorridos completos de la barra por segundo.")]
     [SerializeField] private float speed = 0.85f;
 
-    [Tooltip("Mitad del ancho de la zona crítica, en tanto por uno de la barra.")]
+    [Tooltip("Mitad del ancho de la zona crítica en gama 1, en tanto por uno de la barra.")]
     [Range(0.02f, 0.30f)]
     [SerializeField] private float critHalfWidth = 0.09f;
+
+    [Tooltip("Cuánto encoge la zona crítica por cada gama por encima de la primera.")]
+    [Range(0.60f, 1f)]
+    [SerializeField] private float critShrinkPerTier = 0.82f;
+
+    [Tooltip("Suelo del ancho de la zona crítica: por alta que sea la gama, nunca baja de aquí.")]
+    [Range(0.01f, 0.10f)]
+    [SerializeField] private float critHalfWidthMin = 0.03f;
 
     private GameObject panel;
     private TMP_Text titulo;
@@ -41,6 +49,14 @@ public class HammerMinigameUI : MonoBehaviour
     private bool corriendo;
     private float recorrido;
     private float centroCritico = 0.5f;
+
+    // Mitad del ancho de la zona de la pieza que se está forjando; sale de su gama.
+    private float critHalfActual;
+
+    // Cuanto mejor la gama, más estrecha la zona: una pieza buena cuesta más de clavar.
+    private float CritHalfWidthFor(int tier)
+        => Mathf.Max(critHalfWidthMin,
+                     critHalfWidth * Mathf.Pow(critShrinkPerTier, Mathf.Max(0, tier - 1)));
 
     public bool IsOpen => panel != null && panel.activeSelf;
 
@@ -87,8 +103,9 @@ public class HammerMinigameUI : MonoBehaviour
 
         // La zona crítica cambia de sitio cada vez: si no, se acierta de memoria.
         centroCritico = Random.Range(0.22f, 0.78f);
+        critHalfActual = CritHalfWidthFor(pieza.Tier);
         zonaCritica.anchoredPosition = new Vector2((centroCritico - 0.5f) * barWidth, 0f);
-        zonaCritica.sizeDelta = new Vector2(critHalfWidth * 2f * barWidth, 54f);
+        zonaCritica.sizeDelta = new Vector2(critHalfActual * 2f * barWidth, 54f);
 
         recorrido = Random.value;
         corriendo = true;
@@ -129,7 +146,7 @@ public class HammerMinigameUI : MonoBehaviour
         float t = Mathf.PingPong(recorrido, 1f);
         float distancia = Mathf.Abs(t - centroCritico);
 
-        if (distancia > critHalfWidth)
+        if (distancia > critHalfActual)
         {
             resultado.text = LocalizationManager.Get("UI_HAMMER_MISS");
             resultado.color = UITheme.TextMuted;
@@ -138,7 +155,7 @@ public class HammerMinigameUI : MonoBehaviour
         }
 
         // Cuanto más al centro, mejor el afijo: justo en el borde vale poco, en el centro todo.
-        float calidad = 1f - distancia / critHalfWidth;
+        float calidad = 1f - distancia / critHalfActual;
 
         if (crafting != null && crafting.ApplyForgedAffix(pieza, calidad))
         {

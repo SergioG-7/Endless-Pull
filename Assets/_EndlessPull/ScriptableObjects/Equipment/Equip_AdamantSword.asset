@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bfca39b167c744042b896efd5c3902c5, type: 3}
+  m_Name: Equip_AdamantSword
+  m_EditorClassIdentifier: EndlessPull.Runtime::EquipmentData
+  equipName: Equip_AdamantSword
+  nameKey: EQUIP_ADAMANT_SWORD
+  slotType: 0
+  tier: 6
+  weaponType: 1
+  bonusATK: 130
+  bonusDEF: 0
+  bonusHP: 0
+  maxDurability: 18
+  dropOnly: 0
+  passiveTrait: 4
+  passiveValue: 20

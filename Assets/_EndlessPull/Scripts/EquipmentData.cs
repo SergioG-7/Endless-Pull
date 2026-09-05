@@ -119,6 +119,9 @@ public class EquipmentData : ScriptableObject
     [Tooltip("Combates que aguanta la pieza antes de romperse y dejar de dar bonus.")]
     public int maxDurability = 10;
 
+    [Tooltip("Solo cae como recompensa de jefe o escolta dura; la Forja nunca la ofrece.")]
+    public bool dropOnly;
+
     [Tooltip("Afijo pasivo de la pieza; None deja la pieza con solo sus cifras.")]
     public EquipmentAffix passiveTrait = EquipmentAffix.None;
 

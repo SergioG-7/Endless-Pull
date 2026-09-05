@@ -13,3 +13,52 @@ Assets/_EndlessPull/Scripts/UITheme.cs
 docs/roadmap.md
 ---
 
+## Session End: 20260904_163131
+### Commits
+f52fec1 revamp forge + equipment +  workers + building progress + camera
+### Uncommitted Changes
+Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF - Fallback.asset
+Assets/_EndlessPull/Fonts/MainFont SDF.asset
+Assets/_EndlessPull/Prefabs/Hero_Base.prefab
+Assets/_EndlessPull/Scenes/Base.unity
+Assets/_EndlessPull/Scripts/CraftingManager.cs
+Assets/_EndlessPull/Scripts/EnemyController.cs
+Assets/_EndlessPull/Scripts/EquipmentData.cs
+Assets/_EndlessPull/Scripts/HeroController.cs
+Assets/_EndlessPull/Scripts/HeroProgress.cs
+Assets/_EndlessPull/Scripts/LocalizationManager.cs
+Assets/_EndlessPull/Scripts/SaveManager.cs
+Assets/_EndlessPull/Scripts/WaveManager.cs
+Assets/_EndlessPull/Scripts/WeaponMastery.cs
+---
+
+## Session End: 20260904_181627
+### Commits
+f52fec1 revamp forge + equipment +  workers + building progress + camera
+### Uncommitted Changes
+Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF - Fallback.asset
+Assets/_EndlessPull/Fonts/MainFont SDF.asset
+Assets/_EndlessPull/Prefabs/Hero_Base.prefab
+Assets/_EndlessPull/Scenes/Base.unity
+Assets/_EndlessPull/Scripts/BaseBuilding.cs
+Assets/_EndlessPull/Scripts/BaseFairyController.cs
+Assets/_EndlessPull/Scripts/CraftingManager.cs
+Assets/_EndlessPull/Scripts/EnemyController.cs
+Assets/_EndlessPull/Scripts/EquipmentData.cs
+Assets/_EndlessPull/Scripts/HammerMinigameUI.cs
+Assets/_EndlessPull/Scripts/HeroController.cs
+Assets/_EndlessPull/Scripts/HeroData.cs
+Assets/_EndlessPull/Scripts/HeroProgress.cs
+Assets/_EndlessPull/Scripts/HeroQuickCardUI.cs
+Assets/_EndlessPull/Scripts/LocalizationManager.cs
+Assets/_EndlessPull/Scripts/MasterHUD.cs
+Assets/_EndlessPull/Scripts/PartyManager.cs
+Assets/_EndlessPull/Scripts/SaveManager.cs
+Assets/_EndlessPull/Scripts/SquadManagementUI.cs
+Assets/_EndlessPull/Scripts/TowerPanelUI.cs
+Assets/_EndlessPull/Scripts/WaveManager.cs
+Assets/_EndlessPull/Scripts/WeaponMastery.cs
+Assets/_EndlessPull/Scripts/production/session-logs/agent-audit.log
+Assets/_EndlessPull/Scripts/production/session-logs/session-log.md
+---
+

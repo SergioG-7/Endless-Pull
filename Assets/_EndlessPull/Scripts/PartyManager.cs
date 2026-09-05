@@ -10,29 +10,73 @@ public class PartyManager : MonoBehaviour
     [Tooltip("Héroes que caben en la escuadra de expedición de recursos.")]
     [SerializeField] private int maxExpeditionSize = 4;
 
-    [Tooltip("Puestos de la formación, del slot 1 al 4; evitan que la escuadra se apile.")]
+    [Tooltip("Puestos de la formación, del slot 1 al 6; evitan que la escuadra se apile.")]
     [SerializeField] private Vector2[] formationSlots =
     {
         new Vector2(3.5f, 0f),
         new Vector2(2.5f, 0.8f),
         new Vector2(1.8f, -0.8f),
-        new Vector2(1.0f, 0f)
+        new Vector2(1.0f, 0f),
+        new Vector2(3.0f, 1.6f),
+        new Vector2(2.3f, -1.6f)
     };
+
+    [Tooltip("Pisos superados que suman un hueco de escuadra; con { 20, 40 } va de 4 a 6.")]
+    [SerializeField] private int[] partySizeFloors = { 20, 40 };
 
     private readonly List<HeroController> party = new List<HeroController>();
 
     // Escuadra aparte para recolectar: subir la torre y granjear no se hacen a la vez.
     private readonly List<HeroController> expedition = new List<HeroController>();
 
-    // Dos presets; cada uno guarda las dos escuadras por identidad de héroe.
-    private readonly List<string>[] presetParty = { new List<string>(), new List<string>() };
-    private readonly List<string>[] presetExpedition = { new List<string>(), new List<string>() };
+    // Presets; cada uno guarda las dos escuadras por identidad de héroe. Se dimensionan desde
+    // PresetCount para que subir la constante no deje arrays a medias.
+    private readonly List<string>[] presetParty = NewPresetSlots();
+    private readonly List<string>[] presetExpedition = NewPresetSlots();
+
+    private static List<string>[] NewPresetSlots()
+    {
+        var slots = new List<string>[PresetCount];
+        for (int i = 0; i < slots.Length; i++) slots[i] = new List<string>();
+        return slots;
+    }
 
     public IReadOnlyList<HeroController> Party => party;
     public IReadOnlyList<HeroController> ExpeditionSquad => expedition;
-    public int MaxPartySize => maxPartySize;
+    // La escuadra crece con la Torre: un hueco más por cada piso clave superado, con el tope
+    // puesto por los puestos de formación que existan.
+    public int MaxPartySize
+    {
+        get
+        {
+            int extra = 0;
+            if (partySizeFloors != null)
+                foreach (int piso in partySizeFloors)
+                    if (BaseBuilding.TowerFloor >= piso) extra++;
+
+            int tope = formationSlots != null && formationSlots.Length > 0
+                ? formationSlots.Length
+                : maxPartySize;
+
+            return Mathf.Min(maxPartySize + extra, tope);
+        }
+    }
+
+    // Piso del próximo hueco de escuadra; 0 si ya no queda ninguno por delante.
+    public int NextPartySizeFloor
+    {
+        get
+        {
+            if (partySizeFloors == null) return 0;
+
+            foreach (int piso in partySizeFloors)
+                if (BaseBuilding.TowerFloor < piso) return piso;
+
+            return 0;
+        }
+    }
     public int MaxExpeditionSize => maxExpeditionSize;
-    public const int PresetCount = 2;
+    public const int PresetCount = 4;
 
     // Se dispara cuando cambia la escuadra.
     public event System.Action PartyChanged;
@@ -52,7 +96,7 @@ public class PartyManager : MonoBehaviour
 
     public bool IsInParty(HeroController hero) => hero != null && party.Contains(hero);
     public bool IsInExpedition(HeroController hero) => hero != null && expedition.Contains(hero);
-    public bool IsFull => party.Count >= maxPartySize;
+    public bool IsFull => party.Count >= MaxPartySize;
     public bool IsExpeditionFull => expedition.Count >= maxExpeditionSize;
 
     // Mete o saca al héroe de la escuadra de torre; devuelve true si se quedó dentro.
@@ -76,13 +120,22 @@ public class PartyManager : MonoBehaviour
 
         if (IsFull)
         {
-            Debug.LogWarning($"[Escuadra] Ya hay {maxPartySize} héroes asignados.", this);
+            Debug.LogWarning($"[Escuadra] Ya hay {MaxPartySize} héroes asignados.", this);
             return false;
         }
 
+        LeaveBuilding(hero);
         party.Add(hero);
         PartyChanged?.Invoke();
         return true;
+    }
+
+    // Un héroe que entra en una escuadra deja el edificio en el que estuviera asignado.
+    private static void LeaveBuilding(HeroController hero)
+    {
+        if (hero == null || hero.AssignedBuilding == null) return;
+
+        hero.AssignedBuilding.ToggleWorker(hero);
     }
 
     // Igual que Toggle, pero para la escuadra que sale a recolectar.
@@ -114,6 +167,7 @@ public class PartyManager : MonoBehaviour
             return false;
         }
 
+        LeaveBuilding(hero);
         expedition.Add(hero);
         PartyChanged?.Invoke();
         return true;
@@ -221,6 +275,23 @@ public class PartyManager : MonoBehaviour
         }
     }
 
+    // Monta la escuadra de un preset sin tocar la activa; deja fuera a quien ya esté en la
+    // escuadra de torre o en la de recolección, para que nadie salga dos veces.
+    public List<HeroController> ResolvePreset(int index)
+    {
+        var squad = new List<HeroController>();
+        if (index < 0 || index >= PresetCount) return squad;
+
+        var pool = new List<HeroController>(
+            UnityEngine.Object.FindObjectsByType<HeroController>(
+            FindObjectsInactive.Include, FindObjectsSortMode.None));
+
+        pool.RemoveAll(h => h == null || party.Contains(h) || expedition.Contains(h));
+
+        Fill(squad, presetParty[index], pool, MaxPartySize);
+        return squad;
+    }
+
     // Guarda las dos escuadras tal y como están en el preset indicado.
     public void SavePreset(int index)
     {
@@ -252,16 +323,16 @@ public class PartyManager : MonoBehaviour
         party.Clear();
         if (!recolectando) expedition.Clear();
 
-        Fill(party, presetParty[index], pool, maxPartySize);
+        Fill(party, presetParty[index], pool, MaxPartySize);
         if (!recolectando) Fill(expedition, presetExpedition[index], pool, maxExpeditionSize);
 
-        // Nadie puede estar en las dos ni currando en un edificio.
+        // Nadie puede estar en las dos a la vez; la de recolección manda porque puede estar fuera.
         for (int i = party.Count - 1; i >= 0; i--)
-            if (expedition.Contains(party[i]) || HeroAssignment.WorkplaceName(party[i]) != string.Empty)
-                party.RemoveAt(i);
+            if (expedition.Contains(party[i])) party.RemoveAt(i);
 
-        for (int i = expedition.Count - 1; i >= 0; i--)
-            if (HeroAssignment.WorkplaceName(expedition[i]) != string.Empty) expedition.RemoveAt(i);
+        // Currar en un edificio ya no echa a nadie del preset: se le saca del edificio.
+        foreach (var hero in party) LeaveBuilding(hero);
+        foreach (var hero in expedition) LeaveBuilding(hero);
 
         Debug.Log($"[Escuadra] Preset {index + 1} aplicado: {party.Count} en torre, " +
                   $"{expedition.Count} en recolección.", this);

@@ -172,7 +172,9 @@ public class HeroQuickCardUI : MonoBehaviour
             : string.Empty;
         subclase.text = $"{oficio}   ·   {HeroTraits.DisplayName(hero.Trait)}{puesto}";
 
-        bio.text = hero.Data.GetLocalizedBio();
+        bio.text = hero.Data.GetLocalizedBio()
+                   + $"\n\n<b>{LocalizationManager.Get("UI_MEMORIES")}</b>\n"
+                   + hero.MemoriesReport();
 
         UIBuild.SetBar(barHp, hero.MaxHealth > 0 ? (float)hero.CurrentHealth / hero.MaxHealth : 0f);
         txtHp.text = string.Format(LocalizationManager.Get("UI_QUICKCARD_HP"), hero.CurrentHealth, hero.MaxHealth);

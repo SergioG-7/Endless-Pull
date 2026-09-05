@@ -136,6 +136,10 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Máximo de héroes que aterrizan en el Portal al volver; el resto va directo a su zona.")]
     [SerializeField] private int gatewayVisibleCap = 6;
 
+    // El cupo es por escuadrón: con dos desplegados solo volvía por el Portal el primero,
+    // porque el tope contaba sobre `deployed`, que es la unión de todos.
+    private int GatewayCapForRecall => gatewayVisibleCap * Mathf.Max(1, squads.Count);
+
     [Tooltip("Uno de cada cuántos enemigos de la oleada es tirador.")]
     [SerializeField] private int archerEveryNth = 3;
 
@@ -185,6 +189,21 @@ public class WaveManager : MonoBehaviour
 
     [Tooltip("Último piso de cada tier en el cofre de jefe (Menor, Media, Mayor); por encima cae Legendaria.")]
     [SerializeField] private int[] stoneTierFloorCap = { 5, 10, 15 };
+
+    [Tooltip("Piezas del conjunto del Guardián, en el orden de los pisos de wardenDropFloors.")]
+    [SerializeField] private EquipmentData[] wardenDrops;
+
+    [Tooltip("Piso que suelta cada pieza del Guardián; la primera vez cae segura.")]
+    [SerializeField] private int[] wardenDropFloors = { 10, 20, 30, 40 };
+
+    [Tooltip("Probabilidad de que una pieza del Guardián vuelva a caer una vez ya conseguida.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float wardenRepeatChance = 0.15f;
+
+    [SerializeField] private ShopManager shop;
+
+    // Piezas del Guardián ya conseguidas alguna vez; las guarda el SaveManager por nombre de asset.
+    private readonly HashSet<string> wardenGranted = new HashSet<string>();
 
     [Tooltip("Segundos de pausa dramática antes de la cuenta atrás cuando aparece el jefe.")]
     [SerializeField] private float bossArrivalPause = 0.5f;
@@ -242,6 +261,15 @@ public class WaveManager : MonoBehaviour
 
     [Tooltip("Desplazamiento de la formación de héroes respecto al origen de la arena; los deja en el extremo izquierdo, lejos de los enemigos, para que las unidades a distancia tengan hueco real de tiro.")]
     [SerializeField] private Vector2 heroSpawnOffset = new Vector2(-9.5f, 0f);
+
+    [Tooltip("Pisos de jefe guionizado que despliegan más de un escuadrón; el resto va con uno.")]
+    [SerializeField] private int[] multiSquadFloors = { 20 };
+
+    [Tooltip("Presets de los que salen los escuadrones de apoyo, por orden. Índice 0 = Preset 1.")]
+    [SerializeField] private int[] supportSquadPresets = { 1 };
+
+    [Tooltip("Desplazamiento de cada escuadrón respecto al punto de despliegue; el primero es la escuadra activa.")]
+    [SerializeField] private Vector2[] squadOffsets = { Vector2.zero, new Vector2(0f, -3.5f), new Vector2(0f, 3.5f) };
 
     [Tooltip("Medio ancho/alto del muro de la arena; cualquier proyectil que lo cruce se destruye para no escapar hacia la base.")]
     [SerializeField] private Vector2 arenaWallHalfExtents = new Vector2(15f, 7f);
@@ -494,6 +522,7 @@ void Awake()
         if (economy == null) economy = UnityEngine.Object.FindFirstObjectByType<EconomyManager>();
         if (party == null) party = UnityEngine.Object.FindFirstObjectByType<PartyManager>();
         if (crafting == null) crafting = UnityEngine.Object.FindFirstObjectByType<CraftingManager>();
+        if (shop == null) shop = UnityEngine.Object.FindFirstObjectByType<ShopManager>();
 
         ArenaWallMin = arenaCenter - arenaWallHalfExtents;
         ArenaWallMax = arenaCenter + arenaWallHalfExtents;
@@ -746,17 +775,72 @@ void Awake()
     }
 
     // Solo la escuadra viaja a la torre; el resto se queda en la base.
-private void DeployParty()
+    // Solo los jefes guionizados sacan más de un escuadrón; el resto de pisos va con la escuadra
+    // activa y nada más, como siempre.
+    public bool IsMultiSquadFloor(int floor)
+    {
+        if (multiSquadFloors == null) return false;
+
+        foreach (int piso in multiSquadFloors)
+            if (piso == floor) return true;
+
+        return false;
+    }
+
+    // Escuadrones que pide un piso: la escuadra activa más los de apoyo. La usan el panel de
+    // Torre e Isel para avisar antes de entrar, y así poder preparar los presets.
+    public int SquadCountForFloor(int floor)
+        => IsMultiSquadFloor(floor) && supportSquadPresets != null
+           ? 1 + supportSquadPresets.Length
+           : 1;
+
+    // Escuadrones desplegados ahora mismo, el primero es la escuadra activa. Lo lee el HUD.
+    private readonly List<List<HeroController>> squads = new List<List<HeroController>>();
+    public IReadOnlyList<List<HeroController>> Squads => squads;
+
+    // Solo lectura para quien necesite actuar sobre el combate en curso (MasterIntervention).
+    public IReadOnlyList<HeroController> Deployed => deployed;
+    public IReadOnlyList<EnemyController> Wave => wave;
+
+    private void DeployParty()
     {
         deployed.Clear();
+        squads.Clear();
         potionUsesThisExpedition.Clear();
         potionCooldownUntil.Clear();
         survivedCritical.Clear();
 
-        int slot = 0;
-        foreach (var hero in party.Party)
+        DeploySquad(new List<HeroController>(party.Party), 0);
+
+        // En los pisos de jefe guionizado salen además los escuadrones de apoyo, cada uno con su
+        // propia formación en su propio sitio de la arena.
+        if (IsMultiSquadFloor(currentFloor) && supportSquadPresets != null)
         {
-            if (hero == null) continue;
+            foreach (int preset in supportSquadPresets)
+            {
+                var apoyo = party.ResolvePreset(preset);
+                if (apoyo.Count > 0) DeploySquad(apoyo, squads.Count);
+            }
+        }
+
+        ApplyOriginSynergy();
+        Debug.Log($"[Expedición] {squads.Count} escuadrón(es) desplegado(s), " +
+                  $"{deployed.Count} héroe(s) en total.", this);
+    }
+
+    private void DeploySquad(List<HeroController> squad, int squadIndex)
+    {
+        var desplegados = new List<HeroController>();
+
+        // Sin desplazamiento propio los escuadrones aterrizarían unos encima de otros.
+        Vector2 offset = squadOffsets != null && squadOffsets.Length > 0
+            ? squadOffsets[Mathf.Clamp(squadIndex, 0, squadOffsets.Length - 1)]
+            : Vector2.zero;
+
+        int slot = 0;
+        foreach (var hero in squad)
+        {
+            if (hero == null || deployed.Contains(hero)) continue;
 
             // Desacoplado de Fase 39: si estaba currando en un edificio, se desasigna solo al
             // desplegar de verdad, sin bloquear antes al meterlo en la escuadra de Torre.
@@ -764,13 +848,13 @@ private void DeployParty()
 
             // Sale por el Portal de la Torre y camina hasta su puesto en formación; cada puesto
             // tiene su sitio: apilados, el golpe circular del jefe se los lleva a todos.
-            hero.DeployViaGateway(arenaCenter + heroSpawnOffset + party.FormationSlot(slot));
+            hero.DeployViaGateway(arenaCenter + heroSpawnOffset + offset + party.FormationSlot(slot));
             deployed.Add(hero);
+            desplegados.Add(hero);
             slot++;
         }
 
-        ApplyOriginSynergy();
-        Debug.Log($"[Expedición] Escuadra desplegada: {deployed.Count} héroe(s).", this);
+        squads.Add(desplegados);
     }
 
     // Origen compartido por la escuadra y cuántos lo aprovechan; lo lee el HUD de combate.
@@ -849,7 +933,7 @@ private void DeployParty()
         {
             if (hero == null) continue;
 
-            bool viaGateway = gatewayCount < gatewayVisibleCap;
+            bool viaGateway = gatewayCount < GatewayCapForRecall;
             if (viaGateway) gatewayCount++;
 
             hero.SetDeployed(false, viaGateway);
@@ -964,10 +1048,45 @@ private void DeployParty()
         var tier = StoneTierForFloor(floor);
         crafting?.AddStones(tier, 1);
 
+        GrantWardenDrop(floor);
+
         VfxManager.Play(VfxId.VictoryChest, (Vector3)ArenaFocus);
 
         Debug.Log($"[Cofre] Botín del jefe: +{bossChestGems} gemas, " +
                   $"+{bossChestMaterials} madera, +{bossChestMaterials} hierro y +1 Piedra {tier}.", this);
+    }
+
+    // Pieza del Guardián del piso: segura la primera vez, y luego repetible por sorteo.
+    // Es equipo marcado dropOnly, así que la Forja no puede sacarlo de ninguna gama.
+    private void GrantWardenDrop(int floor)
+    {
+        if (shop == null || wardenDrops == null) return;
+
+        for (int i = 0; i < wardenDrops.Length && i < wardenDropFloors.Length; i++)
+        {
+            var pieza = wardenDrops[i];
+            if (pieza == null || wardenDropFloors[i] != floor) continue;
+
+            bool primera = wardenGranted.Add(pieza.name);
+            if (!primera && Random.value >= wardenRepeatChance) return;
+
+            shop.AddToInventory(pieza);
+            Debug.Log($"[Cofre] {pieza.LocalizedName()} del conjunto del Guardián" +
+                      $"{(primera ? " (primera vez)" : " (repetida)")}.", this);
+            return;
+        }
+    }
+
+    // Las usa el SaveManager para conservar qué piezas del Guardián ya salieron.
+    public IEnumerable<string> WardenGranted => wardenGranted;
+
+    public void LoadWardenGranted(IEnumerable<string> nombres)
+    {
+        wardenGranted.Clear();
+        if (nombres == null) return;
+
+        foreach (var nombre in nombres)
+            if (!string.IsNullOrEmpty(nombre)) wardenGranted.Add(nombre);
     }
 
     private AscensionStoneTier StoneTierForFloor(int floor)

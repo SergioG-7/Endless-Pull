@@ -317,8 +317,10 @@ public class HeroController : MonoBehaviour, IHealthOwner
     [SerializeField] private float affinityExpBonus = 0.05f;
 
     // Bonus por instancia que aporta el nivel; el HeroData compartido no se toca nunca.
-    private int bonusMaxHealth;
-    private int bonusAttack;
+    // Van en float y se redondean solo al leer la cifra: redondear en cada nivel obligaba a
+    // un mínimo de +1, que en un héroe de base baja es más porcentaje del que se pide.
+    private float bonusMaxHealth;
+    private float bonusAttack;
 
     // Mejora de equipo básico del Taller: plano, independiente del nivel y de la ascensión.
     private int gearUpgradeAttack;
@@ -349,6 +351,14 @@ public class HeroController : MonoBehaviour, IHealthOwner
     public bool ExternalControl { get => externalControl; set => externalControl = value; }
     public bool IsFrozen => frozen;
     public void SetFrozen(bool value) => frozen = value;
+
+    // Intervención del Maestro: durante esta ventana la esquiva no se tira, se da por buena.
+    private float guaranteedDodgeUntil;
+
+    public void SetGuaranteedDodge(float seconds)
+        => guaranteedDodgeUntil = Mathf.Max(guaranteedDodgeUntil, Time.time + Mathf.Max(0f, seconds));
+
+    public bool HasGuaranteedDodge => Time.time < guaranteedDodgeUntil;
     public bool IsDead => currentHealth <= 0;
     public bool AttackReady => attackTimer <= 0f;
     public bool CanCastSkill => skill != null && skill.CanCast(CurrentMP);
@@ -370,7 +380,37 @@ public class HeroController : MonoBehaviour, IHealthOwner
     public bool IsInDefensiveStance => defensiveTimer > 0f;
 
     public int StarRank => data != null ? Mathf.Min(7, data.starRank + bonusStarRank) : 0;
+
+    // Multiplica el crecimiento por nivel según la rareza: un 1★ crece a la mitad del ritmo de
+    // un 3★ y un 7★ al doble. Ascender sube el ritmo, no solo el tope de nivel.
+    public float GrowthRateByRarity => 0.5f + 0.25f * (Mathf.Max(1, StarRank) - 1);
     public float AscensionMultiplier => ascensionMultiplier;
+
+    // Recuerdos del héroe, en orden de rareza. Los que aún no toca salen sellados: el jugador
+    // ve que existen y a qué estrella se abren, que es lo que empuja a ascender.
+    public string MemoriesReport()
+    {
+        if (data == null || data.memories == null || data.memories.Length == 0)
+            return LocalizationManager.Get("UI_MEMORY_NONE");
+
+        var sb = new System.Text.StringBuilder();
+        int estrellas = StarRank;
+
+        foreach (var memoria in System.Linq.Enumerable.OrderBy(data.memories, m => m.starRank))
+        {
+            if (memoria == null || !memoria.IsValid) continue;
+
+            if (sb.Length > 0) sb.Append('\n');
+
+            sb.Append(estrellas >= memoria.starRank
+                ? memoria.GetLocalized()
+                : $"<color={UITheme.Tag(UITheme.TextFaint)}>" +
+                  string.Format(LocalizationManager.Get("UI_MEMORY_LOCKED"), memoria.starRank) +
+                  "</color>");
+        }
+
+        return sb.Length > 0 ? sb.ToString() : LocalizationManager.Get("UI_MEMORY_NONE");
+    }
     public int BonusStarRank => bonusStarRank;
 
     public float Affinity => affinity;
@@ -588,7 +628,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
     public int CurrentHealth => currentHealth;
     public int MaxHealth => data != null
-        ? Mathf.RoundToInt(data.maxHealth * ascensionMultiplier) + bonusMaxHealth + EquipBonusHP
+        ? Mathf.RoundToInt(data.maxHealth * ascensionMultiplier + bonusMaxHealth) + EquipBonusHP
         : 0;
 
     public int Defense => data != null
@@ -603,8 +643,8 @@ public class HeroController : MonoBehaviour, IHealthOwner
         {
             if (data == null) return 0;
 
-            int raw = Mathf.RoundToInt(data.baseAttack * ascensionMultiplier)
-                      + bonusAttack + gearUpgradeAttack + HeroTraits.AttackBonus(trait) + EquipBonusATK;
+            int raw = Mathf.RoundToInt(data.baseAttack * ascensionMultiplier + bonusAttack)
+                      + gearUpgradeAttack + HeroTraits.AttackBonus(trait) + EquipBonusATK;
 
             float multiplier = (IsInspired ? 1f + inspiredAttackBonus : 1f)
                                * mastery.DamageMultiplier(EquippedWeaponType)
@@ -1019,8 +1059,8 @@ public void DeployViaGateway(Vector2 destination)
         ascensionMultiplier *= multiplier;
 
         // El nivel vuelve a 1, así que los bonus acumulados por nivel se van con él.
-        bonusMaxHealth = 0;
-        bonusAttack = 0;
+        bonusMaxHealth = 0f;
+        bonusAttack = 0f;
 
         currentHealth = MaxHealth;
         currentMP = MaxMP;
@@ -1078,12 +1118,19 @@ public void DeployViaGateway(Vector2 destination)
     }
 
     // La llama HeroProgress al subir de nivel; devuelve la vida máxima ganada.
-    public int ApplyLevelUpBonus(float healthPercent, int attackFlat)
+    // Los porcentajes van sobre las bases del asset ya ascendidas, no sobre el máximo actual:
+    // sobre el actual el nivel componía (x106 a Nv.50) y se quedaba con parte del equipo puesto.
+    public int ApplyLevelUpBonus(float healthPercent, float attackPercent)
     {
-        int gain = Mathf.Max(1, Mathf.RoundToInt(MaxHealth * healthPercent));
+        if (data == null) return 0;
 
-        bonusMaxHealth += gain;
-        bonusAttack += attackFlat;
+        int antes = MaxHealth;
+        float ritmo = GrowthRateByRarity;
+
+        bonusMaxHealth += data.maxHealth * ascensionMultiplier * healthPercent * ritmo;
+        bonusAttack += data.baseAttack * ascensionMultiplier * attackPercent * ritmo;
+
+        int gain = MaxHealth - antes;
 
         // Al subir de nivel se restaura la salud.
         currentHealth = MaxHealth;
@@ -1856,8 +1903,9 @@ public void DeployViaGateway(Vector2 destination)
         // Congelado en la cuenta atrás: invulnerabilidad estricta, sin excepciones por origen del golpe.
         if (frozen) return;
 
-        // Evasión: el golpe no llega, así que no hay daño, ni fatiga, ni moral perdida.
-        if (UnityEngine.Random.value < EffectiveEvasionChance)
+        // Evasión: el golpe no llega, así que no hay daño, ni fatiga, ni moral perdida. La
+        // intervención del Maestro la da por acertada sin tirar.
+        if (HasGuaranteedDodge || UnityEngine.Random.value < EffectiveEvasionChance)
         {
             DamageTextManager.ShowDodge(transform.position);
             Debug.Log($"[Pasiva] {data.heroName} esquiva el golpe.", this);
@@ -1865,7 +1913,9 @@ public void DeployViaGateway(Vector2 destination)
             return;
         }
 
-        int finalDamage = ignoresDefense ? Mathf.Max(1, amount) : Mathf.Max(1, amount - Defense);
+        int finalDamage = ignoresDefense
+            ? Mathf.Max(1, amount)
+            : Mathf.Max(Mathf.RoundToInt(amount * CombatTuning.MinDamageFraction), amount - Defense, 1);
 
         // El escudo temporal absorbe primero; lo que sobra es lo que llega a la vida.
         finalDamage = Status.AbsorbDamage(finalDamage);

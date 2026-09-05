@@ -103,6 +103,13 @@ public class TowerPanelUI : MonoBehaviour
         string text = LocalizationManager.Get("UI_FLOOR") + " " + floor + "   -   " + modo
                     + (cleared ? "   (0 " + LocalizationManager.Get("UI_GEMS") + ")" : string.Empty);
 
+        // Los pisos que sacan más de un escuadrón se avisan aquí: es donde el jugador elige,
+        // así que es donde puede darse la vuelta a preparar los presets.
+        int escuadrones = waves.SquadCountForFloor(floor);
+        if (escuadrones > 1)
+            text += $"   <color={UITheme.Tag(UITheme.Cyan)}>" +
+                    string.Format(LocalizationManager.Get("UI_MULTI_SQUAD"), escuadrones) + "</color>";
+
         var go = new GameObject("Btn_Floor_" + floor, typeof(RectTransform), typeof(Image), typeof(Button));
         go.transform.SetParent(content, false);
 

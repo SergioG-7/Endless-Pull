@@ -145,6 +145,13 @@ public class BaseFairyController : MonoBehaviour
         if (waves != null)
         {
             int nextFloor = waves.HighestSelectableFloor;
+
+            // Que el próximo piso pida varios escuadrones manda sobre el resto de avisos: es lo
+            // único que obliga a preparar presets antes de entrar.
+            int escuadrones = waves.SquadCountForFloor(nextFloor);
+            if (escuadrones > 1)
+                return string.Format(LocalizationManager.Get("UI_MULTI_SQUAD_HINT"), nextFloor, escuadrones);
+
             FloorMissionType nextType = waves.PeekMissionType(nextFloor);
             if (nextType != FloorMissionType.Subjugation)
             {

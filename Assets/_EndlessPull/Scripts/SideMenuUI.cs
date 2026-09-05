@@ -44,7 +44,8 @@ public class SideMenuUI : MonoBehaviour
     {
         ("UI_SECTION_MANAGEMENT", new[] { "Btn_Tower_Open", "Btn_Squads", "Btn_Expeditions_Open", "Btn_Quests" }),
         ("UI_SECTION_STAFF", new[] { "Btn_Roster", "Btn_Pull", "Btn_HealAll" }),
-        ("UI_SECTION_FACILITIES", new[] { "Btn_Craft_Open", "Btn_Shop_Open", "Btn_Sanctuary_Open" })
+        ("UI_SECTION_FACILITIES", new[] { "Btn_Craft_Open", "Btn_Shop_Open", "Btn_Sanctuary_Open",
+                                          "Btn_Gallery_Open" })
     };
 
     // Los botones venían con el texto en español fijo en el prefab: aquí se cablean a sus claves.
@@ -59,7 +60,8 @@ public class SideMenuUI : MonoBehaviour
         { "Btn_HealAll", "UI_HEAL_ALL" },
         { "Btn_Craft_Open", "UI_CRAFT" },
         { "Btn_Shop_Open", "UI_SHOP" },
-        { "Btn_Sanctuary_Open", "UI_SANCTUARY" }
+        { "Btn_Sanctuary_Open", "UI_SANCTUARY" },
+        { "Btn_Gallery_Open", "BLD_GALLERY" }
     };
 
     private GameObject body;

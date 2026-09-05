@@ -12,7 +12,8 @@ public enum BuildingType
     ManaWell,
     Forge,
     WarRoom,
-    Archive
+    Archive,
+    Lodging
 }
 
 // Nombres visibles de los tipos de edificio.
@@ -31,6 +32,7 @@ public static class BuildingTypes
             case BuildingType.Forge: return LocalizationManager.Get("BLD_FORGE");
             case BuildingType.WarRoom: return LocalizationManager.Get("BLD_WARROOM");
             case BuildingType.Archive: return LocalizationManager.Get("BLD_ARCHIVE");
+            case BuildingType.Lodging: return LocalizationManager.Get("BLD_LODGING");
         }
         return type.ToString();
     }
@@ -50,6 +52,7 @@ public static class BuildingTypes
             case BuildingType.Forge: return new Color(0.80f, 0.40f, 0.20f);
             case BuildingType.WarRoom: return new Color(0.70f, 0.25f, 0.30f);
             case BuildingType.Archive: return new Color(0.55f, 0.50f, 0.60f);
+            case BuildingType.Lodging: return new Color(0.45f, 0.40f, 0.65f);
         }
         return Color.white;
     }
@@ -109,6 +112,9 @@ public class BaseBuilding : MonoBehaviour
     [Tooltip("Segundos entre cosechas de la granja.")]
     [SerializeField] private float harvestInterval = 10f;
 
+    [Tooltip("Fatiga que quita cada tick en los Dormitorios; dormir cansa menos que descansar de pie.")]
+    [SerializeField] private float fatigueRecoveryPerTick = 20f;
+
     [Tooltip("MP que restaura el Pozo de Maná a quien lo visita, en nivel 1.")]
     [SerializeField] private int manaPerVisitTick = 8;
 
@@ -152,6 +158,7 @@ public class BaseBuilding : MonoBehaviour
     public int FoodPerHarvest => Mathf.RoundToInt(foodPerHarvest * LevelFactor);
     public float HarvestInterval => harvestInterval;
     public int ManaPerVisitTick => Mathf.RoundToInt(manaPerVisitTick * LevelFactor);
+    public float FatigueRecoveryPerTick => fatigueRecoveryPerTick * LevelFactor;
     public float PassiveManaPerSecond => passiveManaPerSecond * LevelFactor;
     public int HealPerTick => Mathf.RoundToInt(healPerTick * LevelFactor);
     public float MoralePerTick => moralePerTick;
@@ -166,17 +173,33 @@ public class BaseBuilding : MonoBehaviour
     // Piso actual de la torre; lo publica el WaveManager para no consultarlo por edificio.
     public static int TowerFloor { get; private set; } = 1;
 
+    // Salta cuando Townia sube de nivel al superar un hito; lleva el nivel nuevo.
+    public static event System.Action<int> TownLevelChanged;
+
     public static void SetTowerFloor(int floor)
     {
+        int nivelAntes = TownLevel;
         TowerFloor = Mathf.Max(1, floor);
 
         // Los edificios que aún no tocan se apagan; los que ya tocan aparecen.
         foreach (var b in all)
             if (b != null) b.RefreshUnlock();
+
+        if (TownLevel > nivelAntes) TownLevelChanged?.Invoke(TownLevel);
     }
 
-    // A partir del piso 5 cada instalación admite el doble de gente.
-    public static int FloorCapacity => TowerFloor >= 5 ? 2 : 1;
+    // Pisos de Torre que hacen subir Townia un nivel; sin tope, como el lobby del manhwa.
+    public const int FloorsPerTownLevel = 10;
+
+    // Nivel de Townia: 1 de salida y uno más cada FloorsPerTownLevel pisos superados.
+    public static int TownLevel => 1 + Mathf.Max(0, TowerFloor) / FloorsPerTownLevel;
+
+    // Piso del próximo hito de Townia; es también el que abre la siguiente tanda de edificios.
+    public static int NextTownMilestone => TownLevel * FloorsPerTownLevel;
+
+    // Sitios por instalación: uno por nivel de Townia. Los muñecos de un campo de entrenamiento
+    // salen de aquí, así que subir Townia es lo que permite entrenar a más gente a la vez.
+    public static int FloorCapacity => TownLevel;
 
     // Nivel maximo por edificio: la base crece al subir la Torre, un nivel mas cada 5 pisos.
     // Los materiales son el coste secundario, no la puerta.
@@ -571,6 +594,14 @@ void Start()
             case BuildingType.ManaWell:
                 // Visita puntual: restaura MP igual que la cantina restaura vida.
                 hero.RestoreMP(ManaPerVisitTick);
+                return true;
+
+            case BuildingType.Lodging:
+                // Dormir es lo único que quita fatiga de verdad; la zona de descanso solo cura
+                // y sube moral. Aquí se recupera el héroe exhausto que ya no rinde en la Torre.
+                hero.RecoverFatigue(fatigueRecoveryPerTick * LevelFactor);
+                hero.AddMorale(moralePerTick);
+                hero.Heal(HealPerTick);
                 return true;
         }
 

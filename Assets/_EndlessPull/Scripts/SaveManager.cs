@@ -146,6 +146,12 @@ public class GameSaveData
 
     // Formato antiguo del almacén (solo nombres de asset); se migra al cargar y ya no se escribe.
     public List<string> inventory = new List<string>();
+
+    // Piezas del Guardián ya conseguidas; sin esto la suelta segura volvería a caer cada vez.
+    public List<string> wardenGranted = new List<string>();
+
+    // Galería Memorial: los héroes perdidos y cómo se perdieron.
+    public List<MemorialRecord> memorial = new List<MemorialRecord>();
 }
 
 // Guarda y restaura la partida en JSON dentro de Application.persistentDataPath.
@@ -290,7 +296,11 @@ public class SaveManager : MonoBehaviour
             save.currentFloor = waves.CurrentFloor;
             save.highestClearedFloor = waves.HighestClearedFloor;
             save.hiddenChallengeAwardedFloors = new List<int>(waves.HiddenChallengeAwardedFloors);
+            save.wardenGranted = new List<string>(waves.WardenGranted);
         }
+
+        var memorial = UnityEngine.Object.FindFirstObjectByType<MemorialManager>();
+        if (memorial != null) save.memorial = memorial.Snapshot();
 
         save.quadrantEastRevealed = QuadrantController.Find(QuadrantId.East)?.Revealed ?? false;
         save.quadrantSouthRevealed = QuadrantController.Find(QuadrantId.South)?.Revealed ?? false;
@@ -435,7 +445,10 @@ public class SaveManager : MonoBehaviour
         {
             waves.LoadProgress(save.currentFloor, save.highestClearedFloor);
             waves.LoadHiddenChallengeAwardedFloors(save.hiddenChallengeAwardedFloors);
+            waves.LoadWardenGranted(save.wardenGranted);
         }
+
+        UnityEngine.Object.FindFirstObjectByType<MemorialManager>()?.LoadRecords(save.memorial);
 
         // El piso ya está publicado en BaseBuilding.TowerFloor: los cuadrantes pueden calcular su IsUnlocked.
         QuadrantController.Find(QuadrantId.East)?.LoadRevealed(save.quadrantEastRevealed);
