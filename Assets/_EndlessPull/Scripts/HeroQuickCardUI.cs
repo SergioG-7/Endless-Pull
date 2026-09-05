@@ -172,9 +172,9 @@ public class HeroQuickCardUI : MonoBehaviour
             : string.Empty;
         subclase.text = $"{oficio}   ·   {HeroTraits.DisplayName(hero.Trait)}{puesto}";
 
-        bio.text = hero.Data.GetLocalizedBio()
-                   + $"\n\n<b>{LocalizationManager.Get("UI_MEMORIES")}</b>\n"
-                   + hero.MemoriesReport();
+        // Los recuerdos salían aquí y empujaban las barras de HP/MP fuera de la ficha. En
+        // standby hasta tener su propia pantalla; MemoriesReport() sigue disponible.
+        bio.text = hero.Data.GetLocalizedBio();
 
         UIBuild.SetBar(barHp, hero.MaxHealth > 0 ? (float)hero.CurrentHealth / hero.MaxHealth : 0f);
         txtHp.text = string.Format(LocalizationManager.Get("UI_QUICKCARD_HP"), hero.CurrentHealth, hero.MaxHealth);

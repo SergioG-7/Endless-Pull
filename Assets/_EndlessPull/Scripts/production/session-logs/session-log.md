@@ -62,3 +62,24 @@ Assets/_EndlessPull/Scripts/production/session-logs/agent-audit.log
 Assets/_EndlessPull/Scripts/production/session-logs/session-log.md
 ---
 
+## Session End: 20260905_103606
+### Commits
+45b832d equipamiento + galeria + fix bugs
+---
+
+## Session End: 20260905_110646
+### Commits
+45b832d equipamiento + galeria + fix bugs
+### Uncommitted Changes
+Assets/_EndlessPull/ScriptableObjects/Enemies/Enemy_Halgiraph.asset
+Assets/_EndlessPull/ScriptableObjects/Enemies/Enemy_OrcBrawler.asset
+Assets/_EndlessPull/ScriptableObjects/Enemies/Enemy_SkeletonRogue.asset
+Assets/_EndlessPull/Scripts/EnemyController.cs
+Assets/_EndlessPull/Scripts/GachaManager.cs
+Assets/_EndlessPull/Scripts/HeroProgress.cs
+Assets/_EndlessPull/Scripts/HeroQuickCardUI.cs
+Assets/_EndlessPull/Scripts/MemorialGalleryUI.cs
+Assets/_EndlessPull/Scripts/MemorialManager.cs
+Assets/_EndlessPull/Scripts/production/session-logs/session-log.md
+---
+

@@ -25,6 +25,7 @@ public class HeroSaveData
     public HeroTrait trait;
     public bool isLocked;
     public int subclass;
+    public int ability;
     public string assignedBuilding = string.Empty;
 
     // Personalidad de combate: agresividad, distancia de seguridad, umbral de habilidad.
@@ -337,6 +338,7 @@ public class SaveManager : MonoBehaviour
                 trait = hero.Trait,
                 isLocked = hero.IsLocked,
                 subclass = (int)hero.Subclass,
+                ability = (int)hero.Ability,
                 aggression = progress != null ? progress.Aggression : 0.5f,
                 safeDistance = progress != null ? progress.SafeDistance : 0.5f,
                 skillThreshold = progress != null ? progress.SkillThreshold : 0.15f,
@@ -708,6 +710,11 @@ public class SaveManager : MonoBehaviour
             hero.LoadVitals(entry.currentHealth, entry.currentMP, entry.fatigue, entry.morale);
             hero.SetLocked(entry.isLocked);
             hero.SetSubclass((HeroSubclass)entry.subclass);
+
+            // Los saves anteriores no guardaban la habilidad: ahí SetSubclass ya dejó una del
+            // arquetipo y no hay nada que restaurar.
+            if (entry.ability != (int)ActiveSkill.None)
+                hero.LearnAbility((ActiveSkill)entry.ability);
             RestoreWorkplace(hero, entry.assignedBuilding);
             PlaceOnLoad(hero, entry.assignedBuilding);
             spawned.Add(hero);

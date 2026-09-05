@@ -88,6 +88,9 @@ public class BaseBuilding : MonoBehaviour
     [Tooltip("Refinamiento de habilidad (0-1) que gana un héroe por tick de entrenamiento; baja el enfriamiento y sube la precisión de su habilidad activa.")]
     [SerializeField] private float skillRefinementPerTrainingTick = 0.01f;
 
+    [Tooltip("Probabilidad por tick de que entrenar despierte una pasiva; muy por debajo del 15% por piso de la Torre.")]
+    [SerializeField, Range(0f, 1f)] private float trainingAwakeningChance = 0.005f;
+
     [Tooltip("Vida por tick en cantina y zona de descanso, en nivel 1.")]
     [SerializeField] private int healPerTick = 6;
 
@@ -579,6 +582,14 @@ void Start()
                 // Con afecto al máximo, la EXP de entrenamiento sube un poco.
                 progress.AddEXP(Mathf.RoundToInt(ExpPerTick * (1f + hero.AffinityExpBonus)));
                 progress.AddSkillRefinement(skillRefinementPerTrainingTick);
+
+                // Entrenar también despierta, mucho más despacio que pelear en la Torre; a
+                // veces sale una pasiva y a veces una habilidad activa nueva.
+                if (Random.value < trainingAwakeningChance)
+                {
+                    if (Random.value < 0.35f) ActiveSkills.TryAwaken(hero);
+                    else PassiveSkills.TryAwaken(hero);
+                }
                 return true;
 
             case BuildingType.Canteen:

@@ -28,7 +28,27 @@ public enum HeroSubclass
 
     HighPriest = 16,
     ProtectiveOracle = 17,
-    WarCleric = 18
+    WarCleric = 18,
+
+    // Segunda hornada: dos más por arquetipo, para que dos héroes con la misma arma no acaben
+    // siempre con la misma habilidad.
+    BloodReaver = 19,
+    Riposteur = 20,
+
+    Halberdier = 21,
+    Skewerer = 22,
+
+    Sentinel = 23,
+    Retributor = 24,
+
+    Trapper = 25,
+    WindArcher = 26,
+
+    FrostWeaver = 27,
+    Necromancer = 28,
+
+    Exorcist = 29,
+    BattleMonk = 30
 }
 
 // Tabla central de subclases: nombre, arquetipo, habilidad exclusiva y su efecto.
@@ -68,6 +88,18 @@ public static class HeroSubclasses
             case HeroSubclass.HighPriest: return "Sumo Sacerdote";
             case HeroSubclass.ProtectiveOracle: return "Oráculo Protector";
             case HeroSubclass.WarCleric: return "Clérigo de Guerra";
+            case HeroSubclass.BloodReaver: return "Segador de Sangre";
+            case HeroSubclass.Riposteur: return "Espadachín de Réplica";
+            case HeroSubclass.Halberdier: return "Alabardero";
+            case HeroSubclass.Skewerer: return "Empalador";
+            case HeroSubclass.Sentinel: return "Centinela";
+            case HeroSubclass.Retributor: return "Vengador";
+            case HeroSubclass.Trapper: return "Trampero";
+            case HeroSubclass.WindArcher: return "Arquero del Viento";
+            case HeroSubclass.FrostWeaver: return "Tejedor de Escarcha";
+            case HeroSubclass.Necromancer: return "Nigromante";
+            case HeroSubclass.Exorcist: return "Exorcista";
+            case HeroSubclass.BattleMonk: return "Monje Guerrero";
         }
         return "sin subclase";
     }
@@ -78,51 +110,73 @@ public static class HeroSubclasses
         {
             case HeroSubclass.ShadowBlade:
             case HeroSubclass.IronBlade:
-            case HeroSubclass.ZephyrBlade: return WeaponType.Sword;
+            case HeroSubclass.ZephyrBlade:
+            case HeroSubclass.BloodReaver:
+            case HeroSubclass.Riposteur: return WeaponType.Sword;
 
             case HeroSubclass.DragonLancer:
             case HeroSubclass.PikeGuard:
-            case HeroSubclass.StormPiercer: return WeaponType.Spear;
+            case HeroSubclass.StormPiercer:
+            case HeroSubclass.Halberdier:
+            case HeroSubclass.Skewerer: return WeaponType.Spear;
 
             case HeroSubclass.LightPaladin:
             case HeroSubclass.Juggernaut:
-            case HeroSubclass.ImmortalBastion: return WeaponType.Shield;
+            case HeroSubclass.ImmortalBastion:
+            case HeroSubclass.Sentinel:
+            case HeroSubclass.Retributor: return WeaponType.Shield;
 
             case HeroSubclass.Sniper:
             case HeroSubclass.VolleyShooter:
-            case HeroSubclass.ShadowHunter: return WeaponType.Bow;
+            case HeroSubclass.ShadowHunter:
+            case HeroSubclass.Trapper:
+            case HeroSubclass.WindArcher: return WeaponType.Bow;
 
             case HeroSubclass.Pyromancer:
             case HeroSubclass.Chronomage:
-            case HeroSubclass.ArcaneMage: return WeaponType.Staff;
+            case HeroSubclass.ArcaneMage:
+            case HeroSubclass.FrostWeaver:
+            case HeroSubclass.Necromancer: return WeaponType.Staff;
 
             case HeroSubclass.HighPriest:
             case HeroSubclass.ProtectiveOracle:
-            case HeroSubclass.WarCleric: return WeaponType.Mace;
+            case HeroSubclass.WarCleric:
+            case HeroSubclass.Exorcist:
+            case HeroSubclass.BattleMonk: return WeaponType.Mace;
         }
         return WeaponType.None;
     }
 
-    // Las tres opciones del arquetipo; el arma que empuña el héroe decide cuáles ve.
+    // Las cinco subclases del arquetipo; el arma que empuña el héroe decide cuáles le tocan.
     public static HeroSubclass[] OptionsFor(WeaponType archetype)
     {
         switch (archetype)
         {
             case WeaponType.Sword:
-                return new[] { HeroSubclass.ShadowBlade, HeroSubclass.IronBlade, HeroSubclass.ZephyrBlade };
+                return new[] { HeroSubclass.ShadowBlade, HeroSubclass.IronBlade, HeroSubclass.ZephyrBlade,
+                               HeroSubclass.BloodReaver, HeroSubclass.Riposteur };
             case WeaponType.Spear:
-                return new[] { HeroSubclass.DragonLancer, HeroSubclass.PikeGuard, HeroSubclass.StormPiercer };
+                return new[] { HeroSubclass.DragonLancer, HeroSubclass.PikeGuard, HeroSubclass.StormPiercer,
+                               HeroSubclass.Halberdier, HeroSubclass.Skewerer };
             case WeaponType.Shield:
-                return new[] { HeroSubclass.LightPaladin, HeroSubclass.Juggernaut, HeroSubclass.ImmortalBastion };
+                return new[] { HeroSubclass.LightPaladin, HeroSubclass.Juggernaut, HeroSubclass.ImmortalBastion,
+                               HeroSubclass.Sentinel, HeroSubclass.Retributor };
             case WeaponType.Bow:
-                return new[] { HeroSubclass.Sniper, HeroSubclass.VolleyShooter, HeroSubclass.ShadowHunter };
+                return new[] { HeroSubclass.Sniper, HeroSubclass.VolleyShooter, HeroSubclass.ShadowHunter,
+                               HeroSubclass.Trapper, HeroSubclass.WindArcher };
             case WeaponType.Staff:
-                return new[] { HeroSubclass.Pyromancer, HeroSubclass.Chronomage, HeroSubclass.ArcaneMage };
+                return new[] { HeroSubclass.Pyromancer, HeroSubclass.Chronomage, HeroSubclass.ArcaneMage,
+                               HeroSubclass.FrostWeaver, HeroSubclass.Necromancer };
             case WeaponType.Mace:
-                return new[] { HeroSubclass.HighPriest, HeroSubclass.ProtectiveOracle, HeroSubclass.WarCleric };
+                return new[] { HeroSubclass.HighPriest, HeroSubclass.ProtectiveOracle, HeroSubclass.WarCleric,
+                               HeroSubclass.Exorcist, HeroSubclass.BattleMonk };
         }
         return new HeroSubclass[0];
     }
+
+    // Cartas que se ofrecen de golpe en el modal de elección; el pool es mayor que la oferta,
+    // así que dos héroes con la misma arma no ven la misma mano.
+    public const int OfferedOptions = 3;
 
     // Rareza de nacimiento (la del gacha, sin contar ascensiones) a partir de la cual se puede
     // optar a Mago Arcano; por debajo, esa carta no se ofrece nunca, aunque el héroe ascienda
@@ -133,12 +187,18 @@ public static class HeroSubclasses
     // (1★/2★) — el resto de arquetipos no incluyen esa subclase, así que no les afecta.
     public static HeroSubclass[] OptionsFor(WeaponType archetype, int birthStarRank)
     {
-        var options = OptionsFor(archetype);
-        if (birthStarRank >= MageMinBirthStarRank) return options;
+        var elegibles = new List<HeroSubclass>(OptionsFor(archetype));
+        if (birthStarRank < MageMinBirthStarRank) elegibles.Remove(HeroSubclass.ArcaneMage);
 
-        var plebeyas = new List<HeroSubclass>(options);
-        plebeyas.Remove(HeroSubclass.ArcaneMage);
-        return plebeyas.ToArray();
+        // Baraja y corta: la mano sale del pool completo, no siempre las mismas tres.
+        for (int i = elegibles.Count - 1; i > 0; i--)
+        {
+            int j = Random.Range(0, i + 1);
+            (elegibles[i], elegibles[j]) = (elegibles[j], elegibles[i]);
+        }
+
+        if (elegibles.Count > OfferedOptions) elegibles.RemoveRange(OfferedOptions, elegibles.Count - OfferedOptions);
+        return elegibles.ToArray();
     }
 
     // Las tres subclases de clérigo curan y protegen en vez de pegar.
@@ -159,36 +219,48 @@ public static class HeroSubclasses
         return hecha;
     }
 
-    private static HeroSkill Build(HeroSubclass subclass)
+    // Habilidad de rol con la que arranca cada subclase. La habilidad ya es una entidad
+    // aparte: esto solo dice con cuál empieza, no a cuál queda atada para siempre.
+    public static ActiveSkill DefaultAbility(HeroSubclass subclass)
     {
         switch (subclass)
         {
-            case HeroSubclass.ShadowBlade: return Skill("Corte Ponzoñoso", 18, 5f, 1.6f);
-            case HeroSubclass.IronBlade: return Skill("Guardia de Hierro", 15, 8f, 1.2f);
-            case HeroSubclass.ZephyrBlade: return Skill("Danza de Cortes", 22, 6f, 1.1f);
-
-            case HeroSubclass.DragonLancer: return Skill("Lanza del Dragón", 25, 7f, 1.8f);
-            case HeroSubclass.PikeGuard: return Skill("Empuje de Pica", 16, 5f, 1.3f);
-            case HeroSubclass.StormPiercer: return Skill("Perforación Tormentosa", 24, 8f, 1.5f);
-
-            case HeroSubclass.LightPaladin: return Skill("Llamada de la Luz", 20, 9f, 0.9f);
-            case HeroSubclass.Juggernaut: return Skill("Embestida Imparable", 22, 7f, 1.4f);
-            case HeroSubclass.ImmortalBastion: return Skill("Muro Inmortal", 18, 10f, 0.8f);
-
-            case HeroSubclass.Sniper: return Skill("Disparo Cargado", 26, 8f, 2.6f);
-            case HeroSubclass.VolleyShooter: return Skill("Lluvia de Flechas", 28, 9f, 1.0f);
-            case HeroSubclass.ShadowHunter: return Skill("Saeta Sombría", 20, 6f, 1.4f);
-
-            case HeroSubclass.Pyromancer: return Skill("Estallido Ígneo", 30, 8f, 1.5f);
-            case HeroSubclass.Chronomage: return Skill("Fractura Temporal", 26, 10f, 0.7f);
-            case HeroSubclass.ArcaneMage: return Skill("Rayo Arcano", 32, 7f, 1.2f);
-
-            case HeroSubclass.HighPriest: return Skill("Bendición Mayor", 22, 6f, 0f);
-            case HeroSubclass.ProtectiveOracle: return Skill("Égida del Oráculo", 26, 9f, 0f);
-            case HeroSubclass.WarCleric: return Skill("Himno de Guerra", 24, 10f, 0f);
+            case HeroSubclass.ShadowBlade: return ActiveSkill.PoisonCut;
+            case HeroSubclass.IronBlade: return ActiveSkill.IronGuard;
+            case HeroSubclass.ZephyrBlade: return ActiveSkill.BladeDance;
+            case HeroSubclass.BloodReaver: return ActiveSkill.BloodHarvest;
+            case HeroSubclass.Riposteur: return ActiveSkill.Riposte;
+            case HeroSubclass.DragonLancer: return ActiveSkill.DragonThrust;
+            case HeroSubclass.PikeGuard: return ActiveSkill.PikePush;
+            case HeroSubclass.StormPiercer: return ActiveSkill.StormPierce;
+            case HeroSubclass.Halberdier: return ActiveSkill.HalberdSweep;
+            case HeroSubclass.Skewerer: return ActiveSkill.Skewer;
+            case HeroSubclass.LightPaladin: return ActiveSkill.LightCall;
+            case HeroSubclass.Juggernaut: return ActiveSkill.UnstoppableCharge;
+            case HeroSubclass.ImmortalBastion: return ActiveSkill.ImmortalWall;
+            case HeroSubclass.Sentinel: return ActiveSkill.SentinelWatch;
+            case HeroSubclass.Retributor: return ActiveSkill.Retribution;
+            case HeroSubclass.Sniper: return ActiveSkill.ChargedShot;
+            case HeroSubclass.VolleyShooter: return ActiveSkill.ArrowRain;
+            case HeroSubclass.ShadowHunter: return ActiveSkill.ShadowBolt;
+            case HeroSubclass.Trapper: return ActiveSkill.HuntingSnare;
+            case HeroSubclass.WindArcher: return ActiveSkill.WindVolley;
+            case HeroSubclass.Pyromancer: return ActiveSkill.FireBurst;
+            case HeroSubclass.Chronomage: return ActiveSkill.TimeFracture;
+            case HeroSubclass.ArcaneMage: return ActiveSkill.ArcaneRay;
+            case HeroSubclass.FrostWeaver: return ActiveSkill.FrostShroud;
+            case HeroSubclass.Necromancer: return ActiveSkill.WitheringTouch;
+            case HeroSubclass.HighPriest: return ActiveSkill.GreaterBlessing;
+            case HeroSubclass.ProtectiveOracle: return ActiveSkill.OracleAegis;
+            case HeroSubclass.WarCleric: return ActiveSkill.WarHymn;
+            case HeroSubclass.Exorcist: return ActiveSkill.PurgingRite;
+            case HeroSubclass.BattleMonk: return ActiveSkill.IronPalm;
         }
-        return null;
+        return ActiveSkill.BasicStrike;
     }
+
+    private static HeroSkill Build(HeroSubclass subclass)
+        => ActiveSkills.Make(DefaultAbility(subclass));
 
     // Lo que hace la habilidad más allá del daño; el daño base lo aplica quien la lanza.
     public static string DescribeSkill(HeroSubclass subclass)
@@ -221,6 +293,18 @@ public static class HeroSubclasses
             case HeroSubclass.HighPriest: return "cura al más herido";
             case HeroSubclass.ProtectiveOracle: return "escudos a la escuadra";
             case HeroSubclass.WarCleric: return "+ATK en área";
+            case HeroSubclass.BloodReaver: return "sangrado fuerte y roba vida";
+            case HeroSubclass.Riposteur: return "golpe doble, el segundo ignora armadura";
+            case HeroSubclass.Halberdier: return "barrido en área y empuja";
+            case HeroSubclass.Skewerer: return "hilera con sangrado";
+            case HeroSubclass.Sentinel: return "escuda a la escuadra y provoca";
+            case HeroSubclass.Retributor: return "más daño cuanto peor está";
+            case HeroSubclass.Trapper: return "inmoviliza y ralentiza";
+            case HeroSubclass.WindArcher: return "tres flechas a objetivos distintos";
+            case HeroSubclass.FrostWeaver: return "congela el área";
+            case HeroSubclass.Necromancer: return "veneno mágico y roba vida";
+            case HeroSubclass.Exorcist: return "cura y limpia estados";
+            case HeroSubclass.BattleMonk: return "cura en área y se cura al pegar";
         }
         return string.Empty;
     }
@@ -266,7 +350,7 @@ public static class HeroSubclasses
     public static List<HeroSubclass> AllReal()
     {
         var list = new List<HeroSubclass>();
-        for (int i = 1; i <= 18; i++) list.Add((HeroSubclass)i);
+        for (int i = 1; i <= (int)HeroSubclass.BattleMonk; i++) list.Add((HeroSubclass)i);
         return list;
     }
 }

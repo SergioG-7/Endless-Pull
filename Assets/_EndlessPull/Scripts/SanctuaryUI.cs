@@ -606,6 +606,10 @@ public class SanctuaryUI : MonoBehaviour
         content.pivot = new Vector2(0.5f, 1f);
         content.anchoredPosition = Vector2.zero;
 
+        // Sin esto la lista hereda el sizeDelta 100 por defecto y se sale del viewport, donde el
+        // Mask corta el principio de cada fila. La altura la pone el ContentSizeFitter.
+        content.sizeDelta = Vector2.zero;
+
         var scroll = viewGo.GetComponent<ScrollRect>();
         scroll.viewport = vrt;
         scroll.content = content;

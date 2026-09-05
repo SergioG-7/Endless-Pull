@@ -14,6 +14,9 @@ public class MasterHUD : MonoBehaviour
     [Tooltip("Gestor de oleadas, para el piso y el feedback.")]
     [SerializeField] private WaveManager waves;
 
+    [Tooltip("Expediciones de recolección, para la cuenta atrás de la TopBar.")]
+    [SerializeField] private ResourceExpeditionManager expeditions;
+
     [Tooltip("Chip compacto con Gemas, Madera, Hierro y Comida agrupados en la esquina.")]
     [SerializeField] private TextMeshProUGUI resourcesLabel;
 
@@ -35,6 +38,10 @@ public class MasterHUD : MonoBehaviour
 
     // Nivel de Townia; hueco libre entre el separador y el botón de menú (construido por código).
     private TMP_Text townLabel;
+
+    // Cuenta atrás de la recolección; solo visible mientras hay expedición fuera. Vive aquí y no
+    // en el panel de Escuadras, donde compartía etiqueta con el aviso de "héroe ocupado".
+    private TMP_Text expeditionLabel;
 
 
     void OnEnable()
@@ -144,6 +151,7 @@ void Start()
 
         BuildStarCountLabel();
         BuildSurvivalTimerLabel();
+        BuildExpeditionLabel();
         BuildTownLabel();
 
         if (economy != null) RefreshResources();
@@ -154,6 +162,8 @@ void Start()
 
     void Update()
     {
+        RefreshExpedition();
+
         if (survivalTimerLabel == null || waves == null) return;
 
         bool show = waves.State == ExpeditionState.InProgress
@@ -166,6 +176,24 @@ void Start()
 
         int seconds = Mathf.CeilToInt(waves.SurvivalTimeRemaining);
         survivalTimerLabel.text = $"{seconds / 60:00}:{seconds % 60:00}";
+    }
+
+    // La cuenta atrás de recolección se refresca en el mismo Update; el chip se esconde cuando
+    // no hay nadie fuera, para no ocupar sitio en la TopBar sin motivo.
+    private void RefreshExpedition()
+    {
+        if (expeditionLabel == null) return;
+
+        bool fuera = expeditions != null && expeditions.IsRunning;
+        if (expeditionLabel.gameObject.activeSelf != fuera)
+            expeditionLabel.gameObject.SetActive(fuera);
+
+        if (!fuera) return;
+
+        expeditionLabel.text = expeditions.ReadyToClaim
+            ? $"<color={UITheme.Tag(UITheme.Cyan)}>{LocalizationManager.Get("UI_GATHER_READY")}</color>"
+            : string.Format(LocalizationManager.Get("UI_GATHERING_NOW"),
+                            expeditions.Remaining.ToString("0"));
     }
 
     // Cronómetro regresivo centrado en la TopBar, junto al resto de rótulos construidos por código.
@@ -193,6 +221,32 @@ void Start()
         survivalTimerLabel.gameObject.SetActive(false);
     }
 
+
+    // A la derecha del contador de estrellas, en la misma franja libre de la izquierda.
+    private void BuildExpeditionLabel()
+    {
+        if (expeditions == null)
+            expeditions = UnityEngine.Object.FindFirstObjectByType<ResourceExpeditionManager>();
+
+        if (floorLabel == null) return;
+
+        var topBar = floorLabel.transform.parent;
+        if (topBar == null) return;
+
+        expeditionLabel = UIBuild.Label(topBar, "Txt_Expedition", UITheme.SizeCaption,
+            TextAlignmentOptions.Left);
+
+        var rt = expeditionLabel.rectTransform;
+        rt.anchorMin = new Vector2(0f, 0.5f);
+        rt.anchorMax = new Vector2(0f, 0.5f);
+        rt.pivot = new Vector2(0f, 0.5f);
+        rt.sizeDelta = new Vector2(300f, 34f);
+        // starCountLabel ocupa de 20 a 340; este arranca detrás con margen.
+        rt.anchoredPosition = new Vector2(356f, 0f);
+
+        ConfigureNoClip((TextMeshProUGUI)expeditionLabel);
+        expeditionLabel.gameObject.SetActive(false);
+    }
 
     // El hueco vacío a la izquierda de la TopBar (todo lo demás cuelga anclado a la derecha).
     private void BuildStarCountLabel()

@@ -58,6 +58,8 @@ public class MemorialManager : MonoBehaviour
 
         var progress = hero.GetComponent<HeroProgress>();
 
+        instance.records.RemoveAll(f => f.heroName == hero.Data.heroName);
+
         instance.records.Add(new MemorialRecord
         {
             heroName = hero.Data.heroName,
@@ -78,11 +80,29 @@ public class MemorialManager : MonoBehaviour
 
         foreach (EquipmentSlot slot in System.Enum.GetValues(typeof(EquipmentSlot)))
         {
+            // El arma no se lista en la ficha; el resto del equipo sí.
+            if (slot == EquipmentSlot.Weapon) continue;
+
             var pieza = hero.GetEquipped(slot);
             if (pieza != null && pieza.IsValid) piezas.Add(pieza.LocalizedName());
         }
 
         return piezas.Count > 0 ? string.Join(", ", piezas) : string.Empty;
+    }
+
+    // Nombres de todos los caídos. El gacha los suma a los vivos para que su hueco del
+    // catálogo siga ocupado y no se les pueda volver a invocar.
+    public static HashSet<string> MemorialNames()
+    {
+        var names = new HashSet<string>();
+
+        if (instance == null) instance = Object.FindFirstObjectByType<MemorialManager>();
+        if (instance == null) return names;
+
+        foreach (var ficha in instance.records)
+            if (!string.IsNullOrEmpty(ficha.heroName)) names.Add(ficha.heroName);
+
+        return names;
     }
 
     // Las usa el SaveManager para conservar la Galería entre partidas.

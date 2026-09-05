@@ -76,6 +76,9 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Datos base del enemigo, antes de escalar por piso.")]
     [SerializeField] private EnemyData enemyData;
 
+    [Tooltip("Bestiario por tramo de piso. Si está vacío se usa el reparto antiguo por campos sueltos.")]
+    [SerializeField] private FloorBand[] bestiary = new FloorBand[0];
+
     [Tooltip("Economía a la que se abona la recompensa del piso.")]
     [SerializeField] private EconomyManager economy;
 
@@ -186,6 +189,9 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Probabilidad de que un héroe elegible (sobrevivió crítico, o mató al jefe) despierte una pasiva nueva al superar el piso.")]
     [Range(0f, 1f)]
     [SerializeField] private float skillAwakeningChance = 0.15f;
+
+    [Tooltip("De cada despertar, qué parte cambia la habilidad activa en vez de dar una pasiva.")]
+    [SerializeField, Range(0f, 1f)] private float abilityAwakeningShare = 0.35f;
 
     [Tooltip("Último piso de cada tier en el cofre de jefe (Menor, Media, Mayor); por encima cae Legendaria.")]
     [SerializeField] private int[] stoneTierFloorCap = { 5, 10, 15 };
@@ -669,9 +675,33 @@ void Awake()
         return 0f;
     }
 
+    // Banda del bestiario que toca a este piso: la de mayor fromFloor que no lo supere.
+    private FloorBand BandForFloor(int floor)
+    {
+        FloorBand mejor = null;
+
+        foreach (var band in bestiary)
+        {
+            if (band == null || band.pool == null || band.pool.Length == 0) continue;
+            if (band.fromFloor > floor) continue;
+            if (mejor == null || band.fromFloor > mejor.fromFloor) mejor = band;
+        }
+
+        return mejor;
+    }
+
     // Composición por piso: el goblin es el relleno y el resto entra según a qué altura estemos.
     private EnemyData PickEnemyData(int index)
     {
+        // Con bestiario configurado manda él: cada hueco sortea del pool de su tramo, que es lo
+        // que hace que dos pisos seguidos no traigan la misma fila de goblins.
+        var band = BandForFloor(currentFloor);
+        if (band != null)
+        {
+            var elegido = band.pool[Random.Range(0, band.pool.Length)];
+            if (elegido != null) return elegido;
+        }
+
         // Pisos 1-4 ("Pruebas de Caza"): solo goblins, sin orcos/tiradores/chamanes todavía
         // — el filtro de verdad empieza en el Piso 5.
         if (currentFloor <= 4) return enemyData;
@@ -1205,25 +1235,10 @@ void Awake()
             if (!bossKilled && !survivedCritical.Contains(hero)) continue;
             if (Random.value >= skillAwakeningChance) continue;
 
-            TryAwakenSkill(hero);
+            // Una parte de los despertares cambia la habilidad activa en vez de dar una pasiva.
+            if (Random.value < abilityAwakeningShare) ActiveSkills.TryAwaken(hero);
+            else PassiveSkills.TryAwaken(hero);
         }
-    }
-
-    // Le da una pasiva nueva del pool que aún no tenga; sin hueco libre no pasa nada.
-    private void TryAwakenSkill(HeroController hero)
-    {
-        var pool = new List<PassiveSkill>(PassiveSkills.All);
-        pool.RemoveAll(hero.HasPassive);
-        if (pool.Count == 0) return;
-
-        var chosen = pool[Random.Range(0, pool.Count)];
-        var updated = new List<PassiveSkill>(hero.Passives) { chosen };
-        hero.SetPassives(updated);
-
-        string msg = string.Format(LocalizationManager.Get("UI_SKILL_AWAKENING"),
-            hero.Data.heroName, PassiveSkills.DisplayName(chosen));
-        ScreenBanner.ShowCompact(msg, 3f, UITheme.AccentPick);
-        Debug.Log($"[Despertar] {msg}", this);
     }
 
     void Update()

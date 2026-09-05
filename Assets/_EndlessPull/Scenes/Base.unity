@@ -2161,6 +2161,7 @@ MonoBehaviour:
   expPerTick: 5
   masteryPerTrainingTick: 2
   skillRefinementPerTrainingTick: 0.01
+  trainingAwakeningChance: 0.005
   healPerTick: 6
   moralePerTick: 5
   visitDuration: {x: 8, y: 12}
@@ -4038,6 +4039,7 @@ MonoBehaviour:
   expPerTick: 5
   masteryPerTrainingTick: 2
   skillRefinementPerTrainingTick: 0.01
+  trainingAwakeningChance: 0.005
   healPerTick: 6
   moralePerTick: 5
   visitDuration: {x: 8, y: 12}
@@ -4244,6 +4246,7 @@ MonoBehaviour:
   expPerTick: 5
   masteryPerTrainingTick: 2
   skillRefinementPerTrainingTick: 0.01
+  trainingAwakeningChance: 0.005
   healPerTick: 6
   moralePerTick: 5
   visitDuration: {x: 8, y: 12}
@@ -9907,6 +9910,7 @@ MonoBehaviour:
   expPerTick: 5
   masteryPerTrainingTick: 2
   skillRefinementPerTrainingTick: 0.01
+  trainingAwakeningChance: 0.005
   healPerTick: 6
   moralePerTick: 5
   visitDuration: {x: 8, y: 12}
@@ -13311,6 +13315,7 @@ MonoBehaviour:
   expPerTick: 5
   masteryPerTrainingTick: 2
   skillRefinementPerTrainingTick: 0.01
+  trainingAwakeningChance: 0.005
   healPerTick: 6
   moralePerTick: 5
   visitDuration: {x: 8, y: 12}
@@ -16387,6 +16392,7 @@ MonoBehaviour:
   expPerTick: 5
   masteryPerTrainingTick: 2
   skillRefinementPerTrainingTick: 0.01
+  trainingAwakeningChance: 0.005
   healPerTick: 6
   moralePerTick: 5
   visitDuration: {x: 8, y: 12}
@@ -17638,6 +17644,7 @@ MonoBehaviour:
   expPerTick: 5
   masteryPerTrainingTick: 2
   skillRefinementPerTrainingTick: 0.01
+  trainingAwakeningChance: 0.005
   healPerTick: 6
   moralePerTick: 5
   visitDuration: {x: 8, y: 12}
@@ -20958,6 +20965,7 @@ MonoBehaviour:
   expPerTick: 5
   masteryPerTrainingTick: 2
   skillRefinementPerTrainingTick: 0.01
+  trainingAwakeningChance: 0.005
   healPerTick: 6
   moralePerTick: 5
   visitDuration: {x: 8, y: 12}
@@ -21492,6 +21500,7 @@ MonoBehaviour:
   expPerTick: 5
   masteryPerTrainingTick: 2
   skillRefinementPerTrainingTick: 0.01
+  trainingAwakeningChance: 0.005
   healPerTick: 6
   moralePerTick: 5
   visitDuration: {x: 8, y: 12}
@@ -21827,6 +21836,40 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WaveManager
   enemyPrefab: {fileID: 2062506768320722534, guid: fabda8bd8e94e994798d5193f58e8bff, type: 3}
   enemyData: {fileID: 11400000, guid: 4c385b8c16dd6234d95548445e94fc5f, type: 2}
+  bestiary:
+  - fromFloor: 1
+    pool:
+    - {fileID: 11400000, guid: 4c385b8c16dd6234d95548445e94fc5f, type: 2}
+    - {fileID: 11400000, guid: e8bd8adf683964e44bf8709fe7a689bb, type: 2}
+    - {fileID: 11400000, guid: e82df21f1ae84164ba279313194093da, type: 2}
+    - {fileID: 11400000, guid: f03ac4866797787419baef6e05904ddc, type: 2}
+  - fromFloor: 10
+    pool:
+    - {fileID: 11400000, guid: 4c385b8c16dd6234d95548445e94fc5f, type: 2}
+    - {fileID: 11400000, guid: e82df21f1ae84164ba279313194093da, type: 2}
+    - {fileID: 11400000, guid: f03ac4866797787419baef6e05904ddc, type: 2}
+    - {fileID: 11400000, guid: 807f8a8b5efd4b3459b265ea973d8fa9, type: 2}
+    - {fileID: 11400000, guid: aa127f7edc9903c4a821848e6019ae87, type: 2}
+    - {fileID: 11400000, guid: d30f35a5a6ddc0c41ad50c3898ea7213, type: 2}
+    - {fileID: 11400000, guid: c1d38eb2bad450b4eb8aabed0cf8cffb, type: 2}
+  - fromFloor: 20
+    pool:
+    - {fileID: 11400000, guid: aa127f7edc9903c4a821848e6019ae87, type: 2}
+    - {fileID: 11400000, guid: d30f35a5a6ddc0c41ad50c3898ea7213, type: 2}
+    - {fileID: 11400000, guid: c1d38eb2bad450b4eb8aabed0cf8cffb, type: 2}
+    - {fileID: 11400000, guid: a2f5a6acb8f283245816a9f27240d252, type: 2}
+    - {fileID: 11400000, guid: d1b9d8e3e56db694a9d419a6b1542025, type: 2}
+    - {fileID: 11400000, guid: 807f8a8b5efd4b3459b265ea973d8fa9, type: 2}
+    - {fileID: 11400000, guid: f03ac4866797787419baef6e05904ddc, type: 2}
+  - fromFloor: 35
+    pool:
+    - {fileID: 11400000, guid: 4acf584f8f586da45b7af5ef3728fdde, type: 2}
+    - {fileID: 11400000, guid: 5e308f6b0eebfe241b1bbb4b744ac406, type: 2}
+    - {fileID: 11400000, guid: b176cb83b1b4b7d4e857e58c83797824, type: 2}
+    - {fileID: 11400000, guid: a2f5a6acb8f283245816a9f27240d252, type: 2}
+    - {fileID: 11400000, guid: d1b9d8e3e56db694a9d419a6b1542025, type: 2}
+    - {fileID: 11400000, guid: c1d38eb2bad450b4eb8aabed0cf8cffb, type: 2}
+    - {fileID: 11400000, guid: c4151c12b2396aa4d960a0478b51015a, type: 2}
   economy: {fileID: 1930413716}
   party: {fileID: 1930413723}
   bossData: {fileID: 11400000, guid: 49b5230d5aecd6648b5b8831e6d0f571, type: 2}
@@ -21862,6 +21905,7 @@ MonoBehaviour:
   autoPotionCooldown: 3
   criticalHealthRatioForAwakening: 0.2
   skillAwakeningChance: 0.15
+  abilityAwakeningShare: 0.35
   stoneTierFloorCap: 050000000a0000000f000000
   wardenDrops:
   - {fileID: 11400000, guid: 776ff01beaa5a504d8e95df99969947d, type: 2}
@@ -21936,6 +21980,7 @@ MonoBehaviour:
   economy: {fileID: 1930413716}
   gacha: {fileID: 1930413714}
   waves: {fileID: 1930413715}
+  expeditions: {fileID: 0}
   resourcesLabel: {fileID: 793083290}
   floorLabel: {fileID: 615985993}
   statusLabel: {fileID: 1971030847}
@@ -22967,6 +23012,7 @@ MonoBehaviour:
   expPerTick: 5
   masteryPerTrainingTick: 2
   skillRefinementPerTrainingTick: 0.01
+  trainingAwakeningChance: 0.005
   healPerTick: 6
   moralePerTick: 5
   visitDuration: {x: 8, y: 12}

@@ -50,6 +50,36 @@ RECETAS = {
     "Enemy_GoblinKing": dict(
         cuerpo="muscular", cabeza="goblin/adult", piel="bright_green",
         torso="torso/armour/plate", arma="blunt", capa="cape/solid"),
+
+    # Segunda hornada: bestias y elites, para que la Torre no sea goblins y esqueletos
+    # repintados. Cada una tiene un papel distinto en la oleada, no solo mas numeros.
+    "Enemy_DireWolf": dict(
+        cuerpo="muscular", cabeza="wolf/male", piel="fur_grey",
+        torso=None, arma=None, capa=None),
+    "Enemy_RatThief": dict(
+        cuerpo="teen", cabeza="rat/adult", piel="fur_brown",
+        torso="torso/clothes/sleeveless", arma="sword", capa=None),
+    "Enemy_LizardSoldier": dict(
+        cuerpo="male", cabeza="lizard/male", piel="green",
+        torso="torso/armour/leather", arma="polearm", capa=None),
+    "Enemy_BoarCharger": dict(
+        cuerpo="muscular", cabeza="boarman/adult", piel="fur_brown",
+        torso="torso/armour/leather", arma="polearm", capa=None),
+    "Enemy_RottenZombie": dict(
+        cuerpo="zombie", cabeza="zombie/adult", piel="zombie_green",
+        torso="torso/clothes/shirt", arma=None, capa=None),
+    "Enemy_StoneTroll": dict(
+        cuerpo="muscular", cabeza="troll/adult", piel="dark_green",
+        torso="torso/armour/leather", arma="blunt", capa=None),
+    "Enemy_Minotaur": dict(
+        cuerpo="muscular", cabeza="minotaur/male", piel="fur_black",
+        torso="torso/armour/leather", arma="blunt", capa=None),
+    "Enemy_FleshGolem": dict(
+        cuerpo="muscular", cabeza="frankenstein/adult", piel="pale_green",
+        torso="torso/clothes/sleeveless", arma=None, capa=None),
+    "Enemy_Wartotaur": dict(
+        cuerpo="muscular", cabeza="wartotaur/adult", piel="fur_copper",
+        torso="torso/armour/plate", arma="polearm", capa="cape/tattered"),
 }
 
 
@@ -85,6 +115,9 @@ DETRAS = ("universal_behind", "background", "behind", "bg")
 
 def armas_con(categoria, anim):
     salida = []
+    if not categoria:
+        return salida
+
     raiz = os.path.join(HOJAS, "weapon", categoria)
     if not os.path.isdir(raiz):
         return salida
@@ -126,7 +159,19 @@ def trasera(delante, anim, fichero):
 
 
 def cuerpo(tipo, anim):
-    return os.path.join(HOJAS, "body", "bodies", tipo, anim + ".png")
+    directo = os.path.join(HOJAS, "body", "bodies", tipo, anim + ".png")
+    if os.path.isfile(directo):
+        return directo
+
+    # Algunos cuerpos (zombie) guardan la hoja dentro de una carpeta con el nombre de la
+    # animacion en vez de sueltos junto a las demas.
+    carpeta = os.path.join(HOJAS, "body", "bodies", tipo, anim)
+    if os.path.isdir(carpeta):
+        for fichero in sorted(os.listdir(carpeta)):
+            if fichero.endswith(".png"):
+                return os.path.join(carpeta, fichero)
+
+    return directo
 
 
 def cabeza(familia, anim):

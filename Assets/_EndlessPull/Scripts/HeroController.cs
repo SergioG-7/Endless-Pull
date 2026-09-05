@@ -197,6 +197,21 @@ public class HeroController : MonoBehaviour, IHealthOwner
     [Tooltip("Rango de detección extra con la pasiva de Ojo de Águila.")]
     [SerializeField] private float eagleEyeBonusRange = 3f;
 
+    [Tooltip("Fracción de vida por debajo de la cual se activa Berserker.")]
+    [SerializeField, Range(0f, 1f)] private float berserkHealthThreshold = 0.30f;
+
+    [Tooltip("Ataque extra de Berserker mientras está por debajo del umbral.")]
+    [SerializeField] private float berserkAttackBonus = 0.40f;
+
+    [Tooltip("Altura a la que sale el rótulo con el nombre de la habilidad lanzada.")]
+    [SerializeField] private float skillLabelHeight = 0.9f;
+
+    [Tooltip("Altura del rótulo de intención táctica; por debajo del de habilidad para no solaparse.")]
+    [SerializeField] private float intentLabelHeight = 0.6f;
+
+    [Tooltip("Vida restante del objetivo por debajo de la cual no se le suelta aunque la escuadra mande otro.")]
+    [SerializeField, Range(0f, 1f)] private float intentSwitchKeepRatio = 0.35f;
+
     [Tooltip("Defensa extra mientras dura el decreto de posición defensiva.")]
     [SerializeField] private int defensiveStanceBonus = 5;
 
@@ -246,6 +261,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
     // Sub-estado de combate; solo se actualiza mientras GlobalState == InCombat.
     private CombatState combatState = CombatState.IdleSearching;
+    private CombatIntent intent = CombatIntent.None;
     public CombatState CombatSubState => combatState;
 
     // Cuando está armado, IdleSearching aguanta el sitio en vez de avanzar a ciegas hacia +X.
@@ -361,7 +377,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
     public bool HasGuaranteedDodge => Time.time < guaranteedDodgeUntil;
     public bool IsDead => currentHealth <= 0;
     public bool AttackReady => attackTimer <= 0f;
-    public bool CanCastSkill => skill != null && skill.CanCast(CurrentMP);
+    public bool CanCastSkill => skill != null && skill.IsReady && CurrentMP >= SkillManaCost;
     // Arcos y báculos pegan de lejos; el resto tiene que plantarse delante.
     public bool IsRanged
         => EquippedWeaponType == WeaponType.Bow || EquippedWeaponType == WeaponType.Staff
@@ -497,27 +513,47 @@ public class HeroController : MonoBehaviour, IHealthOwner
     // es la pasiva innata: el afijo y la pericia de arma (rango F=0 ... S=tope) suman encima.
     // Los afijos van en porcentaje, así que aquí se pasan a tanto por uno una sola vez.
     public float EffectiveEvasionChance
-        => Mathf.Clamp01((HasPassive(PassiveSkill.Evasion) ? evasionChance : 0f)
+        => Mathf.Clamp01(PassiveSkills.EvasionBonus(passives)
                           + AffixTotal(EquipmentAffix.EvasionBoost) * 0.01f
                           + mastery.EvasionBonus(EquippedWeaponType));
 
     public float ArmorPierce
-        => Mathf.Clamp01(AffixTotal(EquipmentAffix.ArmorPierce) * 0.01f);
+        => Mathf.Clamp01(AffixTotal(EquipmentAffix.ArmorPierce) * 0.01f
+                          + PassiveSkills.ArmorPierceBonus(passives));
 
     public float LifeStealRatio
-        => Mathf.Clamp01(AffixTotal(EquipmentAffix.LifeSteal) * 0.01f);
+        => Mathf.Clamp01(AffixTotal(EquipmentAffix.LifeSteal) * 0.01f
+                          + PassiveSkills.LifeStealBonus(passives));
 
     // El refinamiento del muñeco de entrenamiento afina la puntería con la habilidad, aplicado
     // aquí como bonus general de crítico (no hay un stat de precisión separado en este combate).
     public float CritChance => Mathf.Clamp01(baseCritChance
-        + (progress != null ? progress.SkillRefinement * maxCritBonusFromRefinement : 0f));
+        + (progress != null ? progress.SkillRefinement * maxCritBonusFromRefinement : 0f)
+        + PassiveSkills.CritChanceBonus(passives));
 
     // Cuánto se acorta el enfriamiento de la habilidad activa por refinamiento de entrenamiento.
     public float SkillCooldownReduction
-        => progress != null ? progress.SkillRefinement * maxSkillCooldownReductionFromRefinement : 0f;
+        => Mathf.Clamp01((progress != null ? progress.SkillRefinement * maxSkillCooldownReductionFromRefinement : 0f)
+                         + PassiveSkills.SkillCooldownBonus(passives));
 
     public float CritMultiplier
-        => baseCritMultiplier + AffixTotal(EquipmentAffix.CritDamage) * 0.01f;
+        => baseCritMultiplier + AffixTotal(EquipmentAffix.CritDamage) * 0.01f
+           + PassiveSkills.CritDamageBonus(passives);
+
+    // Última Voluntad ya gastada en este combate; se rearma al desplegar de nuevo.
+    private bool lastStandSpent;
+
+    // Maná que cuesta de verdad lanzar la habilidad, ya con las pasivas que lo abaratan.
+    public int SkillManaCost
+        => skill == null ? 0
+           : Mathf.Max(1, Mathf.RoundToInt(skill.mpCost * PassiveSkills.MpCostMultiplier(passives)));
+
+    // Berserker: pega más fuerte cuanto peor está. Fuera del umbral no multiplica nada.
+    private float BerserkMultiplier
+        => PassiveSkills.HasBerserk(passives)
+           && MaxHealth > 0 && currentHealth <= MaxHealth * berserkHealthThreshold
+            ? 1f + berserkAttackBonus
+            : 1f;
 
     // Tira el crítico sobre un daño ya calculado; el robo de vida se cobra al impactar.
     public int RollStrike(int raw, out bool critico)
@@ -628,12 +664,14 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
     public int CurrentHealth => currentHealth;
     public int MaxHealth => data != null
-        ? Mathf.RoundToInt(data.maxHealth * ascensionMultiplier + bonusMaxHealth) + EquipBonusHP
+        ? Mathf.RoundToInt((Mathf.RoundToInt(data.maxHealth * ascensionMultiplier + bonusMaxHealth)
+          + EquipBonusHP) * PassiveSkills.MaxHealthMultiplier(passives))
         : 0;
 
     public int Defense => data != null
         ? Mathf.RoundToInt((Mathf.RoundToInt(data.baseDefense * ascensionMultiplier) + EquipBonusDEF
-          + gearUpgradeDefense + (IsInDefensiveStance ? defensiveStanceBonus : 0)) * (1f + originSynergy))
+          + gearUpgradeDefense + (IsInDefensiveStance ? defensiveStanceBonus : 0)) * (1f + originSynergy)
+          * PassiveSkills.DefenseMultiplier(passives))
         : 0;
 
     // Ascensión, nivel, rasgo y equipo suman; moral y maestría multiplican.
@@ -649,7 +687,9 @@ public class HeroController : MonoBehaviour, IHealthOwner
             float multiplier = (IsInspired ? 1f + inspiredAttackBonus : 1f)
                                * mastery.DamageMultiplier(EquippedWeaponType)
                                * (1f + originSynergy)
-                               * (1f + AffinityAtkBonus);
+                               * (1f + AffinityAtkBonus)
+                               * PassiveSkills.AttackMultiplier(passives)
+                               * BerserkMultiplier;
 
             return Mathf.RoundToInt(raw * multiplier);
         }
@@ -657,7 +697,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
     public float EffectiveDetectionRange
         => detectionRange * HeroTraits.DetectionMultiplier(trait)
-           + (HasPassive(PassiveSkill.EagleEye) ? eagleEyeBonusRange : 0f);
+           + PassiveSkills.DetectionRangeBonus(passives);
 
     // Se redondea hacia abajo: lo que se ve es lo que se puede gastar.
     public int CurrentMP => Mathf.FloorToInt(currentMP);
@@ -721,7 +761,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
         {
             if (data == null) return 0f;
 
-            float speed = data.moveSpeed;
+            float speed = data.moveSpeed * PassiveSkills.MoveSpeedMultiplier(passives);
             if (IsExhausted) speed *= 1f - exhaustionSpeedPenalty;
             if (IsDemoralized) speed *= 1f - demoralizedSpeedPenalty;
             return speed * Status.SpeedMultiplier;
@@ -734,7 +774,8 @@ public class HeroController : MonoBehaviour, IHealthOwner
         {
             // La pericia de arma acorta la recuperación base; la fatiga/desmoralización se
             // suman encima tal cual, no se ven reducidas por la pericia.
-            float cooldown = attackCooldown * (1f - mastery.RecoveryReduction(EquippedWeaponType));
+            float cooldown = attackCooldown * (1f - mastery.RecoveryReduction(EquippedWeaponType))
+                             * PassiveSkills.AttackCooldownMultiplier(passives);
             if (IsExhausted) cooldown += exhaustionAttackDelay;
             if (IsDemoralized) cooldown += demoralizedAttackDelay;
             return cooldown;
@@ -802,6 +843,11 @@ public class HeroController : MonoBehaviour, IHealthOwner
 public void SetDeployed(bool value, bool viaGateway = false)
     {
         deployed = value;
+
+        // Cada despliegue es un combate nuevo: Última Voluntad vuelve a estar disponible y la
+        // intención se limpia para que la escuadra la vuelva a anunciar.
+        if (value) lastStandSpent = false;
+        intent = CombatIntent.None;
 
         if (!deployed)
         {
@@ -932,20 +978,77 @@ public void DeployViaGateway(Vector2 destination)
         globalState = deployed ? HeroGlobalState.InCombat : HeroGlobalState.InBase;
     }
 
-    // Asignar subclase cambia también la habilidad activa por la exclusiva del arquetipo.
+    // Asignar subclase da la habilidad de rol, que es la que enseña el modal de elección. A
+    // partir de ahí el héroe puede aprender otras del arquetipo despertando.
     public void SetSubclass(HeroSubclass value)
     {
         subclass = value;
 
-        var exclusiva = HeroSubclasses.MakeSkill(value);
-        if (exclusiva != null) skill = exclusiva;
+        LearnAbility(HeroSubclasses.DefaultAbility(value));
     }
+
+    // Le cambia la habilidad activa. La usan la subclase, el guardado y el despertar.
+    public void LearnAbility(ActiveSkill ability)
+    {
+        var hecha = ActiveSkills.Make(ability);
+        if (hecha == null) return;
+
+        hecha.subclass = subclass;
+        skill = hecha;
+    }
+
+    public ActiveSkill Ability => skill != null ? skill.ability : ActiveSkill.None;
 
     // Compartir origen con al menos un compañero de escuadra da un bonus pasivo en combate.
     public void SetOriginSynergy(float value) => originSynergy = Mathf.Max(0f, value);
 
     public void SetLocked(bool value) => isLocked = value;
     public bool ToggleLock() { isLocked = !isLocked; return isLocked; }
+
+    public bool HasForcedTarget => forcedTarget != null;
+
+    // Lo que este héroe ha decidido hacer; lo reparte SquadTactics y lo pinta el rótulo.
+    public CombatIntent Intent => intent;
+
+    // La escuadra le dice a qué va. El objetivo entra como sugerencia, no como decreto: la FSM
+    // sigue mandando en el cuerpo a cuerpo y el héroe no suelta a quien ya tiene medio muerto.
+    public void SetIntent(CombatIntent nuevo, EnemyController sugerido)
+    {
+        // Solo se anuncia el cambio, no cada relectura del campo: si no, el rótulo parpadea.
+        if (nuevo != intent)
+        {
+            intent = nuevo;
+            AnnounceIntent();
+        }
+
+        if (sugerido == null || sugerido.CurrentHealth <= 0) return;
+        if (!deployed || frozen) return;
+
+        // Cambiar de objetivo teniendo uno a punto de caer es tirar el daño ya metido.
+        if (target != null && target.CurrentHealth > 0 && target != sugerido)
+        {
+            float restante = target.MaxHealth > 0 ? (float)target.CurrentHealth / target.MaxHealth : 1f;
+            if (restante <= intentSwitchKeepRatio) return;
+        }
+
+        target = sugerido;
+        if (!IsInCombat())
+        {
+            globalState = HeroGlobalState.InCombat;
+            state = HeroState.CombatApproach;
+        }
+        if (combatState == CombatState.IdleSearching) combatState = CombatState.MovingToTarget;
+    }
+
+    // Rótulo con lo que acaba de decidir; es lo que hace legible la capa táctica en combate.
+    private void AnnounceIntent()
+    {
+        if (intent == CombatIntent.None || data == null) return;
+
+        DamageTextManager.Show(transform.position + Vector3.up * intentLabelHeight,
+            $"{CombatIntents.Glyph(intent)} {CombatIntents.DisplayName(intent)}",
+            CombatIntents.Tint(intent));
+    }
 
     // Decreto de Enfocar Objetivo: este enemigo pasa por delante del más cercano.
     public void SetForcedTarget(EnemyController enemy)
@@ -1205,7 +1308,8 @@ public void DeployViaGateway(Vector2 destination)
     {
         if (data == null) return;
 
-        float rate = IsInCombat() ? mpRegenInCombat : mpRegenOutOfCombat;
+        float rate = (IsInCombat() ? mpRegenInCombat : mpRegenOutOfCombat)
+                     * PassiveSkills.ManaRegenMultiplier(passives);
         currentMP = Mathf.Min(MaxMP, currentMP + rate * Time.deltaTime);
     }
 
@@ -1457,7 +1561,7 @@ public void DeployViaGateway(Vector2 destination)
         // que el enemigo esté ya por debajo del umbral del héroe: rematar con la habilidad es tirarla.
         bool targetAlmostDead = target.MaxHealth > 0
             && (float)target.CurrentHealth / target.MaxHealth < SkillThreshold;
-        if (!IsSupport && !targetAlmostDead && skill != null && skill.CanCast(CurrentMP))
+        if (!IsSupport && !targetAlmostDead && CanCastSkill)
         {
             CastCombatSkill(target);
             return;
@@ -1514,8 +1618,10 @@ public void DeployViaGateway(Vector2 destination)
     // Habilidad exclusiva de la subclase; sin subclase sale el golpe potente de siempre.
     private void CastCombatSkill(EnemyController victim)
     {
-        currentMP -= skill.mpCost;
+        currentMP -= SkillManaCost;
         skill.PutOnCooldown(SkillCooldownReduction);
+
+        AnnounceSkill();
 
         // Los golpes a distancia ya tienen su propio proyectil; el empujón es solo cuerpo a cuerpo.
         if (!IsRanged && animator != null) animator.PlayAttackLunge(victim.transform.position);
@@ -1529,62 +1635,62 @@ public void DeployViaGateway(Vector2 destination)
         int vidaVictima = victim != null ? victim.CurrentHealth : 0;
         int veneno = Mathf.Max(1, Mathf.RoundToInt(Attack * 0.15f));
 
-        switch (subclass)
+        switch (skill.ability)
         {
-            case HeroSubclass.ShadowBlade:
+            case ActiveSkill.PoisonCut:
                 victim.TakeDamage(damage);
                 StatusEffectManager.Apply(victim.gameObject, StatusEffect.Poison, 6f, veneno);
                 break;
 
-            case HeroSubclass.IronBlade:
+            case ActiveSkill.IronGuard:
                 victim.TakeDamage(damage);
                 Status.Add(StatusEffect.Shield, 8f, Attack * 1.5f);
                 break;
 
-            case HeroSubclass.ZephyrBlade:
+            case ActiveSkill.BladeDance:
                 for (int i = 0; i < 3; i++) victim.TakeDamage(Mathf.Max(1, damage / 2));
                 StatusEffectManager.Apply(victim.gameObject, StatusEffect.Bleed, 5f, veneno);
                 break;
 
-            case HeroSubclass.DragonLancer:
+            case ActiveSkill.DragonThrust:
                 // En hilera: alcanza a lo que esté alineado detrás del objetivo.
                 foreach (var e in EnemiesInLine(victim, 3f)) e.TakeDamage(damage);
                 break;
 
-            case HeroSubclass.PikeGuard:
+            case ActiveSkill.PikePush:
                 victim.TakeDamage(damage);
                 victim.PushBack(transform.position, 1.5f);
                 StatusEffectManager.Apply(victim.gameObject, StatusEffect.Slow, 4f, 0f);
                 break;
 
-            case HeroSubclass.StormPiercer:
+            case ActiveSkill.StormPierce:
                 // Antiarmadura: el daño entra sin restar la defensa del enemigo.
                 victim.TakeDamage(damage, true);
                 StatusEffectManager.Apply(victim.gameObject, StatusEffect.Stun, 1.5f, 0f);
                 break;
 
-            case HeroSubclass.LightPaladin:
+            case ActiveSkill.LightCall:
                 victim.TakeDamage(damage);
                 foreach (var e in EnemiesAround(transform.position, 4f)) e.Taunt(this, 6f);
                 foreach (var a in AlliesAround(5f)) a.Status.Add(StatusEffect.Shield, 6f, Attack * 0.8f);
                 break;
 
-            case HeroSubclass.Juggernaut:
+            case ActiveSkill.UnstoppableCharge:
                 victim.TakeDamage(damage);
                 StatusEffectManager.Apply(victim.gameObject, StatusEffect.Stun, 1.5f, 0f);
                 RecoverFatigue(40f);
                 break;
 
-            case HeroSubclass.ImmortalBastion:
+            case ActiveSkill.ImmortalWall:
                 victim.TakeDamage(damage);
                 Status.Add(StatusEffect.Shield, 10f, Attack * 4f);
                 break;
 
-            case HeroSubclass.Sniper:
+            case ActiveSkill.ChargedShot:
                 Projectile.Fire(transform.position, victim, Mathf.RoundToInt(damage * 1.5f), ProjectileColor);
                 break;
 
-            case HeroSubclass.VolleyShooter:
+            case ActiveSkill.ArrowRain:
                 // La flecha que se ve es la del centro; el área la resuelve la habilidad.
                 Projectile.Fire(transform.position, victim, 0, ProjectileColor);
                 foreach (var e in EnemiesAround(victim.transform.position, 3f))
@@ -1594,28 +1700,108 @@ public void DeployViaGateway(Vector2 destination)
                 }
                 break;
 
-            case HeroSubclass.ShadowHunter:
+            case ActiveSkill.ShadowBolt:
                 Projectile.Fire(transform.position, victim, damage, ProjectileColor);
                 victim.PushBack(transform.position, 2f);
                 StatusEffectManager.Apply(victim.gameObject, StatusEffect.Poison, 8f, veneno);
                 break;
 
-            case HeroSubclass.Pyromancer:
+            case ActiveSkill.FireBurst:
                 Projectile.Fire(transform.position, victim, 0, new Color(1f, 0.55f, 0.15f), magic: true);
                 foreach (var e in EnemiesAround(victim.transform.position, 3.5f)) e.TakeDamage(damage, true);
                 break;
 
-            case HeroSubclass.Chronomage:
+            case ActiveSkill.TimeFracture:
                 victim.TakeDamage(damage);
                 foreach (var e in EnemiesAround(transform.position, 12f))
                     StatusEffectManager.Apply(e.gameObject, StatusEffect.Slow, 6f, 0f);
                 break;
 
-            case HeroSubclass.ArcaneMage:
+            case ActiveSkill.ArcaneRay:
                 // Rayo perforante: gasta todo el maná que quede y pega en proporción.
                 int extra = CurrentMP;
                 currentMP = 0f;
                 Projectile.Fire(transform.position, victim, damage + extra * 2, ProjectileColor, true, magic: true);
+                break;
+
+            case ActiveSkill.BloodHarvest:
+                // Sangrado el doble de largo y curación aparte del robo de vida normal.
+                victim.TakeDamage(damage);
+                StatusEffectManager.Apply(victim.gameObject, StatusEffect.Bleed, 10f, veneno);
+                Heal(Mathf.Max(1, Mathf.RoundToInt(damage * 0.25f)));
+                break;
+
+            case ActiveSkill.Riposte:
+                // Dos tiempos: el primero tantea y el segundo entra por el hueco de la guardia.
+                victim.TakeDamage(damage);
+                if (victim != null) victim.TakeDamage(Mathf.Max(1, damage / 2), true);
+                break;
+
+            case ActiveSkill.HalberdSweep:
+                foreach (var e in EnemiesAround(victim.transform.position, 2.5f))
+                {
+                    e.TakeDamage(damage);
+                    e.PushBack(transform.position, 1.2f);
+                }
+                break;
+
+            case ActiveSkill.Skewer:
+                foreach (var e in EnemiesInLine(victim, 3f))
+                {
+                    e.TakeDamage(damage);
+                    StatusEffectManager.Apply(e.gameObject, StatusEffect.Bleed, 6f, veneno);
+                }
+                break;
+
+            case ActiveSkill.SentinelWatch:
+                victim.TakeDamage(damage);
+                foreach (var a in AlliesAround(6f)) a.Status.Add(StatusEffect.Shield, 8f, Attack * 1.1f);
+                foreach (var e in EnemiesAround(transform.position, 3.5f)) e.Taunt(this, 5f);
+                break;
+
+            case ActiveSkill.Retribution:
+                // Represalia: cuanta menos vida le queda, más fuerte devuelve el golpe.
+                float carencia = MaxHealth > 0 ? 1f - (float)currentHealth / MaxHealth : 0f;
+                victim.TakeDamage(Mathf.RoundToInt(damage * (1f + carencia)));
+                Status.Add(StatusEffect.Shield, 6f, Attack * 1.5f);
+                break;
+
+            case ActiveSkill.HuntingSnare:
+                Projectile.Fire(transform.position, victim, damage, ProjectileColor);
+                StatusEffectManager.Apply(victim.gameObject, StatusEffect.Stun, 1.2f, 0f);
+                StatusEffectManager.Apply(victim.gameObject, StatusEffect.Slow, 6f, 0f);
+                break;
+
+            case ActiveSkill.WindVolley:
+                // Una flecha por enemigo distinto, empezando por el objetivo.
+                int flechas = 0;
+                Projectile.Fire(transform.position, victim, damage, ProjectileColor);
+                flechas++;
+                foreach (var e in EnemiesAround(transform.position, EffectiveAttackRange + 2f))
+                {
+                    if (flechas >= 3) break;
+                    if (e == victim) continue;
+
+                    Projectile.Fire(transform.position, e, damage, ProjectileColor);
+                    flechas++;
+                }
+                break;
+
+            case ActiveSkill.FrostShroud:
+                Projectile.Fire(transform.position, victim, 0, new Color(0.55f, 0.85f, 1f), magic: true);
+                foreach (var e in EnemiesAround(victim.transform.position, 3.5f))
+                {
+                    e.TakeDamage(damage, true);
+                    StatusEffectManager.Apply(e.gameObject, StatusEffect.Slow, 5f, 0f);
+                    StatusEffectManager.Apply(e.gameObject, StatusEffect.Stun, 0.8f, 0f);
+                }
+                break;
+
+            case ActiveSkill.WitheringTouch:
+                Projectile.Fire(transform.position, victim, damage, new Color(0.45f, 0.75f, 0.4f),
+                                magic: true);
+                StatusEffectManager.Apply(victim.gameObject, StatusEffect.Poison, 10f, veneno * 2);
+                Heal(Mathf.Max(1, Mathf.RoundToInt(damage * 0.30f)));
                 break;
 
             default:
@@ -1628,42 +1814,90 @@ public void DeployViaGateway(Vector2 destination)
 
         AddMasteryPoints(masteryPerHit);
         Debug.Log($"[Habilidad] {data.heroName} ({SubclassName}) lanza {skill.GetDisplayName()}: " +
-                  $"{damage} base, {HeroSubclasses.DescribeSkill(subclass)} " +
+                  $"{damage} base, {skill.GetDescription()} " +
                   $"(-{skill.mpCost} MP, quedan {CurrentMP}/{MaxMP}).", this);
+    }
+
+    // Rótulo flotante con el nombre de la habilidad. Sin esto las 30 habilidades se notaban
+    // solo en los números de daño, que es lo mismo que no verlas.
+    private void AnnounceSkill()
+    {
+        if (skill == null) return;
+
+        DamageTextManager.Show(transform.position + Vector3.up * skillLabelHeight,
+                               skill.GetDisplayName(), SkillLabelColor);
+        AudioManager.PlayAt(SfxId.Critical, transform.position);
+    }
+
+    // Un color por arquetipo: acero para espada y lanza, oro para escudo, verde para arco,
+    // violeta para báculo y turquesa para las mazas de los clérigos.
+    private Color SkillLabelColor
+    {
+        get
+        {
+            switch (ActiveSkills.ArchetypeOf(skill != null ? skill.ability : ActiveSkill.None))
+            {
+                case WeaponType.Sword:
+                case WeaponType.Spear: return new Color(0.85f, 0.90f, 1f);
+                case WeaponType.Shield: return UITheme.Amber;
+                case WeaponType.Bow: return new Color(0.55f, 0.95f, 0.55f);
+                case WeaponType.Staff: return new Color(0.75f, 0.55f, 1f);
+                case WeaponType.Mace: return new Color(0.45f, 0.95f, 0.85f);
+            }
+            return UITheme.Text;
+        }
     }
 
     // Los clérigos miran a la escuadra, no al enemigo: actúan sobre el que peor está.
     private void TickSupport()
     {
-        if (skill == null || !skill.CanCast(CurrentMP)) return;
+        if (!CanCastSkill) return;
 
         var herido = MostWoundedAlly();
         if (herido == null) return;
 
         // Curar a alguien intacto es tirar el maná; los bufos sí salen sin esperar.
         bool urgente = herido.MaxHealth > 0 && (float)herido.CurrentHealth / herido.MaxHealth < 0.85f;
-        if (subclass == HeroSubclass.HighPriest && !urgente) return;
+        if (skill.ability == ActiveSkill.GreaterBlessing && !urgente) return;
 
-        currentMP -= skill.mpCost;
+        currentMP -= SkillManaCost;
         skill.PutOnCooldown(SkillCooldownReduction);
+        AnnounceSkill();
 
-        switch (subclass)
+        switch (skill.ability)
         {
-            case HeroSubclass.HighPriest:
+            case ActiveSkill.GreaterBlessing:
                 int curado = herido.Heal(Mathf.RoundToInt(Attack * 2f));
                 DamageTextManager.Show(herido.transform.position, $"+{curado}", new Color(0.4f, 1f, 0.5f));
                 Debug.Log($"[Soporte] {data.heroName} cura a {herido.Data.heroName}: +{curado} PV " +
                           $"({herido.CurrentHealth}/{herido.MaxHealth}).", this);
                 break;
 
-            case HeroSubclass.ProtectiveOracle:
+            case ActiveSkill.OracleAegis:
                 foreach (var a in AlliesAround(6f)) a.Status.Add(StatusEffect.Shield, 8f, Attack * 1.2f);
                 Debug.Log($"[Soporte] {data.heroName} escuda a la escuadra.", this);
                 break;
 
-            case HeroSubclass.WarCleric:
+            case ActiveSkill.WarHymn:
                 foreach (var a in AlliesAround(6f)) a.AddMorale(15f);
                 Debug.Log($"[Soporte] {data.heroName} entona el himno: +moral a la escuadra.", this);
+                break;
+
+            case ActiveSkill.PurgingRite:
+                // Cura menos que el Sumo Sacerdote, pero limpia veneno, sangrado y ralentización.
+                int purgado = herido.Heal(Mathf.RoundToInt(Attack * 1.4f));
+                herido.Status.Remove(StatusEffect.Poison);
+                herido.Status.Remove(StatusEffect.Bleed);
+                herido.Status.Remove(StatusEffect.Slow);
+                DamageTextManager.Show(herido.transform.position, $"+{purgado}", new Color(0.9f, 0.9f, 0.5f));
+                Debug.Log($"[Soporte] {data.heroName} purga a {herido.Data.heroName}: +{purgado} PV.", this);
+                break;
+
+            case ActiveSkill.IronPalm:
+                // Reparte una curación menor entre los de al lado en vez de volcarla en uno solo.
+                foreach (var a in AlliesAround(4f)) a.Heal(Mathf.RoundToInt(Attack * 0.7f));
+                RecoverFatigue(25f);
+                Debug.Log($"[Soporte] {data.heroName} cura a los de alrededor y recupera aliento.", this);
                 break;
         }
     }
@@ -1922,6 +2156,17 @@ public void DeployViaGateway(Vector2 destination)
         if (finalDamage <= 0) return;
 
         currentHealth = Mathf.Max(0, currentHealth - finalDamage);
+
+        // Última Voluntad: el primer golpe mortal de cada combate deja al héroe a 1 de vida.
+        if (currentHealth <= 0 && !lastStandSpent && PassiveSkills.HasLastStand(passives))
+        {
+            lastStandSpent = true;
+            currentHealth = 1;
+            DamageTextManager.Show(transform.position,
+                PassiveSkills.DisplayName(PassiveSkill.LastStand), UITheme.Amber);
+            Debug.Log($"[Pasiva] {data.heroName} aguanta en pie con Última Voluntad.", this);
+        }
+
         HealthChanged?.Invoke(currentHealth, MaxHealth);
 
         DamageTextManager.ShowDamage(transform.position, finalDamage);
@@ -1932,7 +2177,7 @@ public void DeployViaGateway(Vector2 destination)
         if (MaxHealth > 0 && finalDamage >= MaxHealth * hitFlashThreshold) HitFlash();
 
         // Encajar golpes cansa; con Aguante, la mitad.
-        AddFatigue(fatiguePerHitTaken * (HasPassive(PassiveSkill.PainTolerance) ? painToleranceFactor : 1f));
+        AddFatigue(fatiguePerHitTaken * PassiveSkills.FatigueMultiplier(passives));
         CheckCriticalMorale();
 
         Debug.Log($"[Hero] {data.heroName} recibe {finalDamage} ({currentHealth}/{MaxHealth})", this);
@@ -1942,11 +2187,19 @@ public void DeployViaGateway(Vector2 destination)
             // En el gimnasio la unidad se reaprovecha entre episodios, así que no se destruye.
             if (externalControl) return;
 
-            // Permadeath: el héroe no vuelve.
+            // Permadeath: el héroe no vuelve. La ficha se toma con el héroe todavía en pie,
+            // que es cuando aún se pueden leer equipo, nivel y rareza; sin ella su nombre queda
+            // libre y el gacha lo vuelve a ofrecer como si no hubiera pasado nada.
+            MemorialManager.Record(this, MemorialCause.FallenInTower, BaseBuilding.TowerFloor);
+
             AudioManager.PlayAt(SfxId.Defeat, transform.position);
             NotifyAlliesOfDeath();
             Debug.Log($"[Hero] {data.heroName} ha muerto.", this);
             Destroy(gameObject);
+
+            // La Galería tiene que sobrevivir al cierre: sin esto la muerte se pierde al salir
+            // y el héroe reaparece en el catálogo del gacha.
+            SaveManager.RequestSave();
         }
     }
 
@@ -1969,7 +2222,7 @@ public void DeployViaGateway(Vector2 destination)
         if (Vector2.Distance(transform.position, enemy.transform.position) > attackRange) return false;
 
         attackTimer = EffectiveAttackCooldown;
-        currentMP -= skill.mpCost;
+        currentMP -= SkillManaCost;
         skill.PutOnCooldown(SkillCooldownReduction);
 
         StrikeEnemy(enemy, skill.DamageFrom(Attack));
@@ -2033,6 +2286,8 @@ public void DeployViaGateway(Vector2 destination)
     public int Heal(int amount)
     {
         if (amount <= 0 || data == null) return 0;
+
+        amount = Mathf.RoundToInt(amount * PassiveSkills.HealingMultiplier(passives));
 
         int before = currentHealth;
         currentHealth = Mathf.Min(MaxHealth, currentHealth + amount);

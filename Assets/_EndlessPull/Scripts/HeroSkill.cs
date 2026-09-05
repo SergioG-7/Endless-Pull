@@ -7,7 +7,10 @@ public class HeroSkill
     [Tooltip("Nombre visible de la habilidad; solo se usa si no hay subclase detrás.")]
     public string skillName = "Golpe Potente";
 
-    [Tooltip("Subclase de la que sale la habilidad; de ella se saca el nombre localizado.")]
+    [Tooltip("Qué habilidad del catálogo es; de ella salen el nombre y el efecto.")]
+    public ActiveSkill ability = ActiveSkill.None;
+
+    [Tooltip("Subclase que la otorgó, solo informativo: la habilidad ya no depende de ella.")]
     public HeroSubclass subclass = HeroSubclass.None;
 
     [Tooltip("Maná que consume cada uso.")]
@@ -43,15 +46,15 @@ public class HeroSkill
     // (nunca se muestra directamente, para que el héroe sin subclase también salga localizado).
     public string GetDisplayName()
     {
-        if (subclass == HeroSubclass.None) return LocalizationManager.Get("UI_SKILL_BASIC_STRIKE");
+        if (ability == ActiveSkill.None) return LocalizationManager.Get("UI_SKILL_BASIC_STRIKE");
 
-        string localizado = HeroSubclasses.SkillName(subclass);
+        string localizado = ActiveSkills.DisplayName(ability);
         return string.IsNullOrEmpty(localizado) ? skillName : localizado;
     }
 
     // Lo que hace la habilidad más allá del daño, ya localizado.
     public string GetDescription()
-        => subclass == HeroSubclass.None
+        => ability == ActiveSkill.None
             ? LocalizationManager.Get("UI_SKILL_BASIC_STRIKE_DESC")
-            : HeroSubclasses.DescribeSkill(subclass);
+            : ActiveSkills.Description(ability);
 }

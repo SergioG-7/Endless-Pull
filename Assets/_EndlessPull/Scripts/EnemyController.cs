@@ -393,7 +393,8 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         if (state == EnemyState.Idle) state = EnemyState.Approach;
     }
 
-    // Un tanque solo puede sujetar a maxAggroPerTank enemigos; el resto va a por la retaguardia.
+    // Un tanque solo puede sujetar a maxAggroPerTank enemigos. Sin tanque libre, los de rango
+    // flanquean a la retaguardia y los cuerpo a cuerpo van al más cercano.
     private HeroController FindNearestHero()
     {
         var heroes = UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None);
@@ -436,7 +437,13 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         }
 
         if (tanqueLibre != null) return tanqueLibre;
-        return retaguardia != null ? retaguardia : masCercano;
+
+        // Solo flanquea quien tiene alcance para hacerlo. Un cuerpo a cuerpo persiguiendo al
+        // héroe más lejano nunca llegaba: el héroe corre a 2,5 y él a 1,5, así que la primera
+        // línea lo interceptaba y lo mataba de camino sin que llegase a golpear a nadie.
+        if (IsRanged && retaguardia != null) return retaguardia;
+
+        return masCercano != null ? masCercano : retaguardia;
     }
 
     private void TickApproach()

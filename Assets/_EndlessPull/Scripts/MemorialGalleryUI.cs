@@ -140,6 +140,10 @@ public class MemorialGalleryUI : MonoBehaviour
         content.pivot = new Vector2(0.5f, 1f);
         content.anchoredPosition = Vector2.zero;
 
+        // Sin esto la lista hereda el sizeDelta 100 por defecto: se sale 21 px por cada lado
+        // del viewport y el Mask corta el principio de cada fila. La altura la pone el fitter.
+        content.sizeDelta = Vector2.zero;
+
         var scroll = viewGo.GetComponent<ScrollRect>();
         scroll.viewport = vrt;
         scroll.content = content;

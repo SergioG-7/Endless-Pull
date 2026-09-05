@@ -76,7 +76,7 @@ public class HeroProgress : MonoBehaviour
         }
     }
 
-    // El tope de nivel sale de la rareza actual: 1★ Nv.10, 2★ Nv.20, y así hasta 5★ Nv.50.
+    // El tope de nivel sale de la rareza actual: 1★ Nv.10, 2★ Nv.20, 3★ Nv.40 y así hasta 7★ Nv.110.
     // Tope por rareza leído de la tabla; fuera de ella se cae al reparto lineal de siempre.
     public int MaxLevel
     {
@@ -180,6 +180,10 @@ public class HeroProgress : MonoBehaviour
     public void AddEXP(int amount)
     {
         if (amount <= 0) return;
+
+        // Crecimiento Monstruoso y compañía: la pasiva multiplica lo que entra.
+        if (hero != null)
+            amount = Mathf.Max(1, Mathf.RoundToInt(amount * PassiveSkills.ExpMultiplier(hero.Passives)));
 
         currentEXP += amount;
 

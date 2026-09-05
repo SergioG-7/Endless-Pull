@@ -16,7 +16,7 @@ MonoBehaviour:
   maxHealth: 45
   baseAttack: 24
   baseDefense: 1
-  attackRange: 1
+  attackRange: 1.2
   moveSpeed: 2.8
   attackCooldown: 0.7
   magicAttack: 0

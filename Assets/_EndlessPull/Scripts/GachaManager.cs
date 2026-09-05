@@ -128,6 +128,7 @@ public class GachaManager : MonoBehaviour
     }
 
     // Nombres de los héroes que ya están en la base; el catálogo no puede repetirlos.
+    // Incluye a los de la Galería Memorial: un héroe perdido no vuelve a invocarse.
     public HashSet<string> LivingHeroNames()
     {
         var names = new HashSet<string>();
@@ -135,6 +136,8 @@ public class GachaManager : MonoBehaviour
         foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(
             FindObjectsInactive.Include, FindObjectsSortMode.None))
             if (hero.Data != null && !hero.Discarded) names.Add(hero.Data.heroName);
+
+        names.UnionWith(MemorialManager.MemorialNames());
 
         return names;
     }
@@ -227,8 +230,8 @@ public class GachaManager : MonoBehaviour
             return;
         }
 
-        // Una o dos pasivas al azar; son innatas y ya no cambian.
-        var passives = PassiveSkills.RandomSet();
+        // Pasivas de salida, más cuantas más estrellas; el resto se despiertan peleando.
+        var passives = PassiveSkills.RandomSet(pulled.starRank);
         hero.SetPassives(passives);
         GrantStarterWeapon(hero);
 

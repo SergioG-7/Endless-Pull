@@ -94,8 +94,8 @@ public class SquadManagementUI : MonoBehaviour
         if (panel != null) panel.SetActive(false);
     }
 
-    // Solo refresca con expedición corriendo (la cuenta atrás); si no, rehacía filas cada
-    // 0.5s sin necesidad y parpadeaba.
+    // Refresca con expedición corriendo para que las filas bloqueadas se actualicen solas; si
+    // no, rehacía filas cada 0.5s sin necesidad y parpadeaba.
     void Update()
     {
         if (!IsOpen) return;
@@ -243,11 +243,8 @@ public class SquadManagementUI : MonoBehaviour
               $"<color={UITheme.Tag(UITheme.Cyan)}>{LocalizationManager.Get("UI_GATHER_SQUAD")}</color> " +
               $"<b>{party.ExpeditionSquad.Count}/{party.MaxExpeditionSize}</b>";
 
-        // Antes solo se fijaba una vez (si aviso.text estaba vacío): la cuenta atrás se quedaba
-        // congelada en el primer número/idioma para siempre. Se recalcula en cada Rebuild().
-        if (recolectando)
-            aviso.text = string.Format(LocalizationManager.Get("UI_GATHERING_NOW"),
-                expeditions.Remaining.ToString("0"));
+        // La cuenta atrás de recolección se pinta en la TopBar (MasterHUD): aquí compartía
+        // etiqueta con el aviso de "héroe ocupado" y se pisaban entre sí.
 
         for (int i = 0; i < presetApply.Count; i++)
         {
