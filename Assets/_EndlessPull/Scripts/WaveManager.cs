@@ -185,6 +185,12 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Segundos mínimos entre cada auto-curación del mismo héroe, para que no se beba el inventario de golpe.")]
     [SerializeField] private float autoPotionCooldown = 3f;
 
+    [Tooltip("Fracción de maná por debajo de la cual un héroe desplegado se bebe una poción de maná, si le queda cupo.")]
+    [SerializeField] private float autoManaPotionRatio = 0.25f;
+
+    [Tooltip("Máximo de pociones de maná por héroe y expedición; mismo cupo que las de vida.")]
+    [SerializeField] private int autoManaPotionUsesPerExpedition = 3;
+
     [Tooltip("Fracción de vida por debajo de la cual sobrevivir a un combate cuenta como situación crítica, de cara al Despertar de Habilidades.")]
     [Range(0f, 1f)]
     [SerializeField] private float criticalHealthRatioForAwakening = 0.20f;
@@ -266,7 +272,7 @@ public class WaveManager : MonoBehaviour
     [SerializeField] private float hiddenChallengeChance = 0.10f;
 
     [Tooltip("Origen de la arena; la base queda lejos para que no se mezclen las dos zonas.")]
-    [SerializeField] private Vector2 arenaCenter = new Vector2(1000f, 0f);
+    [SerializeField] private Vector2 arenaCenter = new Vector2(500f, 0f);
 
     [Tooltip("Desplazamiento de la formación de héroes respecto al origen de la arena; los deja en el extremo izquierdo, lejos de los enemigos, para que las unidades a distancia tengan hueco real de tiro.")]
     [SerializeField] private Vector2 heroSpawnOffset = new Vector2(-9.5f, 0f);
@@ -282,6 +288,10 @@ public class WaveManager : MonoBehaviour
 
     [Tooltip("Medio ancho/alto del muro de la arena; cualquier proyectil que lo cruce se destruye para no escapar hacia la base.")]
     [SerializeField] private Vector2 arenaWallHalfExtents = new Vector2(15f, 7f);
+
+    // Gestor activo de la Torre. Lo necesita el jefe para meter sus refuerzos en la oleada
+    // en curso; sin esto tendria que instanciar enemigos por su cuenta y quedarian sueltos.
+    private static WaveManager active;
 
     public static Vector2 ArenaWallMin { get; private set; }
     public static Vector2 ArenaWallMax { get; private set; }
@@ -348,6 +358,10 @@ public class WaveManager : MonoBehaviour
 
     // Momento (Time.time) a partir del cual el héroe puede volver a auto-curarse con poción.
     private readonly Dictionary<HeroController, float> potionCooldownUntil = new Dictionary<HeroController, float>();
+
+    // Mismo reparto para las de maná: cupo propio de 3 y su propio enfriamiento.
+    private readonly Dictionary<HeroController, int> manaPotionUsesThisExpedition = new Dictionary<HeroController, int>();
+    private readonly Dictionary<HeroController, float> manaPotionCooldownUntil = new Dictionary<HeroController, float>();
 
     // Héroes desplegados que en algún momento de esta expedición cayeron por debajo del umbral
     // crítico y siguen en pie: candidatos al Despertar de Habilidades al superar el piso.
@@ -542,6 +556,7 @@ public Vector2 ArenaFocus => arenaCenter + new Vector2((heroSpawnOffset.x + spaw
     private void PublishFloor()
     {
         BaseBuilding.SetTowerFloor(highestClearedFloor);
+        BaseBackdrop.ApplyFloor(currentFloor);
         FloorChanged?.Invoke(currentFloor);
     }
 
@@ -567,6 +582,8 @@ void Awake()
         if (party == null) party = UnityEngine.Object.FindFirstObjectByType<PartyManager>();
         if (crafting == null) crafting = UnityEngine.Object.FindFirstObjectByType<CraftingManager>();
         if (shop == null) shop = UnityEngine.Object.FindFirstObjectByType<ShopManager>();
+
+        active = this;
 
         ArenaWallMin = arenaCenter - arenaWallHalfExtents;
         ArenaWallMax = arenaCenter + arenaWallHalfExtents;
@@ -1008,7 +1025,7 @@ void Awake()
     private readonly List<List<HeroController>> squads = new List<List<HeroController>>();
     public IReadOnlyList<List<HeroController>> Squads => squads;
 
-    // Solo lectura para quien necesite actuar sobre el combate en curso (MasterIntervention).
+    // Solo lectura para quien necesite actuar sobre el combate en curso.
     public IReadOnlyList<HeroController> Deployed => deployed;
     public IReadOnlyList<EnemyController> Wave => wave;
 
@@ -1018,6 +1035,8 @@ void Awake()
         squads.Clear();
         potionUsesThisExpedition.Clear();
         potionCooldownUntil.Clear();
+        manaPotionUsesThisExpedition.Clear();
+        manaPotionCooldownUntil.Clear();
         survivedCritical.Clear();
 
         DeploySquad(new List<HeroController>(party.Party), 0);
@@ -1195,14 +1214,56 @@ void Awake()
         var boss = go.GetComponent<EnemyController>();
         boss.Initialize(bossToSpawn, bossHpMult, bossAtkMult);
         boss.MakeBoss(bossScale);
+
+        // Mecánica propia: rota por número de jefe, no por bioma (el Templo es todo el 16+, así
+        // que atarla al bioma dejaba a todos los jefes altos con la misma).
+        int indice = BossMechanics.IndexForFloor(currentFloor, bossEveryFloors);
+        var primera = BossMechanics.Primary(indice);
+        var segunda = BossMechanics.Secondary(indice);
+        boss.SetMechanics(primera, segunda);
+
         wave.Add(boss);
         currentBoss = boss;
 
         Debug.Log($"[Jefe] {bossToSpawn.enemyName} aparece en el piso {currentFloor} " +
-                  $"con {boss.MaxHealth} PV.", this);
+                  $"con {boss.MaxHealth} PV; mecánica {primera}" +
+                  (segunda != BossMechanic.None ? $" + {segunda}" : string.Empty) + ".", this);
 
         BossStateChanged?.Invoke(true);
     }
+
+    // Refuerzos que invoca un jefe con la mecánica de Invocación. Entran en la oleada del piso
+    // como uno más: cuentan para el recuento y se limpian al acabar el piso, igual que el resto.
+    public static int SummonBossAdds(Vector2 origin, int count)
+    {
+        if (active == null || active.enemyPrefab == null || count <= 0) return 0;
+        if (active.state != ExpeditionState.InProgress) return 0;
+
+        var datos = active.enemyData;
+        if (datos == null) return 0;
+
+        int puestos = 0;
+        for (int i = 0; i < count; i++)
+        {
+            Vector2 pos = origin + UnityEngine.Random.insideUnitCircle.normalized * bossAddSpawnRadius;
+            pos.x = Mathf.Clamp(pos.x, ArenaWallMin.x, ArenaWallMax.x);
+            pos.y = Mathf.Clamp(pos.y, ArenaWallMin.y, ArenaWallMax.y);
+
+            active.waveSpawnedTotal++;
+            var go = Instantiate(active.enemyPrefab, pos, Quaternion.identity);
+            go.name = $"Enemy_BossAdd_F{active.currentFloor}_{active.waveSpawnedTotal}";
+
+            var add = go.GetComponent<EnemyController>();
+            add.Initialize(datos, active.waveStatMultiplier, active.waveAttackMultiplier);
+            active.wave.Add(add);
+            puestos++;
+        }
+
+        return puestos;
+    }
+
+    // Distancia a la que aparecen los refuerzos alrededor del jefe.
+    private const float bossAddSpawnRadius = 2.2f;
 
     // Friacis aparece cerca de la escuadra (no en la línea enemiga) y su vida se reporta al
     // HUD vía EscortHealthBarUI, igual que el jefe.
@@ -1419,6 +1480,31 @@ void Awake()
                 potionCooldownUntil[hero] = Time.time + autoPotionCooldown;
             }
         }
+
+        TickAutoManaPotions();
+    }
+
+    // Igual que las de vida pero mirando el maná: sin esto, un héroe que gasta su habilidad se
+    // quedaba seco el resto de la expedición, porque el maná ya no se regenera solo.
+    private void TickAutoManaPotions()
+    {
+        foreach (var hero in deployed)
+        {
+            if (hero == null || hero.MaxMP <= 0) continue;
+            if ((float)hero.CurrentMP / hero.MaxMP >= autoManaPotionRatio) continue;
+
+            manaPotionUsesThisExpedition.TryGetValue(hero, out int used);
+            if (used >= autoManaPotionUsesPerExpedition) continue;
+
+            manaPotionCooldownUntil.TryGetValue(hero, out float readyAt);
+            if (Time.time < readyAt) continue;
+
+            if (crafting.TryUseManaPotion(hero))
+            {
+                manaPotionUsesThisExpedition[hero] = used + 1;
+                manaPotionCooldownUntil[hero] = Time.time + autoPotionCooldown;
+            }
+        }
     }
 
     // Da a cada héroe elegible (sobrevivió crítico esta expedición, o el piso era de jefe y
@@ -1562,6 +1648,16 @@ void Awake()
             // de RecallParty(), que vacía `deployed`).
             TryAwakenSkills(bossChest);
 
+            // Hoja de servicios y vínculos: tienen que resolverse AQUÍ, con la escuadra todavía
+            // desplegada. Estaban después de RecallParty(), que vacía `deployed`, así que
+            // recorrían una lista vacía y no sumaban nunca.
+            var enPie = new List<HeroController>();
+            foreach (var hero in deployed)
+                if (hero != null && hero.CurrentHealth > 0) enPie.Add(hero);
+
+            HeroBonds.RecordFloorCleared(deployed);
+            foreach (var hero in enPie) hero.RecordFloorCleared();
+
             // Friacis (si la había) no muere al ganar, pero su barra debe desaparecer con el
             // resto de la oleada — si no, se queda visible en el HUD de vuelta en la base.
             DespawnEscort();
@@ -1589,17 +1685,12 @@ void Awake()
             ReportFallen();
 
             // Uno de los que siguen en pie lo celebra; con todos hablando no se leería nada.
-            var enPie = new List<HeroController>();
-            foreach (var hero in deployed)
-                if (hero != null && hero.CurrentHealth > 0) enPie.Add(hero);
-
             if (enPie.Count > 0)
                 enPie[Random.Range(0, enPie.Count)].Bark(1f,
                     "BATTLE_VICTORY_1", "BATTLE_VICTORY_2", "BATTLE_VICTORY_3", "BATTLE_VICTORY_4");
 
             AudioManager.Play(SfxId.Victory);
             QuestManager.Report(QuestKind.ClearFloors);
-            HeroBonds.RecordFloorCleared(deployed);
             if (bossChest) QuestManager.Report(QuestKind.WinBossFloor);
             FloorCleared?.Invoke(new FloorRewardInfo
             {

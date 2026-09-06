@@ -38,6 +38,70 @@ public class HeroBonds : MonoBehaviour
         return salida;
     }
 
+    // Un compañero y los pisos que llevan juntos; lo pinta la ficha del héroe.
+    public struct BondEntry
+    {
+        public string otherName;
+        public int floors;
+        public bool bonded;
+        public bool fallen;
+    }
+
+    // Vínculos ordenados de más a menos pisos juntos; los ya vinculados primero.
+    public List<BondEntry> Entries()
+    {
+        var caidos = MemorialManager.MemorialNames();
+        var salida = new List<BondEntry>();
+
+        foreach (var par in floorsTogether)
+            salida.Add(new BondEntry
+            {
+                otherName = par.Key,
+                floors = par.Value,
+                bonded = par.Value >= bondThreshold,
+                fallen = caidos != null && caidos.Contains(par.Key)
+            });
+
+        salida.Sort((a, b) => b.floors.CompareTo(a.floors));
+        return salida;
+    }
+
+    // Quién sigue vivo y estaba vinculado con el caído; lo pinta la Galería.
+    public static List<string> MournersOf(string fallenName)
+    {
+        var salida = new List<string>();
+        if (string.IsNullOrEmpty(fallenName)) return salida;
+
+        // Incluye inactivos: un héroe de expedición o de Torre sigue de luto.
+        foreach (var bonds in UnityEngine.Object.FindObjectsByType<HeroBonds>(
+            FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (bonds == null || !bonds.IsBondedTo(fallenName)) continue;
+
+            // GetComponent y no el campo cacheado: un héroe que nunca llegó a activarse no ha
+            // pasado por Awake y tendría 'hero' a null.
+            var doliente = bonds.GetComponent<HeroController>();
+            if (doliente == null || doliente.Data == null) continue;
+            if (doliente.Data.heroName == fallenName) continue;
+
+            salida.Add(doliente.Data.heroName);
+        }
+
+        return salida;
+    }
+
+    // ¿Alguno de sus vínculos está ya en la Galería? Pesa mucho más que el duelo genérico.
+    public bool HasFallenBond()
+    {
+        var caidos = MemorialManager.MemorialNames();
+        if (caidos == null || caidos.Count == 0) return false;
+
+        foreach (var par in floorsTogether)
+            if (par.Value >= bondThreshold && caidos.Contains(par.Key)) return true;
+
+        return false;
+    }
+
     // Al despejar un piso, todo el que siga en pie suma un piso con cada compañero vivo.
     public static void RecordFloorCleared(IReadOnlyList<HeroController> squad)
     {

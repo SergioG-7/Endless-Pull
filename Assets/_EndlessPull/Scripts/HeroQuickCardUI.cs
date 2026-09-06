@@ -48,11 +48,11 @@ public class HeroQuickCardUI : MonoBehaviour
     private GameObject portraitFrame;
     private TMP_Text titulo;
     private TMP_Text subclase;
-    private TMP_Text bio;
+
     private TMP_Text equipo;
     private TMP_Text estados;
 
-    // Alto de la cabecera (retrato + nombre/clase/bio a su lado).
+    // Alto de la cabecera (retrato + nombre/clase a su lado).
     private const float HeaderHeight = 176f;
     private const float HeaderTextInset = 180f;
 
@@ -90,6 +90,44 @@ public class HeroQuickCardUI : MonoBehaviour
     void Start()
     {
         if (panel != null) panel.SetActive(false);
+    }
+
+    void OnEnable()
+    {
+        HeroController.RestOrderResolved += OnRestOrderResolved;
+        HeroController.RestShiftEnded += OnRestShiftEnded;
+    }
+
+    void OnDisable()
+    {
+        HeroController.RestOrderResolved -= OnRestOrderResolved;
+        HeroController.RestShiftEnded -= OnRestShiftEnded;
+    }
+
+    // Fin del turno: o vuelve a su puesto o se dice que ya no queda hueco, en vez de dejarlo
+    // desasignado sin explicación.
+    private void OnRestShiftEnded(HeroController quien, bool vuelve, BaseBuilding puesto)
+    {
+        if (quien == null || quien.Data == null || puesto == null) return;
+
+        string edificio = puesto.DisplayName;
+        ScreenBanner.ShowCompact(string.Format(
+            LocalizationManager.Get(vuelve ? "UI_REST_BACK_TO_WORK" : "UI_REST_JOB_TAKEN"),
+            quien.Data.heroName, edificio), 2.5f, vuelve ? UITheme.Accent : UITheme.TextMuted);
+    }
+
+    // Respuesta real de "Enviar a descansar": el aviso al pulsar solo dice que va de camino,
+    // este dice si llegó o si se quedó sin sitio.
+    private void OnRestOrderResolved(HeroController quien, bool llego, BaseBuilding donde)
+    {
+        if (quien == null || quien.Data == null) return;
+
+        if (llego)
+            ScreenBanner.ShowCompact(string.Format(LocalizationManager.Get("UI_REST_ARRIVED"),
+                quien.Data.heroName, donde.DisplayName), 2.5f, UITheme.Accent);
+        else
+            ScreenBanner.ShowCompact(string.Format(LocalizationManager.Get("UI_REST_ABORTED"),
+                quien.Data.heroName), 2.5f, UITheme.TextMuted);
     }
 
     // Se refresca mientras esté abierta: la vida y el maná cambian solos.
@@ -160,11 +198,32 @@ public class HeroQuickCardUI : MonoBehaviour
 
         if (hero.SendToRest())
             ScreenBanner.ShowCompact(
-                string.Format(LocalizationManager.Get("UI_REST_SENT"), hero.Data.heroName), 2.5f, UITheme.Accent);
+                string.Format(LocalizationManager.Get("UI_REST_SENT"), hero.Data.heroName,
+                    hero.RestOrderBuilding.DisplayName), 2.5f, UITheme.Accent);
         else
             ScreenBanner.ShowCompact(LocalizationManager.Get("UI_REST_FAILED"), 2.5f, UITheme.TextMuted);
 
         Refresh();
+    }
+
+    // Dónde está: descansando manda sobre el puesto de trabajo, que es lo que hacía que
+    // "Enviar a descansar" pareciera no hacer nada.
+    private string EstadoDeSitio()
+    {
+        if (hero.RestOrderPending)
+            return string.Format(LocalizationManager.Get("UI_HEADING_TO_REST"),
+                                 hero.RestOrderBuilding.DisplayName);
+
+        var dentro = hero.CurrentBuilding;
+        if (dentro != null && (dentro.Type == BuildingType.RestArea || dentro.Type == BuildingType.Canteen))
+            return string.Format(LocalizationManager.Get("UI_RESTING_AT"),
+                                 dentro.DisplayName);
+
+        if (hero.AssignedBuilding != null)
+            return string.Format(LocalizationManager.Get("UI_WORKS_AT"),
+                                 hero.AssignedBuilding.DisplayName);
+
+        return string.Empty;
     }
 
     private void Refresh()
@@ -185,16 +244,13 @@ public class HeroQuickCardUI : MonoBehaviour
         titulo.color = rareza;
 
         string oficio = hero.Subclass != HeroSubclass.None ? hero.SubclassName : LocalizationManager.Get("UI_NO_SUBCLASS");
-        string puesto = hero.AssignedBuilding != null
-            ? string.Format(LocalizationManager.Get("UI_WORKS_AT"), BuildingTypes.DisplayName(hero.AssignedBuilding.Type))
-            : string.Empty;
+        string puesto = EstadoDeSitio();
         // El rasgo de combate sale del vector: cambia con la moral y la fatiga, no es fijo.
         subclase.text = $"{oficio}   ·   {HeroTraits.DisplayName(hero.Trait)}   ·   " +
                         $"{hero.TraitVector.Label}{puesto}";
 
         // Los recuerdos salían aquí y empujaban las barras de HP/MP fuera de la ficha. En
         // standby hasta tener su propia pantalla; MemoriesReport() sigue disponible.
-        bio.text = hero.Data.GetLocalizedBio();
 
         UIBuild.SetBar(barHp, hero.MaxHealth > 0 ? (float)hero.CurrentHealth / hero.MaxHealth : 0f);
         txtHp.text = string.Format(LocalizationManager.Get("UI_QUICKCARD_HP"), hero.CurrentHealth, hero.MaxHealth);
@@ -219,15 +275,26 @@ public class HeroQuickCardUI : MonoBehaviour
             Pieza(EquipmentSlot.Armor), Pieza(EquipmentSlot.Accessory));
 
         int pocionesHp = crafting != null ? crafting.TotalHealingPotions : 0;
-        if (usePotionHpButton != null) usePotionHpButton.interactable = pocionesHp > 0 && hero.CurrentHealth < hero.MaxHealth;
+        bool pocionLista = crafting == null || crafting.PotionReady(hero);
+        if (usePotionHpButton != null)
+            usePotionHpButton.interactable = pocionesHp > 0 && pocionLista && hero.CurrentHealth < hero.MaxHealth;
         if (potionHpLabel != null)
             potionHpLabel.text = string.Format(LocalizationManager.Get("UI_USE_POTION"), pocionesHp);
 
-        if (restButton != null) restButton.interactable = hero.GlobalState == HeroGlobalState.InBase && hero.Fatigue > 1f;
-        if (restLabel != null) restLabel.text = LocalizationManager.Get("UI_SEND_REST");
+        // Con la orden en curso el botón se apaga y dice a dónde va: antes no había forma de
+        // saber si el héroe estaba yendo o si había pasado del encargo.
+        bool yendoADescansar = hero.RestOrderPending;
+        if (restButton != null)
+            restButton.interactable = !yendoADescansar && hero.GlobalState == HeroGlobalState.InBase;
+        if (restLabel != null)
+            restLabel.text = yendoADescansar
+                ? string.Format(LocalizationManager.Get("UI_REST_ON_THE_WAY"),
+                    hero.RestOrderBuilding.DisplayName)
+                : LocalizationManager.Get("UI_SEND_REST");
 
         int pocionesMp = crafting != null ? crafting.TotalManaPotions : 0;
-        if (usePotionMpButton != null) usePotionMpButton.interactable = pocionesMp > 0 && hero.CurrentMP < hero.MaxMP;
+        if (usePotionMpButton != null)
+            usePotionMpButton.interactable = pocionesMp > 0 && pocionLista && hero.CurrentMP < hero.MaxMP;
         if (potionMpLabel != null)
             potionMpLabel.text = string.Format(LocalizationManager.Get("UI_USE_MANA_POTION"), pocionesMp);
 
@@ -338,7 +405,8 @@ private void Build()
 
         UIBuild.CloseButtonTopRight(panel.transform, Close);
 
-        // Cabecera: retrato grande a la izquierda, nombre/clase/estrellas/nivel y bio a su lado.
+        // Cabecera: retrato grande a la izquierda, nombre/clase/estrellas/nivel a su lado. La
+        // bio vive solo en Recuerdos: aquí duplicaba texto y chocaba con la línea de estado.
         portraitFrame = new GameObject("Portrait", typeof(RectTransform), typeof(Image));
         portraitFrame.transform.SetParent(panel.transform, false);
         var prt = portraitFrame.GetComponent<RectTransform>();
@@ -350,9 +418,8 @@ private void Build()
         UITheme.Surface(portraitFrame, UITheme.Card, UITheme.Border, UITheme.RadiusCard);
 
         titulo = HeaderLabel("Title", UIBuild.TitleSize, -20f, 34f);
-        subclase = HeaderLabel("Subclass", UIBuild.NameSize, -56f, 26f);
-        bio = HeaderLabel("Bio", UIBuild.BodySize, -86f, 82f);
-        bio.color = UITheme.TextSoft;
+        subclase = HeaderLabel("Subclass", UIBuild.NameSize, -56f, 62f);
+        subclase.textWrappingMode = TMPro.TextWrappingModes.Normal;
 
         barHp = UIBuild.Bar(panel.transform, "Bar_HP", new Vector2(size.x - 40f, 34f), new Vector2(0f, -(HeaderHeight)),
             new Color(0.80f, 0.25f, 0.25f), out txtHp);

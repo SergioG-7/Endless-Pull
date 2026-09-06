@@ -50,7 +50,10 @@ public enum PassiveSkill
     // Sinergias de escuadra: miran a los compañeros, no al propio héroe.
     Vanguard = 34,
     Bannerman = 35,
-    Lonewolf = 36
+    Lonewolf = 36,
+
+    // Exclusiva del protagonista: no entra en el sorteo ni en el despertar.
+    Underdog = 37
 }
 
 // Lo que aporta una pasiva, por canales. Los que multiplican arrancan en 1 y los que suman en 0,
@@ -203,8 +206,19 @@ public static class PassiveSkills
         // --- Sinergias de escuadra. El número lo pone HeroController contando compañeros. ---
         { PassiveSkill.Vanguard,        new PassiveMods { SquadAttack = 0.05f, HoldsLine = true } },
         { PassiveSkill.Bannerman,       new PassiveMods { SquadDefense = 0.05f, Leads = true } },
-        { PassiveSkill.Lonewolf,        new PassiveMods { SoloBonus = 0.30f, Aggression = 0.20f } }
+        { PassiveSkill.Lonewolf,        new PassiveMods { SoloBonus = 0.30f, Aggression = 0.20f } },
+
+        // --- Única del protagonista: el que menos promete y más crece. ---
+        { PassiveSkill.Underdog,        new PassiveMods { Exp = 1.75f, Attack = 1.15f,
+                                                  MaxHealth = 1.15f, Defense = 1.10f,
+                                                  MoveSpeed = 1.05f, CritChance = 0.08f,
+                                                  CritDamage = 0.20f, Aggression = 0.10f,
+                                                  LastStand = true, KeepsCool = true,
+                                                  Berserk = true } }
     };
+
+    // Pasivas que no salen nunca del sorteo ni del despertar: son de un héroe concreto.
+    public static bool IsUnique(PassiveSkill passive) => passive == PassiveSkill.Underdog;
 
     public static PassiveMods Mods(PassiveSkill passive)
         => Table.TryGetValue(passive, out var mods) ? mods : Neutral;

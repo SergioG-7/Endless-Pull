@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b9d6c9320b4480c9b2fa54f0eaa125f, type: 3}
+  m_Name: BuildingArt
+  m_EditorClassIdentifier: EndlessPull.Runtime::BuildingArt
+  defaultWidth: 9
+  lockedFog: {fileID: 21300000, guid: 4b49568727f486740ab667c19a83bee4, type: 3}
+  lockedFogOverflow: 1.25
+  entries:
+  - type: 0
+    sprite: {fileID: 21300000, guid: 802253df17bc4c54d98457a653f05013, type: 3}
+    width: 0
+  - type: 1
+    sprite: {fileID: 21300000, guid: 815ab6210c33ef4438a6f2f5fec5c1a2, type: 3}
+    width: 0
+  - type: 2
+    sprite: {fileID: 21300000, guid: e7b00256dbeb5e34489b6f5b0e1711dc, type: 3}
+    width: 0
+  - type: 3
+    sprite: {fileID: 21300000, guid: cb03c194cc85e0246bf760696d2b8f33, type: 3}
+    width: 0
+  - type: 4
+    sprite: {fileID: 21300000, guid: 9ba18d7a541a0734393d4a511bae56c5, type: 3}
+    width: 0
+  - type: 5
+    sprite: {fileID: 21300000, guid: 31d96e5f4a77d954a9cea590c82ec5bd, type: 3}
+    width: 6.5
+  - type: 6
+    sprite: {fileID: 21300000, guid: 230f1a8f8fe68d341b8678441e71142d, type: 3}
+    width: 0
+  - type: 7
+    sprite: {fileID: 21300000, guid: 8f8fc41a7c1954346ab9ea1050c6182e, type: 3}
+    width: 0
+  - type: 8
+    sprite: {fileID: 21300000, guid: 3b11a29774edc4b45aaa4d32b0899302, type: 3}
+    width: 0
+  - type: 9
+    sprite: {fileID: 21300000, guid: 22f52bfe0c66bf24ebabeeaf5e36753b, type: 3}
+    width: 0
+  - type: 10
+    sprite: {fileID: 21300000, guid: 00f85e2552d45c8439039fe6f6fad9b8, type: 3}
+    width: 0
+  - type: 11
+    sprite: {fileID: 21300000, guid: f51eee2d2f1d56e4581acb08c8085b3b, type: 3}
+    width: 0

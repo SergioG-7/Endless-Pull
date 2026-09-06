@@ -35,7 +35,7 @@ public class SanctuaryUI : MonoBehaviour
     [SerializeField] private float refreshInterval = 0.5f;
 
     private const float ListWidth = 520f;
-    private const float RowHeight = 60f;
+    private const float RowHeight = 78f;
     private const float RightX = ListWidth + 48f;
 
     private GameObject panel;
@@ -617,10 +617,10 @@ public class SanctuaryUI : MonoBehaviour
         scroll.scrollSensitivity = 30f;
 
         var layout = bodyGo.AddComponent<VerticalLayoutGroup>();
-        // Margen holgado en las 4 direcciones: con 20/10/6/6 los textos largos («Lv.30が必要です»,
-            // nombres de héroe) y la tarjeta quedaban apretados contra los bordes del modal.
-            layout.padding = new RectOffset(35, 35, 20, 20);
-            layout.spacing = 10f;
+        // Sin margen lateral: los 35 px de cada lado estrechaban la fila sin motivo (el
+            // problema de recorte que intentaban tapar era otro). Arriba y abajo sí se deja aire.
+            layout.padding = new RectOffset(8, 8, 16, 16);
+            layout.spacing = 8f;
         layout.childControlWidth = true;
         layout.childForceExpandWidth = true;
         layout.childControlHeight = false;

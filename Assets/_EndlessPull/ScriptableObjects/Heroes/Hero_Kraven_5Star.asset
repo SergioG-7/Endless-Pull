@@ -18,6 +18,25 @@ MonoBehaviour:
   bio: "Pocos en la torre no han oído hablar de Kraven, cuyas hazañas ya son leyenda. Combate cuerpo a cuerpo sin dudar, buscando siempre el punto débil del enemigo."
   bioEn: "Few in the tower haven't heard of Kraven, whose feats are already legend. Prefers the head-on clash: close in, strike, and give the enemy no room to breathe."
   bioJa: "塔の中でKravenの名を知らぬ者は少なく、その武勲はすでに伝説となっている。迷わず接近戦を挑み、常に敵の弱点を探る。"
+  memories:
+  - starRank: 2
+    unlock: 3
+    amount: 300
+    text: "Recuerda el primero. Solo el primero. Los otros trescientos se le mezclan."
+    textEn: "Recalls the first one. Only the first. The other three hundred blur together."
+    textJa: "最初の一人を思い出す。最初だけだ。あとの三百は混ざっている。"
+  - starRank: 2
+    unlock: 1
+    amount: 20
+    text: "Recuerda la Marca Quemada antes de que se llamara así, cuando todavía tenía otro nombre y gente dentro."
+    textEn: "Recalls the Burnt March before it was called that, when it still had another name and people in it."
+    textJa: "焦土領がそう呼ばれる前を思い出す。まだ別の名と、人がいた頃を。"
+  - starRank: 6
+    unlock: 0
+    amount: 1
+    text: "Recuerda que nunca quiso ser verdugo. Quiso ser el que llega primero, y salió esto."
+    textEn: "Recalls never wanting to be an executioner. Wanted to be the one who arrives first; this is what that became."
+    textJa: "処刑人になりたかった訳ではない。ただ一番に着きたかった。結果がこれだ。"
   bodySprite: {fileID: -7367305072550069824, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}
   walkFrames:
   - {fileID: -7661199024462390445, guid: 50b430fb166542c4a87676a3cb9c697b, type: 3}

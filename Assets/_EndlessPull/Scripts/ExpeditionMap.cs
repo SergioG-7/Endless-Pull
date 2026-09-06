@@ -7,7 +7,7 @@ using UnityEngine;
 public class ExpeditionMap : MonoBehaviour
 {
     [Tooltip("Rincón del mundo donde vive el mapa. Va en vertical sobre la base a propósito: la arena está en (1000, 0) y el viaje de cámara pasaba por encima de ella.")]
-    [SerializeField] private Vector2 mapCenter = new Vector2(0f, 1000f);
+    [SerializeField] private Vector2 mapCenter = new Vector2(0f, 500f);
 
     [Tooltip("Terreno útil: los héroes pasean dentro y el decorado se reparte por ahí.")]
     [SerializeField] private Vector2 mapSize = new Vector2(24f, 16f);

@@ -417,6 +417,8 @@ GameObject:
   - component: {fileID: 75170119577100740}
   - component: {fileID: 1624746207007868752}
   - component: {fileID: 2284392694718890242}
+  - component: {fileID: 2284392694718890999}
+  - component: {fileID: 5114842718702894932}
   m_Layer: 0
   m_Name: Hero_Base
   m_TagString: Untagged
@@ -610,10 +612,12 @@ MonoBehaviour:
   mpRegenInCombat: 1
   skill:
     skillName: Golpe Potente
+    ability: 0
     subclass: 0
     mpCost: 20
     cooldown: 5
     damageMultiplier: 2
+  maxSkills: 3
   fatiguePerSecondMoving: 2
   fatiguePerHitTaken: 5
   fatigueRecoveryIdle: 5
@@ -635,16 +639,45 @@ MonoBehaviour:
     pointsPerLevel: 10
     maxLevel: 10
     bonusPerLevel: 0.08
+    maxEvasionBonusAtRankS: 0.08
+    maxRecoveryReductionAtRankS: 0.18
   masteryPerHit: 1
   evasionChance: 0.15
+  maxCritBonusFromRefinement: 0.1
+  maxSkillCooldownReductionFromRefinement: 0.2
   baseCritChance: 0.12
+  burstWindow: 2.5
+  burstPressureFraction: 0.25
+  maxComposurePenalty: 0.25
   baseCritMultiplier: 1.5
   painToleranceFactor: 0.5
   eagleEyeBonusRange: 3
+  berserkHealthThreshold: 0.3
+  berserkAttackBonus: 0.4
+  skillLabelHeight: 0.9
+  intentLabelHeight: 0.6
+  intentSwitchKeepRatio: 0.35
+  flankSpeedThreshold: 3
+  tankHealthThreshold: 260
   defensiveStanceBonus: 5
   maxKiteRadius: 3.5
   hitFlashThreshold: 0.12
   hitFlashDuration: 0.08
+  affinityAtkThreshold: 50
+  affinityAtkBonus: 0.02
+  affinityExpBonus: 0.05
+  allyBondRadius: 4
+  insubordinationHealthRatio: 0.3
+  maxDisobeyChance: 0.6
+  selfRetreatMorale: 15
+  selfRetreatHealthRatio: 0.35
+  selfRetreatCooldown: 8
+  defensiveStanceSeconds: 3
+  selfRetreatDistance: 2.5
+  executeThreshold: 0.35
+  clusterRadius: 2.5
+  restShiftSeconds: 60
+  barkInterval: 6
 --- !u!114 &8534592815500860111
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -679,7 +712,16 @@ MonoBehaviour:
   expGrowthPerLevel: 1.1
   healthGrowthPerLevel: 0.06
   attackGrowthPerLevel: 0.05
+  levelCapByStar: 0a00000014000000280000003c00000050000000630000006e000000
   levelsPerStar: 10
+  refinementCapByStar:
+  - 2.2
+  - 2
+  - 1.75
+  - 1.5
+  - 1.25
+  - 1
+  - 1
   ascendGemCostByStar: 64000000fa000000f4010000e803000008070000b80b0000
   ascensionStatMultiplier: 1.4
   levelLabel: {fileID: 8932244556792481435}
@@ -754,6 +796,35 @@ MonoBehaviour:
   idleGrace: 0.1
   lungeDistance: 0.15
   lungeDuration: 0.15
+--- !u!114 &2284392694718890999
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6736230919267043135}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 609f45ccb04d8ac4bbc8e39b78b18fe3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: EndlessPull.Runtime::HeroBonds
+  bondThreshold: 5
+  moraleLossOnBondDeath: 35
+--- !u!114 &5114842718702894932
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6736230919267043135}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bff95c173cf432e46b95c74673bc9a30, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: EndlessPull.Runtime::HeroAuthority
+  minStarRank: 7
+  interval: 20
+  fatigueThreshold: 70
 --- !u!1 &6744772514828819670
 GameObject:
   m_ObjectHideFlags: 0

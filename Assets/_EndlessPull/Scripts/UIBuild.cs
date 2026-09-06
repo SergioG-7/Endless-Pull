@@ -205,4 +205,48 @@ public static class UIBuild
         rt.offsetMin = Vector2.zero;
         rt.offsetMax = Vector2.zero;
     }
+
+    // Fila de héroe con retrato a la izquierda y texto a la derecha. La comparten la Galería
+    // Memorial y el Archivo del Santuario para que las dos listas de héroes se lean igual.
+    public class HeroRow
+    {
+        public RectTransform root;
+        public Image portrait;
+        public TMP_Text label;
+    }
+
+    public static HeroRow BuildHeroRow(Transform parent, string name, float height, float portraitSize)
+    {
+        var go = new GameObject(name, typeof(RectTransform), typeof(Image));
+        go.transform.SetParent(parent, false);
+        UITheme.Surface(go, UITheme.Card, UITheme.BorderCard, UITheme.RadiusCard);
+
+        var root = go.GetComponent<RectTransform>();
+        root.sizeDelta = new Vector2(0f, height);
+
+        var marco = new GameObject("Portrait", typeof(RectTransform), typeof(Image));
+        marco.transform.SetParent(go.transform, false);
+
+        var prt = marco.GetComponent<RectTransform>();
+        prt.anchorMin = new Vector2(0f, 0.5f);
+        prt.anchorMax = new Vector2(0f, 0.5f);
+        prt.pivot = new Vector2(0f, 0.5f);
+        prt.sizeDelta = new Vector2(portraitSize, portraitSize);
+        prt.anchoredPosition = new Vector2(12f, 0f);
+
+        var retrato = marco.GetComponent<Image>();
+        retrato.preserveAspect = true;
+        retrato.raycastTarget = false;
+
+        var texto = Label(go.transform, "Text", UITheme.SizeBody, TextAlignmentOptions.Left);
+        var trt = texto.rectTransform;
+        trt.anchorMin = new Vector2(0f, 0f);
+        trt.anchorMax = new Vector2(1f, 1f);
+        trt.pivot = new Vector2(0.5f, 0.5f);
+        trt.offsetMin = new Vector2(portraitSize + 24f, 8f);
+        trt.offsetMax = new Vector2(-14f, -8f);
+        texto.textWrappingMode = TextWrappingModes.Normal;
+
+        return new HeroRow { root = root, portrait = retrato, label = texto };
+    }
 }

@@ -16,9 +16,15 @@ public class ForgeUI : MonoBehaviour
     [Tooltip("Tamaño del modal; el mismo rango que el resto de paneles del juego.")]
     [SerializeField] private Vector2 size = new Vector2(1100f, 620f);
 
-    [Tooltip("Gamas que se enseñan en la fila, incluidas las aún bloqueadas.")]
+    [Tooltip("Gamas que se enseñan en la rejilla, incluidas las aún bloqueadas.")]
     [Min(1)]
-    [SerializeField] private int tiersShown = 4;
+    [SerializeField] private int tiersShown = 8;
+
+    // Gamas por fila: la segunda fila (5-8) cae justo debajo, así el resto del panel no se
+    // recoloca según cuántas gamas haya abiertas.
+    private const int TiersPerRow = 4;
+    private const float TierButtonHeight = 56f;
+    private const float TierRowGap = 12f;
 
     private static readonly EquipmentSlot[] Slots =
         { EquipmentSlot.Weapon, EquipmentSlot.Armor, EquipmentSlot.Shield, EquipmentSlot.Accessory };
@@ -228,7 +234,12 @@ public class ForgeUI : MonoBehaviour
     {
         if (canvas == null) return;
 
-        panel = UIBuild.Panel(canvas.transform, "ForgePanel", size, UITheme.Bg);
+        // Alto extra por cada fila de gamas más allá de la primera; lo que va debajo baja igual.
+        int filasGama = Mathf.CeilToInt(Mathf.Max(1, tiersShown) / (float)TiersPerRow);
+        float extra = (filasGama - 1) * (TierButtonHeight + TierRowGap);
+
+        panel = UIBuild.Panel(canvas.transform, "ForgePanel", new Vector2(size.x, size.y + extra),
+            UITheme.Bg);
 
         titulo = UIBuild.TopLabel(panel.transform, "Title", UITheme.SizeTitle, 34f, -20f,
             TextAlignmentOptions.Left);
@@ -256,36 +267,41 @@ public class ForgeUI : MonoBehaviour
         rotuloGama.color = UITheme.TextMuted;
 
         int gamas = Mathf.Max(1, tiersShown);
-        float anchoGama = (size.x - 40f - (gamas - 1) * 12f) / gamas;
+        float anchoGama = (size.x - 40f - (TiersPerRow - 1) * 12f) / TiersPerRow;
         float inicioGama = -(size.x - 40f) * 0.5f + anchoGama * 0.5f;
 
         for (int i = 0; i < gamas; i++)
         {
             int gama = i + 1;
+            int fila = i / TiersPerRow;
+            int columna = i % TiersPerRow;
+
             var boton = UIBuild.Button(panel.transform, "Btn_Tier_" + gama, string.Empty,
-                UITheme.Neutral, new Vector2(anchoGama, 56f),
-                new Vector2(inicioGama + i * (anchoGama + 12f), -212f), () => OnTierPressed(gama));
+                UITheme.Neutral, new Vector2(anchoGama, TierButtonHeight),
+                new Vector2(inicioGama + columna * (anchoGama + 12f),
+                            -212f - fila * (TierButtonHeight + TierRowGap)),
+                () => OnTierPressed(gama));
 
             botonesGama.Add(boton);
             etiquetasGama.Add(boton.GetComponentInChildren<TMP_Text>());
         }
 
-        coste = UIBuild.TopLabel(panel.transform, "Cost", UITheme.SizeName, 30f, -292f,
+        coste = UIBuild.TopLabel(panel.transform, "Cost", UITheme.SizeName, 30f, -292f - extra,
             TextAlignmentOptions.Center);
 
-        resultado = UIBuild.TopLabel(panel.transform, "Outcome", UITheme.SizeBody, 60f, -328f,
+        resultado = UIBuild.TopLabel(panel.transform, "Outcome", UITheme.SizeBody, 60f, -328f - extra,
             TextAlignmentOptions.Center);
         resultado.enableWordWrapping = true;
 
-        aviso = UIBuild.TopLabel(panel.transform, "Notice", UITheme.SizeBody, 28f, -396f,
+        aviso = UIBuild.TopLabel(panel.transform, "Notice", UITheme.SizeBody, 28f, -396f - extra,
             TextAlignmentOptions.Center);
 
         botonMinijuego = UIBuild.Button(panel.transform, "Btn_Minigame", string.Empty,
-            UITheme.AccentPick, new Vector2(460f, 48f), new Vector2(0f, -430f), OnMinigameToggled);
+            UITheme.AccentPick, new Vector2(460f, 48f), new Vector2(0f, -430f - extra), OnMinigameToggled);
         etiquetaMinijuego = botonMinijuego.GetComponentInChildren<TMP_Text>();
 
         botonForjar = UIBuild.Button(panel.transform, "Btn_Forge", string.Empty,
-            UITheme.AccentPick, new Vector2(360f, 64f), new Vector2(0f, -490f), OnForgePressed);
+            UITheme.AccentPick, new Vector2(360f, 64f), new Vector2(0f, -490f - extra), OnForgePressed);
         etiquetaForjar = botonForjar.GetComponentInChildren<TMP_Text>();
 
         UIBuild.CloseButtonTopRight(panel.transform, Close);

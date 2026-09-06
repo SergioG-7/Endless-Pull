@@ -27,14 +27,14 @@ RectTransform:
   m_GameObject: {fileID: 4535159637556135466}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 4288966605228666922}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0.72}
+  m_AnchoredPosition: {x: 0, y: -1.613}
   m_SizeDelta: {x: 6, y: 1.2}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!23 &5454224223097391874
@@ -133,8 +133,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 4
-  m_fontSizeBase: 4
+  m_fontSize: 4.4
+  m_fontSizeBase: 4.4
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -209,7 +209,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2, y: 2, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2232566421676755014}
@@ -260,16 +260,16 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: -1
+  m_SortingLayerID: 270112577
+  m_SortingLayer: 1
+  m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 515a2b9dd68856b46af2226d648d71fd, type: 3}
+  m_Sprite: {fileID: 21300000, guid: c6d58e7150e6a6441ad6a02a83f264cb, type: 3}
   m_Color: {r: 0.35, g: 0.65, b: 0.3, a: 1}
   m_FlipX: 0
   m_FlipY: 0
-  m_DrawMode: 0
-  m_Size: {x: 1, y: 1}
+  m_DrawMode: 1
+  m_Size: {x: 6.8, y: 4.3}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -289,7 +289,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BaseBuilding
   type: 3
   buildingName: Granja
-  interactionRadius: 1.5
+  interactionRadius: 4
+  slotRadius: 3.4
+  slotCount: 8
   tickInterval: 2
   expPerTick: 5
   masteryPerTrainingTick: 2

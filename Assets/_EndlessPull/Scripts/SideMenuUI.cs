@@ -321,7 +321,9 @@ public class SideMenuUI : MonoBehaviour
             rt.localScale = Vector3.one;
         }
 
-        UITheme.Surface(item.gameObject, Color.clear, UITheme.Border, UITheme.RadiusItem);
+        // Relleno opaco en vez de Color.clear: sobre el arte de la base los botones se leían
+        // como texto suelto, sin caja. Mismo tono que los botones del HUD de combate.
+        UITheme.Surface(item.gameObject, itemBackground, UITheme.Border, UITheme.RadiusItem);
 
         var tmp = item.GetComponentInChildren<TMP_Text>(true);
         if (tmp == null) return;
@@ -332,6 +334,9 @@ public class SideMenuUI : MonoBehaviour
         tmp.rectTransform.offsetMin = new Vector2(12f, 0f);
         tmp.rectTransform.offsetMax = new Vector2(-12f, 0f);
     }
+
+    [Tooltip("Fondo de los botones del menú lateral; opaco para que se lean sobre el arte de la base.")]
+    [SerializeField] private Color itemBackground = new Color(0.071f, 0.094f, 0.141f, 0.94f);
 
     private Button CreateToggle()
     {

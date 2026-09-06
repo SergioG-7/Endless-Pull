@@ -124,7 +124,7 @@ public class WorkerAssignUI : MonoBehaviour
         if (building == null) return;
 
         titulo.text = string.Format(LocalizationManager.Get("UI_ASSIGN_TITLE"),
-            BuildingTypes.DisplayName(building.Type));
+            building.DisplayName);
         ocupacion.text = string.Format(LocalizationManager.Get("UI_ASSIGN_SLOTS"),
             building.Workers.Count, building.Capacity);
     }
@@ -181,7 +181,7 @@ public class WorkerAssignUI : MonoBehaviour
         row.toggleLabel.text = LocalizationManager.Get(dentro ? "BTN_UNASSIGN"
                                                      : enOtro ? "BTN_MOVE_HERE" : "BTN_ASSIGN");
         row.toggleLabel.fontStyle = dentro ? FontStyles.Bold : FontStyles.Normal;
-        row.toggle.interactable = dentro || hayHueco;
+        row.toggle.interactable = dentro || (hayHueco && building.AllowsHero(hero));
         row.toggleLabel.color = row.toggle.interactable ? UITheme.Text : UITheme.TextFaint;
         row.toggle.targetGraphic.color = dentro ? UITheme.Amber : UITheme.Neutral;
     }
@@ -193,10 +193,9 @@ public class WorkerAssignUI : MonoBehaviour
         bool dentro = building.IsWorker(row.hero);
         building.ToggleWorker(row.hero);
 
-        // Si pedía entrar y sigue fuera es que el edificio estaba lleno: se dice, no se calla.
+        // Si pedía entrar y sigue fuera, el edificio dice por qué: aforo o rango.
         aviso.text = !dentro && !building.IsWorker(row.hero)
-            ? string.Format(LocalizationManager.Get("UI_ASSIGN_FULL"),
-                BuildingTypes.DisplayName(building.Type))
+            ? building.LastRefusal
             : string.Empty;
 
         RefreshHeader();

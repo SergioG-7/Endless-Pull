@@ -26,6 +26,12 @@ public class CombatHUD : MonoBehaviour
     [SerializeField] private Vector2 panelPosition = new Vector2(-150f, -24f);
 
     private RectTransform root;
+    [Tooltip("Fondo de los botones de velocidad y auto-retirada; opaco para que se lean sobre cualquier suelo.")]
+    [SerializeField] private Color buttonBackground = new Color(0.071f, 0.094f, 0.141f, 0.94f);
+
+    [Tooltip("Fondo de la auto-retirada cuando está armada.")]
+    [SerializeField] private Color buttonArmedBackground = new Color(0.290f, 0.098f, 0.129f, 0.94f);
+
     private Button speedButton;
     private TMP_Text speedLabel;
     private Button autoRetreatButton;
@@ -114,12 +120,14 @@ public class CombatHUD : MonoBehaviour
         float buttonWidth = panelSize.x / 2f - 2f;
         var buttonSize = new Vector2(buttonWidth, panelSize.y);
 
-        speedButton = UIBuild.Button(root, "SpeedButton", "x1", UITheme.Neutral, buttonSize,
+        // Fondo oscuro opaco en vez del Neutral de siempre (blanco al 6%): sobre los suelos
+        // claros de la arena los dos botones se leían como texto flotando sin caja.
+        speedButton = UIBuild.Button(root, "SpeedButton", "x1", buttonBackground, buttonSize,
             new Vector2(-buttonWidth / 2f - 2f, 0f), ToggleSpeed);
         speedLabel = speedButton.GetComponentInChildren<TMP_Text>();
 
         autoRetreatButton = UIBuild.Button(root, "AutoRetreatButton",
-            LocalizationManager.Get("UI_AUTO_RETREAT"), UITheme.Neutral, buttonSize,
+            LocalizationManager.Get("UI_AUTO_RETREAT"), buttonBackground, buttonSize,
             new Vector2(buttonWidth / 2f + 2f, 0f), ToggleAutoRetreat);
         autoRetreatLabel = autoRetreatButton.GetComponentInChildren<TMP_Text>();
 
@@ -165,6 +173,6 @@ public class CombatHUD : MonoBehaviour
         if (autoRetreatButton == null) return;
 
         var image = autoRetreatButton.targetGraphic as Image;
-        if (image != null) image.color = autoRetreatArmed ? UITheme.DangerSoft : UITheme.Neutral;
+        if (image != null) image.color = autoRetreatArmed ? buttonArmedBackground : buttonBackground;
     }
 }

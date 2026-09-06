@@ -1,12 +1,30 @@
 using UnityEngine;
 
-// Fragmento de memoria que se desbloquea al alcanzar una rareza concreta.
+// Qué hito abre un recuerdo. StarRank es el modo de siempre; el resto miran la hoja de
+// servicios del héroe, para que los supervivientes largos pesen tanto como los ascendidos.
+public enum MemoryUnlock
+{
+    StarRank,
+    FloorsCleared,
+    HeroLevel,
+    EnemiesSlain,
+    BondsForged
+}
+
+// Fragmento de memoria que se desbloquea al alcanzar un hito con ese héroe.
 [System.Serializable]
 public class HeroMemory
 {
-    [Tooltip("Estrellas que hacen falta para recordar esto.")]
+    [Tooltip("Estrellas que hacen falta para recordar esto; solo cuenta en modo StarRank.")]
     [Range(1, 7)]
     public int starRank = 2;
+
+    [Tooltip("Hito que abre el recuerdo. StarRank es el de siempre.")]
+    public MemoryUnlock unlock = MemoryUnlock.StarRank;
+
+    [Tooltip("Cifra que hay que alcanzar en ese hito; se ignora en modo StarRank.")]
+    [Min(1)]
+    public int amount = 1;
 
     [Tooltip("Texto del recuerdo (español).")]
     [TextArea(2, 4)]
@@ -35,6 +53,9 @@ public class HeroMemory
 
     public bool IsValid => !string.IsNullOrEmpty(text) || !string.IsNullOrEmpty(textEn)
                            || !string.IsNullOrEmpty(textJa);
+
+    // Cifra que hay que alcanzar; en modo StarRank el umbral vive en starRank.
+    public int Threshold => unlock == MemoryUnlock.StarRank ? starRank : Mathf.Max(1, amount);
 }
 
 [CreateAssetMenu(fileName = "Hero_New", menuName = "Endless Pull/Hero Data")]
@@ -73,6 +94,9 @@ public class HeroData : ScriptableObject
     [Tooltip("Rareza del héroe, de 1 a 5 estrellas.")]
     [Range(1, 5)]
     public int starRank = 1;
+
+    [Tooltip("Protagonista: nace con la pasiva única Underdog y no la pierde nunca.")]
+    public bool isProtagonist;
 
     [Tooltip("Vida máxima con la que arranca el héroe.")]
     public int maxHealth = 100;

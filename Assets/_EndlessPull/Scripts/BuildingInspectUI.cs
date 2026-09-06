@@ -95,10 +95,10 @@ public class BuildingInspectUI : MonoBehaviour
         if (building == null) return;
 
         titulo.text = string.Format(LocalizationManager.Get("UI_BUILDING_TITLE"),
-            BuildingTypes.DisplayName(building.Type), building.Level);
+            building.DisplayName, building.Level);
         ocupacion.text = string.Format(LocalizationManager.Get("UI_OCCUPANCY"),
             building.CurrentOccupants, building.Capacity,
-            BuildingTypes.DisplayName(building.Type));
+            building.DisplayName);
         produccion.text = string.Format(LocalizationManager.Get("UI_PER_TICK"), BeneficioPorTick());
 
         // El tope de nivel lo abre la Torre, no los materiales: si está topado se dice qué piso falta.
@@ -247,8 +247,14 @@ public class BuildingInspectUI : MonoBehaviour
         switch (building.Type)
         {
             case BuildingType.TrainingDummy:
-                return string.Format(LocalizationManager.Get("UI_PROD_TRAINING"),
-                    building.ExpPerTick, building.TickInterval.ToString("0.#"));
+                string entreno = string.Format(LocalizationManager.Get("UI_PROD_TRAINING"),
+                    building.TrainingExpPerTick, building.TickInterval.ToString("0.#"));
+
+                // La puerta de rango se dice aquí, no al fallar la asignación.
+                return building.MinStarRank > 0
+                    ? entreno + "  ·  " + string.Format(
+                        LocalizationManager.Get("UI_BUILDING_RANK_REQ"), building.MinStarRank)
+                    : entreno;
             case BuildingType.Canteen:
             case BuildingType.RestArea:
                 return string.Format(LocalizationManager.Get("UI_PROD_REST"),

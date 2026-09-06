@@ -18,6 +18,25 @@ MonoBehaviour:
   bio: "Dicen que Han Ysl puso fin a una guerra fronteriza antes de que el Maestro llegara a llamar a un solo voluntario. Nadie ha podido confirmarlo, y nadie se atreve a preguntarle directamente."
   bioEn: "They say Han Ysl ended a border war before the Master ever called for a single volunteer. No one's been able to confirm it, and no one dares ask directly."
   bioJa: "ハン・イスルはマスターが志願者を募る前に国境戦争を終わらせたと言われている。誰もそれを確かめられずにいるし、本人に直接尋ねる勇気を持つ者もいない。"
+  memories:
+  - starRank: 2
+    unlock: 1
+    amount: 20
+    text: "Recuerda la guerra fronteriza que dicen que acabó. No corrige a nadie: la versión que cuentan pesa más que la verdad."
+    textEn: "Recalls the border war they say was ended here. Corrects no one, because the story they tell weighs more than the truth."
+    textJa: "終わらせたと噂される国境の戦を思い出す。誰も正さない。語られる話の方が真実より重い。"
+  - starRank: 2
+    unlock: 4
+    amount: 3
+    text: "Recuerda que antes peleaba solo porque nadie le seguía el paso. Ahora hay tres que sí, y eso obliga a mirar atrás."
+    textEn: "Recalls fighting alone because no one could keep up. Three can, now, and that means looking back."
+    textJa: "誰も付いて来られず、独りで戦っていたことを思い出す。今は三人が付いて来る。だから振り返る。"
+  - starRank: 7
+    unlock: 0
+    amount: 1
+    text: "Recuerda el nombre que tenía antes de ser una leyenda. No piensa decirlo."
+    textEn: "Recalls the name held before becoming a legend. Has no intention of saying it."
+    textJa: "伝説になる前の名を思い出す。口にする気はない。"
   bodySprite: {fileID: 8857963479767297247, guid: 5825b9d2b64a70b41a8174dc42b05d09, type: 3}
   walkFrames:
   - {fileID: 4668943251254395369, guid: 5825b9d2b64a70b41a8174dc42b05d09, type: 3}

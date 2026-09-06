@@ -13,11 +13,42 @@ MonoBehaviour:
   m_Name: Hero_Loki_1Star
   m_EditorClassIdentifier: Assembly-CSharp::HeroData
   heroName: Loki
-  title: Novato de la Vanguardia
-  origin: Reino Fronterizo
-  bio: "Loki se ganaba la vida vendiendo cosas que no eran suyas antes de que un reclutador le diera a elegir entre la Torre y el calabozo. Sigue sin fiarse de nadie, pero al menos ahora pelea de su lado."
-  bioEn: "Loki used to make a living selling things that weren't his before a recruiter gave him a choice between the Tower and the dungeon. He still doesn't trust anyone, but at least now he's fighting on their side."
-  bioJa: "人のものを売って生計を立てていたロキだったが、徴募官に「塔か牢屋か」と迫られて今に至る。誰も信用しない性分は変わらないが、少なくとも今は味方として戦う。"
+  title: El Último de la Tirada
+  origin: Invocado por el Maestro
+  bio: "Salió de la peor tirada del Maestro: una carta de una estrella entre cien. Sabe lo que vale un 1★ aquí, sabe que a los de su rango se les gasta y se les sustituye, y aun así es el único que se levanta cada vez. No sube porque le toque: sube porque no piensa ser el que se queda en el piso."
+  bioEn: "He came out of the Master's worst pull: a one-star card among a hundred. He knows what a 1★ is worth here, he knows heroes of his rank get spent and replaced, and he is still the only one who gets back up every time. He does not rise because it is his turn: he rises because he refuses to be the one left behind on the floor."
+  bioJa: "主の最悪のガチャから出た、百枚中の一星。ここでの1★の価値も、使い捨てられることも知っている。それでも毎回立ち上がるのは彼だけだ。順番だから登るのではない——その階に置いていかれる側になる気がないからだ。"
+  memories:
+  - starRank: 1
+    unlock: 0
+    amount: 1
+    text: "Recuerda el momento de la invocación: una estrella, y la cara del Maestro al verla. No le sorprendió a nadie, tampoco a él."
+    textEn: "Recalls the summoning: one star, and the Master's face when it came up. It surprised no one, himself included."
+    textJa: "召喚の瞬間を思い出す。一星。それを見た主の顔。誰も驚かなかった。彼自身も。"
+  - starRank: 2
+    unlock: 1
+    amount: 10
+    text: "Recuerda a los que subieron con él los primeros pisos. De aquella tanda ya no queda nadie más en pie."
+    textEn: "Recalls the ones who climbed the first floors beside him. Out of that batch, no one else is still standing."
+    textJa: "最初の階を共に登った者たちを思い出す。あの組で立っているのはもう彼だけだ。"
+  - starRank: 2
+    unlock: 3
+    amount: 50
+    text: "Recuerda la primera vez que ganó una pelea que tenía perdida sobre el papel. Ahí dejó de creerse los números."
+    textEn: "Recalls the first fight he won that the numbers said he had already lost. That was when he stopped believing the numbers."
+    textJa: "数字の上では負けていた戦いに初めて勝った日を思い出す。その日から数字を信じなくなった。"
+  - starRank: 2
+    unlock: 4
+    amount: 3
+    text: "Recuerda cuándo dejó de subir solo. No lo dice en voz alta, pero ya cuenta cabezas antes de cada piso."
+    textEn: "Recalls when he stopped climbing alone. He does not say it out loud, but he counts heads before every floor now."
+    textJa: "一人で登るのをやめた日を思い出す。口には出さないが、今は階ごとに人数を数えている。"
+  - starRank: 2
+    unlock: 2
+    amount: 25
+    text: "Recuerda que le tocaba ser material de síntesis. Sigue aquí, y ya no es él quien mira la lista con miedo."
+    textEn: "Recalls being marked as synthesis material. He is still here, and he is no longer the one reading that list in fear."
+    textJa: "合成の材料にされるはずだったことを思い出す。彼はまだここにいる。そしてもう、怖がる側ではない。"
   bodySprite: {fileID: 2914959115193528987, guid: cb31d0cb0ba1949438d4123bc6d05e22, type: 3}
   walkFrames:
   - {fileID: 7223212680756178324, guid: cb31d0cb0ba1949438d4123bc6d05e22, type: 3}
@@ -57,6 +88,7 @@ MonoBehaviour:
   - {fileID: 4480408933232966041, guid: cb31d0cb0ba1949438d4123bc6d05e22, type: 3}
   - {fileID: -6641136830609635757, guid: cb31d0cb0ba1949438d4123bc6d05e22, type: 3}
   starRank: 1
+  isProtagonist: 1
   maxHealth: 100
   maxMP: 50
   baseAttack: 15

@@ -17,7 +17,13 @@ public class MemorialGalleryUI : MonoBehaviour
     private RectTransform content;
 
     // Una fila por ficha; se reutilizan para no destruir y recrear en cada refresco.
-    private readonly List<TMP_Text> pool = new List<TMP_Text>();
+    private readonly List<UIBuild.HeroRow> pool = new List<UIBuild.HeroRow>();
+
+    // Catálogo del que sale el retrato del caído; el registro guardado no lleva sprite.
+    private GachaManager gacha;
+
+    private const float RowHeight = 84f;
+    private const float PortraitSize = 60f;
 
     private MemorialManager memorial;
 
@@ -81,38 +87,61 @@ public class MemorialGalleryUI : MonoBehaviour
         for (int i = 0; i < pool.Count; i++)
         {
             bool usada = i < filas;
-            pool[i].gameObject.SetActive(usada);
+            pool[i].root.gameObject.SetActive(usada);
             if (!usada) continue;
 
             if (vacia)
             {
-                pool[i].text = LocalizationManager.Get("UI_MEMORIAL_EMPTY");
-                pool[i].color = UITheme.TextMuted;
+                pool[i].portrait.enabled = false;
+                pool[i].label.text = LocalizationManager.Get("UI_MEMORIAL_EMPTY");
+                pool[i].label.color = UITheme.TextMuted;
                 continue;
             }
 
             var ficha = fichas[i];
             var estrellas = new System.Text.StringBuilder();
-            for (int e = 0; e < ficha.starRank; e++) estrellas.Append('★');
+            for (int e = 0; e < ficha.starRank; e++) estrellas.Append('\u2605');
+
+            // El retrato se recupera del catálogo: el registro guardado no puede llevar sprite.
+            var datos = HeroArtOf(ficha);
+            pool[i].portrait.enabled = datos != null && datos.bodySprite != null;
+            if (pool[i].portrait.enabled) pool[i].portrait.sprite = datos.bodySprite;
+
+            // Quién le llora: los vínculos que sobrevivieron. Es lo que convierte la lista de
+            // bajas en una lista de pérdidas.
+            var dolientes = HeroBonds.MournersOf(ficha.heroName);
+            string luto = dolientes.Count > 0
+                ? $"   <color={UITheme.Tag(UITheme.Accent2)}>" +
+                  string.Format(LocalizationManager.Get("UI_MEMORIAL_MOURNED"),
+                                string.Join(", ", dolientes)) + "</color>"
+                : string.Empty;
 
             // El equipo del caído ya no se lista: no vuelve con él, se queda en el piso donde
             // cayó hasta que se vuelva a despejar (ver LostGearManager).
-            pool[i].color = UITheme.Text;
-            pool[i].text = $"<color={UITheme.Tag(UITheme.Rarity(ficha.starRank))}>{estrellas}</color>  " +
-                           $"<b>{ficha.heroName}</b>  " +
-                           $"<size={UITheme.SizeCaption}>{LocalizationManager.Get("UI_LEVEL_ABBR")}{ficha.level}</size>\n" +
-                           $"<size={UITheme.SizeCaption}><color={UITheme.Tag(UITheme.TextMuted)}>" +
-                           $"{ficha.CauseLabel()}</color></size>";
+            pool[i].label.color = UITheme.Text;
+            pool[i].label.text =
+                $"<color={UITheme.Tag(UITheme.Rarity(ficha.starRank))}>{estrellas}</color>  " +
+                $"<b>{ficha.heroName}</b>  " +
+                $"<size={UITheme.SizeCaption}><color={UITheme.Tag(UITheme.TextMuted)}>" +
+                $"{LocalizationManager.Get("UI_LEVEL_ABBR")}{ficha.level}</color></size>\n" +
+                $"<size={UITheme.SizeCaption}><color={UITheme.Tag(UITheme.TextMuted)}>" +
+                $"{ficha.CauseLabel()}</color>{luto}</size>";
         }
     }
 
-    private TMP_Text NewRow()
+    // HeroData del caído: por nombre de asset si el registro lo trae, y por nombre visible en
+    // los registros guardados antes de que existiera ese campo.
+    private HeroData HeroArtOf(MemorialRecord ficha)
     {
-        var fila = UIBuild.Label(content, "MemorialRow", UITheme.SizeName, TextAlignmentOptions.TopLeft);
-        var rt = fila.rectTransform;
-        rt.sizeDelta = new Vector2(0f, 78f);
-        return fila;
+        if (gacha == null) gacha = Object.FindFirstObjectByType<GachaManager>();
+        if (gacha == null) return null;
+
+        var datos = gacha.FindByAssetName(ficha.heroAsset);
+        return datos != null ? datos : gacha.FindByHeroName(ficha.heroName);
     }
+
+    private UIBuild.HeroRow NewRow()
+        => UIBuild.BuildHeroRow(content, "MemorialRow", RowHeight, PortraitSize);
 
     private void Build()
     {
@@ -155,8 +184,8 @@ public class MemorialGalleryUI : MonoBehaviour
         scroll.scrollSensitivity = 30f;
 
         var layout = bodyGo.AddComponent<VerticalLayoutGroup>();
-        layout.padding = new RectOffset(24, 24, 18, 18);
-        layout.spacing = 10f;
+        layout.padding = new RectOffset(16, 16, 12, 12);
+        layout.spacing = 8f;
         layout.childControlWidth = true;
         layout.childForceExpandWidth = true;
         layout.childControlHeight = false;

@@ -128,7 +128,10 @@ void Update()
                 float perfora = shooter != null ? shooter.ArmorPierce : 0f;
                 int antes = enemyVictim.CurrentHealth;
 
-                enemyVictim.TakeDamage(damage, ignoresDefense, perfora);
+                // La baja es del tirador, no de quien tuviera el enemigo encima.
+                EnemyController.SetAttacker(shooter);
+                try { enemyVictim.TakeDamage(damage, ignoresDefense, perfora); }
+                finally { EnemyController.SetAttacker(null); }
 
                 if (shooter != null) shooter.StealLife(antes - enemyVictim.CurrentHealth);
             }

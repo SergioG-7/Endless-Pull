@@ -18,6 +18,25 @@ MonoBehaviour:
   bio: "Ithlyn cruzó al mundo de la Torre por una grieta que se cerró tras ella para siempre, y nunca ha encontrado el camino de vuelta. Cura a quien lucha a su lado como si cada vida salvada fuera un paso más cerca de casa."
   bioEn: "Ithlyn crossed into the Tower's world through a rift that sealed behind her forever, and she has never found her way back. She heals whoever fights at her side as if every life saved brought her one step closer to home."
   bioJa: "イスリンは、渡った後に永遠に閉じてしまった裂け目を通ってこの塔の世界にたどり着き、いまだに戻る道を見つけていない。共に戦う者を癒すたび、まるで故郷に一歩近づくかのように。"
+  memories:
+  - starRank: 2
+    unlock: 2
+    amount: 40
+    text: "Recuerda la grieta cerrándose a su espalda y el sonido exacto que hizo: como la puerta de casa, pero al revés."
+    textEn: "Recalls the rift sealing behind, and the exact sound it made: like a front door, played backwards."
+    textJa: "背後で裂け目が閉じる音を思い出す。家の扉の音を、逆さに流したような。"
+  - starRank: 2
+    unlock: 1
+    amount: 25
+    text: "Recuerda haber curado a alguien que no volvió al piso siguiente. Sigue sin saber si eso cuenta como salvarlo."
+    textEn: "Recalls healing someone who did not return the next floor. Still unsure whether that counts as saving them."
+    textJa: "次の階に戻らなかった者を癒したことを思い出す。それを救ったと呼べるのか、今も分からない。"
+  - starRank: 6
+    unlock: 0
+    amount: 1
+    text: "Recuerda por qué cura a desconocidos: cada vida que sostiene le suena un poco más a su mundo."
+    textEn: "Recalls why strangers get healed: every life held up sounds a little more like home."
+    textJa: "なぜ見知らぬ者を癒すのかを思い出す。支えた命の一つ一つが、故郷の音に少しだけ近い。"
   bodySprite: {fileID: -2378546601417595387, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}
   walkFrames:
   - {fileID: -8043242188342543108, guid: c8cf39f08ab94cf980bf49fd441e4fbc, type: 3}

@@ -5,7 +5,9 @@ using UnityEngine;
 public class YSorter : MonoBehaviour
 {
     [Tooltip("Renderers a ordenar; vacío coge todos los del objeto y sus hijos.")]
-    [SerializeField] private SpriteRenderer[] renderers;
+    // Renderer y no SpriteRenderer: los rótulos de TextMeshPro tienen MeshRenderer, y si se
+    // quedan fuera el cuerpo del edificio acaba tapando su propio nombre.
+    [SerializeField] private Renderer[] renderers;
 
     [Tooltip("Cuánto pesa cada unidad de mundo en el orden; más alto separa más.")]
     [SerializeField] private int precision = 100;
@@ -26,12 +28,23 @@ public class YSorter : MonoBehaviour
     void Awake()
     {
         if (renderers == null || renderers.Length == 0)
-            renderers = GetComponentsInChildren<SpriteRenderer>(true);
+            renderers = GetComponentsInChildren<Renderer>(true);
 
         offsets = new int[renderers.Length];
         for (int i = 0; i < renderers.Length; i++)
             offsets[i] = renderers[i] != null ? renderers[i].sortingOrder : 0;
 
+        Sort();
+    }
+
+    // Para los objetos que se ordenan por código (los edificios): fija los parámetros y reordena
+    // ya, porque Awake se ha ejecutado con los valores por defecto al añadir el componente.
+    public void Configure(int order, float foot, bool moving)
+    {
+        baseOrder = order;
+        footOffset = foot;
+        onlyWhenMoving = moving;
+        lastY = float.NaN;
         Sort();
     }
 

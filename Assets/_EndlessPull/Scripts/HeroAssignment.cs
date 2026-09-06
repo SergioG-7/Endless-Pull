@@ -71,7 +71,7 @@ public static class HeroAssignment
         if (hero == null) return string.Empty;
 
         foreach (var building in BaseBuilding.All)
-            if (building != null && building.IsWorker(hero)) return BuildingTypes.DisplayName(building.Type);
+            if (building != null && building.IsWorker(hero)) return building.DisplayName;
 
         return string.Empty;
     }

@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
 """Genera un spritesheet LPC por cada heroe del catalogo de Endless Pull.
 
+AVISO: los PNG que hay HOY en Assets/_EndlessPull/Sprites/Heroes NO salieron de aqui, sino
+de la cadena de Node (tools/LPC_Assets/_generate_*.mjs), que maneja el generador oficial LPC
+en localhost:5173 con una tabla escrita a mano por heroe. Este script compone las capas por
+su cuenta y con otro criterio, asi que lanzarlo sobre todo el catalogo CAMBIA la cara de los
+100 heroes, no solo los retoca. Para tocar un heroe concreto, usa la cadena de Node.
+
 Compone las capas del Universal LPC Spritesheet Character Generator y exporta un PNG
 por heroe a Assets/_EndlessPull/Sprites/Heroes/.
 
@@ -278,17 +284,29 @@ def a_rgb(hexa):
     return tuple(int(hexa[i:i + 2], 16) for i in (0, 2, 4))
 
 
+# Distancia maxima (al cuadrado, por canal RGB) para dar por buena una coincidencia
+# aproximada. Las hojas de ojos vienen dibujadas unos pocos valores por encima de su propia
+# rampa del JSON -- (80,212,236) frente a #57cee4 = (87,206,228) -- asi que la busqueda exacta
+# no encontraba nada y TODOS los heroes salian con los ojos del color base.
+TOLERANCIA_RAMPA = 400
+
+
 def recolorear(imagen, rampa_origen, rampa_destino):
     """Cambia una rampa por otra, color a color y por posicion en la rampa."""
     if not rampa_origen or not rampa_destino:
         return imagen
 
     pares = min(len(rampa_origen), len(rampa_destino))
-    mapa = {a_rgb(rampa_origen[i]): a_rgb(rampa_destino[i]) for i in range(pares)}
+    origen = [a_rgb(rampa_origen[i]) for i in range(pares)]
+    destino = [a_rgb(rampa_destino[i]) for i in range(pares)]
+    mapa = {origen[i]: destino[i] for i in range(pares)}
 
     imagen = imagen.convert("RGBA")
     pixeles = imagen.load()
     ancho, alto = imagen.size
+
+    # Cache de aproximaciones: una hoja repite pocos colores miles de veces.
+    cercanos = {}
 
     for y in range(alto):
         for x in range(ancho):
@@ -296,7 +314,24 @@ def recolorear(imagen, rampa_origen, rampa_destino):
             if a == 0:
                 continue
 
-            nuevo = mapa.get((r, g, b))
+            clave = (r, g, b)
+            nuevo = mapa.get(clave)
+
+            if nuevo is None:
+                if clave not in cercanos:
+                    cercanos[clave] = None
+                    mejor, mejor_d = None, TOLERANCIA_RAMPA + 1
+
+                    for i, (orr, og, ob) in enumerate(origen):
+                        d = (r - orr) ** 2 + (g - og) ** 2 + (b - ob) ** 2
+                        if d < mejor_d:
+                            mejor_d, mejor = d, destino[i]
+
+                    if mejor_d <= TOLERANCIA_RAMPA:
+                        cercanos[clave] = mejor
+
+                nuevo = cercanos[clave]
+
             if nuevo:
                 pixeles[x, y] = (nuevo[0], nuevo[1], nuevo[2], a)
 
@@ -368,6 +403,22 @@ CATEGORIA_ARMA = {
     "shield": "sword",
 }
 
+# Heroes con aspecto fijado a mano: el protagonista no puede salir de un sorteo. Cada clave
+# que aparezca aqui manda sobre la eleccion aleatoria; las que falten se siguen sorteando.
+# Claves admitidas: cuerpo, piel, pelo (carpeta del peinado), color_pelo, ojos, rol.
+FIJOS = {
+    # Loki es el nombre de Maestro de Han Isratte, el protagonista de Pick Me Up: joven
+    # espigado de veintipocos, pelo negro con flequillo partido a un lado y ojos marrones.
+    "Loki": {
+        "cuerpo": "teen",
+        "piel": "light",
+        "pelo": "parted_side_bangs",
+        "color_pelo": "raven",
+        "ojos": "brown",
+        "rol": "sword",
+    },
+}
+
 CUERPOS_MASCULINOS = ("male", "muscular", "teen")
 CUERPOS_FEMENINOS = ("female",)
 
@@ -435,7 +486,8 @@ def por_tipo(rutas, tipo):
 def generar(hero, anim, genero, rampas_piel, rampas_pelo, rampas_ojos, cache, verbose=True):
     rng = random.Random(hero["heroName"])
     rareza = max(1, min(5, hero.get("starRank", 1)))
-    rol = arquetipo(hero)
+    fijo = FIJOS.get(hero["heroName"], {})
+    rol = fijo.get("rol") or arquetipo(hero)
 
     # El genero fija el cuerpo disponible (30M/20F de asignar_generos); dentro de
     # los masculinos, tanques y lanceros salen corpulentos.
@@ -444,6 +496,8 @@ def generar(hero, anim, genero, rampas_piel, rampas_pelo, rampas_ojos, cache, ve
         tipo = "muscular"
     else:
         tipo = elegir(rng, cuerpos_genero)
+
+    tipo = fijo.get("cuerpo", tipo)
 
     lienzo = Image.new("RGBA", LIENZO, (0, 0, 0, 0))
     capas = []
@@ -466,6 +520,14 @@ def generar(hero, anim, genero, rampas_piel, rampas_pelo, rampas_ojos, cache, ve
     # El peinado se elige aqui porque su melena trasera va detras del cuerpo.
     pelos = cache.setdefault(("hair", anim), peinados_con(anim))
     pelo = elegir(rng, por_tipo([par[0] for par in pelos], "adult"))
+
+    if fijo.get("pelo"):
+        marca = os.sep + fijo["pelo"] + os.sep
+        for par in pelos:
+            if marca in par[0]:
+                pelo = par[0]
+                break
+
     pelo_detras = None
 
     for delante, detras in pelos:
@@ -475,7 +537,7 @@ def generar(hero, anim, genero, rampas_piel, rampas_pelo, rampas_ojos, cache, ve
 
     paleta_pelo = sorted(rampas_pelo) if rareza >= 4 else [
         c for c in sorted(rampas_pelo) if c in PELO_NATURAL]
-    color_pelo = elegir(rng, paleta_pelo or sorted(rampas_pelo))
+    color_pelo = fijo.get("color_pelo") or elegir(rng, paleta_pelo or sorted(rampas_pelo))
 
     if pegar(lienzo, pelo_detras, color_pelo, "hair", rampas_pelo):
         capas.append("hair_bg")
@@ -494,7 +556,7 @@ def generar(hero, anim, genero, rampas_piel, rampas_pelo, rampas_ojos, cache, ve
     if rareza >= 5:
         tonos += [t for t in PIEL_EXOTICA if t in rampas_piel]
 
-    piel = elegir(rng, tonos or sorted(rampas_piel))
+    piel = fijo.get("piel") or elegir(rng, tonos or sorted(rampas_piel))
     if pegar(lienzo, cuerpo(tipo, anim), piel, "body", rampas_piel):
         capas.append("body:" + tipo)
     else:
@@ -532,7 +594,7 @@ def generar(hero, anim, genero, rampas_piel, rampas_pelo, rampas_ojos, cache, ve
     if pegar(lienzo, ruta_nariz, piel, "body", rampas_piel):
         capas.append("nose:" + nariz)
 
-    color_ojos = elegir(rng, sorted(rampas_ojos))
+    color_ojos = fijo.get("ojos") or elegir(rng, sorted(rampas_ojos))
     ruta_ojos = os.path.join(HOJAS, "eyes", "human", "adult", "default", anim + ".png")
     if pegar(lienzo, ruta_ojos, color_ojos, "eye", rampas_ojos):
         capas.append("eyes:" + color_ojos)
@@ -578,6 +640,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--anim", default="walk", help="animacion LPC a componer (walk por defecto)")
     ap.add_argument("--dry-run", action="store_true", help="no escribe ningun PNG")
+    ap.add_argument("--solo", default=None, help="genera solo el heroe con ese heroName")
     args = ap.parse_args()
 
     if not os.path.isdir(HOJAS):
@@ -585,6 +648,9 @@ def main():
         return 1
 
     heroes = leer_heroes()
+    if args.solo:
+        heroes = [h for h in heroes if h["heroName"] == args.solo]
+
     if not heroes:
         print("No hay HeroData en " + HEROES, file=sys.stderr)
         return 1

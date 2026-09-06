@@ -15,7 +15,7 @@ public class CameraDirector : MonoBehaviour
     [SerializeField] private Vector2 baseView = new Vector2(0f, 0f);
 
     [Tooltip("Punto de combate de reserva; con un WaveManager en escena manda el suyo.")]
-    [SerializeField] private Vector2 arenaView = new Vector2(1000f, 0f);
+    [SerializeField] private Vector2 arenaView = new Vector2(500f, 0f);
 
     [Tooltip("Segundos que tarda el viaje entre base y arena.")]
     [SerializeField] private float travelSeconds = 1.1f;
@@ -34,10 +34,11 @@ public class CameraDirector : MonoBehaviour
     [SerializeField] private Vector2 hubBoundsCenter = new Vector2(0f, -1f);
     [SerializeField] private Vector2 hubBoundsSize = new Vector2(12f, 14f);
 
-    // Muralla perimetral a ±20u del centro (Fase 37): el máximo deja ver la base entera sin salirse del suelo.
+    // Muralla perimetral a ±20u del centro: el máximo deja ver la base entera de un vistazo. Se
+    // subió al agrandar los edificios, que con 26 ya no entraba todo en pantalla.
     [Tooltip("Zoom ortográfico mínimo y máximo permitido al manipular la vista de base.")]
     [SerializeField] private float minZoom = 5f;
-    [SerializeField] private float maxZoom = 26f;
+    [SerializeField] private float maxZoom = 42f;
 
     // x15 respecto al valor original: 3-4 giros de rueda deben cubrir todo el rango de zoom.
     [Tooltip("Sensibilidad de la rueda del ratón al hacer zoom en la vista de base.")]
@@ -79,7 +80,6 @@ public class CameraDirector : MonoBehaviour
     private float previousPinchDistance;
 
     // Color de fondo de la base; se restaura al volver de la arena tras el tinte de bioma.
-    private Color baseBackgroundColor;
 
     private static CameraDirector instance;
 
@@ -93,7 +93,6 @@ public class CameraDirector : MonoBehaviour
         basePosition = baseView;
         travelTimer = travelSeconds;
 
-        if (target != null) baseBackgroundColor = target.backgroundColor;
 
         instance = this;
     }
@@ -157,8 +156,9 @@ void Update()
             {
                 pendingArenaDelay = -1f;
                 GoToArena();
-                ApplyBiomeTint();
-                if (arenaGround != null) arenaGround.gameObject.SetActive(true);
+                // El suelo de la arena ya es una ilustración por bioma (BaseBackdrop.ApplyFloor);
+                // el rectángulo tintado de antes se queda apagado, que tapaba el arte de negro.
+                if (arenaGround != null) arenaGround.gameObject.SetActive(false);
             }
         }
     }
@@ -189,7 +189,7 @@ void Update()
     // Lo manda el WaveManager para que la cámara no acabe encuadrando una arena vacía.
     private Vector2 ArenaPoint => waves != null ? waves.ArenaFocus : arenaView;
 
-    [Tooltip("Suelo de la arena de combate; se tiñe con TowerBiome.Tint y se apaga en la vista de base.")]
+    [Tooltip("Rectángulo tintado que hacía de suelo de la arena antes del arte; se deja apagado.")]
     [SerializeField] private SpriteRenderer arenaGround;
 
     public void GoToArena() => TravelTo(ArenaPoint, arenaOrthographicSize);
@@ -216,7 +216,7 @@ void Update()
     [SerializeField] private float expeditionOrthographicSize = 9f;
 
     [Tooltip("Aire alrededor del claro para poder alejarse; más corto que el de la base.")]
-    [SerializeField] private float expeditionOverscan = 4f;
+    [SerializeField] private float expeditionOverscan;
 
 private void OnExpeditionChanged(ExpeditionState state, string message)
     {
@@ -232,25 +232,8 @@ private void OnExpeditionChanged(ExpeditionState state, string message)
         {
             pendingArenaDelay = -1f;
             GoToBase();
-            if (target != null) target.backgroundColor = baseBackgroundColor;
             if (arenaGround != null) arenaGround.gameObject.SetActive(false);
         }
-    }
-
-    // Placeholder sin arte final (ver decisión de diseño): tiñe el fondo de cámara y el suelo de
-    // la arena según TowerBiome.IndexForFloor, en vez de dejar solo el color de fondo plano.
-    private void ApplyBiomeTint()
-    {
-        if (target == null || waves == null) return;
-
-        int biomeIndex = TowerBiome.IndexForFloor(waves.CurrentFloor);
-        if (biomeIndex < 0 || biomeIndex >= TowerBiome.Tint.Length) return;
-
-        target.backgroundColor = TowerBiome.Tint[biomeIndex];
-
-        // El suelo va un punto más claro que el fondo para que se note como superficie, no como vacío.
-        if (arenaGround != null)
-            arenaGround.color = TowerBiome.Tint[biomeIndex] + new Color(0.06f, 0.06f, 0.06f);
     }
 
     // Zoom (rueda/pellizco) y paneo (arrastre) manuales; solo activos en la vista de base, quieta y sin viajar.
@@ -381,9 +364,10 @@ private void OnExpeditionChanged(ExpeditionState state, string message)
         return bounds;
     }
 
-    // Zoom máximo que todavía cabe dentro de la zona desbloqueada. Sin este tope se podía alejar
-    // hasta que el encuadre superaba los límites, y entonces el clamp daba un salto seco al
-    // centro de la base: se perdía el paneo y parecía que la cámara se recolocase sola.
+    // Zoom máximo de alejar. Se toma el eje que MÁS pide, no el que menos: con el mínimo, en
+    // pantalla ancha mandaba el ancho y la base no cabía de alto, que es justo lo que se quería
+    // ver de un vistazo. El eje que sobra lo resuelve ClampToUnlockedBounds fijando la cámara a
+    // baseView en ese eje, así que no hay salto.
     private float MaxUsableZoom()
     {
         var bounds = UnlockedBounds();
@@ -391,7 +375,7 @@ private void OnExpeditionChanged(ExpeditionState state, string message)
         float porAncho = target.aspect > 0f ? bounds.extents.x / target.aspect : porAlto;
 
         // El mínimo manda siempre: con muy poca base desbloqueada el zoom seguiría siendo usable.
-        return Mathf.Max(minZoom, Mathf.Min(maxZoom, Mathf.Min(porAlto, porAncho)));
+        return Mathf.Max(minZoom, Mathf.Min(maxZoom, Mathf.Max(porAlto, porAncho)));
     }
 
     // Restringe basePosition a los límites del hub más los cuadrantes ya desbloqueados (decisión de diseño).

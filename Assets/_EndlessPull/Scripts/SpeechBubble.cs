@@ -119,8 +119,11 @@ public class SpeechBubble : MonoBehaviour
         if (hero.AffinityAtkBonus > 0f)
             Añadir(2, "SAY_AFFINITY_1", "SAY_AFFINITY_2", "SAY_AFFINITY_3");
 
-        // La Galería pesa sobre los vivos.
-        if (MemorialManager.LostCount > 0)
+        // La Galería pesa sobre los vivos, y un vínculo perdido pesa mucho más que el resto.
+        var bonds = hero.GetComponent<HeroBonds>();
+        if (bonds != null && bonds.HasFallenBond())
+            Añadir(4, "SAY_BOND_MOURNING_1", "SAY_BOND_MOURNING_2", "SAY_BOND_MOURNING_3");
+        else if (MemorialManager.LostCount > 0)
             Añadir(1, "SAY_MOURNING_1", "SAY_MOURNING_2", "SAY_MOURNING_3");
 
         if (hero.MoralePercent > 80)

@@ -72,21 +72,33 @@ public class BaseBuilding : MonoBehaviour
     [Tooltip("Nombre visible del edificio.")]
     [SerializeField] private string buildingName = "Campo de Entrenamiento";
 
-    [Tooltip("Radio en el que el héroe se considera dentro del edificio.")]
-    [SerializeField] private float interactionRadius = 1.5f;
+    [Tooltip("Clave de localización del nombre; vacío usa el nombre genérico del tipo.")]
+    [SerializeField] private string nameKey = string.Empty;
 
-    [Tooltip("Distancia de los puntos de llegada al centro del edificio.")]
-    [SerializeField] private float slotRadius = 1.2f;
+    [Tooltip("Catálogo de ilustraciones por tipo; sin él (o sin sprite para este tipo) se queda el bloque tintado.")]
+    [SerializeField] private BuildingArt art;
+
+    [Tooltip("Categoría del campo de entrenamiento: 1 normal, 2 avanzado, 3 élite. Escala lo que da por tick.")]
+    [SerializeField, Range(1, 3)] private int trainingTier = 1;
+
+    [Tooltip("Estrellas mínimas para poder usar el edificio; 0 = abierto a todos.")]
+    [SerializeField] private int minStarRank;
+
+    [Tooltip("Radio en el que el héroe se considera dentro del edificio.")]
+    [SerializeField] private float interactionRadius = 4f;
+
+    [Tooltip("Margen desde el borde del edificio al que se pegan los puntos de llegada.")]
+    [SerializeField] private float slotInset = 0.7f;
 
     [Tooltip("Puntos de llegada repartidos alrededor del edificio.")]
     [Range(4, 8)]
-    [SerializeField] private int slotCount = 6;
+    [SerializeField] private int slotCount = 8;
 
     [Tooltip("Segundos entre cada efecto aplicado al héroe.")]
     [SerializeField] private float tickInterval = 2f;
 
-    [Tooltip("EXP por tick en el campo de entrenamiento, en nivel 1.")]
-    [SerializeField] private int expPerTick = 5;
+    [Tooltip("EXP por tick en el campo de entrenamiento, en nivel 1. Simbólica a propósito: el nivel se gana en la Torre, no dejando al héroe en el muñeco.")]
+    [SerializeField] private int expPerTick = 1;
 
     [Tooltip("Puntos de maestría de arma por tick de entrenamiento.")]
     [SerializeField] private int masteryPerTrainingTick = 2;
@@ -162,6 +174,21 @@ public class BaseBuilding : MonoBehaviour
 
     public BuildingType Type => type;
     public string BuildingName => buildingName;
+
+    // Nombre para la interfaz: el propio del edificio si lo tiene registrado, y si no el genérico
+    // del tipo. Sin esto los tres campos de entrenamiento salían con el mismo rótulo.
+    public string DisplayName => string.IsNullOrEmpty(nameKey)
+        ? BuildingTypes.DisplayName(type)
+        : LocalizationManager.Get(nameKey);
+
+    public int MinStarRank => minStarRank;
+
+    // Cada categoría rinde el doble que la anterior: normal x1, avanzado x2, élite x4.
+    public float TrainingFactor => Mathf.Pow(2f, Mathf.Clamp(trainingTier, 1, 3) - 1);
+
+    // Los campos buenos son para los de rango: un 1★ no entrena donde los 5★.
+    public bool AllowsHero(HeroController hero)
+        => minStarRank <= 0 || (hero != null && hero.StarRank >= minStarRank);
     public float InteractionRadius => interactionRadius;
     public float TickInterval => tickInterval;
     public int Level => level;
@@ -170,6 +197,11 @@ public class BaseBuilding : MonoBehaviour
     public float LevelFactor => level * (1f + extraPerLevel * (level - 1));
 
     public int ExpPerTick => Mathf.RoundToInt(expPerTick * LevelFactor);
+
+    // Lo que da de verdad el campo: la categoría multiplica sobre el nivel del edificio, así que
+    // el élite rinde el cuádruple que el normal al mismo nivel.
+    public int TrainingExpPerTick => Mathf.Max(1, Mathf.RoundToInt(expPerTick * LevelFactor * TrainingFactor));
+    public int TrainingMasteryPerTick => Mathf.Max(1, Mathf.RoundToInt(masteryPerTrainingTick * TrainingFactor));
     public int FoodPerHarvest => Mathf.RoundToInt(foodPerHarvest * LevelFactor);
     public int MaterialPerHarvest => Mathf.RoundToInt(materialPerHarvest * LevelFactor);
 
@@ -254,9 +286,14 @@ public class BaseBuilding : MonoBehaviour
     public bool HasRoom => CurrentOccupants < Capacity;
 
     // Asignar y desasignar desde la ficha del edificio.
+    // Por qué se rechazó la última asignación; lo pinta el panel de asignación en rojo.
+    public string LastRefusal { get; private set; } = string.Empty;
+
     public bool ToggleWorker(HeroController hero)
     {
         if (hero == null) return false;
+
+        LastRefusal = string.Empty;
 
         if (workers.Remove(hero))
         {
@@ -271,8 +308,19 @@ public class BaseBuilding : MonoBehaviour
         // una escuadra a la vez; se desasigna solo al desplegar esa escuadra de verdad.
 
 
+        // Puerta de rango antes que el aforo: si no tiene rango da igual que quede sitio, y
+        // decir "está lleno" cuando el motivo es otro solo confunde.
+        if (!AllowsHero(hero))
+        {
+            LastRefusal = string.Format(LocalizationManager.Get("UI_BUILDING_RANK_LOCKED"),
+                DisplayName, minStarRank);
+            Debug.LogWarning($"[Edificio] {LastRefusal}", this);
+            return false;
+        }
+
         if (workers.Count >= Capacity)
         {
+            LastRefusal = string.Format(LocalizationManager.Get("UI_ASSIGN_FULL"), DisplayName);
             Debug.LogWarning($"[Edificio] {buildingName} está al completo ({workers.Count}/{Capacity}).", this);
             return false;
         }
@@ -353,39 +401,103 @@ private void RefreshUnlock()
 
         // Se apaga el sprite/rótulo reales; el candado (si existe) toma su sitio.
         foreach (var sr in GetComponentsInChildren<SpriteRenderer>(true))
-            if (lockOverlay == null || sr.gameObject != lockOverlay) sr.enabled = unlocked;
+        {
+            if (lockOverlay != null && sr.transform.IsChildOf(lockOverlay.transform)) continue;
+
+            // Con ilustración puesta, el bloque tintado se queda apagado siempre.
+            if (artSprite != null && (sr == bodySprite || sr.gameObject.name == "Frame"))
+            {
+                sr.enabled = false;
+                continue;
+            }
+
+            // El edificio bloqueado no desaparece: se queda en penumbra bajo el candado. Antes se
+            // apagaba entero y solo quedaban el rótulo y el candado flotando sobre el suelo, que
+            // es lo que parecía un edificio invisible.
+            if (artSprite != null && sr == artSprite)
+            {
+                sr.enabled = true;
+                bool hayNiebla = art != null && art.lockedFog != null;
+                sr.color = unlocked || hayNiebla ? Color.white : lockedTint;
+                continue;
+            }
+
+            sr.enabled = unlocked;
+        }
 
         foreach (var t in GetComponentsInChildren<TMPro.TextMeshPro>(true))
             if (t != lockLabel) t.enabled = unlocked;
 
-        if (lockOverlay != null) lockOverlay.SetActive(!unlocked);
+        if (lockOverlay != null)
+        {
+            lockOverlay.SetActive(!unlocked);
+            FitLockOverlay();
+        }
     }
 
 
     // Candado con "Desbloquea en Piso N" centrado en el edificio; no revela nombre ni tipo.
+    [Tooltip("Tinte del edificio mientras está bloqueado; en penumbra, no apagado.")]
+    [SerializeField] private Color lockedTint = new Color(0.30f, 0.32f, 0.40f, 1f);
+
+    // El candado se dimensiona a la huella real: con las ilustraciones, el recuadro de 6,8x4,3
+    // se quedaba corto y dejaba medio edificio fuera del velo.
+    private void FitLockOverlay()
+    {
+        if (lockOverlay == null) return;
+
+        var veloTr = lockOverlay.transform.Find(VeilChildName);
+        if (veloTr == null) return;
+
+        var velo = veloTr.GetComponent<SpriteRenderer>();
+        if (velo == null || velo.sprite == null) return;
+
+        Vector2 huella = Footprint;
+        Vector2 propio = velo.sprite.bounds.size;
+        if (propio.x <= 0f || propio.y <= 0f) return;
+
+        // El velo es un hijo aparte para poder escalarlo sin deformar el rótulo, que cuelga del
+        // mismo padre. La niebla desborda un poco la huella: así no se ve el corte del edificio.
+        float desborde = art != null ? Mathf.Max(1f, art.lockedFogOverflow) : 1f;
+        veloTr.localScale = new Vector3(huella.x * desborde / propio.x,
+                                        huella.y * desborde / propio.y, 1f);
+    }
+
+    private const string VeilChildName = "LockVeil";
+
     private void BuildLockOverlay()
     {
         var baseSr = GetComponent<SpriteRenderer>();
         if (baseSr == null) return;
 
+        // El padre no dibuja nada: solo sostiene el velo (que se escala) y el rótulo (que no).
         var badgeGO = new GameObject("LockBadge");
         badgeGO.transform.SetParent(transform, false);
-        var badgeSr = badgeGO.AddComponent<SpriteRenderer>();
-        badgeSr.sprite = baseSr.sprite;
-        badgeSr.sortingLayerID = baseSr.sortingLayerID;
-        badgeSr.sortingOrder = baseSr.sortingOrder + 1;
-        badgeSr.color = UITheme.GlassDeep;
         lockOverlay = badgeGO;
 
-        var iconGO = new GameObject("LockIcon");
-        iconGO.transform.SetParent(badgeGO.transform, false);
-        iconGO.transform.localPosition = new Vector3(0f, 0.4f, 0f);
-        iconGO.transform.localScale = Vector3.one * 0.6f;
-        var iconSr = iconGO.AddComponent<SpriteRenderer>();
-        iconSr.sprite = baseSr.sprite;
-        iconSr.sortingLayerID = baseSr.sortingLayerID;
-        iconSr.sortingOrder = badgeSr.sortingOrder + 1;
-        iconSr.color = UITheme.TextSoft;
+        bool hayNiebla = art != null && art.lockedFog != null;
+
+        var veilGO = new GameObject(VeilChildName);
+        veilGO.transform.SetParent(badgeGO.transform, false);
+        var veilSr = veilGO.AddComponent<SpriteRenderer>();
+        veilSr.sprite = hayNiebla ? art.lockedFog : baseSr.sprite;
+        veilSr.sortingLayerID = baseSr.sortingLayerID;
+        veilSr.sortingOrder = baseSr.sortingOrder + 1;
+        veilSr.color = hayNiebla ? Color.white : UITheme.GlassDeep;
+
+        // El icono de candado era otro rectángulo redondeado de relleno: con la niebla sobra.
+        if (!hayNiebla)
+        {
+            var iconGO = new GameObject("LockIcon");
+            iconGO.transform.SetParent(badgeGO.transform, false);
+            iconGO.transform.localPosition = new Vector3(0f, 0.4f, 0f);
+            iconGO.transform.localScale = Vector3.one * 0.6f;
+            var iconSr = iconGO.AddComponent<SpriteRenderer>();
+            iconSr.sprite = baseSr.sprite;
+            iconSr.sortingLayerID = baseSr.sortingLayerID;
+            iconSr.sortingOrder = veilSr.sortingOrder + 1;
+            iconSr.color = UITheme.TextSoft;
+        }
 
         var labelGO = new GameObject("LockLabel");
         labelGO.transform.SetParent(badgeGO.transform, false);
@@ -398,7 +510,7 @@ private void RefreshUnlock()
         lockLabel.fontSizeMax = 2.4f;
         lockLabel.color = UITheme.Text;
         lockLabel.sortingLayerID = baseSr.sortingLayerID;
-        lockLabel.sortingOrder = iconSr.sortingOrder + 1;
+        lockLabel.sortingOrder = baseSr.sortingOrder + 3;
         lockLabel.enableWordWrapping = true;
         lockLabel.rectTransform.sizeDelta = new Vector2(3.2f, 1.2f);
     }
@@ -420,6 +532,96 @@ private void RefreshUnlock()
     {
         var sr = GetComponent<SpriteRenderer>();
         if (sr != null) sr.color = BuildingTypes.AccentColor(type);
+
+        var arte = BuildArt();
+
+        // El pie de la ilustración manda si la hay; si no, el borde inferior del bloque.
+        SortByFoot(arte != null ? arte : sr);
+    }
+
+    // Ilustración del edificio; pública para poder montarla también desde el editor. Va en un hijo y no en el renderer de la raíz a propósito: la raíz
+    // no se puede escalar sin deformar también el rótulo del nombre, y su bloque de 6,8x4,3 sigue
+    // haciendo falta apagado, porque de él salen la huella (Footprint), los clics y los puestos.
+    public SpriteRenderer BuildArt()
+    {
+        if (art == null) return null;
+
+        var entrada = art.For(type);
+        if (entrada == null) return null;
+
+        // Antes de nada: de aquí sale la capa de ordenación. Sin resolverlo primero, el hijo
+        // nacía en la capa Default y se dibujaba DEBAJO de la isla.
+        if (bodySprite == null) bodySprite = GetComponent<SpriteRenderer>();
+
+        var hijo = transform.Find(ArtChildName);
+        if (hijo == null)
+        {
+            var go = new GameObject(ArtChildName, typeof(SpriteRenderer));
+            go.transform.SetParent(transform, false);
+            hijo = go.transform;
+        }
+
+        artSprite = hijo.GetComponent<SpriteRenderer>();
+        artSprite.sprite = entrada.sprite;
+        artSprite.sortingLayerID = bodySprite != null ? bodySprite.sortingLayerID : artSprite.sortingLayerID;
+        artSprite.sortingOrder = 0;
+
+        float ancho = art.WidthFor(entrada);
+        Vector2 propio = entrada.sprite.bounds.size;
+        float escala = propio.x > 0f ? ancho / propio.x : 1f;
+        hijo.localScale = new Vector3(escala, escala, 1f);
+
+        // El bloque tintado se apaga, pero el componente se queda: Footprint lo lee. El marco
+        // fino de alrededor se va con él: con ilustración queda un recuadro flotando.
+        if (bodySprite != null) bodySprite.enabled = false;
+
+        var marco = transform.Find("Frame");
+        if (marco != null)
+        {
+            var marcoSr = marco.GetComponent<SpriteRenderer>();
+            if (marcoSr != null) marcoSr.enabled = false;
+        }
+
+        PlaceNameLabel(artSprite.sprite.bounds.size.y * escala, ancho);
+        return artSprite;
+    }
+
+    // El rótulo del nombre caía encima de la ilustración: se baja hasta justo debajo de su pie y
+    // se le da el ancho del edificio, para que quepa a un tamaño legible sobre el arte.
+    private void PlaceNameLabel(float alturaArte, float anchoArte)
+    {
+        foreach (var loc in GetComponentsInChildren<LocalizedText>(true))
+        {
+            var rt = loc.GetComponent<RectTransform>();
+            if (rt == null) continue;
+
+            rt.sizeDelta = new Vector2(anchoArte, nameLabelHeight);
+            rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, -alturaArte * 0.5f - nameLabelGap);
+
+            var texto = loc.GetComponent<TMPro.TMP_Text>();
+            if (texto != null) texto.fontStyle |= TMPro.FontStyles.Bold;
+        }
+    }
+
+    [Tooltip("Alto de la caja del rótulo del nombre; con el texto más grande hace falta sitio.")]
+    [SerializeField] private float nameLabelHeight = 2.2f;
+
+    [Tooltip("Hueco entre el pie de la ilustración y el rótulo del nombre.")]
+    [SerializeField] private float nameLabelGap = 0.35f;
+
+    private const string ArtChildName = "Building_Art";
+    private SpriteRenderer artSprite;
+
+    // Los edificios tenían orden de dibujado fijo, así que un héroe que pasaba por delante (más
+    // abajo en pantalla) quedaba tapado por el bloque del edificio. Se ordenan por la misma regla
+    // que los héroes, tomando como pie el borde inferior del sprite. El rótulo del nombre entra
+    // en el mismo lote porque YSorter ordena Renderer, no solo SpriteRenderer.
+    private void SortByFoot(SpriteRenderer sr)
+    {
+        if (sr == null || GetComponent<YSorter>() != null) return;
+
+        float pie = sr.bounds.min.y - transform.position.y;
+        gameObject.AddComponent<YSorter>().Configure(0, pie, false);
     }
 
 void Start()
@@ -497,17 +699,67 @@ void Start()
         lockLabel.text = string.Format(LocalizationManager.Get("UI_QUADRANT_LOCKED_TAP"), requiredFloor);
     }
 
-    public bool IsInside(Vector2 position)
-        => ((Vector2)transform.position - position).sqrMagnitude <= interactionRadius * interactionRadius;
+    // Huella real del edificio en unidades de mundo. Los huecos y la llegada se miden sobre
+    // ella y no sobre un círculo: con el círculo los asignados paseaban fuera del bloque.
+    private SpriteRenderer bodySprite;
 
-    // Puntos de llegada repartidos en círculo; así dos héroes no caminan al mismo sitio.
+    public Vector2 Footprint
+    {
+        get
+        {
+            // Con ilustración puesta manda su tamaño: si no, los héroes se quedaban paseando en
+            // el rectángulo viejo de 6,8x4,3 mientras el edificio dibujado era mucho más grande.
+            if (artSprite != null && artSprite.sprite != null)
+            {
+                Vector2 arte = artSprite.sprite.bounds.size;
+                Vector3 escalaArte = artSprite.transform.lossyScale;
+                return new Vector2(Mathf.Abs(arte.x * escalaArte.x), Mathf.Abs(arte.y * escalaArte.y));
+            }
+
+            if (bodySprite == null) bodySprite = GetComponent<SpriteRenderer>();
+            if (bodySprite == null || bodySprite.sprite == null)
+                return new Vector2(interactionRadius * 2f, interactionRadius * 2f);
+
+            Vector2 tamano = bodySprite.drawMode == SpriteDrawMode.Simple
+                ? (Vector2)bodySprite.sprite.bounds.size
+                : bodySprite.size;
+
+            Vector3 escala = transform.lossyScale;
+            return new Vector2(Mathf.Abs(tamano.x * escala.x), Mathf.Abs(tamano.y * escala.y));
+        }
+    }
+
+    public bool IsInside(Vector2 position)
+    {
+        Vector2 media = Footprint * 0.5f;
+        Vector2 delta = position - (Vector2)transform.position;
+        return Mathf.Abs(delta.x) <= media.x && Mathf.Abs(delta.y) <= media.y;
+    }
+
+    // Puntos de llegada en rejilla dentro del bloque; así dos héroes no caminan al mismo sitio
+    // y ninguno se queda paseando por fuera.
     private readonly Dictionary<int, HeroController> slotOwner = new Dictionary<int, HeroController>();
 
     public Vector2 SlotPosition(int index)
     {
-        float angulo = index * Mathf.PI * 2f / Mathf.Max(1, slotCount);
-        return (Vector2)transform.position
-               + new Vector2(Mathf.Cos(angulo), Mathf.Sin(angulo)) * slotRadius;
+        int total = Mathf.Max(1, slotCount);
+        Vector2 huella = Footprint;
+        Vector2 util = new Vector2(Mathf.Max(0.5f, huella.x - slotInset * 2f),
+                                   Mathf.Max(0.5f, huella.y - slotInset * 2f));
+
+        // Columnas proporcionales a lo ancho del bloque: en uno apaisado salen más por fila.
+        int columnas = Mathf.Clamp(
+            Mathf.RoundToInt(Mathf.Sqrt(total * util.x / Mathf.Max(0.01f, util.y))), 1, total);
+        int filas = Mathf.Max(1, Mathf.CeilToInt(total / (float)columnas));
+
+        int i = ((index % total) + total) % total;
+        int columna = i % columnas;
+        int fila = i / columnas;
+
+        float x = columnas > 1 ? (columna / (float)(columnas - 1) - 0.5f) * util.x : 0f;
+        float y = filas > 1 ? (0.5f - fila / (float)(filas - 1)) * util.y : 0f;
+
+        return (Vector2)transform.position + new Vector2(x, y);
     }
 
     // Reserva el hueco libre más cercano al héroe. Sin huecos devuelve un punto del anillo
@@ -561,7 +813,8 @@ void Start()
         Vector2 desde = (Vector2)hero.transform.position - centro;
         Vector2 direccion = desde.sqrMagnitude > 0.0001f ? desde.normalized : Vector2.up;
 
-        return centro + direccion * (slotRadius * 2.2f);
+        Vector2 fuera = Footprint * 0.5f + Vector2.one * 1.2f;
+        return centro + new Vector2(direccion.x * fuera.x, direccion.y * fuera.y);
     }
 
     public void ReleaseSlot(HeroController hero)
@@ -603,19 +856,20 @@ void Start()
         switch (type)
         {
             case BuildingType.TrainingDummy:
-                // Entrenar da EXP y, si lleva arma, maestría con ese tipo.
-                hero.AddMasteryPoints(masteryPerTrainingTick);
+                // Entrenar da maestría con el arma que lleve; la categoría del campo multiplica.
+                hero.AddMasteryPoints(TrainingMasteryPerTick);
 
                 var progress = hero.GetComponent<HeroProgress>();
                 if (progress == null) return false;
 
-                // Con afecto al máximo, la EXP de entrenamiento sube un poco.
-                progress.AddEXP(Mathf.RoundToInt(ExpPerTick * (1f + hero.AffinityExpBonus)));
-                progress.AddSkillRefinement(skillRefinementPerTrainingTick);
+                // EXP simbólica: el nivel se gana en la Torre. Lo que se saca aquí es maestría,
+                // refinamiento y pasivas. Con afecto al máximo sube un poco.
+                progress.AddEXP(Mathf.RoundToInt(TrainingExpPerTick * (1f + hero.AffinityExpBonus)));
+                progress.AddSkillRefinement(skillRefinementPerTrainingTick * TrainingFactor);
 
                 // Entrenar también despierta, mucho más despacio que pelear en la Torre; a
                 // veces sale una pasiva y a veces una habilidad activa nueva.
-                if (Random.value < trainingAwakeningChance)
+                if (Random.value < trainingAwakeningChance * TrainingFactor)
                 {
                     if (Random.value < 0.35f) ActiveSkills.TryAwaken(hero);
                     else PassiveSkills.TryAwaken(hero);
@@ -633,8 +887,9 @@ void Start()
                 return true;
 
             case BuildingType.ManaWell:
-                // Visita puntual: restaura MP igual que la cantina restaura vida.
-                hero.RestoreMP(ManaPerVisitTick);
+                // Único sitio donde vuelve el maná: no se regenera solo ni con el resto de
+                // edificios. Flujo de Maná rinde aquí, que es donde queda algo que multiplicar.
+                hero.RestoreMP(ManaPerVisitTick * PassiveSkills.ManaRegenMultiplier(hero.Passives));
                 return true;
 
             case BuildingType.Lodging:

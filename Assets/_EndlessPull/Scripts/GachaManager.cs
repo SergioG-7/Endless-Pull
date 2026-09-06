@@ -52,15 +52,56 @@ public class GachaManager : MonoBehaviour
         if (hero == null) return false;
         if (hero.GetEquipped(EquipmentSlot.Weapon) != null) return false;
 
-        // Se sortea entre las de inicio para que la base tenga arqueros, magos y clérigos y no
-        // cien espadachines. Sin lista configurada se cae al arma única de siempre.
-        var elegida = starterWeapons != null && starterWeapons.Length > 0
-            ? starterWeapons[Random.Range(0, starterWeapons.Length)]
-            : starterWeapon;
+        // El protagonista no entra en el sorteo: empuña espada, como en el manhwa.
+        var elegida = hero.Data != null && hero.Data.isProtagonist
+            ? StarterOfType(WeaponType.Sword)
+            : null;
+
+        // El resto se sortea entre las de inicio, para que la base tenga arqueros, magos y
+        // clérigos y no cien espadachines. Sin lista configurada se cae al arma de siempre.
+        if (elegida == null)
+            elegida = starterWeapons != null && starterWeapons.Length > 0
+                ? starterWeapons[Random.Range(0, starterWeapons.Length)]
+                : starterWeapon;
 
         if (elegida == null) return false;
 
         hero.Equip(elegida);
+        return true;
+    }
+
+    // Arma de inicio de un tipo concreto; null si no hay ninguna de ese tipo en la lista.
+    private EquipmentData StarterOfType(WeaponType tipo)
+    {
+        if (starterWeapons == null) return null;
+
+        foreach (var arma in starterWeapons)
+            if (arma != null && arma.weaponType == tipo) return arma;
+
+        return null;
+    }
+
+    // El protagonista salió con arco en las partidas anteriores a esta regla. Se le devuelve la
+    // espada solo si lo que lleva sigue siendo un arma de inicio: si el jugador le ha puesto algo
+    // mejor a mano, no se le toca.
+    private bool FixProtagonistWeapon(HeroController hero)
+    {
+        if (hero == null || hero.Data == null || !hero.Data.isProtagonist) return false;
+
+        var actual = hero.GetEquipped(EquipmentSlot.Weapon);
+        if (actual == null || actual.WeaponType == WeaponType.Sword) return false;
+
+        bool esDeInicio = false;
+        if (starterWeapons != null)
+            foreach (var arma in starterWeapons)
+                if (arma != null && actual.data == arma) { esDeInicio = true; break; }
+
+        if (!esDeInicio) return false;
+
+        var espada = StarterOfType(WeaponType.Sword);
+        if (espada == null) return false;
+
+        hero.Equip(espada);
         return true;
     }
 
@@ -109,8 +150,13 @@ public class GachaManager : MonoBehaviour
 
         foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(
             FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
             if (GrantStarterWeapon(hero))
                 Debug.Log($"[Gacha] {hero.Data.heroName} empieza con {starterWeapon.equipName}.", hero);
+
+            if (FixProtagonistWeapon(hero))
+                Debug.Log($"[Gacha] {hero.Data.heroName} recupera su espada de protagonista.", hero);
+        }
     }
 
     // Busca en el catálogo por nombre de asset; la usa el SaveManager al restaurar el roster.
@@ -120,6 +166,18 @@ public class GachaManager : MonoBehaviour
 
         foreach (var hero in catalog)
             if (hero != null && hero.name == assetName) return hero;
+
+        return null;
+    }
+
+    // Busca por nombre visible; la usa la Galería para recuperar el retrato de un caído
+    // registrado antes de que se guardara el nombre del asset.
+    public HeroData FindByHeroName(string heroName)
+    {
+        if (string.IsNullOrEmpty(heroName)) return null;
+
+        foreach (var hero in catalog)
+            if (hero != null && hero.heroName == heroName) return hero;
 
         return null;
     }

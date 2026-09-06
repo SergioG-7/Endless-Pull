@@ -11,8 +11,20 @@ public class SubclassSelectionUI : MonoBehaviour
     [Tooltip("Tamaño del modal.")]
     [SerializeField] private Vector2 size = new Vector2(1320f, 700f);
 
-    [Tooltip("Tamaño de cada carta de subclase.")]
+    [Tooltip("Tamaño máximo de cada carta de subclase; el alto real se ajusta al texto.")]
     [SerializeField] private Vector2 cardSize = new Vector2(400f, 470f);
+
+    [Tooltip("Alto mínimo de la carta aunque el texto ocupe menos.")]
+    [SerializeField] private float minCardHeight = 260f;
+
+    [Tooltip("Margen que se suma al alto del texto dentro de la carta.")]
+    [SerializeField] private float cardPadding = 44f;
+
+    [Tooltip("Franja de la cabecera del modal, por encima de las cartas.")]
+    [SerializeField] private float headerHeight = 120f;
+
+    [Tooltip("Margen que queda por debajo de las cartas.")]
+    [SerializeField] private float bottomMargin = 40f;
 
     private static SubclassSelectionUI instance;
 
@@ -22,6 +34,10 @@ public class SubclassSelectionUI : MonoBehaviour
     private readonly Button[] cartas = new Button[3];
     private readonly TMP_Text[] textos = new TMP_Text[3];
     private HeroSubclass[] opciones = new HeroSubclass[0];
+
+    // Si la elección salió desde el Santuario, se vuelve ahí al elegir en vez de dejar al
+    // jugador en la base: la ascensión y la subclase son el mismo gesto.
+    private SanctuaryUI volverA;
 
     public bool IsOpen => panel != null && panel.activeSelf;
 
@@ -59,6 +75,10 @@ public class SubclassSelectionUI : MonoBehaviour
         if (opciones.Length < 2) return false;
 
         hero = target;
+
+        var santuario = UnityEngine.Object.FindFirstObjectByType<SanctuaryUI>();
+        volverA = santuario != null && santuario.IsOpen ? santuario : null;
+
         titulo.text = string.Format(LocalizationManager.Get("UI_SUBCLASS_OFFER_TITLE"),
             hero.Data.heroName, hero.StarRank, WeaponTypes.DisplayName(archetype));
 
@@ -80,10 +100,38 @@ public class SubclassSelectionUI : MonoBehaviour
                              $"{HeroSubclasses.MakeSkill(sub).cooldown:0.#}s";
         }
 
+        FitToContent(opciones.Length);
         RepositionCards(opciones.Length);
 
         UIManager.OpenExclusive(panel);
         return true;
+    }
+
+    // Las cartas traen poco texto y la caja quedaba medio vacía. Se mide lo que ocupa de verdad
+    // y la carta y el modal se encogen hasta ahí, sin bajar del mínimo legible.
+    private void FitToContent(int count)
+    {
+        float alto = 0f;
+        for (int i = 0; i < count; i++)
+        {
+            textos[i].ForceMeshUpdate();
+            alto = Mathf.Max(alto, textos[i].preferredHeight);
+        }
+
+        float cartaAlto = Mathf.Clamp(alto + cardPadding, minCardHeight, cardSize.y);
+        float panelAlto = headerHeight + cartaAlto + bottomMargin;
+
+        panel.GetComponent<RectTransform>().sizeDelta = new Vector2(size.x, panelAlto);
+
+        // El centro de la carta cuelga de la cabecera: el hueco de arriba no cambia al encoger.
+        float centroY = panelAlto * 0.5f - headerHeight - cartaAlto * 0.5f;
+
+        for (int i = 0; i < count; i++)
+        {
+            var rt = cartas[i].GetComponent<RectTransform>();
+            rt.sizeDelta = new Vector2(cardSize.x, cartaAlto);
+            rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, centroY);
+        }
     }
 
     // Con 3 cartas reproduce exactamente las posiciones de siempre ((i-1)*paso); con 2 las
@@ -109,6 +157,9 @@ public class SubclassSelectionUI : MonoBehaviour
         SaveManager.RequestSave();
         hero = null;
         UIManager.CloseEverything();
+
+        if (volverA != null) volverA.Open();
+        volverA = null;
     }
 
     // Rol de un vistazo, para no tener que leerse los números.

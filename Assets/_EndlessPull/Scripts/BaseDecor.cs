@@ -61,12 +61,16 @@ public class BaseDecor : MonoBehaviour
 
     private Transform root;
 
+    [Tooltip("Con el fondo pintado puesto (BaseBackdrop), el decorado por código no se construye: la isla ya trae suelo, calles, plaza, farolas y arbolado.")]
+    [SerializeField] private bool useArtBackdrop = true;
+
     void Awake() => Build();
 
     // Idempotente: se la puede llamar desde el editor para ver la base sin entrar en Play, y al
     // arrancar no vuelve a construir el decorado encima del que ya está.
     public void Build()
     {
+        if (useArtBackdrop) return;
         if (root != null) return;
 
         var existente = transform.Find("BaseDecor");

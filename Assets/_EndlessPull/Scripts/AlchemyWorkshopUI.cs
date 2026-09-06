@@ -283,10 +283,15 @@ public class AlchemyWorkshopUI : MonoBehaviour
     private void RefreshStoneCard(Ficha ficha, AscensionStoneTier tier)
     {
         ficha.titulo.text = AscensionStoneTiers.DisplayName(tier);
-        ficha.cuerpo.text = $"{LocalizationManager.Get("UI_STONES_HELD")} " +
-                            $"<b>{crafting.StoneCount(tier)}</b>\n" +
+
+        string tenidas = $"{LocalizationManager.Get("UI_STONES_HELD")} " +
+                         $"<b>{crafting.StoneCount(tier)}</b>";
+
+        if (!crafting.IsTierUnlocked(tier)) { ShowLocked(ficha, (int)tier + 1, tenidas); return; }
+
+        ficha.cuerpo.text = tenidas + "\n" +
                             $"{LocalizationManager.Get("UI_SUCCESS_CHANCE")} " +
-                            $"<b>{crafting.EffectiveSuccessChance * 100f:0}%</b>";
+                            $"<b>{crafting.StoneSuccessChance(tier) * 100f:0}%</b>";
         ficha.coste.text = Cost(crafting.StoneWoodCost(tier), crafting.StoneIronCost(tier), 0);
         SetButton(ficha, LocalizationManager.Get("UI_FORGE"), crafting.CanCraftStone(tier), UITheme.Amber);
     }
@@ -294,7 +299,18 @@ public class AlchemyWorkshopUI : MonoBehaviour
     private void RefreshPotionCard(Ficha ficha, PotionTier tier)
     {
         ficha.titulo.text = HealingPotionTiers.DisplayName(tier);
-        ficha.cuerpo.text = $"{LocalizationManager.Get("UI_POTIONS_HELD")} <b>{crafting.HealingPotionCount(tier)}</b>";
+
+        string tenidas = $"{LocalizationManager.Get("UI_POTIONS_HELD")} " +
+                         $"<b>{crafting.HealingPotionCount(tier)}</b>";
+
+        if (!crafting.IsTierUnlocked(tier)) { ShowLocked(ficha, (int)tier + 1, tenidas); return; }
+
+        // Sin esta linea no habia forma de saber si la pocion curaba vida plana, porcentaje
+        // o por segundo: cura de golpe un porcentaje de la vida maxima.
+        ficha.cuerpo.text = tenidas + "\n" +
+                            $"<color={UITheme.Tag(UITheme.Cyan)}>" +
+                            string.Format(LocalizationManager.Get("UI_POTION_EFFECT"),
+                                          crafting.PotionHealFraction(tier) * 100f) + "</color>";
         ficha.coste.text = Cost(crafting.PotionWoodCost(tier), 0, crafting.PotionFoodCost(tier));
         SetButton(ficha, LocalizationManager.Get("UI_CRAFT_POTION"), crafting.CanCraftPotion(tier), UITheme.Cyan);
     }
@@ -302,9 +318,29 @@ public class AlchemyWorkshopUI : MonoBehaviour
     private void RefreshManaPotionCard(Ficha ficha, PotionTier tier)
     {
         ficha.titulo.text = ManaPotionTiers.DisplayName(tier);
-        ficha.cuerpo.text = $"{LocalizationManager.Get("UI_MANA_POTIONS_HELD")} <b>{crafting.ManaPotionCount(tier)}</b>";
+
+        string tenidas = $"{LocalizationManager.Get("UI_MANA_POTIONS_HELD")} " +
+                         $"<b>{crafting.ManaPotionCount(tier)}</b>";
+
+        if (!crafting.IsTierUnlocked(tier)) { ShowLocked(ficha, (int)tier + 1, tenidas); return; }
+
+        ficha.cuerpo.text = tenidas + "\n" +
+                            $"<color={UITheme.Tag(UITheme.Cyan)}>" +
+                            string.Format(LocalizationManager.Get("UI_MANA_POTION_EFFECT"),
+                                          crafting.ManaPotionRestoreFraction(tier) * 100f) + "</color>";
         ficha.coste.text = Cost(crafting.ManaPotionWoodCost(tier), 0, crafting.ManaPotionFoodCost(tier));
         SetButton(ficha, LocalizationManager.Get("UI_CRAFT_MANA_POTION"), crafting.CanCraftManaPotion(tier), UITheme.Cyan);
+    }
+
+    // Gama todavia cerrada: se dice el piso que la abre en vez de dejar el boton apagado sin
+    // explicacion. tier es 1-based, igual que en CraftingManager.
+    private void ShowLocked(Ficha ficha, int tier, string cuerpo)
+    {
+        ficha.cuerpo.text = cuerpo;
+        ficha.coste.text = $"<color={UITheme.Tag(UITheme.TextFaint)}>" +
+                           string.Format(LocalizationManager.Get("UI_TIER_LOCKED"),
+                                         crafting.FloorForTier(tier)) + "</color>";
+        SetButton(ficha, LocalizationManager.Get("UI_LOCKED"), false, UITheme.Neutral);
     }
 
     // Coste en columnas: el recurso a la izquierda y la cifra siempre en la misma tabulación.

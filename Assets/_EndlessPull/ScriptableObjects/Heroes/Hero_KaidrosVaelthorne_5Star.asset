@@ -18,6 +18,25 @@ MonoBehaviour:
   bio: "Kaidros llegó a la Torre por accidente, arrastrado desde un mundo que ya no existe. Carga la última llama de su gente como un juramento silencioso: mientras él respire, no se apagará del todo."
   bioEn: "Kaidros arrived at the Tower by accident, pulled from a world that no longer exists. He carries his people's last flame like a silent vow: as long as he draws breath, it will not go fully out."
   bioJa: "カイドロスは、もはや存在しない世界から引きずり出され、偶然この塔にたどり着いた。彼は同胞の最後の炎を、静かな誓いのように背負っている――自分が息をしている限り、その炎は完全には消えない。"
+  memories:
+  - starRank: 2
+    unlock: 1
+    amount: 30
+    text: "Recuerda Ashvael ardiendo, y que no miró atrás por miedo a quedarse quieto."
+    textEn: "Recalls Ashvael burning, and not looking back for fear of standing still."
+    textJa: "燃えるアシュヴァエルを思い出す。振り返れば足が止まると分かっていた。"
+  - starRank: 2
+    unlock: 2
+    amount: 60
+    text: "Recuerda que la llama no calienta. Solo sirve para que alguien la vea desde lejos."
+    textEn: "Recalls that the flame gives no warmth. It only lets someone far away see it."
+    textJa: "炎は暖かくないと思い出す。遠くの誰かに見えるだけのものだ。"
+  - starRank: 7
+    unlock: 0
+    amount: 1
+    text: "Recuerda a quién le juró que no se apagaría. Ya no queda nadie a quien romperle la promesa."
+    textEn: "Recalls who the vow was sworn to. No one is left for it to be broken to."
+    textJa: "誰に誓ったのかを思い出す。もう、破る相手すら残っていない。"
   bodySprite: {fileID: -3307209735215797670, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}
   walkFrames:
   - {fileID: -6427871795788775681, guid: 3bc9ca74b7a5d66d0c9c07e0a1c62382, type: 3}

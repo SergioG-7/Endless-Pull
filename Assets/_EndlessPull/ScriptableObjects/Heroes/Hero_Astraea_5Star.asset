@@ -18,6 +18,25 @@ MonoBehaviour:
   bio: "Pocos en la torre no han oído hablar de Astraea, cuyas hazañas ya son leyenda. Mantiene las distancias y dispara con precisión mientras otros cubren el frente."
   bioEn: "Few in the tower haven't heard of Astraea, whose feats are already legend. Prefers to wound from afar, choosing the exact moment to strike."
   bioJa: "塔の中でAstraeaの名を知らぬ者は少なく、その武勲はすでに伝説となっている。距離を保ちながら、味方が前線を支える間に正確に狙い撃つ。"
+  memories:
+  - starRank: 2
+    unlock: 1
+    amount: 10
+    text: "Recuerda la Torre de Marfil por dentro: pasillos blancos y un maestro que le tapaba el ojo bueno para obligarle a disparar con el otro."
+    textEn: "Recalls the Ivory Tower from the inside: white corridors, and a master who covered the good eye to force the shot with the other."
+    textJa: "内側から見た象牙の塔を思い出す。白い回廊と、利き目を塞いで反対の目で射させた師を。"
+  - starRank: 2
+    unlock: 3
+    amount: 200
+    text: "Recuerda haber dejado de contar los blancos en doscientos. Lo que no ha dejado de contar son las flechas que le pasaron rozando."
+    textEn: "Recalls giving up counting marks at two hundred. Never gave up counting the arrows that came close."
+    textJa: "二百で的を数えるのをやめた。掠めた矢の数だけは、今も数えている。"
+  - starRank: 6
+    unlock: 0
+    amount: 1
+    text: "Recuerda por qué se marchó de la Torre de Marfil: allí la leyenda era el objetivo, y aquí solo hace falta el disparo."
+    textEn: "Recalls why the Ivory Tower was left behind: there the legend was the goal; here, only the shot matters."
+    textJa: "なぜ象牙の塔を去ったかを思い出す。あそこでは伝説が目的だった。ここで要るのは一射だけだ。"
   bodySprite: {fileID: -1889733937686977549, guid: 6f22caf9a772b294c92d02cea6f7b3dd, type: 3}
   walkFrames:
   - {fileID: -6323454350601256274, guid: 6f22caf9a772b294c92d02cea6f7b3dd, type: 3}

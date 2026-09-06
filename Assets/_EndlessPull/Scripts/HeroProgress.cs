@@ -19,6 +19,9 @@ public class HeroProgress : MonoBehaviour
     [Tooltip("Porcentaje del ataque base que se gana por nivel; el grueso del daño lo pone el equipo.")]
     [SerializeField] private float attackGrowthPerLevel = 0.05f;
 
+    [Tooltip("Porcentaje del maná base que se gana por nivel; sin esto todos se quedaban en el 50 del asset.")]
+    [SerializeField] private float manaGrowthPerLevel = 0.06f;
+
     [Tooltip("Tope de nivel por rareza, del 1★ al 7★; la curva del manhwa no es lineal.")]
     [SerializeField] private int[] levelCapByStar = { 10, 20, 40, 60, 80, 99, 110 };
 
@@ -146,7 +149,7 @@ public class HeroProgress : MonoBehaviour
         while (level < savedLevel)
         {
             level++;
-            if (hero != null) hero.ApplyLevelUpBonus(healthGrowthPerLevel, attackGrowthPerLevel);
+            if (hero != null) hero.ApplyLevelUpBonus(healthGrowthPerLevel, attackGrowthPerLevel, manaGrowthPerLevel);
         }
 
         currentEXP = Mathf.Max(0, savedEXP);
@@ -249,7 +252,8 @@ public class HeroProgress : MonoBehaviour
         GrantSubclassIfDue();
         HeroAscended?.Invoke(hero, hero.StarRank);
 
-        level = 1;
+        // El nivel NO se reinicia al ascender: lo que sube es el tope por rareza. Reiniciarlo
+        // tiraba a la basura todo lo peleado y hacía que ascender fuese un castigo.
         currentEXP = 0;
 
         RefreshLabel();
@@ -288,7 +292,7 @@ public class HeroProgress : MonoBehaviour
         level++;
 
         int healthGain = hero != null
-            ? hero.ApplyLevelUpBonus(healthGrowthPerLevel, attackGrowthPerLevel)
+            ? hero.ApplyLevelUpBonus(healthGrowthPerLevel, attackGrowthPerLevel, manaGrowthPerLevel)
             : 0;
 
         RefreshLabel();

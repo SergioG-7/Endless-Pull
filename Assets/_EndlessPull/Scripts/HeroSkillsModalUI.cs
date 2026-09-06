@@ -123,12 +123,12 @@ public class HeroSkillsModalUI : MonoBehaviour
             passiveBody.text = sb.ToString();
         }
 
-        // Pericia de arma: una por línea, mismo formato que el resto. La explicación general baja
-        // a letra pequeña, que ocupaba tanto como la propia lista.
-        string maestria = hero.Mastery.DescribeLines();
-        masteryBody.text = (string.IsNullOrEmpty(maestria) ? LocalizationManager.Get("UI_MASTERY_NONE") : maestria) +
-                            $"\n<size={UITheme.SizeCaption}><color={UITheme.Tag(UITheme.TextMuted)}>" +
-                            $"{LocalizationManager.Get("UI_MASTERY_EXPLANATION")}</color></size>";
+        // Pericia de arma: una por línea, incluida la del arma que lleva puesta aunque esté a
+        // cero. Sin párrafo explicativo: ocupaba más que la propia lista.
+        string maestria = hero.Mastery.DescribeLines(hero.EquippedWeaponType);
+        masteryBody.text = string.IsNullOrEmpty(maestria)
+            ? LocalizationManager.Get("UI_MASTERY_NONE")
+            : maestria;
     }
 
     private void Build()

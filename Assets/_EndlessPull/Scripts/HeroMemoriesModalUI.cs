@@ -84,14 +84,67 @@ public class HeroMemoriesModalUI : MonoBehaviour
         // Bio primero y recuerdos después: la bio es lo que ya sabes de él, los recuerdos lo que
         // te vas ganando.
         var texto = new System.Text.StringBuilder();
-        if (!string.IsNullOrEmpty(hero.Data.bio))
-            texto.Append($"<i>{hero.Data.bio}</i>\n\n");
+        // La bio va por GetLocalizedBio(): leer hero.Data.bio directo dejaba el trasfondo en
+        // español aunque el panel se refrescara al cambiar de idioma.
+        string trasfondo = hero.Data.GetLocalizedBio();
+        if (!string.IsNullOrEmpty(trasfondo))
+            texto.Append(trasfondo + "\n\n");
 
         texto.Append(hero.MemoriesReport());
+        texto.Append(DeedsReport());
+        texto.Append(BondsReport());
         cuerpo.text = texto.ToString();
 
         // El panel crece con el texto; sin esto los héroes con muchos recuerdos se cortaban.
         LayoutRebuilder.ForceRebuildLayoutImmediate(content);
+    }
+
+    // Lo que lleva hecho: es lo que abre los recuerdos que no dependen de la rareza, así que
+    // tiene que verse en la misma pantalla que los recuerdos sellados.
+    private string DeedsReport()
+        => $"\n\n<b>{LocalizationManager.Get("UI_DEEDS")}</b>\n" +
+           $"<color={UITheme.Tag(UITheme.TextSoft)}>" +
+           string.Format(LocalizationManager.Get("UI_DEEDS_ROW"),
+                         hero.FloorsCleared, hero.EnemiesSlain) + "</color>\n";
+
+    // Con quién ha sobrevivido pisos: los vínculos cerrados primero, y debajo el compañero al
+    // que más cerca está de vincularse, que es lo que empuja a repetir escuadra.
+    private string BondsReport()
+    {
+        var bonds = hero.GetComponent<HeroBonds>();
+        if (bonds == null) return string.Empty;
+
+        var entradas = bonds.Entries();
+        var cuerpo = new System.Text.StringBuilder();
+
+        foreach (var entrada in entradas)
+        {
+            if (!entrada.bonded) continue;
+
+            var color = entrada.fallen ? UITheme.TextFaint : UITheme.Accent2;
+            cuerpo.Append($"<color={UITheme.Tag(color)}>");
+            cuerpo.Append(string.Format(LocalizationManager.Get("UI_BOND_ROW"),
+                                        entrada.otherName, entrada.floors));
+            if (entrada.fallen) cuerpo.Append("  " + LocalizationManager.Get("UI_BOND_FALLEN"));
+            cuerpo.Append("</color>\n");
+        }
+
+        // El más cercano al umbral, para que se vea a cuánto está el próximo vínculo.
+        foreach (var entrada in entradas)
+        {
+            if (entrada.bonded || entrada.fallen) continue;
+
+            cuerpo.Append($"<color={UITheme.Tag(UITheme.TextFaint)}>");
+            cuerpo.Append(string.Format(LocalizationManager.Get("UI_BOND_PROGRESS"),
+                                        entrada.otherName, entrada.floors, bonds.BondThreshold));
+            cuerpo.Append("</color>\n");
+            break;
+        }
+
+        // Sin nada que contar no se pinta ni el título: un apartado vacío estorba más que ayuda.
+        if (cuerpo.Length == 0) return string.Empty;
+
+        return $"\n\n<b>{LocalizationManager.Get("UI_BONDS")}</b>\n" + cuerpo;
     }
 
     private void Build()

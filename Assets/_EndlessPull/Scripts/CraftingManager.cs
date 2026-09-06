@@ -147,6 +147,20 @@ public class CraftingManager : MonoBehaviour
     [Tooltip("Probabilidad extra de forja por cada artesano asignado al Taller.")]
     [SerializeField] private float artisanSuccessBonus = 0.03f;
 
+    [Tooltip("Probabilidad extra de forja por cada nivel del Taller, en tanto por uno.")]
+    [SerializeField] private float workshopSuccessPerLevel = 0.015f;
+
+    [Tooltip("Tope duro de la probabilidad de forja; forjar nunca llega a ser seguro.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float maxSuccessChance = 0.92f;
+
+    [Tooltip("Probabilidad que resta cada gama de Piedra por encima de la Menor, en tanto por uno.")]
+    [SerializeField] private float stoneSuccessPenaltyPerTier = 0.07f;
+
+    [Tooltip("Suelo de la probabilidad de forja de Piedra; ni la Celestial baja de aquí.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float minStoneSuccessChance = 0.2f;
+
     [Tooltip("Almacén al que van las armas recién fabricadas.")]
     [SerializeField] private ShopManager shop;
 
@@ -327,11 +341,24 @@ public class CraftingManager : MonoBehaviour
             float bonus = 0f;
             foreach (var b in BaseBuilding.All)
                 if (b != null && b.IsUnlocked && b.Type == BuildingType.Workshop)
-                    bonus += 0.05f * b.Level;
+                    bonus += workshopSuccessPerLevel * b.Level;
 
-            return Mathf.Clamp01(successChance + bonus + artisanSuccessBonus * Artisans);
+            // Tope propio, no Clamp01: con el bonus por nivel antiguo un Taller de nivel 6 ya
+            // dejaba la forja al 100% y las piedras salian solas.
+            return Mathf.Clamp(successChance + bonus + artisanSuccessBonus * Artisans,
+                               0f, maxSuccessChance);
         }
     }
+
+    // Fraccion de vida/mana maximos que devuelve cada pocion; la UI la enseña en su ficha.
+    public float PotionHealFraction(PotionTier tier) => potionHealFractionByTier[(int)tier];
+    public float ManaPotionRestoreFraction(PotionTier tier) => manaPotionRestoreFractionByTier[(int)tier];
+
+    // Probabilidad real de forjar esa Piedra: la base del Taller menos el castigo de la gama.
+    // Sin esto las 6 gamas salían al mismo ritmo y la Celestial no costaba más que la Menor.
+    public float StoneSuccessChance(AscensionStoneTier tier)
+        => Mathf.Clamp(EffectiveSuccessChance - stoneSuccessPenaltyPerTier * (int)tier,
+                       minStoneSuccessChance, maxSuccessChance);
 
     public int StoneWoodCost(AscensionStoneTier tier) => Discounted(stoneWoodCostByTier[(int)tier]);
     public int StoneIronCost(AscensionStoneTier tier) => Discounted(stoneIronCostByTier[(int)tier]);
@@ -408,7 +435,7 @@ public class CraftingManager : MonoBehaviour
             return false;
         }
 
-        bool success = Random.value < EffectiveSuccessChance;
+        bool success = Random.value < StoneSuccessChance(tier);
 
         if (success)
         {
@@ -562,12 +589,39 @@ public class CraftingManager : MonoBehaviour
         return true;
     }
 
+    [Tooltip("Segundos entre pociones del mismo héroe; sin esto un clic repetido le vacía el inventario encima.")]
+    [SerializeField] private float potionCooldown = 3f;
+
+    // Momento (Time.time) a partir del cual cada héroe puede volver a beber. No se guarda: un
+    // enfriamiento de tres segundos no tiene sentido entre sesiones.
+    private readonly Dictionary<HeroController, float> potionReadyAt = new Dictionary<HeroController, float>();
+
+    public float PotionCooldown => potionCooldown;
+
+    public float PotionCooldownLeft(HeroController hero)
+    {
+        if (hero == null) return 0f;
+        return potionReadyAt.TryGetValue(hero, out float listo) ? Mathf.Max(0f, listo - Time.time) : 0f;
+    }
+
+    public bool PotionReady(HeroController hero) => PotionCooldownLeft(hero) <= 0f;
+
+    private void ArmPotionCooldown(HeroController hero)
+    {
+        if (hero != null) potionReadyAt[hero] = Time.time + potionCooldown;
+    }
+
     // Cura con la poción más débil disponible primero (ahorra las fuertes para cuando hagan
     // falta de verdad); la usan tanto la ficha manual del héroe en base como la auto-curación
     // en combate.
-    public bool TryUseHealingPotion(HeroController target)
+    public bool TryUseHealingPotion(HeroController target) => TryUseHealingPotion(target, true);
+
+    // El decreto Curar Escuadra pasa respectCooldown en false: ya tiene su propio enfriamiento y
+    // si no, un solo héroe recién curado cortaba la cura de toda la escuadra.
+    public bool TryUseHealingPotion(HeroController target, bool respectCooldown)
     {
         if (target == null) return false;
+        if (respectCooldown && !PotionReady(target)) return false;
 
         for (int i = 0; i < healingPotionCounts.Length; i++)
         {
@@ -576,6 +630,7 @@ public class CraftingManager : MonoBehaviour
             target.Heal(Mathf.RoundToInt(target.MaxHealth * potionHealFractionByTier[i]));
 
             healingPotionCounts[i]--;
+            ArmPotionCooldown(target);
             PotionsChanged?.Invoke((PotionTier)i, healingPotionCounts[i]);
             AudioManager.Play(SfxId.Potion);
 
@@ -620,9 +675,12 @@ public class CraftingManager : MonoBehaviour
     }
 
     // Restaura MP con la poción de maná más débil disponible primero; mismo criterio que curación.
-    public bool TryUseManaPotion(HeroController target)
+    public bool TryUseManaPotion(HeroController target) => TryUseManaPotion(target, true);
+
+    public bool TryUseManaPotion(HeroController target, bool respectCooldown)
     {
         if (target == null) return false;
+        if (respectCooldown && !PotionReady(target)) return false;
 
         for (int i = 0; i < manaPotionCounts.Length; i++)
         {
@@ -631,6 +689,7 @@ public class CraftingManager : MonoBehaviour
             target.RestoreMP(Mathf.RoundToInt(target.MaxMP * manaPotionRestoreFractionByTier[i]));
 
             manaPotionCounts[i]--;
+            ArmPotionCooldown(target);
             ManaPotionsChanged?.Invoke((PotionTier)i, manaPotionCounts[i]);
             AudioManager.Play(SfxId.Potion);
 

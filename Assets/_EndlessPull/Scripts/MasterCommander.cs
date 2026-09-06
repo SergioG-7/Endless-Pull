@@ -117,20 +117,26 @@ public class MasterCommander : MonoBehaviour
         }
 
         int count = 0;
+        int desobedecen = 0;
         foreach (var hero in DeployedParty())
         {
+            // La moral por los suelos tiene consecuencia: el decreto puede no llegarle.
+            if (!hero.ObeysDecree()) { desobedecen++; continue; }
+
             hero.SetForcedTarget(prey);
+            hero.Bark(0.25f, "OBEY_FOCUS_1", "OBEY_FOCUS_2", "OBEY_FOCUS_3");
             count++;
         }
 
-        if (count == 0) return false;
+        // El decreto se gasta igual aunque nadie lo siga: la orden se dio.
+        if (count == 0 && desobedecen == 0) return false;
 
         focusFireTimer = FocusFireCooldown;
         AudioManager.Play(SfxId.DecreeFocusFire);
         DamageTextManager.Show(prey.transform.position, LocalizationManager.Get("FX_FOCUS_FIRE"), new Color(1f, 0.55f, 0.2f));
         VfxManager.Play(VfxId.DecreeCast, prey.transform.position);
         Debug.Log($"[Decreto] Enfocar Objetivo: {count} héroe(s) sobre {prey.Data.enemyName} " +
-                  $"({prey.CurrentHealth} PV).", this);
+                  $"({prey.CurrentHealth} PV); {desobedecen} desobedecen.", this);
         return true;
     }
 
@@ -144,18 +150,23 @@ public class MasterCommander : MonoBehaviour
         }
 
         int count = 0;
+        int desobedecen = 0;
+        var escuadra = DeployedParty();
         AudioManager.Play(SfxId.DecreeRegroup);
 
-        foreach (var hero in DeployedParty())
+        foreach (var hero in escuadra)
         {
+            if (!hero.ObeysDecree()) { desobedecen++; continue; }
+
             hero.SetForcedTarget(null);
             hero.ApplyDefensiveStance(regroupDuration, regroupRetreat);
+            hero.Bark(0.25f, "OBEY_REGROUP_1", "OBEY_REGROUP_2", "OBEY_REGROUP_3");
             DamageTextManager.Show(hero.transform.position, LocalizationManager.Get("FX_DEFENSE"), new Color(0.6f, 0.8f, 1f));
             VfxManager.Play(VfxId.DecreeCast, hero.transform.position);
             count++;
         }
 
-        if (count == 0)
+        if (escuadra.Count == 0)
         {
             Debug.LogWarning("[Decreto] No hay escuadra desplegada que reagrupar.", this);
             return false;
@@ -163,7 +174,7 @@ public class MasterCommander : MonoBehaviour
 
         regroupTimer = RegroupCooldown;
         Debug.Log($"[Decreto] Reagruparse: {count} héroe(s) retroceden {regroupRetreat} unidades " +
-                  $"durante {regroupDuration}s.", this);
+                  $"durante {regroupDuration}s; {desobedecen} desobedecen.", this);
         return true;
     }
 
@@ -269,7 +280,7 @@ public class MasterCommander : MonoBehaviour
         foreach (var hero in heroes)
         {
             if (hero == null || hero.CurrentHealth >= hero.MaxHealth) continue;
-            if (!crafting.TryUseHealingPotion(hero)) break;
+            if (!crafting.TryUseHealingPotion(hero, false)) break;
 
             VfxManager.Play(VfxId.Heal, hero.transform.position);
             curados++;

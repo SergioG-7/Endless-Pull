@@ -54,11 +54,17 @@ public class RosterUI : MonoBehaviour
     private const float ColName = 300f;
     private const float ColHealth = 190f;
     private const float ColStatus = 220f;
+    private const float SearchWidth = 220f;
+    private const float SearchLeft = 250f;
 
     private float refreshTimer;
 
     private RosterFilter filter = RosterFilter.All;
     private RosterSort sort = RosterSort.Rarity;
+
+    // Texto del buscador; con el roster grande es la unica forma de llegar a uno concreto.
+    private TMP_InputField searchField;
+    private string search = string.Empty;
 
     private readonly List<Button> tabButtons = new List<Button>();
     private readonly List<TMP_Text> tabLabels = new List<TMP_Text>();
@@ -129,6 +135,8 @@ public class RosterUI : MonoBehaviour
         // controles se apilan hacia la izquierda dejándole sitio de sobra.
         float cursor = -(28f + 36f + BtnGap);
 
+        CreateSearchField(bar.transform);
+
         sortButton = CreateBarButton(bar.transform, "Btn_Sort",
             LocalizationManager.Get("UI_SORT_RARITY"), ref cursor, OnSortPressed);
         sortLabel = sortButton.GetComponentInChildren<TMP_Text>();
@@ -151,6 +159,71 @@ public class RosterUI : MonoBehaviour
     }
 
     // El ancho lo marca el texto; el cursor avanza hacia la izquierda tras cada botón.
+    // Buscador por nombre, pegado a la derecha del título del panel. Se construye a mano porque
+    // UIBuild no tiene campo de texto: es el único del juego.
+    private void CreateSearchField(Transform parent)
+    {
+        var go = new GameObject("Search", typeof(RectTransform), typeof(Image), typeof(TMP_InputField));
+        go.transform.SetParent(parent, false);
+
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0f, 1f);
+        rt.anchorMax = new Vector2(0f, 1f);
+        rt.pivot = new Vector2(0f, 1f);
+        rt.sizeDelta = new Vector2(SearchWidth, TabHeight);
+        rt.anchoredPosition = new Vector2(SearchLeft, -22f);
+
+        var fondo = UITheme.Surface(go, UITheme.Neutral, UITheme.BorderStrong, UITheme.RadiusButton);
+
+        // El area de texto recorta lo que sobresalga; sin ella el texto largo se sale de la caja.
+        var areaGo = new GameObject("Area", typeof(RectTransform), typeof(RectMask2D));
+        areaGo.transform.SetParent(go.transform, false);
+        var art = areaGo.GetComponent<RectTransform>();
+        art.anchorMin = Vector2.zero;
+        art.anchorMax = Vector2.one;
+        art.offsetMin = new Vector2(10f, 4f);
+        art.offsetMax = new Vector2(-10f, -4f);
+
+        var pista = NewFieldLabel(areaGo.transform, "Placeholder", UITheme.TextFaint);
+        pista.text = LocalizationManager.Get("UI_SEARCH_HINT");
+
+        var texto = NewFieldLabel(areaGo.transform, "Text", UITheme.Text);
+
+        searchField = go.GetComponent<TMP_InputField>();
+        searchField.targetGraphic = fondo;
+        searchField.textViewport = art;
+        searchField.textComponent = texto;
+        searchField.placeholder = pista;
+        searchField.lineType = TMP_InputField.LineType.SingleLine;
+        searchField.characterLimit = 24;
+        searchField.onValueChanged.AddListener(OnSearchChanged);
+    }
+
+    private static TextMeshProUGUI NewFieldLabel(Transform parent, string name, Color color)
+    {
+        var go = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
+        go.transform.SetParent(parent, false);
+
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
+
+        var tmp = go.GetComponent<TextMeshProUGUI>();
+        tmp.fontSize = UITheme.SizeBody;
+        tmp.alignment = TextAlignmentOptions.Left;
+        tmp.color = color;
+        tmp.richText = false;
+        return tmp;
+    }
+
+    private void OnSearchChanged(string value)
+    {
+        search = value != null ? value.Trim() : string.Empty;
+        Rebuild();
+    }
+
     private Button CreateBarButton(Transform parent, string name, string text,
                                    ref float cursor,
                                    UnityEngine.Events.UnityAction onClick)
@@ -229,6 +302,11 @@ public class RosterUI : MonoBehaviour
 
     private bool PassesFilter(HeroController hero)
     {
+        // El buscador manda sobre la pestaña: si escribes un nombre, quieres ver ese nombre.
+        if (!string.IsNullOrEmpty(search)
+            && hero.Data.heroName.IndexOf(search, System.StringComparison.OrdinalIgnoreCase) < 0)
+            return false;
+
         switch (filter)
         {
             case RosterFilter.OneStar: return hero.StarRank == 1;
@@ -311,11 +389,19 @@ public class RosterUI : MonoBehaviour
         if (a == null || a.Data == null) return 1;
         if (b == null || b.Data == null) return -1;
 
+        // Dos criterios siempre, en el orden que toque: así un 4★ de nivel alto nunca aparece
+        // entre los 5★ ordenando por rareza, ni al revés.
         int primary = sort == RosterSort.Level
             ? LevelOf(b).CompareTo(LevelOf(a))
             : b.StarRank.CompareTo(a.StarRank);
 
         if (primary != 0) return primary;
+
+        int secondary = sort == RosterSort.Level
+            ? b.StarRank.CompareTo(a.StarRank)
+            : LevelOf(b).CompareTo(LevelOf(a));
+
+        if (secondary != 0) return secondary;
 
         return string.Compare(a.Data.heroName, b.Data.heroName, System.StringComparison.Ordinal);
     }

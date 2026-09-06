@@ -42,6 +42,11 @@ public class HeroSaveData
     // vínculos empiezan a contar desde la partida actual sin migración.
     public List<HeroBondSaveData> bonds = new List<HeroBondSaveData>();
 
+    // Hoja de servicios del héroe; abre sus recuerdos aparte de la rareza. 0 en saves antiguos:
+    // el historial arranca desde la partida actual, sin migración.
+    public int floorsCleared;
+    public int enemiesSlain;
+
     // Los enums van como int: es lo único que JsonUtility garantiza dentro de una lista.
     public List<int> passives = new List<int>();
     public List<MasterySaveData> mastery = new List<MasterySaveData>();
@@ -408,6 +413,8 @@ public class SaveManager : MonoBehaviour
                 skillThreshold = progress != null ? progress.SkillThreshold : 0.15f,
                 skillRefinement = progress != null ? progress.SkillRefinement : 0f,
                 bonds = hero.GetComponent<HeroBonds>()?.Capture() ?? new List<HeroBondSaveData>(),
+                floorsCleared = hero.FloorsCleared,
+                enemiesSlain = hero.EnemiesSlain,
                 assignedBuilding = hero.AssignedBuilding != null ? hero.AssignedBuilding.SaveId : string.Empty,
                 bonusStarRank = hero.BonusStarRank,
                 ascensionMultiplier = hero.AscensionMultiplier,
@@ -765,6 +772,7 @@ public class SaveManager : MonoBehaviour
             hero.LoadAffinity(entry.affinity);
             hero.LoadGearUpgrade(entry.gearUpgradeAttack, entry.gearUpgradeDefense);
             hero.GetComponent<HeroBonds>()?.Restore(entry.bonds);
+            hero.LoadDeeds(entry.floorsCleared, entry.enemiesSlain);
 
             var passives = new List<PassiveSkill>();
             foreach (int value in entry.passives) passives.Add((PassiveSkill)value);

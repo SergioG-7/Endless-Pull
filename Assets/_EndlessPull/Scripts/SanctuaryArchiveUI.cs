@@ -93,7 +93,46 @@ public class SanctuaryArchiveUI : MonoBehaviour
             }
         }
 
+        y = AddHeroMemories(y);
+
         lista.sizeDelta = new Vector2(lista.sizeDelta.x, -y + 16f);
+    }
+
+    // Recuerdos ya recuperados de todo el roster: es lo que convierte el Archivo en el sitio
+    // donde vive la historia de tus héroes, y no solo cuatro fichas de lore por piso.
+    private float AddHeroMemories(float y)
+    {
+        y = AddHeader(LocalizationManager.Get("UI_ARCHIVE_MEMORIES"), y);
+
+        var todos = UnityEngine.Object.FindObjectsByType<HeroController>(
+            FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        int escritos = 0;
+        foreach (var hero in todos)
+        {
+            if (hero == null || hero.Data == null || hero.Discarded) continue;
+            if (hero.Data.memories == null || hero.Data.memories.Length == 0) continue;
+
+            bool cabecera = false;
+            foreach (var memoria in hero.Data.memories)
+            {
+                if (memoria == null || !memoria.IsValid || !hero.MemoryUnlocked(memoria)) continue;
+
+                if (!cabecera)
+                {
+                    y = AddRow($"<b>{hero.Data.heroName}</b>", UITheme.Accent2, y);
+                    cabecera = true;
+                }
+
+                y = AddRow(memoria.GetLocalized(), UITheme.TextMuted, y);
+                escritos++;
+            }
+        }
+
+        if (escritos == 0)
+            y = AddRow(LocalizationManager.Get("UI_ARCHIVE_NO_MEMORIES"), UITheme.TextMuted, y);
+
+        return y;
     }
 
     private float AddHeader(string text, float y)

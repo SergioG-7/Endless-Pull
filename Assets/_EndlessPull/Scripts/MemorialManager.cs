@@ -23,6 +23,10 @@ public class MemorialRecord
     // ficha tiene que seguir leyéndose igual dentro de un año.
     public string lastEquipment = string.Empty;
 
+    // Nombre del asset de HeroData, solo para recuperar el retrato en la Galería. Vacío en
+    // registros antiguos: entonces se busca por nombre visible.
+    public string heroAsset = string.Empty;
+
     public string CauseLabel()
         => cause == MemorialCause.Synthesis
            ? LocalizationManager.Get("UI_MEMORIAL_SYNTH")
@@ -77,7 +81,8 @@ public class MemorialManager : MonoBehaviour
             level = progress != null ? progress.Level : 1,
             floor = floor,
             cause = cause,
-            lastEquipment = DescribeEquipment(hero)
+            lastEquipment = DescribeEquipment(hero),
+            heroAsset = hero.Data != null ? hero.Data.name : string.Empty
         });
 
         RecordsChanged?.Invoke();

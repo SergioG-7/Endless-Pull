@@ -110,17 +110,28 @@ public class WeaponMastery
     }
 
     // Igual pero una por linea y con el formato "Arma: Nv.N (rango)" del resto del modal.
-    public string DescribeLines()
+    // equipada: el tipo que lleva puesto ahora mismo. Sale siempre, aunque esté a cero, para
+    // que al cambiar de arma se vea en el acto que empieza una pericia nueva desde Nv.1.
+    public string DescribeLines(WeaponType equipada = WeaponType.None)
     {
         var sb = new System.Text.StringBuilder();
 
+        var tipos = new List<WeaponType>();
         foreach (var pair in points)
+            if (pair.Value > 0) tipos.Add(pair.Key);
+
+        if (equipada != WeaponType.None && !tipos.Contains(equipada)) tipos.Add(equipada);
+
+        foreach (var tipo in tipos)
         {
-            if (pair.Value <= 0) continue;
+            var pair = new KeyValuePair<WeaponType, int>(tipo, PointsOf(tipo));
             if (sb.Length > 0) sb.Append('\n');
 
-            sb.Append($"<b>{WeaponTypes.DisplayName(pair.Key)}</b>: Nv.{LevelOf(pair.Key)} " +
-                      $"({MasteryRanks.DisplayName(RankOf(pair.Key))})");
+            int nivel = LevelOf(pair.Key);
+            sb.Append($"<b>{WeaponTypes.DisplayName(pair.Key)}</b>  " +
+                      $"{LocalizationManager.Get("UI_LEVEL_ABBR")}{nivel}/{maxLevel}  " +
+                      $"({MasteryRanks.DisplayName(RankOf(pair.Key))})  " +
+                      $"+{nivel * bonusPerLevel * 100f:0}% dmg");
         }
 
         return sb.ToString();

@@ -63,6 +63,51 @@ public class EnemyController : MonoBehaviour, IHealthOwner
     [Tooltip("Tinte del jefe mientras carga el golpe.")]
     [SerializeField] private Color bossWindupTint = new Color(1f, 0.25f, 0.20f);
 
+    [Tooltip("Vida de la barrera del jefe, en tanto por uno de su vida máxima.")]
+    [SerializeField] private float barrierFraction = 0.25f;
+
+    [Tooltip("Vida a la que el jefe con Barrera vuelve a levantarla una segunda vez.")]
+    [SerializeField] private float barrierRaiseAgainAt = 0.5f;
+
+    [Tooltip("Tinte del jefe mientras la barrera aguanta.")]
+    [SerializeField] private Color barrierTint = new Color(0.45f, 0.70f, 1f);
+
+    [Tooltip("Refuerzos que invoca el jefe en cada umbral de vida.")]
+    [SerializeField] private int summonAdds = 2;
+
+    [Tooltip("Fracciones de vida a las que el jefe invoca refuerzos.")]
+    [SerializeField] private float[] summonThresholds = { 0.66f, 0.33f };
+
+    [Tooltip("Segundos entre zonas del suelo.")]
+    [SerializeField] private float zoneInterval = 8f;
+
+    [Tooltip("Aviso previo antes de que la zona empiece a quemar.")]
+    [SerializeField] private float zoneWindup = 1.3f;
+
+    [Tooltip("Segundos que la zona sigue haciendo daño una vez activa.")]
+    [SerializeField] private float zoneDuration = 4f;
+
+    [Tooltip("Radio de la zona del suelo.")]
+    [SerializeField] private float zoneRadius = 2.4f;
+
+    [Tooltip("Daño por segundo dentro de la zona, en tanto por uno del ataque del jefe.")]
+    [SerializeField] private float zoneDamageFactor = 0.45f;
+
+    [Tooltip("Vida por debajo de la cual el jefe entra en frenesí.")]
+    [SerializeField] private float frenzyThreshold = 0.30f;
+
+    [Tooltip("Ataque del jefe en frenesí.")]
+    [SerializeField] private float frenzyAttackMultiplier = 1.35f;
+
+    [Tooltip("Enfriamiento de golpe en frenesí; por debajo de 1 pega más a menudo.")]
+    [SerializeField] private float frenzyCooldownFactor = 0.6f;
+
+    [Tooltip("Fracción del daño que el jefe se cura mientras dura el frenesí.")]
+    [SerializeField] private float frenzyLifeSteal = 0.25f;
+
+    [Tooltip("Tinte del jefe en frenesí.")]
+    [SerializeField] private Color frenzyTint = new Color(1f, 0.45f, 0.35f);
+
     [Tooltip("Fracción de la vida máxima en un solo golpe a partir de la cual se ve el flash blanco.")]
     [SerializeField] private float hitFlashThreshold = 0.12f;
 
@@ -87,6 +132,33 @@ public class EnemyController : MonoBehaviour, IHealthOwner
     // Los jefes pegan además un golpe en área cada pocos segundos.
     private bool isBoss;
     private float slamTimer;
+
+    // Mecánicas del jefe: una fija por rotación y, en los jefes altos, una segunda encima.
+    private BossMechanic mechanicA = BossMechanic.None;
+    private BossMechanic mechanicB = BossMechanic.None;
+
+    private float barrierHealth;
+    private bool barrierRaisedTwice;
+    private int summonsDone;
+    private float zoneTimer;
+    private bool frenzied;
+    private float frenzyMultiplier = 1f;
+
+    public bool HasBarrier => barrierHealth > 0f;
+    public bool IsFrenzied => frenzied;
+
+    public bool HasMechanic(BossMechanic mechanic)
+        => mechanic != BossMechanic.None && (mechanicA == mechanic || mechanicB == mechanic);
+
+    // La llama el WaveManager justo después de MakeBoss, con lo que le toque a ese jefe.
+    public void SetMechanics(BossMechanic first, BossMechanic second)
+    {
+        mechanicA = first;
+        mechanicB = second;
+
+        if (HasMechanic(BossMechanic.Barrier)) RaiseBarrier();
+        if (HasMechanic(BossMechanic.GroundZone)) zoneTimer = zoneInterval;
+    }
 
     // Aviso previo: el golpe se ve venir, para que dé tiempo a reagrupar.
     private bool windingUp;
@@ -161,10 +233,14 @@ public class EnemyController : MonoBehaviour, IHealthOwner
     public int CurrentHealth => currentHealth;
     public int MaxHealth => data != null ? Mathf.RoundToInt(data.maxHealth * statMultiplier) : 0;
     public int Attack => data != null
-        ? Mathf.RoundToInt(data.baseAttack * attackMultiplier * (IsRanged ? rangedDamageMultiplier : 1f))
+        ? Mathf.RoundToInt(data.baseAttack * attackMultiplier * frenzyMultiplier * (IsRanged ? rangedDamageMultiplier : 1f))
         : 0;
 
     public float AttackMultiplier => attackMultiplier;
+
+    // En frenesí el jefe golpea más a menudo; el resto del tiempo es el valor del asset.
+    private float AttackCooldown
+        => data != null ? data.attackCooldown * (frenzied ? frenzyCooldownFactor : 1f) : 1f;
 
     // Intervención del Maestro: mientras dure, la armadura de este enemigo no descuenta nada.
     private float armorBrokenUntil;
@@ -241,7 +317,11 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         if (tauntTimer > 0f) tauntTimer -= Time.deltaTime;
         if (burstWindowTimer > 0f) burstWindowTimer -= Time.deltaTime;
 
-        if (isBoss) TickBossSlam();
+        if (isBoss)
+        {
+            TickBossSlam();
+            TickBossMechanics();
+        }
 
         ScanForHeroes();
 
@@ -267,7 +347,7 @@ public class EnemyController : MonoBehaviour, IHealthOwner
             if (windupTimer > 0f) return;
 
             windingUp = false;
-            if (body != null) body.color = baseTint;
+            if (body != null) body.color = CurrentTint;
             ShowTelegraph(false);
             ExecuteSlam();
             return;
@@ -341,6 +421,165 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         sharedCircle = Sprite.Create(tex, new Rect(0f, 0f, size, size), new Vector2(0.5f, 0.5f), size);
         return sharedCircle;
     }
+
+    // --- Mecánicas de jefe (rotación por número de jefe, ver BossMechanics) ---
+
+    // Zona del suelo y entrada en frenesí; la invocación cuelga de los umbrales de vida.
+    private void TickBossMechanics()
+    {
+        if (HasMechanic(BossMechanic.GroundZone))
+        {
+            zoneTimer -= Time.deltaTime;
+            if (zoneTimer <= 0f)
+            {
+                zoneTimer = zoneInterval;
+                StartCoroutine(GroundZoneRoutine());
+            }
+        }
+
+        if (!frenzied && HasMechanic(BossMechanic.Frenzy) && MaxHealth > 0
+            && (float)currentHealth / MaxHealth <= frenzyThreshold)
+            EnterFrenzy();
+    }
+
+    // Umbrales de vida: invocar refuerzos y volver a levantar la barrera una segunda vez.
+    private void CheckBossThresholds()
+    {
+        if (!isBoss || MaxHealth <= 0 || currentHealth <= 0) return;
+
+        float ratio = (float)currentHealth / MaxHealth;
+
+        if (HasMechanic(BossMechanic.Summon) && summonThresholds != null
+            && summonsDone < summonThresholds.Length && ratio <= summonThresholds[summonsDone])
+        {
+            summonsDone++;
+            SummonReinforcements();
+        }
+
+        if (HasMechanic(BossMechanic.Barrier) && !barrierRaisedTwice && ratio <= barrierRaiseAgainAt)
+        {
+            barrierRaisedTwice = true;
+            RaiseBarrier();
+        }
+    }
+
+    private void SummonReinforcements()
+    {
+        int llegan = WaveManager.SummonBossAdds(transform.position, summonAdds);
+        if (llegan <= 0) return;
+
+        AnnounceMechanic(BossMechanic.Summon);
+        Debug.Log($"[Jefe] {data.enemyName} invoca {llegan} refuerzo(s).", this);
+    }
+
+    private void RaiseBarrier()
+    {
+        barrierHealth = Mathf.Max(1f, MaxHealth * barrierFraction);
+
+        if (body != null) body.color = barrierTint;
+        AnnounceMechanic(BossMechanic.Barrier);
+        Debug.Log($"[Jefe] {data.enemyName} levanta su barrera ({barrierHealth:0} de aguante).", this);
+    }
+
+    // Tinte que le toca al jefe fuera del aviso de golpe: barrera, frenesí o el suyo de siempre.
+    private Color CurrentTint
+        => barrierHealth > 0f ? barrierTint : frenzied ? frenzyTint : baseTint;
+
+    private void BreakBarrier()
+    {
+        barrierHealth = 0f;
+
+        if (body != null) body.color = CurrentTint;
+        DamageTextManager.Show(transform.position, LocalizationManager.Get("FX_BARRIER_BROKEN"), barrierTint);
+        AudioManager.PlayAt(SfxId.Impact, transform.position);
+    }
+
+    private void EnterFrenzy()
+    {
+        frenzied = true;
+        frenzyMultiplier = frenzyAttackMultiplier;
+
+        if (body != null) body.color = CurrentTint;
+        AnnounceMechanic(BossMechanic.Frenzy);
+        Debug.Log($"[Jefe] {data.enemyName} entra en frenesí.", this);
+    }
+
+    // Cura del robo de vida del frenesí; nunca por encima del máximo.
+    private void HealBoss(int amount)
+    {
+        if (amount <= 0 || currentHealth <= 0) return;
+
+        currentHealth = Mathf.Min(MaxHealth, currentHealth + amount);
+        HealthChanged?.Invoke(currentHealth, MaxHealth);
+    }
+
+    // Marca en el suelo bajo un héroe: primero avisa, luego quema a quien siga dentro.
+    private IEnumerator GroundZoneRoutine()
+    {
+        var victima = target != null ? target : NearestDeployedHero();
+        if (victima == null) yield break;
+
+        Vector2 centro = victima.transform.position;
+
+        var go = new GameObject("BossGroundZone", typeof(SpriteRenderer));
+        go.transform.position = centro;
+        go.transform.localScale = Vector3.one * (zoneRadius * 2f);
+
+        var marca = go.GetComponent<SpriteRenderer>();
+        marca.sprite = CircleSprite();
+        marca.color = new Color(0.85f, 0.35f, 1f, 0.55f);
+        marca.sortingOrder = -50;
+
+        AnnounceMechanic(BossMechanic.GroundZone);
+        yield return new WaitForSeconds(zoneWindup);
+
+        if (marca != null) marca.color = new Color(0.95f, 0.25f, 0.85f, 0.80f);
+
+        int porSegundo = Mathf.Max(1, Mathf.RoundToInt(Attack * zoneDamageFactor));
+        float restante = zoneDuration;
+        float radioSqr = zoneRadius * zoneRadius;
+
+        while (restante > 0f)
+        {
+            yield return new WaitForSeconds(1f);
+            restante -= 1f;
+
+            foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None))
+            {
+                if (!hero.IsDeployed || hero.CurrentHealth <= 0) continue;
+                if (((Vector2)hero.transform.position - centro).sqrMagnitude > radioSqr) continue;
+
+                hero.TakeDamage(porSegundo, true);
+            }
+        }
+
+        if (go != null) Destroy(go);
+    }
+
+    private HeroController NearestDeployedHero()
+    {
+        HeroController cerca = null;
+        float mejor = float.MaxValue;
+
+        foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None))
+        {
+            if (!hero.IsDeployed || hero.CurrentHealth <= 0) continue;
+
+            float d = ((Vector2)(hero.transform.position - transform.position)).sqrMagnitude;
+            if (d >= mejor) continue;
+
+            mejor = d;
+            cerca = hero;
+        }
+
+        return cerca;
+    }
+
+    // Rótulo sobre el jefe: sin esto la mecánica pasa desapercibida entre los números de daño.
+    private void AnnounceMechanic(BossMechanic mechanic)
+        => ScreenBanner.ShowCompact(
+            $"{data.enemyName}: {BossMechanics.DisplayName(mechanic)} - {BossMechanics.Description(mechanic)}",
+            3f, UITheme.Danger);
 
     private void ExecuteSlam()
     {
@@ -457,7 +696,7 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         if (distance <= range)
         {
             state = EnemyState.Attack;
-            attackTimer = data.attackCooldown;   // no golpea nada más llegar
+            attackTimer = AttackCooldown;   // no golpea nada más llegar
             return;
         }
 
@@ -500,7 +739,7 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         attackTimer -= Time.deltaTime;
         if (attackTimer > 0f) return;
 
-        attackTimer = data.attackCooldown;
+        attackTimer = AttackCooldown;
 
         // Tiradores y chamanes disparan: el golpe tarda en llegar y se ve venir.
         if (AttackRange >= rangedThreshold)
@@ -512,8 +751,20 @@ public class EnemyController : MonoBehaviour, IHealthOwner
 
         if (animator != null) animator.PlayAttackLunge(target.transform.position);
         if (isBoss) CombatFeelManager.OnBossImpact();
-        target.TakeDamage(Attack, data.magicAttack);
+
+        int golpe = Attack;
+        target.TakeDamage(golpe, data.magicAttack);
+
+        // En frenesí el jefe se cura de lo que reparte; es lo que obliga a matarlo deprisa.
+        if (frenzied) HealBoss(Mathf.RoundToInt(golpe * frenzyLifeSteal));
     }
+
+    // Quién está repartiendo el golpe ahora mismo. Las habilidades y los proyectiles no pasan por
+    // StrikeEnemy, así que sin esto sus bajas no se le apuntaban a nadie. Se arma justo alrededor
+    // del golpe y se desarma siempre, incluso si la rama de la habilidad revienta.
+    private static HeroController currentAttacker;
+
+    public static void SetAttacker(HeroController hero) => currentAttacker = hero;
 
     public void TakeDamage(int amount) => TakeDamage(amount, false, 0f);
 
@@ -531,9 +782,20 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         int finalDamage = ignoresDefense
             ? Mathf.Max(1, amount)
             : Mathf.Max(Mathf.RoundToInt(amount * CombatTuning.MinDamageFraction), amount - defensa, 1);
+        // La barrera se come el golpe entero: hasta que no cae, la vida no baja.
+        if (barrierHealth > 0f)
+        {
+            barrierHealth -= finalDamage;
+            DamageTextManager.Show(transform.position, finalDamage.ToString(), barrierTint);
+
+            if (barrierHealth <= 0f) BreakBarrier();
+            return;
+        }
+
         currentHealth = Mathf.Max(0, currentHealth - finalDamage);
         HealthChanged?.Invoke(currentHealth, MaxHealth);
         TrackBurstDamage(finalDamage);
+        CheckBossThresholds();
 
         // Golpe grande de un solo tirón: el flash blanco lo delata igual que a una ráfaga acumulada.
         if (MaxHealth > 0 && finalDamage >= MaxHealth * hitFlashThreshold) HitFlash();
@@ -547,6 +809,7 @@ public class EnemyController : MonoBehaviour, IHealthOwner
             AudioManager.PlayAt(SfxId.Defeat, transform.position);
             Debug.Log($"[Enemy] {data.enemyName} destruido.", this);
             QuestManager.Report(QuestKind.KillEnemies);
+            if (currentAttacker != null) currentAttacker.CreditKill();
             Destroy(gameObject);
         }
     }

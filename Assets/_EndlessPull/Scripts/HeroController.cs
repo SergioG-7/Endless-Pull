@@ -101,12 +101,6 @@ public class HeroController : MonoBehaviour, IHealthOwner
     [Tooltip("Cada cuántos segundos vuelve a buscar enemigos cercanos.")]
     [SerializeField] private float scanInterval = 0.25f;
 
-    [Tooltip("Maná que se regenera por segundo fuera de combate.")]
-    [SerializeField] private float mpRegenOutOfCombat = 2f;
-
-    [Tooltip("Maná que se regenera por segundo en combate.")]
-    [SerializeField] private float mpRegenInCombat = 1f;
-
     [Tooltip("Habilidad activa que gasta maná y entra en enfriamiento.")]
     [SerializeField] private HeroSkill skill = new HeroSkill();
 
@@ -188,6 +182,10 @@ public class HeroController : MonoBehaviour, IHealthOwner
     [Tooltip("Reducción del enfriamiento de habilidad al llegar al refinamiento máximo.")]
     [Range(0f, 1f)]
     [SerializeField] private float maxSkillCooldownReductionFromRefinement = 0.20f;
+
+    [Tooltip("Tope de reducción de enfriamiento sumando refinamiento y pasivas; una habilidad nunca baja de este resto.")]
+    [Range(0f, 0.9f)]
+    [SerializeField] private float skillCooldownReductionCap = 0.60f;
 
     [Tooltip("Probabilidad base de golpe crítico, de 0 a 1.")]
     [Range(0f, 1f)]
@@ -284,6 +282,12 @@ public class HeroController : MonoBehaviour, IHealthOwner
     [Tooltip("Radio máximo de retirada (kite) respecto al puesto de formación en la arena.")]
     [SerializeField] private float maxKiteRadius = 3.5f;
 
+    [Tooltip("Margen dentro del cual ya se considera que está en su puesto de formación.")]
+    [SerializeField] private float formationTolerance = 0.4f;
+
+    [Tooltip("Cuánto puede rebasar la línea del frente quien va a flanquear; sin esto se metían en medio de los enemigos.")]
+    [SerializeField] private float flankOvershoot = 2.5f;
+
     // Estado global (Fase 37): capa de alto nivel sobre la FSM interna, para que el resto del
     // juego (animaciones, IA, HUD) pueda preguntar "en qué modo está" sin conocer HeroState.
     private HeroGlobalState globalState = HeroGlobalState.InBase;
@@ -366,6 +370,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
     // Van en float y se redondean solo al leer la cifra: redondear en cada nivel obligaba a
     // un mínimo de +1, que en un héroe de base baja es más porcentaje del que se pide.
     private float bonusMaxHealth;
+    private float bonusMaxMP;
     private float bonusAttack;
 
     // Mejora de equipo básico del Taller: plano, independiente del nivel y de la ascensión.
@@ -513,15 +518,62 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
             if (sb.Length > 0) sb.Append('\n');
 
-            sb.Append(estrellas >= memoria.starRank
+            sb.Append(MemoryUnlocked(memoria)
                 ? memoria.GetLocalized()
-                : $"<color={UITheme.Tag(UITheme.TextFaint)}>" +
-                  string.Format(LocalizationManager.Get("UI_MEMORY_LOCKED"), memoria.starRank) +
-                  "</color>");
+                : $"<color={UITheme.Tag(UITheme.TextFaint)}>" + MemoryLockLabel(memoria) + "</color>");
         }
 
         return sb.Length > 0 ? sb.ToString() : LocalizationManager.Get("UI_MEMORY_NONE");
     }
+    // Hoja de servicios del héroe: lo que abre sus recuerdos aparte de la rareza. Se guardan
+    // con la ficha, así que un veterano no pierde su historial al cerrar el juego.
+    private int floorsCleared;
+    private int enemiesSlain;
+
+    public int FloorsCleared => floorsCleared;
+    public int EnemiesSlain => enemiesSlain;
+
+    public void RecordFloorCleared() => floorsCleared++;
+
+    // La llama EnemyController al caer, con el atacante que tuviera armado.
+    public void CreditKill() => enemiesSlain++;
+
+    public void LoadDeeds(int pisos, int bajas)
+    {
+        floorsCleared = Mathf.Max(0, pisos);
+        enemiesSlain = Mathf.Max(0, bajas);
+    }
+
+    // Progreso actual del héroe en el hito que abre ese recuerdo.
+    public int MemoryProgress(HeroMemory memoria)
+    {
+        switch (memoria.unlock)
+        {
+            case MemoryUnlock.FloorsCleared: return floorsCleared;
+            case MemoryUnlock.HeroLevel: return progress != null ? progress.Level : 1;
+            case MemoryUnlock.EnemiesSlain: return enemiesSlain;
+            case MemoryUnlock.BondsForged:
+                var bonds = GetComponent<HeroBonds>();
+                return bonds != null ? bonds.BondedNames().Count : 0;
+        }
+
+        return StarRank;
+    }
+
+    public bool MemoryUnlocked(HeroMemory memoria)
+        => memoria != null && MemoryProgress(memoria) >= memoria.Threshold;
+
+    // Recuerdo sellado: se dice qué hito lo abre y por dónde va, que es lo que empuja a seguir.
+    private string MemoryLockLabel(HeroMemory memoria)
+    {
+        if (memoria.unlock == MemoryUnlock.StarRank)
+            return string.Format(LocalizationManager.Get("UI_MEMORY_LOCKED"), memoria.starRank);
+
+        return string.Format(LocalizationManager.Get("UI_MEMORY_LOCKED_DEED"),
+            LocalizationManager.Get("UI_DEED_" + memoria.unlock.ToString().ToUpperInvariant()),
+            MemoryProgress(memoria), memoria.Threshold);
+    }
+
     public int BonusStarRank => bonusStarRank;
 
     public float Affinity => affinity;
@@ -650,8 +702,10 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
     // Cuánto se acorta el enfriamiento de la habilidad activa por refinamiento de entrenamiento.
     public float SkillCooldownReduction
-        => Mathf.Clamp01((progress != null ? progress.SkillRefinement * maxSkillCooldownReductionFromRefinement : 0f)
-                         + PassiveSkills.SkillCooldownBonus(passives));
+        => Mathf.Clamp(
+            (progress != null ? progress.SkillRefinement * maxSkillCooldownReductionFromRefinement : 0f)
+            + PassiveSkills.SkillCooldownBonus(passives),
+            0f, skillCooldownReductionCap);
 
     public float CritMultiplier
         => baseCritMultiplier + AffixTotal(EquipmentAffix.CritDamage) * 0.01f
@@ -711,7 +765,10 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
         // Rematar a alguien se canta; encajar y quedarse en las ultimas, tambien.
         if (antes > 0 && enemy.CurrentHealth <= 0)
+        {
+            enemiesSlain++;
             Bark(0.30f, "BATTLE_KILL_1", "BATTLE_KILL_2", "BATTLE_KILL_3", "BATTLE_KILL_4");
+        }
 
         if (critico) DamageTextManager.Show(enemy.transform.position, LocalizationManager.Get("FX_CRITICAL"), UITheme.BarMorale);
         if (critico) AudioManager.Play(SfxId.Critical);
@@ -842,7 +899,9 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
     // Se redondea hacia abajo: lo que se ve es lo que se puede gastar.
     public int CurrentMP => Mathf.FloorToInt(currentMP);
-    public int MaxMP => data != null ? data.maxMP : 0;
+    public int MaxMP => data != null
+        ? Mathf.RoundToInt(data.maxMP * ascensionMultiplier + bonusMaxMP)
+        : 0;
 
     public float Fatigue => fatigue;
     public int FatiguePercent => Mathf.RoundToInt(fatigue);
@@ -894,6 +953,76 @@ public class HeroController : MonoBehaviour, IHealthOwner
         if (HasBrokenGear) return "UI_INSUBORDINATE_GEAR";
         return string.Empty;
     }
+
+    [Tooltip("Probabilidad máxima de ignorar un decreto, con la moral a cero.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float maxDisobeyChance = 0.6f;
+
+    [Tooltip("Moral por debajo de la cual el héroe rompe el contacto solo si además va herido.")]
+    [SerializeField] private float selfRetreatMorale = 15f;
+
+    [Tooltip("Fracción de vida por debajo de la cual un héroe hundido se retira solo.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float selfRetreatHealthRatio = 0.35f;
+
+    [Tooltip("Segundos entre dos retiradas propias del mismo héroe.")]
+    [SerializeField] private float selfRetreatCooldown = 8f;
+
+    private float selfRetreatTimer;
+
+    // Probabilidad de ignorar un decreto: cero mientras la moral aguante, y sube según se
+    // hunde. El temple obedece siempre — es justo para lo que sirve esa pasiva.
+    public float DisobeyChance
+    {
+        get
+        {
+            if (PassiveSkills.KeepsCool(passives)) return 0f;
+            if (morale >= demoralizedThreshold || demoralizedThreshold <= 0f) return 0f;
+
+            return maxDisobeyChance * (1f - morale / demoralizedThreshold);
+        }
+    }
+
+    // Tira por el decreto. Si desobedece lo dice en voz alta y la orden no le llega.
+    public bool ObeysDecree()
+    {
+        if (UnityEngine.Random.value >= DisobeyChance) return true;
+
+        Bark(1f, "DISOBEY_1", "DISOBEY_2", "DISOBEY_3", "DISOBEY_4");
+        DamageTextManager.Show(transform.position, LocalizationManager.Get("FX_DISOBEY"),
+                               UITheme.DangerLight);
+        Debug.Log($"[Insubordinación] {data.heroName} ignora el decreto " +
+                  $"(moral {MoralePercent}).", this);
+        return false;
+    }
+
+    // Se retira solo: hundido y herido, rompe el contacto y aguanta atrás unos segundos en vez
+    // de morirse en el sitio. No es un decreto, es el héroe decidiendo por su cuenta.
+    private void TickSelfRetreat()
+    {
+        if (selfRetreatTimer > 0f) { selfRetreatTimer -= Time.deltaTime; return; }
+
+        if (!deployed || !IsInCombat() || MaxHealth <= 0) return;
+        if (PassiveSkills.KeepsCool(passives)) return;
+        if (morale > selfRetreatMorale) return;
+        if ((float)CurrentHealth / MaxHealth > selfRetreatHealthRatio) return;
+
+        selfRetreatTimer = selfRetreatCooldown;
+        forcedTarget = null;
+        ApplyDefensiveStance(defensiveStanceSeconds, selfRetreatDistance);
+
+        Bark(1f, "SELF_RETREAT_1", "SELF_RETREAT_2", "SELF_RETREAT_3");
+        DamageTextManager.Show(transform.position, LocalizationManager.Get("FX_SELF_RETREAT"),
+                               UITheme.DangerLight);
+        Debug.Log($"[Insubordinación] {data.heroName} se retira solo " +
+                  $"(moral {MoralePercent}, vida {CurrentHealth}/{MaxHealth}).", this);
+    }
+
+    [Tooltip("Segundos de aguante defensivo que se da el héroe al retirarse solo.")]
+    [SerializeField] private float defensiveStanceSeconds = 3f;
+
+    [Tooltip("Unidades que retrocede el héroe al retirarse solo.")]
+    [SerializeField] private float selfRetreatDistance = 2.5f;
 
     // Agotamiento y desmoralización pesan a la vez sobre llegar y golpear.
     public float EffectiveMoveSpeed
@@ -1332,6 +1461,17 @@ public void DeployViaGateway(Vector2 destination)
         // Los 1★ nacen sin pasivas a propósito: aquí no se les regala ninguna.
         if (passives.Count == 0 && StarRank >= PassiveSkills.MinStarRankForInnate)
             SetPassives(PassiveSkills.RandomSet(StarRank));
+
+        GrantUniquePassive();
+    }
+
+    // El protagonista lleva su pasiva única aunque sea 1★ y nunca pase por el sorteo.
+    public void GrantUniquePassive()
+    {
+        if (data == null || !data.isProtagonist) return;
+        if (passives.Contains(PassiveSkill.Underdog)) return;
+
+        passives.Insert(0, PassiveSkill.Underdog);
     }
 
     // Compartir origen con al menos un compañero de escuadra da un bonus pasivo en combate.
@@ -1411,10 +1551,18 @@ public void DeployViaGateway(Vector2 destination)
     public void SetPassives(IList<PassiveSkill> newPassives)
     {
         passives.Clear();
+
+        // El protagonista lleva su pasiva única siempre: no se sortea, no se despierta y ningún
+        // guardado antiguo puede dejarle sin ella.
+        if (data != null && data.isProtagonist) passives.Add(PassiveSkill.Underdog);
+
         if (newPassives == null) return;
 
         foreach (var p in newPassives)
+        {
+            if (PassiveSkills.IsUnique(p) && (data == null || !data.isProtagonist)) continue;
             if (!passives.Contains(p)) passives.Add(p);
+        }
     }
 
     // La marca el SaveManager en los héroes que va a destruir al recargar la partida. Destroy
@@ -1496,10 +1644,8 @@ public void DeployViaGateway(Vector2 destination)
         bonusStarRank++;
         ascensionMultiplier *= multiplier;
 
-        // El nivel vuelve a 1, así que los bonus acumulados por nivel se van con él.
-        bonusMaxHealth = 0f;
-        bonusAttack = 0f;
-
+        // El nivel NO vuelve a 1 al ascender, así que los bonus acumulados por nivel se quedan:
+        // borrarlos aquí dejaba al héroe con las bases nuevas pero sin nada de lo peleado.
         currentHealth = MaxHealth;
         currentMP = MaxMP;
         HealthChanged?.Invoke(currentHealth, MaxHealth);
@@ -1558,7 +1704,7 @@ public void DeployViaGateway(Vector2 destination)
     // La llama HeroProgress al subir de nivel; devuelve la vida máxima ganada.
     // Los porcentajes van sobre las bases del asset ya ascendidas, no sobre el máximo actual:
     // sobre el actual el nivel componía (x106 a Nv.50) y se quedaba con parte del equipo puesto.
-    public int ApplyLevelUpBonus(float healthPercent, float attackPercent)
+    public int ApplyLevelUpBonus(float healthPercent, float attackPercent, float manaPercent)
     {
         if (data == null) return 0;
 
@@ -1567,6 +1713,7 @@ public void DeployViaGateway(Vector2 destination)
 
         bonusMaxHealth += data.maxHealth * ascensionMultiplier * healthPercent * ritmo;
         bonusAttack += data.baseAttack * ascensionMultiplier * attackPercent * ritmo;
+        bonusMaxMP += data.maxMP * ascensionMultiplier * manaPercent * ritmo;
 
         int gain = MaxHealth - antes;
 
@@ -1588,6 +1735,7 @@ public void DeployViaGateway(Vector2 destination)
 
         // Los héroes puestos a mano en la escena no pasan por Initialize.
         ApplyBodySprite();
+        GrantUniquePassive();
         EnterBaseWander();
     }
 
@@ -1610,7 +1758,6 @@ public void DeployViaGateway(Vector2 destination)
             if (burstTimer <= 0f) burstTaken = 0f;
         }
 
-        RegenerateMana();
         if (skills.Count > 0)
         {
             foreach (var s in skills) s?.Tick(Time.deltaTime);
@@ -1644,6 +1791,8 @@ public void DeployViaGateway(Vector2 destination)
         }
 
         if (barkCooldown > 0f) barkCooldown -= Time.deltaTime;
+        TickSelfRetreat();
+        TickRestShift();
 
         // Muro físico: en la arena ninguna unidad puede salir de sus límites.
         if (deployed)
@@ -1666,16 +1815,15 @@ public void DeployViaGateway(Vector2 destination)
             pos.y = Mathf.Clamp(pos.y, min.y, max.y);
             transform.position = pos;
         }
-    }
-
-    // En combate el maná entra a la mitad de ritmo: no se pueden encadenar habilidades.
-    private void RegenerateMana()
-    {
-        if (data == null) return;
-
-        float rate = (IsInCombat() ? mpRegenInCombat : mpRegenOutOfCombat)
-                     * PassiveSkills.ManaRegenMultiplier(passives);
-        currentMP = Mathf.Min(MaxMP, currentMP + rate * Time.deltaTime);
+        else if (BaseBackdrop.HasWalkableArea)
+        {
+            // Borde de la isla: la roca del reborde no se pisa, y menos el vacío. Mismo criterio
+            // que el muro de la arena y el cerco del claro.
+            Vector3 pos = transform.position;
+            pos.x = Mathf.Clamp(pos.x, BaseBackdrop.WalkableMin.x, BaseBackdrop.WalkableMax.x);
+            pos.y = Mathf.Clamp(pos.y, BaseBackdrop.WalkableMin.y, BaseBackdrop.WalkableMax.y);
+            transform.position = pos;
+        }
     }
 
     public void AddFatigue(float amount)
@@ -1704,17 +1852,136 @@ public void DeployViaGateway(Vector2 destination)
 
     // Orden del Maestro: manda al héroe a la zona de descanso más cercana y lo saca del puesto
     // de trabajo mientras dure. Es el verbo que le faltaba al jugador para curar fatiga a mano.
-    public bool SendToRest()
-    {
-        if (globalState != HeroGlobalState.InBase || Discarded) return false;
+    // Edificio de descanso al que se le mandó a mano; mientras no sea null la orden sigue viva.
+    private BaseBuilding restOrderBuilding;
 
+    public bool RestOrderPending => restOrderBuilding != null;
+    public BaseBuilding RestOrderBuilding => restOrderBuilding;
+
+    // Se dispara cuando la orden de descanso termina de verdad: (héroe, llegó, edificio).
+    public static event System.Action<HeroController, bool, BaseBuilding> RestOrderResolved;
+
+    // Se dispara al acabar el turno de descanso: (héroe, recuperó su puesto, puesto).
+    public static event System.Action<HeroController, bool, BaseBuilding> RestShiftEnded;
+
+    [Tooltip("Segundos que descansa un héroe enviado a mano antes de volver a su puesto.")]
+    [SerializeField] private float restShiftSeconds = 60f;
+
+    // Puesto del que se le sacó al mandarlo a descansar; se intenta devolver al acabar el turno.
+    private BaseBuilding jobBeforeRest;
+    private float restShiftTimer;
+
+    public bool IsOnRestShift => restShiftTimer > 0f;
+    public float RestShiftSecondsLeft => Mathf.Max(0f, restShiftTimer);
+
+    // Turno cumplido: se le devuelve su puesto. Si ya no queda hueco, se dice en vez de
+    // dejarlo desasignado en silencio.
+    private void TickRestShift()
+    {
+        if (restShiftTimer <= 0f) return;
+
+        restShiftTimer -= Time.deltaTime;
+        if (restShiftTimer > 0f) return;
+
+        var puesto = jobBeforeRest;
+        jobBeforeRest = null;
+        if (puesto == null) return;
+
+        bool vuelve = puesto.IsUnlocked && puesto.ToggleWorker(this);
+        RestShiftEnded?.Invoke(this, vuelve, puesto);
+        Debug.Log($"[Descanso] {data.heroName} termina su turno; " +
+                  (vuelve ? $"vuelve a {puesto.BuildingName}." : "su puesto ya está ocupado."), this);
+    }
+
+    // Cierra la orden abierta y avisa; sin orden viva no hace nada.
+    private void ResolveRestOrder(bool arrived)
+    {
+        if (restOrderBuilding == null) return;
+
+        var destino = restOrderBuilding;
+        restOrderBuilding = null;
+
+        // Llegar arranca el turno; abortar devuelve el puesto ya, sin esperar el minuto. En una
+        // cadena manda la carencia, no el reloj: ahí no se arma el turno.
+        if (arrived) restShiftTimer = restChain ? 0f : restShiftSeconds;
+        else if (restChain) restChain = false;
+        else if (jobBeforeRest != null)
+        {
+            var puesto = jobBeforeRest;
+            jobBeforeRest = null;
+            puesto.ToggleWorker(this);
+        }
+
+        RestOrderResolved?.Invoke(this, arrived, destino);
+    }
+
+    // Lo que le puede faltar a un héroe y quién se lo arregla.
+    private enum RestNeed { None, Fatigue, Health, Mana }
+
+    [Tooltip("Porcentaje que le tiene que faltar a una barra para que el descanso la tenga en cuenta.")]
+    [SerializeField, Range(0f, 0.5f)] private float restNeedThreshold = 0.05f;
+
+    [Tooltip("Tope de segundos en cada parada del descanso encadenado, por si algo no se llena nunca.")]
+    [SerializeField] private float restStopTimeout = 120f;
+
+    // Descanso encadenado en curso: se atiende una carencia, y al llenarla se pasa a la
+    // siguiente en vez de volver a la base a medio recuperar.
+    private bool restChain;
+    private RestNeed restNeed;
+    private float restStopTimer;
+
+    public bool IsRestingChain => restChain;
+
+    // Lo que más le falta ahora mismo; la fatiga pesa primero porque es lo que le deja inservible.
+    private RestNeed BiggestNeed()
+    {
+        float faltaFatiga = fatigue / 100f;
+        float faltaVida = MaxHealth > 0 ? 1f - (float)CurrentHealth / MaxHealth : 0f;
+        float faltaMana = MaxMP > 0 ? 1f - currentMP / MaxMP : 0f;
+
+        if (faltaFatiga < restNeedThreshold) faltaFatiga = 0f;
+        if (faltaVida < restNeedThreshold) faltaVida = 0f;
+        if (faltaMana < restNeedThreshold) faltaMana = 0f;
+
+        if (faltaFatiga <= 0f && faltaVida <= 0f && faltaMana <= 0f) return RestNeed.None;
+
+        if (faltaFatiga >= faltaVida && faltaFatiga >= faltaMana) return RestNeed.Fatigue;
+        return faltaVida >= faltaMana ? RestNeed.Health : RestNeed.Mana;
+    }
+
+    private static bool Serves(BaseBuilding building, RestNeed need)
+    {
+        switch (need)
+        {
+            case RestNeed.Fatigue: return building.Type == BuildingType.Lodging;
+            case RestNeed.Health: return building.Type == BuildingType.Canteen
+                                      || building.Type == BuildingType.RestArea;
+            case RestNeed.Mana: return building.Type == BuildingType.ManaWell;
+        }
+        return false;
+    }
+
+    // Ya no le falta nada de lo que da esta parada.
+    private bool NeedCovered(RestNeed need)
+    {
+        switch (need)
+        {
+            case RestNeed.Fatigue: return fatigue <= 0.5f;
+            case RestNeed.Health: return CurrentHealth >= MaxHealth;
+            case RestNeed.Mana: return currentMP >= MaxMP - 0.5f;
+        }
+        return true;
+    }
+
+    // Manda al héroe al edificio más cercano que cubra esa carencia.
+    private bool GoRest(RestNeed need)
+    {
         BaseBuilding mejor = null;
         float mejorDistancia = float.MaxValue;
 
         foreach (var building in BaseBuilding.All)
         {
-            if (building == null || !building.IsUnlocked) continue;
-            if (building.Type != BuildingType.RestArea && building.Type != BuildingType.Canteen) continue;
+            if (building == null || !building.IsUnlocked || !Serves(building, need)) continue;
 
             float distancia = Vector2.Distance(transform.position, building.transform.position);
             if (distancia < mejorDistancia) { mejorDistancia = distancia; mejor = building; }
@@ -1722,16 +1989,72 @@ public void DeployViaGateway(Vector2 destination)
 
         if (mejor == null) return false;
 
-        // Soltar el puesto ANTES de reservar, o el release se llevaría por delante el hueco
+        // Soltar el hueco ANTES de reservar, o el release se llevaría por delante el hueco
         // recién pedido en el propio edificio de descanso.
         BaseBuilding.ReleaseSlotEverywhere(this);
-        if (!mejor.TryClaimSlot(this, out Vector2 hueco)) { PickNewWanderTarget(); return false; }
+        if (!mejor.TryClaimSlot(this, out Vector2 hueco)) return false;
 
+        restNeed = need;
+        restStopTimer = restStopTimeout;
         currentBuilding = null;
         destinationBuilding = mejor;
         wanderTarget = hueco;
         state = HeroState.BaseWander;
+        restOrderBuilding = mejor;
         return true;
+    }
+
+    public bool SendToRest()
+    {
+        if (globalState != HeroGlobalState.InBase || Discarded) return false;
+
+        // Sin nada que recuperar se le manda igual a descansar, que es lo que se ha pedido.
+        var need = BiggestNeed();
+        if (need == RestNeed.None) need = RestNeed.Health;
+
+        // Soltar el puesto de trabajo: sin esto PickNewWanderTarget lo devolvía a currar en
+        // cuanto llegaba, y la orden de descanso no se notaba por ninguna parte. Se guarda para
+        // devolvérselo al acabar la cadena.
+        jobBeforeRest = assignedBuilding;
+        restShiftTimer = 0f;
+        if (assignedBuilding != null) assignedBuilding.ToggleWorker(this);
+
+        restChain = true;
+        restNeed = RestNeed.None;
+
+        // Si el edificio de esa carencia no existe todavía (los Dormitorios llegan al piso 30),
+        // se atiende la siguiente en vez de dejar la orden en nada.
+        if (GoRest(need) || GoRest(RestNeed.Health) || GoRest(RestNeed.Fatigue) || GoRest(RestNeed.Mana))
+            return true;
+
+        restChain = false;
+        PickNewWanderTarget();
+        return false;
+    }
+
+    // Parada cumplida: si le sigue faltando algo se encadena la siguiente, y si no, se acabó.
+    private void ContinueRestChain()
+    {
+        var siguiente = BiggestNeed();
+        if (siguiente != RestNeed.None && siguiente != restNeed && GoRest(siguiente)) return;
+
+        EndRestChain();
+    }
+
+    // Fin de la cadena: se le devuelve su puesto si sigue habiendo hueco, y si no, a la base.
+    private void EndRestChain()
+    {
+        restChain = false;
+        restNeed = RestNeed.None;
+        restStopTimer = 0f;
+
+        var puesto = jobBeforeRest;
+        jobBeforeRest = null;
+
+        bool vuelve = puesto != null && puesto.IsUnlocked && puesto.ToggleWorker(this);
+        if (puesto != null) RestShiftEnded?.Invoke(this, vuelve, puesto);
+
+        if (!vuelve) EnterBaseWander();
     }
 
     public void AddMorale(float amount)
@@ -1861,7 +2184,12 @@ public void DeployViaGateway(Vector2 destination)
 
         // Si el destino era un edificio y ya está dentro, se pone a usarlo.
         // Sin sitio libre no se entra: el edificio decide si desplaza a alguien o no.
-        if (destinationBuilding != null && !destinationBuilding.TryAdmit(this)) destinationBuilding = null;
+        if (destinationBuilding != null && !destinationBuilding.TryAdmit(this))
+        {
+            // Se quedó sin sitio al llegar: la orden de descanso muere aquí, no en silencio.
+            if (destinationBuilding == restOrderBuilding) ResolveRestOrder(false);
+            destinationBuilding = null;
+        }
 
         if (destinationBuilding != null && destinationBuilding.IsInside(transform.position))
         {
@@ -1877,6 +2205,8 @@ public void DeployViaGateway(Vector2 destination)
 
     private void EnterBuildingVisit(BaseBuilding building)
     {
+        if (restOrderBuilding != null) ResolveRestOrder(building == restOrderBuilding);
+
         currentBuilding = building;
         destinationBuilding = null;
         state = HeroState.Training;
@@ -1904,6 +2234,19 @@ public void DeployViaGateway(Vector2 destination)
             currentBuilding.ApplyTick(this);
         }
 
+        // En una cadena de descanso el héroe se queda hasta llenar la barra que ha venido a
+        // llenar; el tope de tiempo solo está para que nada se quede colgado.
+        if (restChain && Serves(currentBuilding, restNeed))
+        {
+            restStopTimer -= Time.deltaTime;
+            if (!NeedCovered(restNeed) && restStopTimer > 0f) return;
+
+            BaseBuilding.ReleaseSlotEverywhere(this);
+            currentBuilding = null;
+            ContinueRestChain();
+            return;
+        }
+
         if (visitTimer <= 0f)
         {
             currentBuilding = null;
@@ -1915,17 +2258,24 @@ public void DeployViaGateway(Vector2 destination)
     {
         if (target == null)
         {
-            // IdleSearching: sin objetivo visible, avanza hacia el lado enemigo (+X). PROHIBIDO
-            // calcular ruta a la base — ScanForEnemies reengancha en cuanto detecte uno nuevo.
-            // holdPosition (armado por WaveManager en misiones con huecos entre oleadas) frena
-            // ese avance a ciegas para no sacar a la escuadra de la línea.
+            // IdleSearching: sin objetivo visible se vuelve al puesto de formación y se espera
+            // ahí a la siguiente oleada, en vez de avanzar a ciegas. PROHIBIDO calcular ruta a
+            // la base — ScanForEnemies reengancha en cuanto detecte uno nuevo.
             combatState = CombatState.IdleSearching;
-            if (!holdPosition) MoveTowards(transform.position + Vector3.right * detectionRange);
+            if (Vector2.Distance(transform.position, combatAnchor) > formationTolerance)
+                MoveTowards(combatAnchor);
             return;
         }
 
         combatState = CombatState.MovingToTarget;
-        MoveTowards(target.transform.position);
+
+        // Con la orden de aguantar (huecos entre oleadas) se persigue solo hasta donde llega el
+        // puesto: nadie se sale de la formación detrás de un rezagado.
+        Vector2 destino = target.transform.position;
+        if (holdPosition)
+            destino = combatAnchor + Vector2.ClampMagnitude(destino - combatAnchor, maxKiteRadius);
+
+        MoveTowards(destino);
 
         // Correr detrás del enemigo cansa; pararse a golpear, no.
         AddFatigue(fatiguePerSecondMoving * Time.deltaTime);
@@ -2059,6 +2409,10 @@ public void DeployViaGateway(Vector2 destination)
         int vidaVictima = victim != null ? victim.CurrentHealth : 0;
         int veneno = Mathf.Max(1, Mathf.RoundToInt(Attack * 0.15f));
 
+        // Las bajas de la habilidad se le apuntan a quien la lanza; se desarma en el finally.
+        EnemyController.SetAttacker(this);
+        try
+        {
         switch (skill.ability)
         {
             case ActiveSkill.PoisonCut:
@@ -2232,6 +2586,8 @@ public void DeployViaGateway(Vector2 destination)
                 victim.TakeDamage(damage);
                 break;
         }
+        }
+        finally { EnemyController.SetAttacker(null); }
 
         // El robo de vida se cobra sobre lo que ha perdido de verdad la victima.
         if (victim != null) StealLife(vidaVictima - victim.CurrentHealth);
@@ -2412,6 +2768,8 @@ public void DeployViaGateway(Vector2 destination)
 
     private void PickNewWanderTarget()
     {
+        // Cualquier destino nuevo cancela la orden de descanso que estuviera en curso.
+        ResolveRestOrder(false);
         destinationBuilding = null;
 
         // En el claro de recolección no hay edificios a los que ir ni cuadrantes bloqueados
@@ -2477,7 +2835,7 @@ public void DeployViaGateway(Vector2 destination)
 
     // El Portal es solo para entrar/salir de la Torre en formación: el paseo común lo evita.
     private static bool IsNearGateway(Vector2 point)
-        => Vector2.Distance(TowerGateway.Position, point) <= 1.3f;
+        => Vector2.Distance(TowerGateway.Position, point) <= TowerGateway.KeepOut;
 
     // Sorteo ponderado: cada rasgo tira más hacia unos edificios que hacia otros.
     private BaseBuilding PickRandomBuilding()
@@ -2490,7 +2848,8 @@ public void DeployViaGateway(Vector2 destination)
         // eso se amontonaba media base encima del campo de entrenamiento.
         float total = 0f;
         foreach (var b in all)
-            if (b != null && b.IsUnlocked && b.HasRoom) total += HeroTraits.BuildingWeight(trait, b.Type);
+            if (b != null && b.IsUnlocked && b.HasRoom && b.AllowsHero(this))
+                total += HeroTraits.BuildingWeight(trait, b.Type);
         if (total <= 0f) return null;
 
         float roll = UnityEngine.Random.Range(0f, total);
@@ -2499,7 +2858,7 @@ public void DeployViaGateway(Vector2 destination)
         BaseBuilding ultimo = null;
         foreach (var b in all)
         {
-            if (b == null || !b.IsUnlocked || !b.HasRoom) continue;
+            if (b == null || !b.IsUnlocked || !b.HasRoom || !b.AllowsHero(this)) continue;
 
             ultimo = b;
             acc += HeroTraits.BuildingWeight(trait, b.Type);
@@ -2525,15 +2884,15 @@ public void DeployViaGateway(Vector2 destination)
         // en Engaging alineaba tambien a los heroes que estan en la base a sus cosas.
         if (!deployed || globalState != HeroGlobalState.InCombat) return destination;
 
-        if (CanFlank) return destination;
-
         var choreo = Choreographer;
         if (choreo == null || !choreo.HasFrontLine) return destination;
 
         // Los del frente son quienes marcan la línea: ellos sí avanzan.
         if (choreo.IsFrontliner(this)) return destination;
 
-        float tope = choreo.FrontLineX;
+        // Quien flanquea ya no queda libre del tope: lo rebasa un poco para rodear, pero no se
+        // planta en medio de los enemigos con la escuadra dos pantallas atrás.
+        float tope = choreo.FrontLineX + (CanFlank ? flankOvershoot : 0f);
         if (destination.x <= tope) return destination;
 
         // Se queda en el borde de la línea, pero sigue ajustando el lado por el que encara.
@@ -2676,7 +3035,12 @@ public void DeployViaGateway(Vector2 destination)
             // Permadeath: el héroe no vuelve. La ficha se toma con el héroe todavía en pie,
             // que es cuando aún se pueden leer equipo, nivel y rareza; sin ella su nombre queda
             // libre y el gacha lo vuelve a ofrecer como si no hubiera pasado nada.
-            int piso = BaseBuilding.TowerFloor;
+            // El piso del caído es el que se estaba asaltando, no el último despejado:
+            // BaseBuilding.TowerFloor va uno por detrás mientras el piso sigue en curso.
+            var expedicion = UnityEngine.Object.FindFirstObjectByType<WaveManager>();
+            int piso = expedicion != null && expedicion.State == ExpeditionState.InProgress
+                ? expedicion.CurrentFloor
+                : BaseBuilding.TowerFloor;
             MemorialManager.Record(this, MemorialCause.FallenInTower, piso);
 
             // El equipo se queda donde cayó: volver a superar ese piso lo devuelve al almacén.
