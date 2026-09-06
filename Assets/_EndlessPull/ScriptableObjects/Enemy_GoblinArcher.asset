@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Enemy_GoblinArcher
   m_EditorClassIdentifier: Assembly-CSharp::EnemyData
   enemyName: Goblin Tirador
-  maxHealth: 35
+  maxHealth: 85
   baseAttack: 10
   baseDefense: 1
   attackRange: 4.5

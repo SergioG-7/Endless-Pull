@@ -32,6 +32,18 @@ public class Projectile : MonoBehaviour
     // Cuelgan de aquí en vez de la raíz de la escena, para no parecer basura sin recoger.
     private static Transform poolRoot;
 
+    // Con Enter Play Mode Options (sin recarga de dominio) los estaticos sobreviven al Stop,
+    // pero los GameObjects no: la reserva se quedaba llena de referencias muertas que ya nunca
+    // se reutilizaban y crecia en cada Play. Se vacia al arrancar cada partida.
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetPool()
+    {
+        pool.Clear();
+        nextPoolIndex = 0;
+        poolRoot = null;
+        sharedSprite = null;
+    }
+
     private static Transform PoolRoot()
     {
         if (poolRoot != null) return poolRoot;

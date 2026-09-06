@@ -247,7 +247,10 @@ public class MasterCommander : MonoBehaviour
             return;
         }
 
-        var heroes = Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None);
+        // Incluye inactivos: un héroe herido en expedición es justo el que hay que curar, y sin
+        // esto el decreto decía "todos sanos" y se comía el enfriamiento sin gastar poción.
+        var heroes = Object.FindObjectsByType<HeroController>(
+            FindObjectsInactive.Include, FindObjectsSortMode.None);
 
         // Si nadie está herido no se gasta ni una poción: solo un aviso en pantalla.
         bool hayHeridos = false;

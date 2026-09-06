@@ -32,9 +32,42 @@ public class SanctuaryArchiveManager : MonoBehaviour
         public int floor;
     }
 
-    // Registro en memoria de esta sesión; persistirlo en el save queda para el paso 2.
     private readonly List<AscensionMilestone> milestones = new List<AscensionMilestone>();
     public IReadOnlyList<AscensionMilestone> Milestones => milestones;
+
+    // Cuántos hitos se guardan; el Archivo enseña los últimos, no una lista infinita.
+    private const int MaxMilestones = 60;
+
+    public List<AscensionMilestoneSaveData> Snapshot()
+    {
+        var salida = new List<AscensionMilestoneSaveData>();
+        foreach (var hito in milestones)
+            salida.Add(new AscensionMilestoneSaveData
+            {
+                heroName = hito.heroName,
+                starRank = hito.starRank,
+                floor = hito.floor
+            });
+
+        return salida;
+    }
+
+    public void LoadRecords(List<AscensionMilestoneSaveData> guardados)
+    {
+        milestones.Clear();
+        if (guardados == null) return;
+
+        foreach (var dato in guardados)
+        {
+            if (dato == null || string.IsNullOrEmpty(dato.heroName)) continue;
+            milestones.Add(new AscensionMilestone
+            {
+                heroName = dato.heroName,
+                starRank = dato.starRank,
+                floor = dato.floor
+            });
+        }
+    }
 
     public static string Format(AscensionMilestone m) =>
         string.Format(LocalizationManager.Get("ARCHIVE_MILESTONE"), m.heroName, m.starRank, m.floor);
@@ -52,6 +85,9 @@ public class SanctuaryArchiveManager : MonoBehaviour
             starRank = starRank,
             floor = BaseBuilding.TowerFloor
         });
+
+        if (milestones.Count > MaxMilestones) milestones.RemoveRange(MaxMilestones, milestones.Count - MaxMilestones);
+        SaveManager.RequestSave();
     }
 
     // Entradas de lore que ya tocan según el piso actual de la torre.

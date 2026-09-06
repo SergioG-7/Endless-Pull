@@ -38,6 +38,10 @@ public class HeroSaveData
     // anteriores a esta fase, arranca desde cero sin migración especial.
     public float skillRefinement;
 
+    // Vínculos: pisos sobrevividos junto a cada compañero. Vacío en saves antiguos, así que los
+    // vínculos empiezan a contar desde la partida actual sin migración.
+    public List<HeroBondSaveData> bonds = new List<HeroBondSaveData>();
+
     // Los enums van como int: es lo único que JsonUtility garantiza dentro de una lista.
     public List<int> passives = new List<int>();
     public List<MasterySaveData> mastery = new List<MasterySaveData>();
@@ -87,6 +91,38 @@ public class BuildingSaveData
 {
     public string buildingId;
     public int level = 1;
+}
+
+// Pisos que un héroe ha sobrevivido junto a otro; el vínculo se deduce de esta cuenta.
+[System.Serializable]
+public class HeroBondSaveData
+{
+    public string otherName;
+    public int floors;
+}
+
+// Un hito de ascensión del Archivo del Santuario.
+[System.Serializable]
+public class AscensionMilestoneSaveData
+{
+    public string heroName;
+    public int starRank;
+    public int floor;
+}
+
+// Un contrato del tablon tal cual quedo guardado, hito o rotativo.
+[System.Serializable]
+public class QuestSaveData
+{
+    public int kind;
+    public int target;
+    public int rewardGems;
+    public int rewardWood;
+    public int rewardIron;
+    public int rewardFood;
+    public bool claimed;
+    public int progress;
+    public bool milestone;
 }
 
 // Todo lo que acaba dentro de savegame.json.
@@ -161,6 +197,13 @@ public class GameSaveData
 
     // Equipo que se quedó en un piso al caer su portador, a la espera de recuperarlo.
     public List<LostGearStash> lostGear = new List<LostGearStash>();
+
+    // Tablón de contratos: sin esto el tablón se reiniciaba en cada carga y se podía farmear.
+    // Vacía en partidas anteriores: se conserva el tablón por defecto en vez de borrarlo.
+    public List<QuestSaveData> quests = new List<QuestSaveData>();
+
+    // Archivo del Santuario: los hitos de ascensión solo vivían en memoria y se perdían al salir.
+    public List<AscensionMilestoneSaveData> ascensionMilestones = new List<AscensionMilestoneSaveData>();
 }
 
 // Guarda y restaura la partida en JSON dentro de Application.persistentDataPath.
@@ -315,6 +358,12 @@ public class SaveManager : MonoBehaviour
         var memorial = UnityEngine.Object.FindFirstObjectByType<MemorialManager>();
         if (memorial != null) save.memorial = memorial.Snapshot();
 
+        var tablon = UnityEngine.Object.FindFirstObjectByType<QuestManager>();
+        if (tablon != null) save.quests = tablon.Capture();
+
+        var archivo = UnityEngine.Object.FindFirstObjectByType<SanctuaryArchiveManager>();
+        if (archivo != null) save.ascensionMilestones = archivo.Snapshot();
+
         var lostGear = UnityEngine.Object.FindFirstObjectByType<LostGearManager>();
         if (lostGear != null) save.lostGear = lostGear.Snapshot();
 
@@ -358,6 +407,7 @@ public class SaveManager : MonoBehaviour
                 safeDistance = progress != null ? progress.SafeDistance : 0.5f,
                 skillThreshold = progress != null ? progress.SkillThreshold : 0.15f,
                 skillRefinement = progress != null ? progress.SkillRefinement : 0f,
+                bonds = hero.GetComponent<HeroBonds>()?.Capture() ?? new List<HeroBondSaveData>(),
                 assignedBuilding = hero.AssignedBuilding != null ? hero.AssignedBuilding.SaveId : string.Empty,
                 bonusStarRank = hero.BonusStarRank,
                 ascensionMultiplier = hero.AscensionMultiplier,
@@ -469,6 +519,8 @@ public class SaveManager : MonoBehaviour
         }
 
         UnityEngine.Object.FindFirstObjectByType<MemorialManager>()?.LoadRecords(save.memorial);
+        UnityEngine.Object.FindFirstObjectByType<QuestManager>()?.Restore(save.quests);
+        UnityEngine.Object.FindFirstObjectByType<SanctuaryArchiveManager>()?.LoadRecords(save.ascensionMilestones);
         UnityEngine.Object.FindFirstObjectByType<LostGearManager>()?.LoadStashes(save.lostGear);
 
         // El piso ya está publicado en BaseBuilding.TowerFloor: los cuadrantes pueden calcular su IsUnlocked.
@@ -712,6 +764,7 @@ public class SaveManager : MonoBehaviour
             hero.LoadAscension(entry.bonusStarRank, entry.ascensionMultiplier);
             hero.LoadAffinity(entry.affinity);
             hero.LoadGearUpgrade(entry.gearUpgradeAttack, entry.gearUpgradeDefense);
+            hero.GetComponent<HeroBonds>()?.Restore(entry.bonds);
 
             var passives = new List<PassiveSkill>();
             foreach (int value in entry.passives) passives.Add((PassiveSkill)value);

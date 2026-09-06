@@ -661,6 +661,7 @@ void Awake()
         DeployParty();
 
         currentMissionType = MissionTypeFor(currentFloor);
+        FloorRules.RollForFloor(currentFloor, IsBossFloor);
         currentIsSiege = IsSiegeFloor(currentFloor);
         survivalTimer = survivalDuration;
         survivalRespawnTimer = survivalRespawnInterval;
@@ -678,6 +679,14 @@ void Awake()
         float mult = StatMultiplierForFloor(currentFloor);
         float atk = AttackMultiplierForFloor(currentFloor);
 
+        // Oleada de élites: menos enemigos a la vez pero cada uno mucho más duro. El recorte de
+        // simultáneos es lo que la hace legible; sin él solo serían los mismos con más números.
+        if (FloorRules.IsEliteWave)
+        {
+            mult *= FloorRules.EliteHealthMultiplier;
+            atk *= FloorRules.EliteDamageMultiplier;
+        }
+
         waveStatMultiplier = mult;
         waveAttackMultiplier = atk;
         waveSpawnedTotal = 0;
@@ -686,7 +695,7 @@ void Awake()
 
         // Solo entra de golpe lo que cabe en el tope; el resto espera turno. Sin esto, un piso
         // alto suelta decenas de enemigos a la vez y la escuadra cae antes de poder leer nada.
-        int deGolpe = Mathf.Min(count, maxConcurrentEnemies);
+        int deGolpe = Mathf.Min(count, ConcurrentCapNow);
 
         for (int i = 0; i < count; i++)
         {
@@ -811,6 +820,11 @@ void Awake()
 
     // Refuerzos que entran juntos: uno más cada reinforcementFloorsPerExtra pisos, para que un
     // piso alto se note en la presión y no solo en las cifras de los enemigos.
+    // Aforo de enemigos a la vez, ya recortado si el piso trae oleada de élites.
+    private int ConcurrentCapNow
+        => Mathf.Max(1, maxConcurrentEnemies
+                        - (FloorRules.IsEliteWave ? FloorRules.EliteSimultaneousPenalty : 0));
+
     private int ReinforcementBatchNow
         => reinforcementBatch + (reinforcementFloorsPerExtra > 0
             ? currentFloor / reinforcementFloorsPerExtra
@@ -828,7 +842,7 @@ void Awake()
         if (pendingReinforcements.Count == 0) return;
 
         PruneWave();
-        int hueco = maxConcurrentEnemies - wave.Count;
+        int hueco = ConcurrentCapNow - wave.Count;
         if (hueco <= 0) return;
 
         reinforcementTimer -= Time.deltaTime;
@@ -929,6 +943,13 @@ void Awake()
     private void BeginCountdown()
     {
         MissionStarted?.Invoke(currentMissionType, currentFloor);
+
+        // La regla del piso hay que cantarla antes de la cuenta atrás: si el jugador no sabe que
+        // no se cura, la regla es una trampa en vez de una decisión.
+        if (FloorRules.Current != FloorRule.None)
+            ScreenBanner.ShowCompact(
+                $"{FloorRules.DisplayName(FloorRules.Current)} - {FloorRules.Description(FloorRules.Current)}",
+                4f, new Color(0.75f, 0.55f, 0.95f));
 
         // Reconocimiento y formación antes de los golpes; mientras dure, nadie pelea.
         if (choreographer == null) choreographer = GetComponent<BattleChoreographer>();
@@ -1118,6 +1139,9 @@ void Awake()
     // Los devuelve a la base y les quita el estado de combate.
     private void RecallParty()
     {
+        // Sin esto la base heredaba la niebla o el suelo drenante del último piso.
+        FloorRules.Clear();
+
         int gatewayCount = 0;
         regrouping = false;
 
@@ -1528,9 +1552,11 @@ void Awake()
             int expGain = Mathf.Max(1, expReward * cleared);
             GrantCombatExp(cleared);
 
-            // Ganar sube la moral de todo el que siga en pie.
-            foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None))
-                hero.AddMorale(moraleRewardOnWin);
+            // Ganar sube la moral SOLO de la escuadra que peleó. Antes barría el roster entero,
+            // así que repetir un piso fácil mantenía a toda la base con la moral llena gratis y
+            // la insubordinación no llegaba a dispararse nunca.
+            foreach (var hero in deployed)
+                if (hero != null && hero.CurrentHealth > 0) hero.AddMorale(moraleRewardOnWin);
 
             // Despertar de Habilidades: se resuelve con la escuadra todavía desplegada (antes
             // de RecallParty(), que vacía `deployed`).
@@ -1572,6 +1598,9 @@ void Awake()
                     "BATTLE_VICTORY_1", "BATTLE_VICTORY_2", "BATTLE_VICTORY_3", "BATTLE_VICTORY_4");
 
             AudioManager.Play(SfxId.Victory);
+            QuestManager.Report(QuestKind.ClearFloors);
+            HeroBonds.RecordFloorCleared(deployed);
+            if (bossChest) QuestManager.Report(QuestKind.WinBossFloor);
             FloorCleared?.Invoke(new FloorRewardInfo
             {
                 floor = cleared,

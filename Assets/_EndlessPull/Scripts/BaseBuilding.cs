@@ -726,6 +726,7 @@ void Start()
         }
 
         level++;
+        QuestManager.Report(QuestKind.UpgradeBuilding);
         Debug.Log($"[Edificio] {buildingName} mejorado a nivel {level}.", this);
         LevelChanged?.Invoke(level);
 

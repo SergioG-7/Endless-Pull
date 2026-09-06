@@ -182,6 +182,8 @@ public class ResourceExpeditionManager : MonoBehaviour
     {
         if (!readyToClaim) return false;
 
+        QuestManager.Report(QuestKind.CompleteExpedition);
+
         bool bonus = currentType == TodaysBonusType();
         float mult = ProgressMultiplier * (bonus ? dailyBonusMultiplier : 1f);
         int sent = Mathf.Max(1, heroesSent);

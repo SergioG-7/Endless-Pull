@@ -546,6 +546,7 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         {
             AudioManager.PlayAt(SfxId.Defeat, transform.position);
             Debug.Log($"[Enemy] {data.enemyName} destruido.", this);
+            QuestManager.Report(QuestKind.KillEnemies);
             Destroy(gameObject);
         }
     }

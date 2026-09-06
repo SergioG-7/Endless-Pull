@@ -73,13 +73,17 @@ public class CombatFeelManager : MonoBehaviour
     // Tiempo real, no de juego: si no, el propio Time.timeScale congelado no dejaría avanzar la espera.
     private IEnumerator HitStopRoutine(float duration)
     {
+        // Se restaura la velocidad que hubiera, no un 1 fijo: con el x2 puesto cada crítico
+        // devolvía el juego a velocidad normal, y con el menú abierto lo despausaba.
+        float previo = Time.timeScale;
+
         Time.timeScale = hitstopTimeScale;
         Time.fixedDeltaTime = defaultFixedDelta * hitstopTimeScale;
 
         yield return new WaitForSecondsRealtime(duration);
 
-        Time.timeScale = 1f;
-        Time.fixedDeltaTime = defaultFixedDelta;
+        Time.timeScale = previo;
+        Time.fixedDeltaTime = defaultFixedDelta * Mathf.Max(0.0001f, previo);
         routine = null;
     }
 }

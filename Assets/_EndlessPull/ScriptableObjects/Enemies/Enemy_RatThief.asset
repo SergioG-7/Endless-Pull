@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Enemy_RatThief
   m_EditorClassIdentifier: EndlessPull.Runtime::EnemyData
   enemyName: Hombre Rata
-  maxHealth: 35
+  maxHealth: 90
   baseAttack: 12
   baseDefense: 0
   attackRange: 1.1

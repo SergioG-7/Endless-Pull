@@ -60,11 +60,15 @@ public class HeroAgent : Agent
         if (gym != null) enemy = gym.ResetArena(hero);
     }
 
+    // 8 observaciones de situación + 3 canales del vector de rasgos. Si se añade una, hay que
+    // subir también Behavior Parameters > Vector Observation > Space Size en el prefab del agente.
+    public const int ObservationSize = 11;
+
     public override void CollectObservations(VectorSensor sensor)
     {
         if (hero == null)
         {
-            sensor.AddObservation(new float[8]);
+            sensor.AddObservation(new float[ObservationSize]);
             return;
         }
 
@@ -82,6 +86,12 @@ public class HeroAgent : Agent
         sensor.AddObservation(cargando ? 1f : 0f);
 
         sensor.AddObservation(hero.CanCastSkill ? 1f : 0f);
+
+        // Vector de rasgos: la red no solo ve la situación, también a quién la está viviendo.
+        var rasgos = hero.TraitVector;
+        sensor.AddObservation(rasgos.Bravery);
+        sensor.AddObservation(rasgos.Composure);
+        sensor.AddObservation(rasgos.Cooperation);
     }
 
     public override void OnActionReceived(ActionBuffers actions)

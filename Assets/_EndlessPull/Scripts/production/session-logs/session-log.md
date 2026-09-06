@@ -83,3 +83,10 @@ Assets/_EndlessPull/Scripts/MemorialManager.cs
 Assets/_EndlessPull/Scripts/production/session-logs/session-log.md
 ---
 
+## Session End: 20260905_200716
+### Commits
+dc2fbe7 fix expedicion + memorias heroe + equipamiento perdido + deco base
+ebbdbaa nuevas armas + fix habilidades + tacticas escuadron
+6d52c2a nuevos enemigos + skills + fix galeria + tacticas squad + fix ataque enemigos
+---
+

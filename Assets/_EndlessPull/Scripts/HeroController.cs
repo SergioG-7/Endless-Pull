@@ -193,6 +193,15 @@ public class HeroController : MonoBehaviour, IHealthOwner
     [Range(0f, 1f)]
     [SerializeField] private float baseCritChance = 0.12f;
 
+    [Tooltip("Ventana en segundos durante la que cuenta el daño recibido como una misma ráfaga.")]
+    [SerializeField] private float burstWindow = 2.5f;
+
+    [Tooltip("Fracción de la vida máxima que hay que encajar en la ventana para presión total.")]
+    [SerializeField] private float burstPressureFraction = 0.25f;
+
+    [Tooltip("Cuánto daño pierde como máximo un héroe sin templanza bajo ráfaga.")]
+    [SerializeField, Range(0f, 0.5f)] private float maxComposurePenalty = 0.25f;
+
     [Tooltip("Multiplicador de daño de un crítico antes de sumar el afijo de la pieza.")]
     [SerializeField] private float baseCritMultiplier = 1.5f;
 
@@ -241,6 +250,13 @@ public class HeroController : MonoBehaviour, IHealthOwner
     // Maná, fatiga y moral van en float para que los cambios por segundo no se pierdan entre frames.
     private float currentMP;
     private float fatigue;
+
+    // Resto fraccionario de fatiga curada pendiente de reportar al tablón de contratos.
+    private float fatigueCuredBuffer;
+
+    // Daño encajado dentro de la ventana de ráfaga, y lo que le queda de vigencia.
+    private float burstTaken;
+    private float burstTimer;
     private float morale;
 
     // Recuerda si ya estaba en crítico: la moral cae al cruzar el umbral, no en cada golpe.
@@ -614,6 +630,24 @@ public class HeroController : MonoBehaviour, IHealthOwner
         + (progress != null ? progress.SkillRefinement * maxCritBonusFromRefinement : 0f)
         + PassiveSkills.CritChanceBonus(passives));
 
+    // Vector de rasgos del héroe; lo consumen HeroAgent y la penalización de puntería.
+    public HeroTraitVector TraitVector => HeroTraitVectors.Of(this);
+
+    // Bajo una ráfaga de golpes, un héroe de poca templanza pierde puntería y sus golpes entran
+    // flojos. Se resuelve como multiplicador de daño y no como fallo: un fallo en un autobattler
+    // no se lee y descuadra el cálculo de DPS.
+    public float ComposureAccuracy
+    {
+        get
+        {
+            if (burstTaken <= 0f || MaxHealth <= 0) return 1f;
+
+            float presion = Mathf.Clamp01(burstTaken / (MaxHealth * burstPressureFraction));
+            float templanza = TraitVector.Composure;
+            return 1f - presion * (1f - templanza) * maxComposurePenalty;
+        }
+    }
+
     // Cuánto se acorta el enfriamiento de la habilidad activa por refinamiento de entrenamiento.
     public float SkillCooldownReduction
         => Mathf.Clamp01((progress != null ? progress.SkillRefinement * maxSkillCooldownReductionFromRefinement : 0f)
@@ -657,8 +691,9 @@ public class HeroController : MonoBehaviour, IHealthOwner
     // Tira el crítico sobre un daño ya calculado; el robo de vida se cobra al impactar.
     public int RollStrike(int raw, out bool critico)
     {
+        int golpe = Mathf.Max(1, Mathf.RoundToInt(raw * ComposureAccuracy));
         critico = CritMultiplier > 1f && UnityEngine.Random.value < CritChance;
-        return critico ? Mathf.Max(1, Mathf.RoundToInt(raw * CritMultiplier)) : raw;
+        return critico ? Mathf.Max(1, Mathf.RoundToInt(golpe * CritMultiplier)) : golpe;
     }
 
     // Golpe completo contra un enemigo: crítico, perforación de armadura y robo de vida.
@@ -801,8 +836,9 @@ public class HeroController : MonoBehaviour, IHealthOwner
     }
 
     public float EffectiveDetectionRange
-        => detectionRange * HeroTraits.DetectionMultiplier(trait)
-           + PassiveSkills.DetectionRangeBonus(passives);
+        => (detectionRange * HeroTraits.DetectionMultiplier(trait)
+            + PassiveSkills.DetectionRangeBonus(passives))
+           * (FloorRules.IsFog && globalState == HeroGlobalState.InCombat ? FloorRules.FogRangeMultiplier : 1f);
 
     // Se redondea hacia abajo: lo que se ve es lo que se puede gastar.
     public int CurrentMP => Mathf.FloorToInt(currentMP);
@@ -1563,6 +1599,17 @@ public void DeployViaGateway(Vector2 destination)
 
         if (defensiveTimer > 0f) defensiveTimer -= Time.deltaTime;
 
+        // El suelo que drena cansa aunque el héroe esté parado; solo dentro de la Torre.
+        if (FloorRules.DrainsFatigue && globalState == HeroGlobalState.InCombat)
+            AddFatigue(FloorRules.DrainPerSecond * Time.deltaTime);
+
+        // La ráfaga caduca de golpe al agotarse su ventana; no hay que arrastrar el daño viejo.
+        if (burstTimer > 0f)
+        {
+            burstTimer -= Time.deltaTime;
+            if (burstTimer <= 0f) burstTaken = 0f;
+        }
+
         RegenerateMana();
         if (skills.Count > 0)
         {
@@ -1641,11 +1688,50 @@ public void DeployViaGateway(Vector2 destination)
     {
         if (amount <= 0f) return;
 
-        bool agotadoAntes = IsExhausted;
+        float antes = fatigue;
         fatigue = Mathf.Max(0f, fatigue - amount);
 
-        // Dejar de estar agotado cuenta como contrato de la cantina cumplido.
-        if (agotadoAntes && !IsExhausted) QuestManager.Report(QuestKind.CureFatigue);
+        // El contrato cuenta fatiga curada acumulada: el cruce del umbral de agotamiento no
+        // servía porque la base cura sola mucho antes de llegar a 80.
+        fatigueCuredBuffer += antes - fatigue;
+        if (fatigueCuredBuffer >= 1f)
+        {
+            int enteros = Mathf.FloorToInt(fatigueCuredBuffer);
+            fatigueCuredBuffer -= enteros;
+            QuestManager.Report(QuestKind.CureFatigue, enteros);
+        }
+    }
+
+    // Orden del Maestro: manda al héroe a la zona de descanso más cercana y lo saca del puesto
+    // de trabajo mientras dure. Es el verbo que le faltaba al jugador para curar fatiga a mano.
+    public bool SendToRest()
+    {
+        if (globalState != HeroGlobalState.InBase || Discarded) return false;
+
+        BaseBuilding mejor = null;
+        float mejorDistancia = float.MaxValue;
+
+        foreach (var building in BaseBuilding.All)
+        {
+            if (building == null || !building.IsUnlocked) continue;
+            if (building.Type != BuildingType.RestArea && building.Type != BuildingType.Canteen) continue;
+
+            float distancia = Vector2.Distance(transform.position, building.transform.position);
+            if (distancia < mejorDistancia) { mejorDistancia = distancia; mejor = building; }
+        }
+
+        if (mejor == null) return false;
+
+        // Soltar el puesto ANTES de reservar, o el release se llevaría por delante el hueco
+        // recién pedido en el propio edificio de descanso.
+        BaseBuilding.ReleaseSlotEverywhere(this);
+        if (!mejor.TryClaimSlot(this, out Vector2 hueco)) { PickNewWanderTarget(); return false; }
+
+        currentBuilding = null;
+        destinationBuilding = mejor;
+        wanderTarget = hueco;
+        state = HeroState.BaseWander;
+        return true;
     }
 
     public void AddMorale(float amount)
@@ -2550,6 +2636,8 @@ public void DeployViaGateway(Vector2 destination)
         if (finalDamage <= 0) return;
 
         currentHealth = Mathf.Max(0, currentHealth - finalDamage);
+        burstTaken += finalDamage;
+        burstTimer = burstWindow;
 
         // Última Voluntad: el primer golpe mortal de cada combate deja al héroe a 1 de vida.
         if (currentHealth <= 0 && !lastStandSpent && PassiveSkills.HasLastStand(passives))
@@ -2699,6 +2787,10 @@ public void DeployViaGateway(Vector2 destination)
 
     private void NotifyAlliesOfDeath()
     {
+        // El vínculo pega mucho más fuerte que ver caer a un compañero cualquiera, y llega a
+        // quien no estuviera cerca; por eso va antes y aparte del radio de aviso.
+        if (data != null) HeroBonds.ReportDeath(data.heroName);
+
         var heroes = UnityEngine.Object.FindObjectsByType<HeroController>(FindObjectsSortMode.None);
         float radiusSqr = allyDeathRadius * allyDeathRadius;
 
@@ -2719,6 +2811,9 @@ public void DeployViaGateway(Vector2 destination)
     public int Heal(int amount)
     {
         if (amount <= 0 || data == null) return 0;
+
+        // El piso sin curación anula pociones, habilidades de sanación y regeneración.
+        if (FloorRules.BlocksHealing && globalState == HeroGlobalState.InCombat) return 0;
 
         amount = Mathf.RoundToInt(amount * PassiveSkills.HealingMultiplier(passives));
 

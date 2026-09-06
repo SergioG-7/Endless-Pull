@@ -63,6 +63,8 @@ public class HeroQuickCardUI : MonoBehaviour
     private Image barHp, barMp, barMoral, barFatiga, barAfinidad;
     private TMP_Text txtHp, txtMp, txtMoral, txtFatiga, txtAfinidad;
     private Button usePotionHpButton, usePotionMpButton;
+    private Button restButton;
+    private TMP_Text restLabel;
     private TMP_Text potionHpLabel, potionMpLabel;
     private Button btnLock, btnEquip, btnGift;
     private TMP_Text seeRosterLabel;
@@ -152,6 +154,19 @@ public class HeroQuickCardUI : MonoBehaviour
         if (crafting != null && hero != null) crafting.TryUseManaPotion(hero);
     }
 
+    public void OnSendRestPressed()
+    {
+        if (hero == null) return;
+
+        if (hero.SendToRest())
+            ScreenBanner.ShowCompact(
+                string.Format(LocalizationManager.Get("UI_REST_SENT"), hero.Data.heroName), 2.5f, UITheme.Accent);
+        else
+            ScreenBanner.ShowCompact(LocalizationManager.Get("UI_REST_FAILED"), 2.5f, UITheme.TextMuted);
+
+        Refresh();
+    }
+
     private void Refresh()
     {
         var progress = hero.GetComponent<HeroProgress>();
@@ -173,7 +188,9 @@ public class HeroQuickCardUI : MonoBehaviour
         string puesto = hero.AssignedBuilding != null
             ? string.Format(LocalizationManager.Get("UI_WORKS_AT"), BuildingTypes.DisplayName(hero.AssignedBuilding.Type))
             : string.Empty;
-        subclase.text = $"{oficio}   ·   {HeroTraits.DisplayName(hero.Trait)}{puesto}";
+        // El rasgo de combate sale del vector: cambia con la moral y la fatiga, no es fijo.
+        subclase.text = $"{oficio}   ·   {HeroTraits.DisplayName(hero.Trait)}   ·   " +
+                        $"{hero.TraitVector.Label}{puesto}";
 
         // Los recuerdos salían aquí y empujaban las barras de HP/MP fuera de la ficha. En
         // standby hasta tener su propia pantalla; MemoriesReport() sigue disponible.
@@ -205,6 +222,9 @@ public class HeroQuickCardUI : MonoBehaviour
         if (usePotionHpButton != null) usePotionHpButton.interactable = pocionesHp > 0 && hero.CurrentHealth < hero.MaxHealth;
         if (potionHpLabel != null)
             potionHpLabel.text = string.Format(LocalizationManager.Get("UI_USE_POTION"), pocionesHp);
+
+        if (restButton != null) restButton.interactable = hero.GlobalState == HeroGlobalState.InBase && hero.Fatigue > 1f;
+        if (restLabel != null) restLabel.text = LocalizationManager.Get("UI_SEND_REST");
 
         int pocionesMp = crafting != null ? crafting.TotalManaPotions : 0;
         if (usePotionMpButton != null) usePotionMpButton.interactable = pocionesMp > 0 && hero.CurrentMP < hero.MaxMP;
@@ -396,6 +416,16 @@ private void Build()
             new Color(0.35f, 0.30f, 0.52f), new Vector2(anchoMitad, ActionBtnHeight),
             new Vector2(xMitad, row3Y), OnMemoriesPressed);
         memoriesButtonLabel = btnMemories.GetComponentInChildren<TMP_Text>();
+
+        // 4ª fila: enviar a descansar. Es el único verbo del jugador sobre la fatiga; antes la
+        // base la curaba sola y no había forma de intervenir.
+        float row4Y = row3Y - ActionBtnHeight - ActionBtnGap;
+        float anchoTotal = ActionBtnWidth * 3f + ActionBtnGap * 2f;
+
+        restButton = UIBuild.Button(panel.transform, "Btn_SendRest", LocalizationManager.Get("UI_SEND_REST"),
+            new Color(0.28f, 0.45f, 0.50f), new Vector2(anchoTotal, ActionBtnHeight),
+            new Vector2(0f, row4Y), OnSendRestPressed);
+        restLabel = restButton.GetComponentInChildren<TMP_Text>();
     }
 
 

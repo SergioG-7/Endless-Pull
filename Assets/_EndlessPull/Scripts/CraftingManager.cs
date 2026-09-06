@@ -524,6 +524,7 @@ public class CraftingManager : MonoBehaviour
         else { pieza.forgedAffix = afijo; pieza.forgedValue = valor; }
 
         Debug.Log($"[Forja] {pieza.LocalizedName()} sale con {pieza.ForgedAffixLabel()}.", this);
+        QuestManager.Report(QuestKind.ForgeGear);
         SaveManager.RequestSave();
         return true;
     }

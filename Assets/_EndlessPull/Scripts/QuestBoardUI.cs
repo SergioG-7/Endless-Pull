@@ -71,15 +71,18 @@ public class QuestBoardUI : MonoBehaviour
         titulo.text = LocalizationManager.Get("UI_QUESTS");
         if (closeLabel != null) closeLabel.text = LocalizationManager.Get("UI_CLOSE");
 
+        // DestroyImmediate y no Destroy: TryClaim dispara QuestsChanged (que repinta) y luego
+        // OnClaimPressed repinta otra vez en el mismo frame; con el borrado diferido las filas
+        // viejas seguían vivas y se apilaban sobre las nuevas.
         for (int i = lista.childCount - 1; i >= 0; i--)
-            Destroy(lista.GetChild(i).gameObject);
+            DestroyImmediate(lista.GetChild(i).gameObject);
 
         foreach (var quest in quests.Quests) CreateRow(quest);
     }
 
     private void CreateRow(Quest quest)
     {
-        var fila = new GameObject("Quest_" + quest.kind, typeof(RectTransform), typeof(Image));
+        var fila = new GameObject("Quest_" + quest.kind + (quest.milestone ? "_M" : "_R"), typeof(RectTransform), typeof(Image));
         fila.transform.SetParent(lista, false);
         fila.GetComponent<RectTransform>().sizeDelta = new Vector2(0f, rowHeight);
 
@@ -139,6 +142,7 @@ public class QuestBoardUI : MonoBehaviour
         if (quest.rewardGems > 0) partes.Add($"{quest.rewardGems} ◆");
         if (quest.rewardWood > 0) partes.Add($"{quest.rewardWood} {LocalizationManager.Get("UI_WOOD")}");
         if (quest.rewardIron > 0) partes.Add($"{quest.rewardIron} {LocalizationManager.Get("UI_IRON")}");
+        if (quest.rewardFood > 0) partes.Add($"{quest.rewardFood} {LocalizationManager.Get("UI_FOOD")}");
 
         return string.Join("  ", partes);
     }

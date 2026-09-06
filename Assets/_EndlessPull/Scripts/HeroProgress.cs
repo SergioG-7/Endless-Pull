@@ -25,6 +25,9 @@ public class HeroProgress : MonoBehaviour
     [Tooltip("Niveles por estrella para rarezas fuera de la tabla de arriba.")]
     [SerializeField] private int levelsPerStar = 10;
 
+    [Tooltip("Techo de pericia técnica del 1★ al 7★; a menos estrellas, más lejos llega el muñeco.")]
+    [SerializeField] private float[] refinementCapByStar = { 2.2f, 2f, 1.75f, 1.5f, 1.25f, 1f, 1f };
+
     [Tooltip("Gemas que cuesta ascender según la rareza actual: índice 0 = 1★→2★ ... índice 5 = 6★→7★.")]
     [SerializeField] private int[] ascendGemCostByStar = { 100, 250, 500, 1000, 1800, 3000 };
 
@@ -172,10 +175,25 @@ public class HeroProgress : MonoBehaviour
     public void AddSkillRefinement(float amount)
     {
         if (amount <= 0f) return;
-        skillRefinement = Mathf.Clamp01(skillRefinement + amount);
+        skillRefinement = Mathf.Clamp(skillRefinement + amount, 0f, RefinementCap);
     }
 
-    public void LoadSkillRefinement(float saved) => skillRefinement = Mathf.Clamp01(saved);
+    public void LoadSkillRefinement(float saved) => skillRefinement = Mathf.Clamp(saved, 0f, RefinementCap);
+
+    // Techo de pericia técnica INVERTIDO por rareza: el 1★ llega mucho más alto que el 6★, así
+    // que las horas de muñeco compensan las estrellas que no tiene. Del 6★ hacia arriba se queda
+    // en el 1,0 de siempre, para no tocar lo que ya estaba equilibrado.
+    public float RefinementCap
+    {
+        get
+        {
+            int estrellas = hero != null ? hero.StarRank : 1;
+            if (refinementCapByStar == null || refinementCapByStar.Length == 0) return 1f;
+
+            int indice = Mathf.Clamp(estrellas - 1, 0, refinementCapByStar.Length - 1);
+            return Mathf.Max(1f, refinementCapByStar[indice]);
+        }
+    }
 
     public void AddEXP(int amount)
     {

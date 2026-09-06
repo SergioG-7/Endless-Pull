@@ -100,6 +100,7 @@ public class MasterHUD : MonoBehaviour
     {
         if (economy != null) RefreshResources();
         RefreshFloor();
+        RefreshExpeditionBackLabel();
         if (showingWonStatus) RefreshWonStatus();
         else if (showingBattleResult) RefreshBattleResultStatus();
     }
@@ -278,6 +279,16 @@ void Start()
 
         Anclar(expeditionBackButton, 356f);
         expeditionBackButton.gameObject.SetActive(false);
+    }
+
+    // El rótulo del botón se pone una sola vez al construirlo, así que al cambiar de idioma hay
+    // que reescribirlo a mano; el resto de la TopBar se repinta sola en Update.
+    private void RefreshExpeditionBackLabel()
+    {
+        if (expeditionBackButton == null) return;
+
+        var label = expeditionBackButton.GetComponentInChildren<TMP_Text>(true);
+        if (label != null) label.text = LocalizationManager.Get("UI_EXPEDITION_BACK");
     }
 
     private static void Anclar(Button boton, float x)

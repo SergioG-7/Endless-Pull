@@ -288,6 +288,7 @@ public class GachaManager : MonoBehaviour
                   $"[{HeroTraits.DisplayName(trait)}] con {hero.MaxHealth} PV, " +
                   $"{hero.MaxMP} MP y {hero.Attack} ATK.", hero.gameObject);
 
+        QuestManager.Report(QuestKind.SummonHero);
         HeroSummoned?.Invoke();
         SaveManager.RequestSave();
     }
