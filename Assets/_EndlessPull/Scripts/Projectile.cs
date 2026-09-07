@@ -18,12 +18,21 @@ public class Projectile : MonoBehaviour
     private int damage;
     private bool ignoresDefense;
 
+    // Punto al que vuela un tiro esquivable: el sitio donde estaba el objetivo al disparar. Los
+    // tiros de habilidad siguen persiguiendo al objetivo, que fallar el maná gastado se lee mal.
+    private bool dodgeable;
+    private Vector2 aimPoint;
+
     // Quien dispara: hace falta al impactar para cobrarle el robo de vida y su perforacion.
     private HeroController shooter;
     private HeroController heroVictim;
     private EnemyController enemyVictim;
 
     private static Sprite sharedSprite;
+
+    // Cuenta de tiros esquivables que entran y que se pierden, para calibrar el daño a distancia.
+    public static int DodgeableHits;
+    public static int DodgeableMisses;
 
     // Reserva de proyectiles; crece bajo demanda y nunca se destruye (evita GC churn).
     private static readonly List<Projectile> pool = new List<Projectile>();
@@ -42,6 +51,8 @@ public class Projectile : MonoBehaviour
         nextPoolIndex = 0;
         poolRoot = null;
         sharedSprite = null;
+        DodgeableHits = 0;
+        DodgeableMisses = 0;
     }
 
     private static Transform PoolRoot()
@@ -59,7 +70,8 @@ public class Projectile : MonoBehaviour
 
     // Disparo contra un enemigo; lo usan arqueros y magos del jugador.
     public static void Fire(Vector2 origin, EnemyController victim, int damage, Color color,
-                            bool ignoresDefense = false, HeroController shooter = null, bool magic = false)
+                            bool ignoresDefense = false, HeroController shooter = null, bool magic = false,
+                            bool dodgeable = false)
     {
         var p = Create(origin, color, magic);
         if (p == null) return;
@@ -69,11 +81,13 @@ public class Projectile : MonoBehaviour
         p.damage = damage;
         p.ignoresDefense = ignoresDefense;
         p.shooter = shooter;
+        p.dodgeable = dodgeable;
+        p.aimPoint = victim.transform.position;
     }
 
     // Disparo contra un héroe; lo usan tiradores goblin y chamanes.
     public static void Fire(Vector2 origin, HeroController victim, int damage, Color color,
-                            bool ignoresDefense = false, bool magic = false)
+                            bool ignoresDefense = false, bool magic = false, bool dodgeable = false)
     {
         var p = Create(origin, color, magic);
         if (p == null) return;
@@ -82,6 +96,8 @@ public class Projectile : MonoBehaviour
         p.target = victim.transform;
         p.damage = damage;
         p.ignoresDefense = ignoresDefense;
+        p.dodgeable = dodgeable;
+        p.aimPoint = victim.transform.position;
     }
 
 void Update()
@@ -97,14 +113,17 @@ void Update()
 
         // Muro de la arena: cualquier proyectil que lo cruce se destruye, no debe escapar hacia la base.
         Vector2 aqui = transform.position;
-        if (aqui.x < WaveManager.ArenaWallMin.x || aqui.x > WaveManager.ArenaWallMax.x
-            || aqui.y < WaveManager.ArenaWallMin.y || aqui.y > WaveManager.ArenaWallMax.y)
+        if (WaveManager.HasArenaBounds
+            && (aqui.x < WaveManager.ArenaWallMin.x || aqui.x > WaveManager.ArenaWallMax.x
+                || aqui.y < WaveManager.ArenaWallMin.y || aqui.y > WaveManager.ArenaWallMax.y))
         {
             gameObject.SetActive(false);
             return;
         }
 
-        Vector2 destino = target.position;
+        // Un tiro esquivable vuela al sitio donde estaba el objetivo, no al objetivo: apartarse
+        // basta para que pase de largo. Los de habilidad siguen persiguiéndolo.
+        Vector2 destino = dodgeable ? aimPoint : (Vector2)target.position;
         transform.position = Vector2.MoveTowards(transform.position, destino, speed * Time.deltaTime);
 
         // Se orienta hacia donde va; con un sprite alargado se nota el sentido del tiro.
@@ -112,13 +131,59 @@ void Update()
         if (delta.sqrMagnitude > 0.0001f)
             transform.right = delta.normalized;
 
+        // Impacta a quien pille de paso, esté donde esté ahora.
+        if (((Vector2)target.position - (Vector2)transform.position).sqrMagnitude <= hitDistance * hitDistance)
+        {
+            Impact();
+            return;
+        }
+
         if (delta.magnitude > hitDistance) return;
 
-        Impact();
+        // Llegó al punto de mira y allí ya no había nadie.
+        if (dodgeable) Miss();
+        else Impact();
+    }
+
+    // Tiro esquivable en vuelo que va a por esa unidad y le llega dentro de la ventana dada. Lo
+    // consulta la IA para apartarse; devuelve por dónde viene, para poder salirse de lado.
+    public static bool IncomingTo(HeroController victim, float warningSeconds, out Vector2 flightDir)
+    {
+        flightDir = Vector2.zero;
+        if (victim == null) return false;
+
+        foreach (var p in pool)
+        {
+            if (p == null || !p.gameObject.activeSelf) continue;
+            if (!p.dodgeable || p.heroVictim != victim) continue;
+
+            Vector2 recorrido = p.aimPoint - (Vector2)p.transform.position;
+            if (recorrido.magnitude > p.speed * warningSeconds) continue;
+
+            flightDir = recorrido.sqrMagnitude > 0.0001f ? recorrido.normalized : Vector2.right;
+            return true;
+        }
+
+        return false;
+    }
+
+    // El tiro se pierde: sin aviso en pantalla la bajada de daño parecería un bug.
+    private void Miss()
+    {
+        if (damage > 0)
+        {
+            DodgeableMisses++;
+            DamageTextManager.Show(transform.position, LocalizationManager.Get("FX_DODGE"),
+                                   new Color(0.75f, 0.78f, 0.85f));
+        }
+
+        gameObject.SetActive(false);
     }
 
     private void Impact()
     {
+        if (dodgeable && damage > 0) DodgeableHits++;
+
         // Con daño 0 el proyectil es puro adorno: lo usan las habilidades de área.
         if (damage > 0)
         {
@@ -154,6 +219,8 @@ void Update()
         p.shooter = null;
         p.damage = 0;
         p.ignoresDefense = false;
+        p.dodgeable = false;
+        p.aimPoint = origin;
         p.lifetime = p.lifetimeDefault;
 
         var t = p.transform;

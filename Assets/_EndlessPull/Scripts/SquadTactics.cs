@@ -65,6 +65,9 @@ public class SquadTactics : MonoBehaviour
     [Tooltip("Penalización por unidad de distancia hasta el objetivo prioritario.")]
     [SerializeField] private float distancePenalty = 6f;
 
+    [Tooltip("Penalización por cada unidad que haya que andar de más para saltarse la primera línea.")]
+    [SerializeField] private float lineSkipPenalty = 25f;
+
     [Tooltip("Vida del enemigo por debajo de la cual no merece la pena gastarle una habilidad.")]
     [SerializeField, Range(0f, 1f)] private float almostDeadRatio = 0.20f;
 
@@ -111,6 +114,15 @@ public class SquadTactics : MonoBehaviour
         EnemyController mejor = null;
         float mejorPuntos = float.MinValue;
 
+        // Lo que hay en primera línea, para medir contra eso. Sin esta referencia el bono de
+        // tirador (que son justo los que aparecen en retaguardia) ganaba siempre a los tres o
+        // cuatro pasos de más que cuesta llegar hasta ellos, y la escuadra cruzaba entera por
+        // delante de la primera línea enemiga sin tocarla.
+        float distanciaMinima = float.MaxValue;
+        foreach (var enemy in enemies)
+            distanciaMinima = Mathf.Min(distanciaMinima,
+                                        Vector2.Distance(centro, enemy.transform.position));
+
         foreach (var enemy in enemies)
         {
             float puntos = 0f;
@@ -122,7 +134,9 @@ public class SquadTactics : MonoBehaviour
             float vidaRestante = enemy.MaxHealth > 0 ? (float)enemy.CurrentHealth / enemy.MaxHealth : 1f;
             puntos += (1f - vidaRestante) * finishWeight;
 
-            puntos -= Vector2.Distance(centro, enemy.transform.position) * distancePenalty;
+            float distancia = Vector2.Distance(centro, enemy.transform.position);
+            puntos -= distancia * distancePenalty;
+            puntos -= (distancia - distanciaMinima) * lineSkipPenalty;
 
             if (puntos <= mejorPuntos) continue;
 

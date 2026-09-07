@@ -37,13 +37,22 @@ public class HeroAgent : Agent
     [SerializeField] private float safeDistanceWeight = 1f;
 
     [Tooltip("Penalización por atacar mientras GymManager tiene activo el pulso simulado de Reagruparse.")]
-    [SerializeField] private float decreeDisobeyPenalty = 0.15f;
+    [SerializeField] private float decreeDisobeyPenalty = 0.05f;
+
+    [Tooltip("Penalización por paso mientras sigue dentro de la marca del suelo ya encendida.")]
+    [SerializeField] private float groundZonePenalty = 0.02f;
+
+    [Tooltip("Recompensa por salir de la marca del suelo del jefe.")]
+    [SerializeField] private float groundZoneEscapeReward = 0.3f;
 
     private HeroController hero;
     private EnemyController enemy;
 
     // El esquivar solo se premia una vez por cada aviso de golpe.
     private bool dodgeRewarded;
+
+    // Salir de la marca solo se premia si antes estaba dentro.
+    private bool insideZone;
 
     public override void Initialize()
     {
@@ -57,12 +66,14 @@ public class HeroAgent : Agent
     public override void OnEpisodeBegin()
     {
         dodgeRewarded = false;
+        insideZone = false;
         if (gym != null) enemy = gym.ResetArena(hero);
     }
 
-    // 8 observaciones de situación + 3 canales del vector de rasgos. Si se añade una, hay que
-    // subir también Behavior Parameters > Vector Observation > Space Size en el prefab del agente.
-    public const int ObservationSize = 11;
+    // 8 observaciones de situación + 3 de mecánica de jefe + 2 de arma + 3 canales del vector de
+    // rasgos. Si se añade una, hay que subir también Behavior Parameters > Vector Observation >
+    // Space Size en el prefab del agente Y volver a entrenar: cambia el tamaño de entrada.
+    public const int ObservationSize = 16;
 
     public override void CollectObservations(VectorSensor sensor)
     {
@@ -87,6 +98,17 @@ public class HeroAgent : Agent
 
         sensor.AddObservation(hero.CanCastSkill ? 1f : 0f);
 
+        // Mecánicas del jefe: la marca del suelo (dentro / ya quemando) y la barrera del objetivo.
+        var zona = BossGroundZone.ThreatAt(transform.position);
+        sensor.AddObservation(zona != null ? 1f : 0f);
+        sensor.AddObservation(zona != null && zona.IsBurning ? 1f : 0f);
+        sensor.AddObservation(vivo && enemy.HasBarrier ? 1f : 0f);
+
+        // Con qué pelea: sin esto la red daba consejos de espadachín a un arquero, porque no veía
+        // ni que fuera de rango ni a qué distancia alcanza.
+        sensor.AddObservation(hero.IsRanged ? 1f : 0f);
+        sensor.AddObservation(Mathf.Clamp01(hero.AttackReach / observableDistance));
+
         // Vector de rasgos: la red no solo ve la situación, también a quién la está viviendo.
         var rasgos = hero.TraitVector;
         sensor.AddObservation(rasgos.Bravery);
@@ -106,6 +128,7 @@ public class HeroAgent : Agent
         ApplyMovement(movimiento);
         ApplyCombat(combate);
 
+        TickGroundZoneReward();
         ResolveEpisodeEnd();
     }
 
@@ -116,6 +139,16 @@ public class HeroAgent : Agent
     {
         var acciones = actionsOut.DiscreteActions;
         float distancia = DistanceToEnemy();
+
+        // Salir de la marca del suelo va antes que nada: se elige el sentido que aleja del centro.
+        var zona = BossGroundZone.ThreatAt(transform.position);
+        if (zona != null && enemy != null)
+        {
+            Vector2 haciaEnemigo = ((Vector2)(enemy.transform.position - transform.position)).normalized;
+            acciones[0] = Vector2.Dot(haciaEnemigo, (Vector2)transform.position - zona.Center) > 0f ? 1 : 2;
+            acciones[1] = 0;
+            return;
+        }
 
         // Mismo criterio que HeroController.TickCombatAttack: esquiva solo si es más prudente que agresivo.
         bool peligro = enemy != null && enemy.IsWindingUp && distancia < enemy.SlamRadius
@@ -152,12 +185,12 @@ public class HeroAgent : Agent
     {
         if (combate == 0 || enemy == null) return;
 
-        // GymManager simula el decreto Reagruparse; atacar mientras está activo es desobedecerlo.
-        if (hero.IsInDefensiveStance) AddReward(-decreeDisobeyPenalty);
-
         if (combate == 1)
         {
-            if (hero.TryBasicAttack(enemy)) AddReward(hitReward * aggressionWeight);
+            if (!hero.TryBasicAttack(enemy)) return;
+
+            AddReward(hitReward * aggressionWeight);
+            CobrarDesobediencia();
             return;
         }
 
@@ -166,6 +199,35 @@ public class HeroAgent : Agent
         if (!hero.TrySkillAttack(enemy)) return;
 
         AddReward(desperdicio ? -wastedSkillPenalty * aggressionWeight : hitReward * aggressionWeight);
+        CobrarDesobediencia();
+    }
+
+    // GymManager simula el decreto Reagruparse; desobedecerlo es soltar un golpe mientras dura, y
+    // se cobra SOLO por golpe soltado. Cobrándolo por decisión (aunque el ataque no llegara a
+    // salir, por estar fuera de alcance o en enfriamiento) el castigo se llevaba entre 3 y 6
+    // puntos por episodio: había victorias con recompensa negativa y la señal no dependía de lo
+    // que el agente controla.
+    private void CobrarDesobediencia()
+    {
+        if (hero.IsInDefensiveStance) AddReward(-decreeDisobeyPenalty);
+    }
+
+    // Quedarse dentro de la marca encendida cuesta cada paso; salir de ella se paga una vez.
+    private void TickGroundZoneReward()
+    {
+        var zona = BossGroundZone.ThreatAt(transform.position);
+
+        if (zona != null)
+        {
+            insideZone = true;
+            if (zona.IsBurning) AddReward(-groundZonePenalty * safeDistanceWeight);
+            return;
+        }
+
+        if (!insideZone) return;
+
+        insideZone = false;
+        AddReward(groundZoneEscapeReward * safeDistanceWeight);
     }
 
     private void ResolveEpisodeEnd()
@@ -198,7 +260,8 @@ public class HeroAgent : Agent
     // Umbral por héroe si hay HeroProgress (el mismo que en combate real); si no, el global del inspector.
     private bool EnemyIsAlmostDead()
     {
-        if (enemy == null || enemy.MaxHealth <= 0) return false;
+        // Con barrera la vida no baja: no hay nada que rematar, y la habilidad sirve para romperla.
+        if (enemy == null || enemy.MaxHealth <= 0 || enemy.HasBarrier) return false;
 
         float ratio = hero != null ? hero.SkillThreshold : residualHealthRatio;
         return (float)enemy.CurrentHealth / enemy.MaxHealth < ratio;

@@ -341,19 +341,24 @@ public class BattleChoreographer : MonoBehaviour
         frontliners.Clear();
         foreach (var hero in tanques) frontliners.Add(hero);
 
-        ColocarFila(tanques, frente, lateral, haciaElEnemigo);
-        ColocarFila(cuerpoACuerpo, frente - haciaElEnemigo * meleeGap, lateral, haciaElEnemigo);
-        ColocarFila(distancia, frente - haciaElEnemigo * rangedGap, lateral, haciaElEnemigo);
-        ColocarFila(soporte, frente - haciaElEnemigo * supportGap, lateral, haciaElEnemigo);
+        ColocarFila(tanques, frente, lateral, haciaElEnemigo, 0);
+        ColocarFila(cuerpoACuerpo, frente - haciaElEnemigo * meleeGap, lateral, haciaElEnemigo, 1);
+        ColocarFila(distancia, frente - haciaElEnemigo * rangedGap, lateral, haciaElEnemigo, 2);
+        ColocarFila(soporte, frente - haciaElEnemigo * supportGap, lateral, haciaElEnemigo, 3);
     }
 
     // Reparte una fila a lo ancho, centrada en su línea.
     private void Colocar(List<HeroController> fila, Vector2 centroLinea, Vector2 lateral,
-                         Vector2 haciaElEnemigo)
+                         Vector2 haciaElEnemigo, int indiceFila)
     {
+        // Las cuatro líneas van centradas en el mismo eje, así que una escuadra con un héroe por
+        // papel salía en fila india, uno detrás de otro. Las impares se corren medio hueco al
+        // lado: con pocos efectivos se lee un zigzag y con muchos, un tablero.
+        float sesgoFila = (indiceFila % 2 == 0 ? -1f : 1f) * rowSpacing * 0.5f;
+
         for (int i = 0; i < fila.Count; i++)
         {
-            float desplazamiento = (i - (fila.Count - 1) * 0.5f) * rowSpacing;
+            float desplazamiento = (i - (fila.Count - 1) * 0.5f) * rowSpacing + sesgoFila;
 
             // La fila no se cuadra a escuadra: el que mejor aguanta pisa medio paso por delante
             // y el que menos se queda algo atrás, para que se lea una línea de combate y no una
@@ -378,7 +383,7 @@ public class BattleChoreographer : MonoBehaviour
     private float filaVidaMedia;
 
     private void ColocarFila(List<HeroController> fila, Vector2 centroLinea, Vector2 lateral,
-                             Vector2 haciaElEnemigo)
+                             Vector2 haciaElEnemigo, int indiceFila)
     {
         filaVidaMedia = 0f;
         foreach (var hero in fila)
@@ -386,7 +391,7 @@ public class BattleChoreographer : MonoBehaviour
 
         if (fila.Count > 0) filaVidaMedia /= fila.Count;
 
-        Colocar(fila, centroLinea, lateral, haciaElEnemigo);
+        Colocar(fila, centroLinea, lateral, haciaElEnemigo, indiceFila);
     }
 
     // Devuelve true cuando ya están todos en su sitio.

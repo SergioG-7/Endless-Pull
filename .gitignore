@@ -133,3 +133,9 @@ save.json
 # sesión): no debe ser pública al abrir el repositorio.
 # ---------------------------------------------------------------
 /docs/
+
+# ---------------------------------------------------------------
+# ML-Agents (Fase 56): entorno de Python y salidas de entrenamiento
+# ---------------------------------------------------------------
+/.venv-mlagents/
+/results/

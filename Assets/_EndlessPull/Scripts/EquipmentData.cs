@@ -83,6 +83,48 @@ public static class WeaponTypes
         }
         return LocalizationManager.Get("WEAPON_NONE");
     }
+
+    // Armadura y accesorio comparten enum con las armas porque son huecos de equipo; con ellas no
+    // se pelea, así que no cuentan como arma de combate.
+    public static bool IsCombatWeapon(WeaponType type)
+        => type == WeaponType.Sword || type == WeaponType.Spear || type == WeaponType.Bow
+           || type == WeaponType.Shield || type == WeaponType.Staff || type == WeaponType.Mace;
+
+    public static bool IsRanged(WeaponType type)
+        => type == WeaponType.Bow || type == WeaponType.Staff;
+
+    // Alcance del arma sobre el de su categoría (melé o distancia), que es lo que se afina desde
+    // el prefab. Antes solo había dos cajones y la lanza pinchaba a la misma distancia que la
+    // daga: la lanza es el arma de alcance del cuerpo a cuerpo y el arco llega más que el báculo.
+    public static float ReachFactor(WeaponType type)
+    {
+        switch (type)
+        {
+            case WeaponType.Spear: return 1.60f;
+            case WeaponType.Sword: return 1f;
+            case WeaponType.Mace: return 0.92f;
+            case WeaponType.Shield: return 0.85f;
+            case WeaponType.Bow: return 1.15f;
+            case WeaponType.Staff: return 0.90f;
+        }
+        return 1f;
+    }
+
+    // Cuánto estorba el arma al moverse. El arquero va ligero y se recoloca bien; el báculo y el
+    // escudo pesan, y quien los lleva no gana carreras.
+    public static float MoveFactor(WeaponType type)
+    {
+        switch (type)
+        {
+            case WeaponType.Bow: return 1.15f;
+            case WeaponType.Sword: return 1f;
+            case WeaponType.Mace: return 0.95f;
+            case WeaponType.Spear: return 0.92f;
+            case WeaponType.Staff: return 0.85f;
+            case WeaponType.Shield: return 0.80f;
+        }
+        return 1f;
+    }
 }
 
 [CreateAssetMenu(fileName = "Equip_New", menuName = "Endless Pull/Equipment Data")]

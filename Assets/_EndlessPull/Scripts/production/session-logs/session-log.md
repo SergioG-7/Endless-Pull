@@ -142,3 +142,91 @@ ProjectSettings/Packages/com.unity.ai.assistant/Settings.json
 tools/generate_heroes_lpc.py
 ---
 
+## Session End: 20260907_205859
+### Uncommitted Changes
+Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF - Fallback.asset
+Assets/_EndlessPull/Fonts/MainFont SDF.asset
+---
+
+## Session End: 20260907_222814
+### Uncommitted Changes
+Assets/ML-Agents/Timers/Base_timers.json
+Assets/ML-Agents/Timers/Gym_Combat_timers.json
+Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF - Fallback.asset
+Assets/_EndlessPull/Fonts/MainFont SDF.asset
+Assets/_EndlessPull/Scenes/Gym_Combat.unity
+Assets/_EndlessPull/Scripts/BattleChoreographer.cs
+Assets/_EndlessPull/Scripts/EnemyController.cs
+Assets/_EndlessPull/Scripts/GachaManager.cs
+Assets/_EndlessPull/Scripts/GymManager.cs
+Assets/_EndlessPull/Scripts/HeroAgent.cs
+Assets/_EndlessPull/Scripts/HeroController.cs
+Assets/_EndlessPull/Scripts/Projectile.cs
+Assets/_EndlessPull/Scripts/SummonAltarUI.cs
+Assets/_EndlessPull/Scripts/WaveManager.cs
+Assets/_EndlessPull/Scripts/production/session-logs/session-log.md
+---
+
+## Session End: 20260907_224451
+### Uncommitted Changes
+Assets/ML-Agents/Timers/Base_timers.json
+Assets/ML-Agents/Timers/Gym_Combat_timers.json
+Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF - Fallback.asset
+Assets/_EndlessPull/Fonts/MainFont SDF.asset
+Assets/_EndlessPull/Scenes/Gym_Combat.unity
+Assets/_EndlessPull/Scripts/BattleChoreographer.cs
+Assets/_EndlessPull/Scripts/EnemyController.cs
+Assets/_EndlessPull/Scripts/GachaManager.cs
+Assets/_EndlessPull/Scripts/GymManager.cs
+Assets/_EndlessPull/Scripts/HeroAgent.cs
+Assets/_EndlessPull/Scripts/HeroController.cs
+Assets/_EndlessPull/Scripts/Projectile.cs
+Assets/_EndlessPull/Scripts/SquadTactics.cs
+Assets/_EndlessPull/Scripts/SummonAltarUI.cs
+Assets/_EndlessPull/Scripts/WaveManager.cs
+Assets/_EndlessPull/Scripts/production/session-logs/agent-audit.log
+Assets/_EndlessPull/Scripts/production/session-logs/session-log.md
+---
+
+## Session End: 20260907_232523
+### Uncommitted Changes
+.gitignore
+Assets/ML-Agents/Timers/Base_timers.json
+Assets/ML-Agents/Timers/Gym_Combat_timers.json
+Assets/_EndlessPull/Fonts/MainFont SDF.asset
+Assets/_EndlessPull/Scenes/Gym_Combat.unity
+Assets/_EndlessPull/Scripts/BattleChoreographer.cs
+Assets/_EndlessPull/Scripts/EnemyController.cs
+Assets/_EndlessPull/Scripts/GachaManager.cs
+Assets/_EndlessPull/Scripts/GymManager.cs
+Assets/_EndlessPull/Scripts/HeroAgent.cs
+Assets/_EndlessPull/Scripts/HeroController.cs
+Assets/_EndlessPull/Scripts/Projectile.cs
+Assets/_EndlessPull/Scripts/SquadTactics.cs
+Assets/_EndlessPull/Scripts/SummonAltarUI.cs
+Assets/_EndlessPull/Scripts/WaveManager.cs
+Assets/_EndlessPull/Scripts/production/session-logs/agent-audit.log
+Assets/_EndlessPull/Scripts/production/session-logs/session-log.md
+---
+
+## Session End: 20260907_232752
+### Uncommitted Changes
+.gitignore
+Assets/ML-Agents/Timers/Base_timers.json
+Assets/ML-Agents/Timers/Gym_Combat_timers.json
+Assets/_EndlessPull/Fonts/MainFont SDF.asset
+Assets/_EndlessPull/Scenes/Gym_Combat.unity
+Assets/_EndlessPull/Scripts/BattleChoreographer.cs
+Assets/_EndlessPull/Scripts/EnemyController.cs
+Assets/_EndlessPull/Scripts/GachaManager.cs
+Assets/_EndlessPull/Scripts/GymManager.cs
+Assets/_EndlessPull/Scripts/HeroAgent.cs
+Assets/_EndlessPull/Scripts/HeroController.cs
+Assets/_EndlessPull/Scripts/Projectile.cs
+Assets/_EndlessPull/Scripts/SquadTactics.cs
+Assets/_EndlessPull/Scripts/SummonAltarUI.cs
+Assets/_EndlessPull/Scripts/WaveManager.cs
+Assets/_EndlessPull/Scripts/production/session-logs/agent-audit.log
+Assets/_EndlessPull/Scripts/production/session-logs/session-log.md
+---
+

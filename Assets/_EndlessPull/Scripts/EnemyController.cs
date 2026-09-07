@@ -147,6 +147,11 @@ public class EnemyController : MonoBehaviour, IHealthOwner
     public bool HasBarrier => barrierHealth > 0f;
     public bool IsFrenzied => frenzied;
 
+    // Refuerzo invocado por un jefe: la escuadra los atiende antes para que no se acumulen.
+    public bool IsBossAdd { get; private set; }
+
+    public void MarkBossAdd() => IsBossAdd = true;
+
     public bool HasMechanic(BossMechanic mechanic)
         => mechanic != BossMechanic.None && (mechanicA == mechanic || mechanicB == mechanic);
 
@@ -331,11 +336,15 @@ public class EnemyController : MonoBehaviour, IHealthOwner
             case EnemyState.Attack: TickAttack(); break;
         }
 
-        // Muro físico: en la arena ninguna unidad puede salir de sus límites.
-        Vector3 pos = transform.position;
-        pos.x = Mathf.Clamp(pos.x, WaveManager.ArenaWallMin.x, WaveManager.ArenaWallMax.x);
-        pos.y = Mathf.Clamp(pos.y, WaveManager.ArenaWallMin.y, WaveManager.ArenaWallMax.y);
-        transform.position = pos;
+        // Muro físico: en la arena ninguna unidad puede salir de sus límites. En el gimnasio no hay
+        // arena declarada, y recortar contra unos límites de tamaño cero clavaba al enemigo en (0,0).
+        if (WaveManager.HasArenaBounds)
+        {
+            Vector3 pos = transform.position;
+            pos.x = Mathf.Clamp(pos.x, WaveManager.ArenaWallMin.x, WaveManager.ArenaWallMax.x);
+            pos.y = Mathf.Clamp(pos.y, WaveManager.ArenaWallMin.y, WaveManager.ArenaWallMax.y);
+            transform.position = pos;
+        }
     }
 
     // Golpe circular: primero avisa, y solo después pega. Ese hueco es la ventana de reacción.
@@ -521,7 +530,7 @@ public class EnemyController : MonoBehaviour, IHealthOwner
 
         Vector2 centro = victima.transform.position;
 
-        var go = new GameObject("BossGroundZone", typeof(SpriteRenderer));
+        var go = new GameObject("BossGroundZone", typeof(SpriteRenderer), typeof(BossGroundZone));
         go.transform.position = centro;
         go.transform.localScale = Vector3.one * (zoneRadius * 2f);
 
@@ -530,10 +539,15 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         marca.color = new Color(0.85f, 0.35f, 1f, 0.55f);
         marca.sortingOrder = -50;
 
+        // Registrada ya durante el aviso: los héroes tienen que poder salir antes de que queme.
+        var zona = go.GetComponent<BossGroundZone>();
+        zona.Setup(centro, zoneRadius, zoneWindup + zoneDuration + 0.5f);
+
         AnnounceMechanic(BossMechanic.GroundZone);
         yield return new WaitForSeconds(zoneWindup);
 
         if (marca != null) marca.color = new Color(0.95f, 0.25f, 0.85f, 0.80f);
+        if (zona != null) zona.Arm();
 
         int porSegundo = Mathf.Max(1, Mathf.RoundToInt(Attack * zoneDamageFactor));
         float restante = zoneDuration;
@@ -745,7 +759,8 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         if (AttackRange >= rangedThreshold)
         {
             Color tinte = data.magicAttack ? new Color(0.65f, 0.35f, 0.95f) : new Color(0.85f, 0.80f, 0.55f);
-            Projectile.Fire(transform.position, target, Attack, tinte, data.magicAttack, magic: data.magicAttack);
+            Projectile.Fire(transform.position, target, Attack, tinte, data.magicAttack,
+                            magic: data.magicAttack, dodgeable: true);
             return;
         }
 

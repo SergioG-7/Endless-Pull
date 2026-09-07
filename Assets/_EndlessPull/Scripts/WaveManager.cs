@@ -296,6 +296,11 @@ public class WaveManager : MonoBehaviour
     public static Vector2 ArenaWallMin { get; private set; }
     public static Vector2 ArenaWallMax { get; private set; }
 
+    // Sin WaveManager en escena (el gimnasio) los límites valen (0,0) y recortar contra ellos deja
+    // a todo el mundo clavado en el origen. Quien recorte tiene que preguntar primero.
+    public static bool HasArenaBounds => ArenaWallMax.x > ArenaWallMin.x
+                                         && ArenaWallMax.y > ArenaWallMin.y;
+
 
 
     [Tooltip("Piso en el que está la expedición ahora mismo.")]
@@ -877,9 +882,28 @@ void Awake()
 
     // Sitio de la escuadra cuando no hay a quien pegar: alrededor de Friacis si la hay que
     // escoltar, y si no el punto de despliegue del piso.
+    // Sin nadie a quien escoltar la escuadra se rehace DONDE ESTÁ: mandarla al punto de
+    // despliegue la hacía cruzar la arena entera de vuelta a la izquierda entre tanda y tanda de
+    // refuerzos, y volver a hacer todo el camino cuando entraban los siguientes.
     private Vector2 RallyPoint => currentEscort != null
         ? (Vector2)currentEscort.transform.position
-        : arenaCenter + heroSpawnOffset;
+        : SquadCenter();
+
+    private Vector2 SquadCenter()
+    {
+        Vector2 suma = Vector2.zero;
+        int vivos = 0;
+
+        foreach (var hero in deployed)
+        {
+            if (hero == null || hero.CurrentHealth <= 0) continue;
+
+            suma += (Vector2)hero.transform.position;
+            vivos++;
+        }
+
+        return vivos > 0 ? suma / vivos : arenaCenter + heroSpawnOffset;
+    }
 
     // Sin nadie a quien pegar, la escuadra no puede seguir avanzando sola hacia el lado enemigo:
     // vuelve al punto de reunión y rehace la línea. Escoltando eso pasa siempre que el campo
@@ -1255,6 +1279,7 @@ void Awake()
 
             var add = go.GetComponent<EnemyController>();
             add.Initialize(datos, active.waveStatMultiplier, active.waveAttackMultiplier);
+            add.MarkBossAdd();
             active.wave.Add(add);
             puestos++;
         }

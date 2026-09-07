@@ -187,8 +187,7 @@ public class SummonAltarUI : MonoBehaviour
             var heroe = gacha.SpawnHero(carta.datos, HeroTraits.Random(), SpawnPoint());
             if (heroe == null) continue;
 
-            heroe.SetPassives(PassiveSkills.RandomSet(heroe.StarRank));
-            gacha.GrantStarterWeapon(heroe);
+            gacha.SetupNewHero(heroe, heroe.StarRank);
             altas++;
         }
 

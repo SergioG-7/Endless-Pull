@@ -193,6 +193,28 @@ public class GachaManager : MonoBehaviour
     }
 
     // Instancia un héroe ya elegido; la usan tanto la tirada como la carga de partida.
+    // Alta de un héroe recién invocado, venga del gacha o del altar. Vive aquí y no repetido en
+    // cada pantalla porque al altar se le había quedado atrás la subclase y el repertorio, y los
+    // héroes de 3★+ salían sin clase y con el golpe genérico. Devuelve las pasivas para el log.
+    public List<PassiveSkill> SetupNewHero(HeroController hero, int starRank)
+    {
+        // Pasivas de salida, más cuantas más estrellas; el resto se despiertan peleando.
+        var passives = PassiveSkills.RandomSet(starRank);
+        hero.SetPassives(passives);
+        GrantStarterWeapon(hero);
+
+        // Un héroe que nace ya en 3★/4★ se especializa solo, sin interrumpir la invocación con
+        // un modal de elección (se puede cambiar luego desde el panel del héroe).
+        var progress = hero.GetComponent<HeroProgress>();
+        if (progress != null) progress.GrantSubclassIfDue(allowUiOffer: false);
+
+        // Los que nacen sin subclase (1★ y 2★ nunca la tienen) se quedaban con el golpe
+        // genérico: la habilidad sale del arma que acaban de recibir.
+        hero.EnsureLoadout();
+
+        return passives;
+    }
+
     public HeroController SpawnHero(HeroData heroData, HeroTrait heroTrait, Vector2 position)
     {
         if (heroData == null || heroPrefab == null) return null;
@@ -324,19 +346,7 @@ public class GachaManager : MonoBehaviour
             return;
         }
 
-        // Pasivas de salida, más cuantas más estrellas; el resto se despiertan peleando.
-        var passives = PassiveSkills.RandomSet(pulled.starRank);
-        hero.SetPassives(passives);
-        GrantStarterWeapon(hero);
-
-        // Un héroe que nace ya en 3★/4★ se especializa solo, sin interrumpir la invocación con
-        // un modal de elección (se puede cambiar luego desde el panel del héroe).
-        var progress = hero.GetComponent<HeroProgress>();
-        if (progress != null) progress.GrantSubclassIfDue(allowUiOffer: false);
-
-        // Los que nacen sin subclase (1★ y 2★ nunca la tienen) se quedaban con el golpe
-        // genérico: la habilidad sale del arma que acaban de recibir.
-        hero.EnsureLoadout();
+        var passives = SetupNewHero(hero, pulled.starRank);
 
         DamageTextManager.Show(hero.transform.position, LocalizationManager.Get("FX_NEW_HERO"),
             new Color(1f, 0.9f, 0.4f));

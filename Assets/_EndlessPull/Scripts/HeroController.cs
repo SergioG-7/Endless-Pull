@@ -200,6 +200,28 @@ public class HeroController : MonoBehaviour, IHealthOwner
     [Tooltip("Cuánto daño pierde como máximo un héroe sin templanza bajo ráfaga.")]
     [SerializeField, Range(0f, 0.5f)] private float maxComposurePenalty = 0.25f;
 
+
+    [Tooltip("Retardo máximo en reaccionar a la marca del suelo del jefe, con templanza a cero.")]
+    [SerializeField] private float zoneReactionDelay = 0.8f;
+
+    [Tooltip("Margen extra al salir de la marca del suelo, para no quedarse pegado al borde.")]
+    [SerializeField] private float zoneEscapeMargin = 0.6f;
+
+    [Tooltip("Ventana de aviso para esquivar un tiro, en segundos, con templanza al máximo.")]
+    [SerializeField] private float projectileWarning = 0.35f;
+
+    [Tooltip("Cuánto se aparta de lado al esquivar un tiro.")]
+    [SerializeField] private float sidestepDistance = 0.6f;
+
+    [Tooltip("Segundos mínimos entre dos esquivas de tiro seguidas.")]
+    [SerializeField] private float sidestepInterval = 1.2f;
+
+    [Tooltip("Hueco mínimo entre dos héroes de la escuadra; por debajo se apartan solos.")]
+    [SerializeField] private float personalSpace = 0.85f;
+
+    [Tooltip("A qué velocidad se separan dos héroes que se están pisando.")]
+    [SerializeField] private float separationSpeed = 2.5f;
+
     [Tooltip("Multiplicador de daño de un crítico antes de sumar el afijo de la pieza.")]
     [SerializeField] private float baseCritMultiplier = 1.5f;
 
@@ -255,6 +277,12 @@ public class HeroController : MonoBehaviour, IHealthOwner
     // Daño encajado dentro de la ventana de ráfaga, y lo que le queda de vigencia.
     private float burstTaken;
     private float burstTimer;
+
+    // Marca del suelo a la que está reaccionando ahora mismo, y lo que le queda para moverse.
+    private BossGroundZone zoneReactingTo;
+    private float zoneReactionTimer;
+
+    private float sidestepCooldown;
     private float morale;
 
     // Recuerda si ya estaba en crítico: la moral cae al cruzar el umbral, no en cada golpe.
@@ -426,12 +454,32 @@ public class HeroController : MonoBehaviour, IHealthOwner
         ? SelectBestSkill()
         : skill != null && skill.IsReady && CurrentMP >= SkillManaCost;
     // Arcos y báculos pegan de lejos; el resto tiene que plantarse delante.
-    public bool IsRanged
-        => EquippedWeaponType == WeaponType.Bow || EquippedWeaponType == WeaponType.Staff
-           || HeroSubclasses.ArchetypeOf(subclass) == WeaponType.Bow
-           || HeroSubclasses.ArchetypeOf(subclass) == WeaponType.Staff;
+    // Arma con la que pelea de verdad: manda la equipada y, si no lleva, el arquetipo de su
+    // subclase. Sin ninguna de las dos, espada.
+    public WeaponType CombatWeapon
+    {
+        get
+        {
+            var equipada = EquippedWeaponType;
+            if (WeaponTypes.IsCombatWeapon(equipada)) return equipada;
 
-    public float EffectiveAttackRange => IsRanged ? rangedAttackRange : attackRange;
+            var arquetipo = HeroSubclasses.ArchetypeOf(subclass);
+            return WeaponTypes.IsCombatWeapon(arquetipo) ? arquetipo : WeaponType.Sword;
+        }
+    }
+
+    public bool IsRanged => WeaponTypes.IsRanged(CombatWeapon);
+
+    // El alcance sale de la categoría (los dos valores del prefab) afinado por el arma concreta.
+    public float EffectiveAttackRange
+    {
+        get
+        {
+            var arma = CombatWeapon;
+            float categoria = WeaponTypes.IsRanged(arma) ? rangedAttackRange : attackRange;
+            return categoria * WeaponTypes.ReachFactor(arma);
+        }
+    }
 
     // Personalidad de combate; sin HeroProgress (agentes de prueba) se queda en los valores neutros.
     // El perfil táctico guardado es la base; encima pesan el carácter (pasivas disposicionales)
@@ -684,6 +732,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
 
     // Vector de rasgos del héroe; lo consumen HeroAgent y la penalización de puntería.
     public HeroTraitVector TraitVector => HeroTraitVectors.Of(this);
+
 
     // Bajo una ráfaga de golpes, un héroe de poca templanza pierde puntería y sus golpes entran
     // flojos. Se resuelve como multiplicador de daño y no como fallo: un fallo en un autobattler
@@ -1031,7 +1080,8 @@ public class HeroController : MonoBehaviour, IHealthOwner
         {
             if (data == null) return 0f;
 
-            float speed = data.moveSpeed * PassiveSkills.MoveSpeedMultiplier(passives);
+            float speed = data.moveSpeed * PassiveSkills.MoveSpeedMultiplier(passives)
+                          * WeaponTypes.MoveFactor(CombatWeapon);
             if (IsExhausted) speed *= 1f - exhaustionSpeedPenalty;
             if (IsDemoralized) speed *= 1f - demoralizedSpeedPenalty;
             return speed * Status.SpeedMultiplier;
@@ -1351,7 +1401,8 @@ public void DeployViaGateway(Vector2 destination)
 
         // El campo, leído una vez para no recorrer enemigos por cada candidata.
         int agrupados = EnemiesNearTarget();
-        bool rematable = target != null && target.MaxHealth > 0
+        // Mismo criterio: mientras aguante la barrera no hay nada que rematar.
+        bool rematable = target != null && target.MaxHealth > 0 && !target.HasBarrier
                          && (float)target.CurrentHealth / target.MaxHealth < executeThreshold;
         bool tocado = MaxHealth > 0 && (float)CurrentHealth / MaxHealth < 0.55f;
         bool escuadraTocada = SquadNeedsHealing();
@@ -1781,21 +1832,31 @@ public void DeployViaGateway(Vector2 destination)
         // El soporte cuida de la escuadra desde donde esté, sin esperar a entrar en rango.
         if (deployed && IsSupport) TickSupport();
 
+        // Apartarse de un tiro es un paso suelto, no un estado: no interrumpe lo que esté haciendo.
+        if (deployed) TickProjectileSidestep();
+
+        // La marca del suelo del jefe quema estando dentro, así que salir manda sobre pegar o
+        // perseguir. El resto de estados no se tocan: en la base no hay marcas.
+        bool saliendoDeLaMarca = deployed && TickGroundZoneEscape();
+
         switch (state)
         {
             case HeroState.BaseIdle: TickBaseIdle(); break;
             case HeroState.BaseWander: TickBaseWander(); break;
             case HeroState.Training: TickBuildingVisit(); break;
-            case HeroState.CombatApproach: TickCombatApproach(); break;
-            case HeroState.CombatAttack: TickCombatAttack(); break;
+            case HeroState.CombatApproach: if (!saliendoDeLaMarca) TickCombatApproach(); break;
+            case HeroState.CombatAttack: if (!saliendoDeLaMarca) TickCombatAttack(); break;
         }
 
         if (barkCooldown > 0f) barkCooldown -= Time.deltaTime;
         TickSelfRetreat();
         TickRestShift();
 
+        // Espacio personal antes del muro, para que el empujón no saque a nadie de la arena.
+        if (deployed) TickPersonalSpace();
+
         // Muro físico: en la arena ninguna unidad puede salir de sus límites.
-        if (deployed)
+        if (deployed && WaveManager.HasArenaBounds)
         {
             Vector3 pos = transform.position;
             pos.x = Mathf.Clamp(pos.x, WaveManager.ArenaWallMin.x, WaveManager.ArenaWallMax.x);
@@ -2093,7 +2154,20 @@ public void DeployViaGateway(Vector2 destination)
 
         // Ya en combate con un objetivo vivo: manda hasta que muera. Que el enemigo quede fuera
         // del rango de detección al kitear no debe arrancar al héroe de vuelta a la base.
-        if (IsInCombat() && target != null) return;
+        if (IsInCombat() && target != null)
+        {
+            // Única excepción: los refuerzos que invoca el jefe. Sueltos acaban rodeando a la
+            // escuadra, así que todo el que no sea tanque los limpia antes de volver al jefe.
+            if (IsTank || !target.IsBoss) return;
+
+            EnemyController refuerzo = FindNearestEnemy();
+            if (refuerzo == null || !refuerzo.IsBossAdd) return;
+
+            target = refuerzo;
+            combatState = CombatState.MovingToTarget;
+            state = HeroState.CombatApproach;
+            return;
+        }
 
         EnemyController nearest = FindNearestEnemy();
         if (nearest == null) return;
@@ -2137,6 +2211,10 @@ public void DeployViaGateway(Vector2 destination)
         bool leeElCampo = PassiveSkills.ReadsField(passives);
         float mejorValor = float.MaxValue;
 
+        // Los refuerzos del jefe pesan menos que el resto, así que ganan a igualdad de condiciones.
+        // Cuanto más cooperativo es el héroe, más caso le hace a la prioridad de la escuadra.
+        float sesgoRefuerzo = Mathf.Lerp(1f, 0.45f, TraitVector.Cooperation);
+
         foreach (var enemy in enemies)
         {
             if (enemy == null || enemy.CurrentHealth <= 0) continue;
@@ -2144,17 +2222,28 @@ public void DeployViaGateway(Vector2 destination)
             float sqr = ((Vector2)(enemy.transform.position - transform.position)).sqrMagnitude;
             if (sqr > range * range) continue;
 
+            float peso = enemy.IsBossAdd ? sesgoRefuerzo : 1f;
+
             if (!leeElCampo)
             {
-                if (sqr > bestSqr) continue;
-                bestSqr = sqr;
+                // El sesgo solo ordena candidatos; el alcance de detección sigue siendo el real.
+                float distanciaValor = sqr * peso;
+                if (distanciaValor > bestSqr) continue;
+                bestSqr = distanciaValor;
                 nearest = enemy;
                 continue;
             }
 
-            // Vida que le queda, con un peso pequeño por distancia para no cruzar la arena
-            // entera detrás de un enemigo medio muerto.
-            float valor = enemy.CurrentHealth + Mathf.Sqrt(sqr) * 12f;
+            // Vida que le queda y lo lejos que está, los DOS en escala 0-1. Antes se sumaba la
+            // vida en bruto (cientos de puntos en pisos altos) contra una distancia que no pasaba
+            // de ~80: la distancia no pintaba nada y el héroe cruzaba la arena entera a por el
+            // arquero de retaguardia, que es el que menos vida tiene, ignorando la primera línea.
+            float vidaRelativa = enemy.MaxHealth > 0
+                ? (float)enemy.CurrentHealth / enemy.MaxHealth
+                : 1f;
+            float lejania = range > 0f ? Mathf.Sqrt(sqr) / range : 0f;
+
+            float valor = (vidaRelativa + lejania) * peso;
             if (valor >= mejorValor) continue;
 
             mejorValor = valor;
@@ -2254,6 +2343,105 @@ public void DeployViaGateway(Vector2 destination)
         }
     }
 
+    // Los Rigidbody2D del héroe y del enemigo son CINEMÁTICOS y todo el movimiento se escribe
+    // directo en el transform, así que sus colliders nunca se empujan entre sí: dos héroes se
+    // atravesaban y acababan uno encima de otro. Separación a mano, sin meter física.
+    private void TickPersonalSpace()
+    {
+        var party = Party;
+        if (party == null) return;
+
+        Vector2 aqui = transform.position;
+        Vector2 empuje = Vector2.zero;
+
+        foreach (var otro in party.Party)
+        {
+            if (otro == null || otro == this || !otro.IsDeployed || otro.CurrentHealth <= 0) continue;
+
+            Vector2 delta = aqui - (Vector2)otro.transform.position;
+            float distancia = delta.magnitude;
+            if (distancia >= personalSpace) continue;
+
+            // Exactamente encima: se desempata al azar, o el empujón saldría cero y no se separan.
+            Vector2 direccion = distancia > 0.001f
+                ? delta / distancia
+                : UnityEngine.Random.insideUnitCircle.normalized;
+
+            empuje += direccion * ((personalSpace - distancia) / personalSpace);
+        }
+
+        if (empuje == Vector2.zero) return;
+
+        transform.position = aqui
+            + Vector2.ClampMagnitude(empuje, 1f) * separationSpeed * Time.deltaTime;
+    }
+
+    private PartyManager party;
+
+    private PartyManager Party
+    {
+        get
+        {
+            if (party == null) party = UnityEngine.Object.FindFirstObjectByType<PartyManager>();
+            return party;
+        }
+    }
+
+    // Paso lateral para dejar pasar un tiro que ya viene encima. De lado y nunca hacia atrás:
+    // retroceder no saca a nadie de la línea de vuelo. El tanque aguanta y el temerario no mira.
+    private void TickProjectileSidestep()
+    {
+        if (sidestepCooldown > 0f)
+        {
+            sidestepCooldown -= Time.deltaTime;
+            return;
+        }
+
+        if (IsTank || SafeDistance <= Aggression) return;
+
+        // Con templanza se ve venir antes; sin ella, casi encima.
+        float ventana = projectileWarning * Mathf.Max(0.25f, TraitVector.Composure);
+        if (!Projectile.IncomingTo(this, ventana, out Vector2 vuelo)) return;
+
+        Vector2 lado = new Vector2(-vuelo.y, vuelo.x);
+        if (UnityEngine.Random.value < 0.5f) lado = -lado;
+
+        transform.position = (Vector2)transform.position + lado * sidestepDistance;
+        sidestepCooldown = sidestepInterval;
+    }
+
+    // Saca al héroe de la marca del suelo del jefe. Devuelve true mientras esté ocupado saliendo.
+    private bool TickGroundZoneEscape()
+    {
+        var zona = BossGroundZone.ThreatAt(transform.position);
+        if (zona == null)
+        {
+            zoneReactingTo = null;
+            return false;
+        }
+
+        // Cada uno tarda lo suyo en darse cuenta; la templanza es lo que acorta ese margen.
+        if (zoneReactingTo != zona)
+        {
+            zoneReactingTo = zona;
+            zoneReactionTimer = zoneReactionDelay * (1f - TraitVector.Composure);
+        }
+
+        if (zoneReactionTimer > 0f)
+        {
+            zoneReactionTimer -= Time.deltaTime;
+            return false;
+        }
+
+        // Salida directa, sin HoldTheLine ni radio de kite: quedarse dentro por formación es peor.
+        Vector2 salida = zona.EscapePoint(transform.position, zoneEscapeMargin);
+        transform.position = Vector2.MoveTowards(
+            transform.position, salida, EffectiveMoveSpeed * Time.deltaTime);
+
+        if (IsInCombat()) combatState = CombatState.Kiting;
+        return true;
+    }
+
     private void TickCombatApproach()
     {
         if (target == null)
@@ -2332,7 +2520,9 @@ public void DeployViaGateway(Vector2 destination)
 
         // Si llega el maná y la habilidad está lista, el golpe especial sustituye al básico, salvo
         // que el enemigo esté ya por debajo del umbral del héroe: rematar con la habilidad es tirarla.
-        bool targetAlmostDead = target.MaxHealth > 0
+        // Con barrera la vida está congelada: nadie remata a nadie hasta que el escudo caiga, así
+        // que guardarse la habilidad "para no tirarla" solo alarga el piso a base de golpes flojos.
+        bool targetAlmostDead = target.MaxHealth > 0 && !target.HasBarrier
             && (float)target.CurrentHealth / target.MaxHealth < SkillThreshold;
         if (!IsSupport && !targetAlmostDead && CanCastSkill)
         {
@@ -2341,11 +2531,7 @@ public void DeployViaGateway(Vector2 destination)
         }
 
         // De lejos el golpe viaja: se ve salir la flecha o el proyectil mágico.
-        if (IsRanged) Projectile.Fire(transform.position, target, RollStrike(Attack, out _),
-                                      ProjectileColor, false, this, magic: IsStaffRanged);
-        else StrikeEnemy(target, Attack);
-
-        AddMasteryPoints(masteryPerHit);
+        PerformBasicAttack(target);
     }
 
     // Flecha clara para el arco, violeta para la magia.
@@ -3064,23 +3250,35 @@ public void DeployViaGateway(Vector2 destination)
         }
     }
 
-    // Golpe básico a un enemigo concreto; devuelve true solo si llegó a pegar.
+    // Golpe básico a un enemigo concreto; devuelve true solo si llegó a pegar. Lo usa el agente,
+    // y tiene que resolverse igual que en la FSM: con alcance de su arma y disparando si es de
+    // rango, o un arquero pegaba puñetazos a 1,2 dentro del gimnasio.
     public bool TryBasicAttack(EnemyController enemy)
     {
         if (enemy == null || !AttackReady) return false;
-        if (Vector2.Distance(transform.position, enemy.transform.position) > attackRange) return false;
+        if (Vector2.Distance(transform.position, enemy.transform.position) > EffectiveAttackRange) return false;
 
         attackTimer = EffectiveAttackCooldown;
-        StrikeEnemy(enemy, Attack);
-        AddMasteryPoints(masteryPerHit);
+        PerformBasicAttack(enemy);
         return true;
+    }
+
+    // El golpe básico en sí, sin comprobaciones: de cerca golpea y de lejos sale el proyectil.
+    private void PerformBasicAttack(EnemyController enemy)
+    {
+        if (IsRanged)
+            Projectile.Fire(transform.position, enemy, RollStrike(Attack, out _),
+                            ProjectileColor, false, this, magic: IsStaffRanged, dodgeable: true);
+        else StrikeEnemy(enemy, Attack);
+
+        AddMasteryPoints(masteryPerHit);
     }
 
     // Habilidad activa a un enemigo concreto; cobra el maná y arranca el enfriamiento.
     public bool TrySkillAttack(EnemyController enemy)
     {
         if (enemy == null || !AttackReady || !CanCastSkill) return false;
-        if (Vector2.Distance(transform.position, enemy.transform.position) > attackRange) return false;
+        if (Vector2.Distance(transform.position, enemy.transform.position) > EffectiveAttackRange) return false;
 
         attackTimer = EffectiveAttackCooldown;
         currentMP -= SkillManaCost;

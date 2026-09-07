@@ -236,6 +236,11 @@ MonoBehaviour:
   residualHealthRatio: 0.1
   stepPenalty: 0.001
   logEpisodes: 1
+  aggressionWeight: 1
+  safeDistanceWeight: 1
+  decreeDisobeyPenalty: 0.15
+  groundZonePenalty: 0.02
+  groundZoneEscapeReward: 0.3
 --- !u!114 &2154669
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -249,7 +254,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Unity.ML-Agents::Unity.MLAgents.Policies.BehaviorParameters
   m_BrainParameters:
-    VectorObservationSize: 8
+    VectorObservationSize: 16
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 0
@@ -381,14 +386,34 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GymManager
   enemyPrefab: {fileID: 2062506768320722534, guid: fabda8bd8e94e994798d5193f58e8bff, type: 3}
   enemyData: {fileID: 11400000, guid: 49b5230d5aecd6648b5b8831e6d0f571, type: 2}
+  trainingPool:
+  - {fileID: 11400000, guid: 4c385b8c16dd6234d95548445e94fc5f, type: 2}
+  - {fileID: 11400000, guid: f03ac4866797787419baef6e05904ddc, type: 2}
+  - {fileID: 11400000, guid: 807f8a8b5efd4b3459b265ea973d8fa9, type: 2}
+  - {fileID: 11400000, guid: aa127f7edc9903c4a821848e6019ae87, type: 2}
+  - {fileID: 11400000, guid: c1d38eb2bad450b4eb8aabed0cf8cffb, type: 2}
+  - {fileID: 11400000, guid: e82df21f1ae84164ba279313194093da, type: 2}
+  - {fileID: 11400000, guid: d30f35a5a6ddc0c41ad50c3898ea7213, type: 2}
+  - {fileID: 11400000, guid: 4acf584f8f586da45b7af5ef3728fdde, type: 2}
+  bossPool:
+  - {fileID: 11400000, guid: 49b5230d5aecd6648b5b8831e6d0f571, type: 2}
+  - {fileID: 11400000, guid: b176cb83b1b4b7d4e857e58c83797824, type: 2}
+  - {fileID: 11400000, guid: 5e308f6b0eebfe241b1bbb4b744ac406, type: 2}
+  bossChance: 0.25
+  trainedBossRange: 16
+  randomizeHeroWeapon: 1
+  startingGap: {x: 3, y: 11}
   enemyMultiplier: 1
   enemyIsBoss: 1
   bossScale: 1.6
   heroSpawn: {x: -4, y: 0}
   enemySpawn: {x: 4, y: 0}
   arenaHalfSize: {x: 9, y: 4.5}
-  fastTimeScale: 10
-  startFast: 0
+  fastTimeScale: 20
+  startFast: 1
+  regroupPulseInterval: 6
+  regroupPulseDuration: 4
+  regroupPulseRetreat: 1.5
 --- !u!4 &1773511474
 Transform:
   m_ObjectHideFlags: 0
