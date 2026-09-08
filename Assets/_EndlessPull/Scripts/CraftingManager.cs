@@ -581,6 +581,7 @@ public class CraftingManager : MonoBehaviour
 
         healingPotionCounts[(int)tier]++;
         PotionsChanged?.Invoke(tier, healingPotionCounts[(int)tier]);
+        QuestManager.Report(QuestKind.CraftPotion);
 
         Debug.Log($"[Taller] Poción de curación {tier} fabricada. Tienes {healingPotionCounts[(int)tier]}.", this);
         CraftResolved?.Invoke(true, LocalizationManager.Get("UI_POTION_CRAFTED"));
@@ -611,8 +612,8 @@ public class CraftingManager : MonoBehaviour
         if (hero != null) potionReadyAt[hero] = Time.time + potionCooldown;
     }
 
-    // Cura con la poción más débil disponible primero (ahorra las fuertes para cuando hagan
-    // falta de verdad); la usan tanto la ficha manual del héroe en base como la auto-curación
+    // Cura con la mejor poción disponible; la usan tanto la ficha manual del héroe en base
+    // como la auto-curación
     // en combate.
     public bool TryUseHealingPotion(HeroController target) => TryUseHealingPotion(target, true);
 
@@ -623,7 +624,9 @@ public class CraftingManager : MonoBehaviour
         if (target == null) return false;
         if (respectCooldown && !PotionReady(target)) return false;
 
-        for (int i = 0; i < healingPotionCounts.Length; i++)
+        // De mejor a peor: aquí se muere para siempre, y curar poco tras un golpe duro solo
+        // retrasa la muerte un golpe más. Guardarse la buena no sale a cuenta.
+        for (int i = healingPotionCounts.Length - 1; i >= 0; i--)
         {
             if (healingPotionCounts[i] <= 0) continue;
 
@@ -665,6 +668,7 @@ public class CraftingManager : MonoBehaviour
         economy.TrySpendFood(comida);
 
         manaPotionCounts[(int)tier]++;
+        QuestManager.Report(QuestKind.CraftPotion);
         ManaPotionsChanged?.Invoke(tier, manaPotionCounts[(int)tier]);
 
         Debug.Log($"[Taller] Poción de maná {tier} fabricada. Tienes {manaPotionCounts[(int)tier]}.", this);
@@ -682,7 +686,8 @@ public class CraftingManager : MonoBehaviour
         if (target == null) return false;
         if (respectCooldown && !PotionReady(target)) return false;
 
-        for (int i = 0; i < manaPotionCounts.Length; i++)
+        // Igual que con las de vida: primero la mejor que quede.
+        for (int i = manaPotionCounts.Length - 1; i >= 0; i--)
         {
             if (manaPotionCounts[i] <= 0) continue;
 

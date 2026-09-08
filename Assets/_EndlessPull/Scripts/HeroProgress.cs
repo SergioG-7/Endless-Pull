@@ -247,6 +247,7 @@ public class HeroProgress : MonoBehaviour
         economy.TrySpend(AscendGemCost);
         crafting.TryConsumeStone(AscendStoneTier);
         AudioManager.Play(SfxId.Ascension);
+        VfxManager.Play(VfxId.LevelUp, transform.position);
 
         hero.ApplyAscension(ascensionStatMultiplier);
         GrantSubclassIfDue();
@@ -297,6 +298,7 @@ public class HeroProgress : MonoBehaviour
 
         RefreshLabel();
         LevelChanged?.Invoke(level);
+        VfxManager.Play(VfxId.LevelUp, transform.position);
 
         string who = hero != null && hero.Data != null ? hero.Data.heroName : name;
         int atk = hero != null ? hero.Attack : 0;

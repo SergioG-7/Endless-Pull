@@ -281,7 +281,10 @@ public class BuildingInspectUI : MonoBehaviour
             case BuildingType.WarRoom:
                 return string.Format(LocalizationManager.Get("UI_PROD_WARROOM"), Mathf.Min(building.Level * 4f, 50f).ToString("0"));
             case BuildingType.Archive:
-                return LocalizationManager.Get("UI_ARCHIVE_HINT");
+                return string.Format(LocalizationManager.Get("UI_PROD_ARCHIVE"),
+                    building.ArchiveMoralePerTick.ToString("0.#"),
+                    building.ArchiveInterval.ToString("0.#"),
+                    building.ArchiveMoraleCap.ToString("0"));
             case BuildingType.Lodging:
                 return string.Format(LocalizationManager.Get("UI_PROD_LODGING"),
                     building.FatigueRecoveryPerTick.ToString("0"), building.TickInterval.ToString("0.#"));

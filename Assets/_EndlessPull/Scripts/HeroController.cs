@@ -365,6 +365,16 @@ public class HeroController : MonoBehaviour, IHealthOwner
     [Tooltip("Fracción de la vida máxima en un solo golpe a partir de la cual se ve el flash blanco.")]
     [SerializeField] private float hitFlashThreshold = 0.12f;
 
+    [Tooltip("Segundos que tarda el cuerpo del héroe caído en desplomarse y apagarse.")]
+    [SerializeField] private float heroFallSeconds = 1.1f;
+
+    [Tooltip("Grados que gira el cuerpo al desplomarse.")]
+    [SerializeField] private float heroFallTilt = 80f;
+
+    [Tooltip("Opacidad a la que se queda el cuerpo tumbado hasta que acabe el piso.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float heroBodyRestAlpha = 0.5f;
+
     [Tooltip("Segundos que dura el flash blanco al recibir un golpe fuerte.")]
     [SerializeField] private float hitFlashDuration = 0.08f;
 
@@ -1192,6 +1202,7 @@ public void SetDeployed(bool value, bool viaGateway = false)
             {
                 TeleportToBaseArea();
                 EnterBaseWander();
+                ConsumeAutoRest();
             }
         }
     }
@@ -1329,6 +1340,7 @@ public void DeployViaGateway(Vector2 destination)
         yield return new WaitForSeconds(gatewayHoldSeconds);
         yield return TravelRoutine(scatterPoint, gatewayTravelSeconds);
         EnterBaseWander();
+        ConsumeAutoRest();
     }
 
     // Paseo lineal corto e independiente de la FSM (usa "traveling", no "frozen"): así no se pisa
@@ -1984,7 +1996,7 @@ public void DeployViaGateway(Vector2 destination)
     }
 
     // Lo que le puede faltar a un héroe y quién se lo arregla.
-    private enum RestNeed { None, Fatigue, Health, Mana }
+    private enum RestNeed { None, Health, Mana, Fatigue, Morale }
 
     [Tooltip("Porcentaje que le tiene que faltar a una barra para que el descanso la tenga en cuenta.")]
     [SerializeField, Range(0f, 0.5f)] private float restNeedThreshold = 0.05f;
@@ -2000,21 +2012,19 @@ public void DeployViaGateway(Vector2 destination)
 
     public bool IsRestingChain => restChain;
 
-    // Lo que más le falta ahora mismo; la fatiga pesa primero porque es lo que le deja inservible.
-    private RestNeed BiggestNeed()
+    // Primera carencia sin cubrir en orden fijo: vida, maná, fatiga y moral. La moral va al
+    // final porque las tres paradas anteriores ya la suben de paso.
+    private RestNeed NextNeed()
     {
-        float faltaFatiga = fatigue / 100f;
         float faltaVida = MaxHealth > 0 ? 1f - (float)CurrentHealth / MaxHealth : 0f;
         float faltaMana = MaxMP > 0 ? 1f - currentMP / MaxMP : 0f;
+        float faltaMoral = 1f - morale / 100f;
 
-        if (faltaFatiga < restNeedThreshold) faltaFatiga = 0f;
-        if (faltaVida < restNeedThreshold) faltaVida = 0f;
-        if (faltaMana < restNeedThreshold) faltaMana = 0f;
-
-        if (faltaFatiga <= 0f && faltaVida <= 0f && faltaMana <= 0f) return RestNeed.None;
-
-        if (faltaFatiga >= faltaVida && faltaFatiga >= faltaMana) return RestNeed.Fatigue;
-        return faltaVida >= faltaMana ? RestNeed.Health : RestNeed.Mana;
+        if (faltaVida >= restNeedThreshold) return RestNeed.Health;
+        if (faltaMana >= restNeedThreshold) return RestNeed.Mana;
+        if (fatigue / 100f >= restNeedThreshold) return RestNeed.Fatigue;
+        if (faltaMoral >= restNeedThreshold) return RestNeed.Morale;
+        return RestNeed.None;
     }
 
     private static bool Serves(BaseBuilding building, RestNeed need)
@@ -2022,9 +2032,11 @@ public void DeployViaGateway(Vector2 destination)
         switch (need)
         {
             case RestNeed.Fatigue: return building.Type == BuildingType.Lodging;
-            case RestNeed.Health: return building.Type == BuildingType.Canteen
-                                      || building.Type == BuildingType.RestArea;
             case RestNeed.Mana: return building.Type == BuildingType.ManaWell;
+            // La moral se recupera donde se come y se descansa: no tiene edificio propio.
+            case RestNeed.Health:
+            case RestNeed.Morale: return building.Type == BuildingType.Canteen
+                                      || building.Type == BuildingType.RestArea;
         }
         return false;
     }
@@ -2037,6 +2049,7 @@ public void DeployViaGateway(Vector2 destination)
             case RestNeed.Fatigue: return fatigue <= 0.5f;
             case RestNeed.Health: return CurrentHealth >= MaxHealth;
             case RestNeed.Mana: return currentMP >= MaxMP - 0.5f;
+            case RestNeed.Morale: return morale >= 99.5f;
         }
         return true;
     }
@@ -2072,12 +2085,26 @@ public void DeployViaGateway(Vector2 destination)
         return true;
     }
 
+    // La marca el WaveManager al recoger la escuadra: en cuanto pise la base se manda sola a
+    // descansar, para no tener que darle al botón héroe por héroe cada piso.
+    private bool autoRestOnReturn;
+
+    public void RequestRestOnReturn() => autoRestOnReturn = true;
+
+    private void ConsumeAutoRest()
+    {
+        if (!autoRestOnReturn) return;
+        autoRestOnReturn = false;
+
+        if (NextNeed() != RestNeed.None) SendToRest();
+    }
+
     public bool SendToRest()
     {
         if (globalState != HeroGlobalState.InBase || Discarded) return false;
 
         // Sin nada que recuperar se le manda igual a descansar, que es lo que se ha pedido.
-        var need = BiggestNeed();
+        var need = NextNeed();
         if (need == RestNeed.None) need = RestNeed.Health;
 
         // Soltar el puesto de trabajo: sin esto PickNewWanderTarget lo devolvía a currar en
@@ -2092,7 +2119,7 @@ public void DeployViaGateway(Vector2 destination)
 
         // Si el edificio de esa carencia no existe todavía (los Dormitorios llegan al piso 30),
         // se atiende la siguiente en vez de dejar la orden en nada.
-        if (GoRest(need) || GoRest(RestNeed.Health) || GoRest(RestNeed.Fatigue) || GoRest(RestNeed.Mana))
+        if (GoRest(need) || GoRest(RestNeed.Health) || GoRest(RestNeed.Mana) || GoRest(RestNeed.Fatigue))
             return true;
 
         restChain = false;
@@ -2103,7 +2130,7 @@ public void DeployViaGateway(Vector2 destination)
     // Parada cumplida: si le sigue faltando algo se encadena la siguiente, y si no, se acabó.
     private void ContinueRestChain()
     {
-        var siguiente = BiggestNeed();
+        var siguiente = NextNeed();
         if (siguiente != RestNeed.None && siguiente != restNeed && GoRest(siguiente)) return;
 
         EndRestChain();
@@ -2337,6 +2364,17 @@ public void DeployViaGateway(Vector2 destination)
             restStopTimer -= Time.deltaTime;
             if (!NeedCovered(restNeed) && restStopTimer > 0f) return;
 
+            // La cantina cura y sube moral a la vez: si este mismo edificio sirve la siguiente
+            // carencia, se queda en vez de salir y volver al sitio donde ya está.
+            var siguiente = NextNeed();
+            if (siguiente != RestNeed.None && siguiente != restNeed
+                && Serves(currentBuilding, siguiente))
+            {
+                restNeed = siguiente;
+                restStopTimer = restStopTimeout;
+                return;
+            }
+
             BaseBuilding.ReleaseSlotEverywhere(this);
             currentBuilding = null;
             ContinueRestChain();
@@ -2535,7 +2573,8 @@ public void DeployViaGateway(Vector2 destination)
         if (paso == 1) MoveTowards(target.transform.position);
         else if (paso == 2) MoveAwayFrom(target.transform.position);
 
-        attackTimer -= Time.deltaTime;
+        // El enfriamiento lo descuenta el Update general; restarlo aquí otra vez lo hacía correr
+        // al doble en combate, y el arquero soltaba flechas al doble de ritmo del que le tocaba.
         if (attackTimer > 0f) return;
 
         // Golpe aconsejado. Esperar no consume el enfriamiento: vuelve a preguntar al frame siguiente.
@@ -3283,6 +3322,13 @@ public void DeployViaGateway(Vector2 destination)
             LostGearManager.DropFrom(this, piso);
 
             AudioManager.PlayAt(SfxId.Defeat, transform.position);
+
+            // Permadeath: el cuerpo se queda cayendo en el sitio aunque el héroe ya no exista, y
+            // el juego se para un momento. Es la única muerte que no se puede deshacer.
+            DeathFall.SpawnLingering(body, heroFallSeconds, heroFallTilt, heroBodyRestAlpha);
+            VfxManager.Play(VfxId.Death, transform.position);
+            CombatFeelManager.OnHeroFallen(transform.position);
+
             NotifyAlliesOfDeath();
 
             // Perder un héroe para siempre no puede pasar en silencio.

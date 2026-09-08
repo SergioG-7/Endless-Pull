@@ -27,9 +27,45 @@ public class CombatFeelManager : MonoBehaviour
     [Tooltip("Duración del temblor de cámara en un golpe de jefe.")]
     [SerializeField] private float bossShakeDuration = 0.22f;
 
+    [Tooltip("Duración del hitstop cuando cae un héroe; es la pausa más larga del juego.")]
+    [SerializeField] private float heroFallHitStopDuration = 0.16f;
+
+    [Tooltip("Magnitud y duración del temblor al caer un héroe.")]
+    [SerializeField] private float heroFallShakeMagnitude = 0.3f;
+    [SerializeField] private float heroFallShakeDuration = 0.35f;
+
+    [Tooltip("Cuánto se asoma la cámara hacia el héroe caído, en unidades de mundo.")]
+    [SerializeField] private float heroFallNudgeDistance = 0.7f;
+
+    [Tooltip("Segundos que tarda la cámara en asomarse y volver.")]
+    [SerializeField] private float heroFallNudgeDuration = 0.8f;
+
+    [Tooltip("Hitstop y temblor al morir un enemigo; muy cortos, pasa muchas veces por piso.")]
+    [SerializeField] private float enemyDeathHitStopDuration = 0.03f;
+    [SerializeField] private float enemyDeathShakeMagnitude = 0.05f;
+    [SerializeField] private float enemyDeathShakeDuration = 0.08f;
+
     private static CombatFeelManager instance;
     private Coroutine routine;
     private float defaultFixedDelta;
+
+    // Velocidad a la que va el juego cuando no hay hitstop: la fija el botón de x1/x2. Antes se
+    // leía el reloj al entrar en el hitstop, y dos muertes seguidas dejaban el juego a cámara
+    // lenta para siempre, porque la segunda guardaba como "normal" la velocidad de la primera.
+    private static float normalTimeScale = 1f;
+
+    // La llaman el HUD de combate y el gimnasio al cambiar de velocidad.
+    public static void SetNormalTimeScale(float value)
+    {
+        normalTimeScale = Mathf.Max(0.01f, value);
+
+        // Sin hitstop en curso el cambio se aplica ya; con uno corriendo lo recoge al acabar.
+        if (instance == null || instance.routine == null)
+        {
+            Time.timeScale = normalTimeScale;
+            Time.fixedDeltaTime = 0.02f * normalTimeScale;
+        }
+    }
 
     void Awake()
     {
@@ -64,6 +100,26 @@ public class CombatFeelManager : MonoBehaviour
         CameraDirector.Shake(instance.bossShakeDuration, instance.bossShakeMagnitude);
     }
 
+    // Cae un héroe: es permadeath, así que se para el juego un momento, tiembla y la cámara se
+    // asoma sin cambiar el encuadre. Lo más marcado que hace el combate.
+    public static void OnHeroFallen(Vector3 position)
+    {
+        if (instance == null) return;
+
+        instance.TriggerHitStop(instance.heroFallHitStopDuration);
+        CameraDirector.Shake(instance.heroFallShakeDuration, instance.heroFallShakeMagnitude);
+        CameraDirector.Nudge(position, instance.heroFallNudgeDuration, instance.heroFallNudgeDistance);
+    }
+
+    // Muere un enemigo: el mismo gesto, pero apenas perceptible.
+    public static void OnEnemyDeath()
+    {
+        if (instance == null) return;
+
+        instance.TriggerHitStop(instance.enemyDeathHitStopDuration);
+        CameraDirector.Shake(instance.enemyDeathShakeDuration, instance.enemyDeathShakeMagnitude);
+    }
+
     private void TriggerHitStop(float duration)
     {
         if (routine != null) StopCoroutine(routine);
@@ -73,17 +129,18 @@ public class CombatFeelManager : MonoBehaviour
     // Tiempo real, no de juego: si no, el propio Time.timeScale congelado no dejaría avanzar la espera.
     private IEnumerator HitStopRoutine(float duration)
     {
-        // Se restaura la velocidad que hubiera, no un 1 fijo: con el x2 puesto cada crítico
-        // devolvía el juego a velocidad normal, y con el menú abierto lo despausaba.
-        float previo = Time.timeScale;
-
         Time.timeScale = hitstopTimeScale;
         Time.fixedDeltaTime = defaultFixedDelta * hitstopTimeScale;
 
         yield return new WaitForSecondsRealtime(duration);
 
-        Time.timeScale = previo;
-        Time.fixedDeltaTime = defaultFixedDelta * Mathf.Max(0.0001f, previo);
         routine = null;
+
+        // Si alguien pisó el reloj mientras durábamos (el menú pausando a 0, por ejemplo), manda
+        // lo suyo: restaurar aquí es lo que despausaba el juego con el menú abierto.
+        if (!Mathf.Approximately(Time.timeScale, hitstopTimeScale)) yield break;
+
+        Time.timeScale = normalTimeScale;
+        Time.fixedDeltaTime = defaultFixedDelta * normalTimeScale;
     }
 }

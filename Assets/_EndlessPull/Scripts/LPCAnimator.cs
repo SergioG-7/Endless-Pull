@@ -22,8 +22,12 @@ public class LPCAnimator : MonoBehaviour
     [Tooltip("Distancia que avanza la arremetida visual al golpear cuerpo a cuerpo.")]
     [SerializeField] private float lungeDistance = 0.15f;
 
-    [Tooltip("Segundos que dura la arremetida completa, ida y vuelta.")]
+    [Tooltip("Segundos que dura la arremetida completa: retroceso, golpe y vuelta.")]
     [SerializeField] private float lungeDuration = 0.15f;
+
+    [Tooltip("Retroceso previo al golpe, como fracción de la distancia de arremetida.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float windUpFraction = 0.35f;
 
     private Coroutine lungeRoutine;
 
@@ -175,21 +179,28 @@ public class LPCAnimator : MonoBehaviour
         if (direccion.sqrMagnitude > 0.0001f) direccion.Normalize();
 
         Vector3 destino = origen + (Vector3)(direccion * lungeDistance);
-        float mitad = Mathf.Max(0.01f, lungeDuration * 0.5f);
+        Vector3 retroceso = origen - (Vector3)(direccion * (lungeDistance * windUpFraction));
 
-        for (float t = 0f; t < mitad; t += Time.deltaTime)
-        {
-            transform.position = Vector3.Lerp(origen, destino, t / mitad);
-            yield return null;
-        }
+        // El reparto suma 1: la duración total del golpe no cambia, solo cómo se gasta. El
+        // retroceso se toma con calma, el golpe sale seco y la vuelta se relaja.
+        float total = Mathf.Max(0.03f, lungeDuration);
 
-        for (float t = 0f; t < mitad; t += Time.deltaTime)
-        {
-            transform.position = Vector3.Lerp(destino, origen, t / mitad);
-            yield return null;
-        }
+        yield return Move(origen, retroceso, total * 0.35f);
+        yield return Move(retroceso, destino, total * 0.20f);
+        yield return Move(destino, origen, total * 0.45f);
 
         transform.position = origen;
         lungeRoutine = null;
+    }
+
+    private System.Collections.IEnumerator Move(Vector3 desde, Vector3 hasta, float duracion)
+    {
+        for (float t = 0f; t < duracion; t += Time.deltaTime)
+        {
+            transform.position = Vector3.Lerp(desde, hasta, t / duracion);
+            yield return null;
+        }
+
+        transform.position = hasta;
     }
 }

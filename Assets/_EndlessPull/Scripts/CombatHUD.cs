@@ -15,9 +15,16 @@ public class CombatHUD : MonoBehaviour
     [Tooltip("Multiplicador de velocidad del modo rápido.")]
     [SerializeField] private float fastTimeScale = 2f;
 
-    [Tooltip("Vida de escuadra (0-1) por debajo de la cual la Auto-Retirada, si está armada, se dispara sola.")]
-    [Range(0.05f, 0.5f)]
-    [SerializeField] private float autoRetreatThreshold = 0.20f;
+    [Tooltip("Vida (0-1) del héroe que peor esté por debajo de la cual salta la Auto-Retirada.")]
+    [Range(0.05f, 0.6f)]
+    [SerializeField] private float autoRetreatThreshold = 0.25f;
+
+    [Tooltip("Vida media de la escuadra (0-1) por debajo de la cual salta la Auto-Retirada.")]
+    [Range(0.05f, 0.8f)]
+    [SerializeField] private float autoRetreatSquadThreshold = 0.4f;
+
+    [Tooltip("Volverse en cuanto cae un héroe; con muerte permanente, perder uno ya basta.")]
+    [SerializeField] private bool autoRetreatOnHeroDown = true;
 
     [Tooltip("Tamaño del panel del acelerador.")]
     [SerializeField] private Vector2 panelSize = new Vector2(260f, 64f);
@@ -60,8 +67,7 @@ public class CombatHUD : MonoBehaviour
         LocalizationManager.LanguageChanged -= RefreshLocalizedTexts;
 
         // Al desactivarse (p.ej. cambio de escena) no debe quedarse el juego a cámara rápida.
-        Time.timeScale = 1f;
-        Time.fixedDeltaTime = 0.02f;
+        CombatFeelManager.SetNormalTimeScale(1f);
     }
 
     // Los botones se construían una vez en Awake() y se quedaban en el idioma de entonces
@@ -81,8 +87,7 @@ public class CombatHUD : MonoBehaviour
         if (state != ExpeditionState.InProgress && fast)
         {
             fast = false;
-            Time.timeScale = 1f;
-            Time.fixedDeltaTime = 0.02f;
+            CombatFeelManager.SetNormalTimeScale(1f);
             RefreshSpeedLabel();
         }
     }
@@ -95,11 +100,22 @@ public class CombatHUD : MonoBehaviour
         if (root.gameObject.activeSelf != show) root.gameObject.SetActive(show);
         if (!show) return;
 
-        if (autoRetreatArmed && !autoRetreatFiredThisRun && waves.DeployedHealthRatio < autoRetreatThreshold)
+        if (autoRetreatArmed && !autoRetreatFiredThisRun && ShouldAutoRetreat())
         {
             autoRetreatFiredThisRun = true;
             waves.RetreatExpedition();
         }
+    }
+
+    // La media de la escuadra por sí sola no servía: con cuatro sanos y uno agonizando da 0,8 y
+    // no saltaba nunca, que es lo que se veía en partida. Ahora vale con que uno esté al límite
+    // o con que haya caído alguien.
+    private bool ShouldAutoRetreat()
+    {
+        if (autoRetreatOnHeroDown && waves.AnyHeroFallenThisFloor) return true;
+        if (waves.LowestDeployedHealthRatio < autoRetreatThreshold) return true;
+
+        return waves.DeployedHealthRatio < autoRetreatSquadThreshold;
     }
 
     private void Build()
@@ -152,8 +168,9 @@ public class CombatHUD : MonoBehaviour
     private void ToggleSpeed()
     {
         fast = !fast;
-        Time.timeScale = fast ? Mathf.Max(1f, fastTimeScale) : 1f;
-        Time.fixedDeltaTime = 0.02f * Time.timeScale;
+
+        // Pasa por el CombatFeelManager: es quien sabe a qué velocidad volver tras un hitstop.
+        CombatFeelManager.SetNormalTimeScale(fast ? Mathf.Max(1f, fastTimeScale) : 1f);
         RefreshSpeedLabel();
     }
 

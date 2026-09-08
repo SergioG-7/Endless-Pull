@@ -112,8 +112,8 @@ public class BaseBuilding : MonoBehaviour
     [Tooltip("Vida por tick en cantina y zona de descanso, en nivel 1.")]
     [SerializeField] private int healPerTick = 6;
 
-    [Tooltip("Moral por tick en cantina y zona de descanso.")]
-    [SerializeField] private float moralePerTick = 5f;
+    [Tooltip("Moral por tick en cantina y zona de descanso, en nivel 1; escala con el nivel.")]
+    [SerializeField] private float moralePerTick = 2f;
 
     [Tooltip("Segundos que se queda un héroe en cada visita.")]
     [SerializeField] private Vector2 visitDuration = new Vector2(8f, 12f);
@@ -214,7 +214,7 @@ public class BaseBuilding : MonoBehaviour
     public float FatigueRecoveryPerTick => fatigueRecoveryPerTick * LevelFactor;
     public float PassiveManaPerSecond => passiveManaPerSecond * LevelFactor;
     public int HealPerTick => Mathf.RoundToInt(healPerTick * LevelFactor);
-    public float MoralePerTick => moralePerTick;
+    public float MoralePerTick => moralePerTick * level;
     // El coste crece con el triangular del nivel, no en linea recta: la produccion por nivel es
     // cuadratica, y un coste lineal dejaba que la base se pagase sus propias mejoras sola.
     public int NextWoodCost => woodCostPerLevel * level * (level + 1) / 2;
@@ -642,6 +642,52 @@ void Start()
 
         if (IsProducer && economy != null) TickProduction();
         else if (type == BuildingType.ManaWell) TickManaWell();
+        else if (type == BuildingType.Archive) TickArchive();
+    }
+
+    [Tooltip("Moral por tick que el Archivo reparte a la base en nivel 1; escala con el nivel.")]
+    [SerializeField] private float archiveMoralePerTick = 1.5f;
+
+    [Tooltip("Moral por encima de la cual el Archivo ya no anima a nadie.")]
+    [Range(0f, 100f)]
+    [SerializeField] private float archiveMoraleCap = 60f;
+
+    [Tooltip("Segundos entre repartos de moral del Archivo.")]
+    [SerializeField] private float archiveInterval = 10f;
+
+    private float archiveTimer;
+
+    public float ArchiveMoralePerTick => archiveMoralePerTick * level;
+    public float ArchiveMoraleCap => archiveMoraleCap;
+    public float ArchiveInterval => archiveInterval;
+
+    // El Archivo no tiene trabajadores ni producción: lo que hace es levantar el ánimo de la
+    // base leyendo las gestas de los que ya pasaron por la Torre. Sube solo hasta el tope, así
+    // que evita que la tropa caiga en desmoralización pero no sustituye a la cantina.
+    private void TickArchive()
+    {
+        archiveTimer -= Time.deltaTime;
+        if (archiveTimer > 0f) return;
+
+        archiveTimer = archiveInterval;
+
+        float cantidad = archiveMoralePerTick * level;
+        int animados = 0;
+
+        // Los que están en la Torre o de expedición se desactivan, así que no los devuelve.
+        foreach (var hero in FindObjectsByType<HeroController>(FindObjectsSortMode.None))
+        {
+            if (hero == null || hero.IsDeployed || hero.Morale >= archiveMoraleCap) continue;
+
+            hero.AddMorale(Mathf.Min(cantidad, archiveMoraleCap - hero.Morale));
+            animados++;
+        }
+
+        // Igual que la cosecha: sin esto el Archivo trabajaría en silencio y parecería seguir
+        // sin servir para nada.
+        if (animados > 0)
+            DamageTextManager.Show(transform.position + Vector3.up * harvestTextHeight,
+                                   "+" + cantidad.ToString("0.#") + " ★", UITheme.BarMorale);
     }
 
     // Granja, Carpintería y Fundición producen solas, sin que nadie las visite.
@@ -659,15 +705,37 @@ void Start()
         switch (type)
         {
             case BuildingType.Farm:
-                economy.AddFood(Mathf.RoundToInt(FoodPerHarvest * factor));
+                int comida = Mathf.RoundToInt(FoodPerHarvest * factor);
+                economy.AddFood(comida);
+                ShowHarvest(comida, FoodColor);
+                QuestManager.Report(QuestKind.HarvestFood, comida);
                 break;
             case BuildingType.WoodworkingShop:
-                economy.AddMaterials(Mathf.RoundToInt(MaterialPerHarvest * factor), 0);
+                int madera = Mathf.RoundToInt(MaterialPerHarvest * factor);
+                economy.AddMaterials(madera, 0);
+                ShowHarvest(madera, WoodColor);
                 break;
             case BuildingType.MetalProcessing:
-                economy.AddMaterials(0, Mathf.RoundToInt(MaterialPerHarvest * factor));
+                int hierro = Mathf.RoundToInt(MaterialPerHarvest * factor);
+                economy.AddMaterials(0, hierro);
+                ShowHarvest(hierro, IronColor);
                 break;
         }
+    }
+
+    private static readonly Color FoodColor = new Color(0.55f, 0.90f, 0.45f);
+    private static readonly Color WoodColor = new Color(0.80f, 0.60f, 0.35f);
+    private static readonly Color IronColor = new Color(0.70f, 0.78f, 0.88f);
+
+    [Tooltip("Altura sobre el edificio a la que sale el número de la cosecha.")]
+    [SerializeField] private float harvestTextHeight = 1.2f;
+
+    // La cosecha solo se veía en el contador del HUD: sin esto la base produce en silencio.
+    private void ShowHarvest(int amount, Color color)
+    {
+        if (amount <= 0) return;
+
+        DamageTextManager.Show(transform.position + Vector3.up * harvestTextHeight, "+" + amount, color);
     }
 
     // El Pozo de Maná recarga a sus trabajadores fijos aunque nadie lo esté visitando ahora mismo.
@@ -879,7 +947,7 @@ void Start()
             case BuildingType.Canteen:
             case BuildingType.RestArea:
                 // Descansar sube la moral aunque ya esté a tope de vida.
-                hero.AddMorale(moralePerTick);
+                hero.AddMorale(MoralePerTick);
 
                 // El glotón saca un 50% más de la cantina.
                 int heal = Mathf.RoundToInt(HealPerTick * HeroTraits.HealMultiplier(hero.Trait, type));
@@ -896,7 +964,7 @@ void Start()
                 // Dormir es lo único que quita fatiga de verdad; la zona de descanso solo cura
                 // y sube moral. Aquí se recupera el héroe exhausto que ya no rinde en la Torre.
                 hero.RecoverFatigue(fatigueRecoveryPerTick * LevelFactor);
-                hero.AddMorale(moralePerTick);
+                hero.AddMorale(MoralePerTick);
                 hero.Heal(HealPerTick);
                 return true;
         }
@@ -926,13 +994,13 @@ void Start()
         return Mathf.RoundToInt(porCosecha * (1f + workers.Count * 0.5f) * cosechas);
     }
 
-    // Descanso y maná que sus trabajadores fijos habrían recuperado estando el juego cerrado.
-    // El campo de entrenamiento queda fuera a propósito: la EXP no se regala sin jugar.
+    // Descanso, maná y sueño que sus trabajadores fijos habrían recuperado estando el juego
+    // cerrado. El campo de entrenamiento queda fuera a propósito: la EXP no se regala sin jugar.
     public int OfflineRecover(float seconds)
     {
         if (!IsUnlocked || seconds <= 0f) return 0;
         if (type != BuildingType.Canteen && type != BuildingType.RestArea
-            && type != BuildingType.ManaWell) return 0;
+            && type != BuildingType.ManaWell && type != BuildingType.Lodging) return 0;
 
         PruneWorkers();
         if (workers.Count == 0) return 0;
@@ -953,7 +1021,11 @@ void Start()
 
             if (ticks <= 0) continue;
 
-            worker.AddMorale(moralePerTick * ticks);
+            // Los Dormitorios se quedaban fuera de esta cuenta, así que la fatiga no bajaba
+            // nunca con el juego cerrado por mucha gente que durmiera aquí.
+            if (type == BuildingType.Lodging) worker.RecoverFatigue(FatigueRecoveryPerTick * ticks);
+
+            worker.AddMorale(MoralePerTick * ticks);
             worker.Heal(Mathf.RoundToInt(HealPerTick * HeroTraits.HealMultiplier(worker.Trait, type) * ticks));
         }
 

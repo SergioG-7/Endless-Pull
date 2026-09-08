@@ -209,6 +209,8 @@ public static class ActiveSkills
         string msg = string.Format(LocalizationManager.Get("UI_ABILITY_AWAKENING"),
             hero.Data.heroName, DisplayName(elegida));
         ScreenBanner.ShowCompact(msg, 3f, UITheme.AccentPick);
+        VfxManager.Play(VfxId.Awaken, hero.transform.position);
+        QuestManager.Report(QuestKind.AwakenSkill);
         Debug.Log($"[Despertar] {msg}", hero);
         return true;
     }

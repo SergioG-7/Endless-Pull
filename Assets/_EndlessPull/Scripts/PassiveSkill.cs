@@ -312,6 +312,8 @@ public static class PassiveSkills
         string msg = string.Format(LocalizationManager.Get("UI_SKILL_AWAKENING"),
             hero.Data.heroName, DisplayName(chosen));
         ScreenBanner.ShowCompact(msg, 3f, UITheme.AccentPick);
+        VfxManager.Play(VfxId.Awaken, hero.transform.position);
+        QuestManager.Report(QuestKind.AwakenSkill);
         Debug.Log($"[Despertar] {msg}", hero);
         return true;
     }

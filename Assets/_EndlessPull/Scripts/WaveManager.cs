@@ -402,6 +402,7 @@ public class WaveManager : MonoBehaviour
     private float challengeSpeedLimit;
     private float combatElapsed;
     private int deployedStartCount;
+    private int deployedStartMaxHealth;
     private bool heroDownOccurred;
 
     // Quién se ha quedado en este piso para siempre; se resume al terminar, gane o pierda.
@@ -509,20 +510,38 @@ public Vector2 ArenaFocus => arenaCenter + new Vector2((heroSpawnOffset.x + spaw
     }
 
     // Vida agregada de la escuadra desplegada (0-1); 1 si no hay nadie fuera. Lo usa el auto-retirada.
+    // El denominador es el de la escuadra AL SALIR, no el de los que siguen en pie: los caídos se
+    // destruyen y salían de la cuenta, así que la media SUBÍA cada vez que moría alguien.
     public float DeployedHealthRatio
     {
         get
         {
-            int cur = 0, max = 0;
+            int cur = 0;
             foreach (var hero in deployed)
-            {
-                if (hero == null) continue;
-                cur += hero.CurrentHealth;
-                max += hero.MaxHealth;
-            }
-            return max > 0 ? (float)cur / max : 1f;
+                if (hero != null) cur += hero.CurrentHealth;
+
+            return deployedStartMaxHealth > 0 ? (float)cur / deployedStartMaxHealth : 1f;
         }
     }
+
+    // La media tapa al que se está muriendo: con cuatro sanos y uno agonizando sale 0,8 y la
+    // retirada automática no salta. Esta mira al que peor está.
+    public float LowestDeployedHealthRatio
+    {
+        get
+        {
+            float peor = 1f;
+            foreach (var hero in deployed)
+            {
+                if (hero == null || hero.MaxHealth <= 0) continue;
+                peor = Mathf.Min(peor, (float)hero.CurrentHealth / hero.MaxHealth);
+            }
+            return peor;
+        }
+    }
+
+    // Ha caído alguien en este piso. Con permadeath ya es motivo de sobra para volverse.
+    public bool AnyHeroFallenThisFloor => heroDownOccurred;
 
     // Se dispara con (estado, mensaje) para que la UI muestre el feedback.
     public event System.Action<ExpeditionState, string> ExpeditionChanged;
@@ -1185,6 +1204,10 @@ void Awake()
         // Sin esto la base heredaba la niebla o el suelo drenante del último piso.
         FloorRules.Clear();
 
+        // Los cuerpos de los caídos se quedan en la arena todo el piso; al cerrarlo se retiran,
+        // o el siguiente asalto empezaría con los muertos del anterior tirados por el suelo.
+        DeathFall.ClearLingering();
+
         int gatewayCount = 0;
         regrouping = false;
 
@@ -1204,6 +1227,9 @@ void Awake()
             bool viaGateway = gatewayCount < GatewayCapForRecall;
             if (viaGateway) gatewayCount++;
 
+            // Se marca antes de recogerlo: al pisar la base se manda solo a descansar si le
+            // falta algo. Solo la escuadra, que es la que vuelve gastada de la Torre.
+            hero.RequestRestOnReturn();
             hero.SetDeployed(false, viaGateway);
             hero.SetOriginSynergy(0f);
             hero.SetFrozen(false);
@@ -1418,6 +1444,10 @@ void Awake()
         combatElapsed = 0f;
         heroDownOccurred = false;
         deployedStartCount = CountAliveDeployed();
+
+        deployedStartMaxHealth = 0;
+        foreach (var hero in deployed)
+            if (hero != null) deployedStartMaxHealth += hero.MaxHealth;
         currentChallenge = HiddenChallengeType.None;
 
         // Ya se ganó un reto oculto en este piso antes, o no ha tocado esta vez: sin reto.
@@ -1717,6 +1747,9 @@ void Awake()
             AudioManager.Play(SfxId.Victory);
             QuestManager.Report(QuestKind.ClearFloors);
             if (bossChest) QuestManager.Report(QuestKind.WinBossFloor);
+            if (!heroDownOccurred) QuestManager.Report(QuestKind.WinNoLosses);
+            if (challengeWonType != HiddenChallengeType.None)
+                QuestManager.Report(QuestKind.WinHiddenChallenge);
             FloorCleared?.Invoke(new FloorRewardInfo
             {
                 floor = cleared,

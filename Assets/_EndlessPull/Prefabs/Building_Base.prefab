@@ -315,7 +315,7 @@ MonoBehaviour:
   skillRefinementPerTrainingTick: 0.01
   trainingAwakeningChance: 0.005
   healPerTick: 6
-  moralePerTick: 5
+  moralePerTick: 2
   visitDuration: {x: 8, y: 12}
   level: 1
   woodCostPerLevel: 20

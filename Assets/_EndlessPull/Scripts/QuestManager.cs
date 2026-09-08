@@ -17,7 +17,15 @@ public enum QuestKind
     CompleteExpedition,
     UpgradeBuilding,
     WinBossFloor,
-    ForgeGear
+    ForgeGear,
+
+    // Siempre al final: el save y el YAML guardan el numero, no el nombre.
+    AwakenSkill,
+    WinNoLosses,
+    WinHiddenChallenge,
+    CraftPotion,
+    HarvestFood,
+    ForgeBond
 }
 
 [System.Serializable]
@@ -92,8 +100,62 @@ public class QuestManager : MonoBehaviour
         new Template(QuestKind.CompleteExpedition,  2, 100,  80,  40,   0),
         new Template(QuestKind.UpgradeBuilding,     1, 120, 100,  60,   0),
         new Template(QuestKind.WinBossFloor,        2, 180,   0, 110,   0),
-        new Template(QuestKind.ForgeGear,           3,  85,   0,  90,   0)
+        new Template(QuestKind.ForgeGear,           3,  85,   0,  90,   0),
+
+        // Contratos que piden jugar de una manera concreta, no solo repetir la misma accion.
+        new Template(QuestKind.AwakenSkill,         2, 130,   0,  40,   0),
+        new Template(QuestKind.WinNoLosses,         3, 140,  70,   0,   0),
+        new Template(QuestKind.WinHiddenChallenge,  2, 200,   0,  80,   0),
+        new Template(QuestKind.CraftPotion,         6,  60,  60,   0,  40),
+        new Template(QuestKind.HarvestFood,       400,  70,  70,   0,   0),
+        new Template(QuestKind.ForgeBond,           2, 110,   0,   0,  80)
     };
+
+    // Catalogo de hitos. La lista de arriba solo sirve para una escena sin guardar: el save
+    // reemplaza `quests` entera, asi que los hitos que falten se anaden desde aqui y llegan
+    // tambien a las partidas empezadas.
+    private static readonly Quest[] MilestoneCatalog =
+    {
+        new Quest { kind = QuestKind.ReachFloor,    target = 5,  rewardGems = 300,  milestone = true },
+        new Quest { kind = QuestKind.ReachFloor,    target = 20, rewardGems = 700,  rewardIron = 150, milestone = true },
+        new Quest { kind = QuestKind.ReachFloor,    target = 40, rewardGems = 1500, rewardIron = 300, milestone = true },
+        new Quest { kind = QuestKind.HeroLevel,     target = 10, rewardGems = 200,  rewardWood = 80,  milestone = true },
+        new Quest { kind = QuestKind.HeroLevel,     target = 30, rewardGems = 600,  rewardWood = 250, milestone = true },
+        new Quest { kind = QuestKind.AscendHero,    target = 3,  rewardGems = 400,  rewardIron = 60,  milestone = true },
+        new Quest { kind = QuestKind.AscendHero,    target = 5,  rewardGems = 900,  rewardIron = 200, milestone = true },
+        new Quest { kind = QuestKind.AssignWorkers, target = 2,  rewardWood = 150,  rewardIron = 100, milestone = true },
+        new Quest { kind = QuestKind.AssignWorkers, target = 10, rewardWood = 400,  rewardIron = 300, milestone = true }
+    };
+
+    // Anade los hitos del catalogo que no esten ya en el tablon, cobrados o no.
+    private void EnsureMilestones()
+    {
+        foreach (var plantilla in MilestoneCatalog)
+        {
+            bool existe = false;
+            foreach (var quest in quests)
+            {
+                if (quest == null || !quest.milestone) continue;
+                if (quest.kind != plantilla.kind || quest.target != plantilla.target) continue;
+
+                existe = true;
+                break;
+            }
+
+            if (existe) continue;
+
+            quests.Add(new Quest
+            {
+                kind = plantilla.kind,
+                target = plantilla.target,
+                rewardGems = plantilla.rewardGems,
+                rewardWood = plantilla.rewardWood,
+                rewardIron = plantilla.rewardIron,
+                rewardFood = plantilla.rewardFood,
+                milestone = true
+            });
+        }
+    }
 
     void Awake()
     {
@@ -103,7 +165,11 @@ public class QuestManager : MonoBehaviour
     }
 
     // El save se restaura antes; aquí solo se rellenan los huecos que falten.
-    void Start() => FillRotatingSlots();
+    void Start()
+    {
+        EnsureMilestones();
+        FillRotatingSlots();
+    }
 
     void OnDestroy()
     {
@@ -265,6 +331,12 @@ public class QuestManager : MonoBehaviour
             case QuestKind.UpgradeBuilding: clave = "Q_BUILDING"; break;
             case QuestKind.WinBossFloor: clave = "Q_BOSS"; break;
             case QuestKind.ForgeGear: clave = "Q_FORGE"; break;
+            case QuestKind.AwakenSkill: clave = "Q_AWAKEN"; break;
+            case QuestKind.WinNoLosses: clave = "Q_NOLOSS"; break;
+            case QuestKind.WinHiddenChallenge: clave = "Q_CHALLENGE"; break;
+            case QuestKind.CraftPotion: clave = "Q_POTION"; break;
+            case QuestKind.HarvestFood: clave = "Q_HARVEST"; break;
+            case QuestKind.ForgeBond: clave = "Q_BOND"; break;
             default: clave = "Q_RESTED"; break;
         }
 
@@ -319,6 +391,7 @@ public class QuestManager : MonoBehaviour
             });
         }
 
+        EnsureMilestones();
         FillRotatingSlots();
         QuestsChanged?.Invoke();
     }

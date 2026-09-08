@@ -117,6 +117,12 @@ public class EnemyController : MonoBehaviour, IHealthOwner
     [Tooltip("Fracción de la vida máxima en un solo golpe a partir de la cual se ve el flash blanco.")]
     [SerializeField] private float hitFlashThreshold = 0.12f;
 
+    [Tooltip("Segundos que tarda el cuerpo del enemigo en desplomarse y apagarse.")]
+    [SerializeField] private float enemyFallSeconds = 0.5f;
+
+    [Tooltip("Grados que gira el cuerpo al desplomarse.")]
+    [SerializeField] private float enemyFallTilt = 75f;
+
     [Tooltip("Segundos que dura el flash blanco al recibir un golpe fuerte o una ráfaga.")]
     [SerializeField] private float hitFlashDuration = 0.08f;
 
@@ -831,7 +837,13 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         CheckBossThresholds();
 
         // Golpe grande de un solo tirón: el flash blanco lo delata igual que a una ráfaga acumulada.
-        if (MaxHealth > 0 && finalDamage >= MaxHealth * hitFlashThreshold) HitFlash();
+        if (MaxHealth > 0 && finalDamage >= MaxHealth * hitFlashThreshold)
+        {
+            HitFlash();
+
+            // Solo en los golpes que ya merecen flash: en cada pinchazo saturaría la pantalla.
+            VfxManager.Play(VfxId.Impact, transform.position);
+        }
 
         DamageTextManager.ShowDamage(transform.position, finalDamage);
         AudioManager.PlayAt(SfxId.Impact, transform.position);
@@ -840,6 +852,13 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         if (currentHealth <= 0)
         {
             AudioManager.PlayAt(SfxId.Defeat, transform.position);
+
+            // El cuerpo se desploma suelto del enemigo, que se destruye ya: así nada del combate
+            // puede seguir apuntando a un muerto.
+            DeathFall.Spawn(body, enemyFallSeconds, enemyFallTilt);
+            VfxManager.Play(VfxId.Death, transform.position);
+            CombatFeelManager.OnEnemyDeath();
+
             Debug.Log($"[Enemy] {data.enemyName} destruido.", this);
             QuestManager.Report(QuestKind.KillEnemies);
             if (currentAttacker != null) currentAttacker.CreditKill();

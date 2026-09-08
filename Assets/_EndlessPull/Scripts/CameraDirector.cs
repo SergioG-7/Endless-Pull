@@ -67,6 +67,13 @@ public class CameraDirector : MonoBehaviour
     private float shakeDurationTotal;
     private float shakeMagnitude;
 
+    // Asomarse a un punto: igual que el temblor, un desplazamiento que se suma al escribir el
+    // transform. No toca el zoom ni basePosition, así que el encuadre de combate no se mueve.
+    private Vector2 nudgeDirection;
+    private float nudgeTimer;
+    private float nudgeDurationTotal;
+    private float nudgeDistance;
+
     // Solo se admite zoom/paneo manual mientras el jugador está viendo la base, quieta y sin viajar.
     private bool inBaseView = true;
 
@@ -106,6 +113,34 @@ public class CameraDirector : MonoBehaviour
     public static void Shake(float duration, float magnitude)
     {
         if (instance != null) instance.TriggerShake(duration, magnitude);
+    }
+
+    public static void Nudge(Vector2 worldPoint, float duration, float distance)
+    {
+        if (instance != null) instance.TriggerNudge(worldPoint, duration, distance);
+    }
+
+    private void TriggerNudge(Vector2 worldPoint, float duration, float distance)
+    {
+        Vector2 hacia = worldPoint - basePosition;
+        if (hacia.sqrMagnitude < 0.0001f) return;
+
+        nudgeDirection = hacia.normalized;
+        nudgeTimer = duration;
+        nudgeDurationTotal = duration;
+
+        // Nunca más de lo que se pida, aunque el caído esté al otro lado de la arena.
+        nudgeDistance = Mathf.Min(distance, hacia.magnitude);
+    }
+
+    // Va y vuelve dentro de la misma duración: al acabar el desplazamiento es cero otra vez.
+    private Vector2 TickNudge()
+    {
+        if (nudgeTimer <= 0f) return Vector2.zero;
+
+        nudgeTimer -= Time.unscaledDeltaTime;
+        float t = nudgeDurationTotal > 0f ? 1f - Mathf.Clamp01(nudgeTimer / nudgeDurationTotal) : 1f;
+        return nudgeDirection * (nudgeDistance * Mathf.Sin(t * Mathf.PI));
     }
 
     private void TriggerShake(float duration, float magnitude)
@@ -179,9 +214,9 @@ void Update()
         }
 
         // El temblor se aplica siempre encima de basePosition, viajando o parada la cámara.
-        Vector2 shakeOffset = TickShake();
+        Vector2 offset = TickShake() + TickNudge();
         target.transform.position = new Vector3(
-            basePosition.x + shakeOffset.x, basePosition.y + shakeOffset.y, target.transform.position.z);
+            basePosition.x + offset.x, basePosition.y + offset.y, target.transform.position.z);
     }
 
     public bool IsTravelling => travelTimer < travelSeconds;

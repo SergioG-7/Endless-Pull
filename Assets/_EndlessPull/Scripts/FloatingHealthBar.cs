@@ -18,6 +18,9 @@ public class FloatingHealthBar : MonoBehaviour
     [Tooltip("Si se oculta la barra cuando la vida está al máximo.")]
     [SerializeField] private bool hideWhenFull = false;
 
+    // La barra de maná se cuelga debajo copiando esta geometría.
+    public Transform FillPivot => fillPivot;
+
     private IHealthOwner owner;
 
     void Awake()

@@ -132,7 +132,15 @@ public class HeroBonds : MonoBehaviour
         if (string.IsNullOrEmpty(otherName)) return;
 
         floorsTogether.TryGetValue(otherName, out int actual);
-        floorsTogether[otherName] = actual + cantidad;
+        int nuevo = actual + cantidad;
+        floorsTogether[otherName] = nuevo;
+
+        // El vinculo acaba de cuajar. Los dos heroes se apuntan el uno al otro, asi que solo lo
+        // reporta el del nombre menor: si no, cada vinculo contaria dos veces en el tablon.
+        if (actual < bondThreshold && nuevo >= bondThreshold
+            && hero != null && hero.Data != null
+            && string.CompareOrdinal(hero.Data.heroName, otherName) < 0)
+            QuestManager.Report(QuestKind.ForgeBond);
     }
 
     // Muere un héroe: quien estuviera vinculado con él se hunde y lo dice en voz alta.

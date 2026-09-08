@@ -422,6 +422,7 @@ GameObject:
   - component: {fileID: 2466509445765513080}
   - component: {fileID: 1204863871985610451}
   - component: {fileID: 2324915135903149808}
+  - component: {fileID: 6826832564273457013}
   m_Layer: 0
   m_Name: Hero_Base
   m_TagString: Untagged
@@ -673,6 +674,9 @@ MonoBehaviour:
   formationTolerance: 0.4
   flankOvershoot: 2.5
   hitFlashThreshold: 0.12
+  heroFallSeconds: 1.1
+  heroFallTilt: 80
+  heroBodyRestAlpha: 0.5
   hitFlashDuration: 0.08
   affinityAtkThreshold: 50
   affinityAtkBonus: 0.02
@@ -811,6 +815,7 @@ MonoBehaviour:
   idleGrace: 0.1
   lungeDistance: 0.15
   lungeDuration: 0.15
+  windUpFraction: 0.35
 --- !u!114 &2284392694718890999
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -919,6 +924,22 @@ MonoBehaviour:
   DecisionPeriod: 5
   DecisionStep: 0
   TakeActionsBetweenDecisions: 1
+--- !u!114 &6826832564273457013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6736230919267043135}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d308ec9532854b14381f9eb20e23a27c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: EndlessPull.Runtime::FloatingManaBar
+  healthBar: {fileID: 0}
+  heightFactor: 0.5
+  gap: 0.11
+  manaColor: {r: 0.35, g: 0.6, b: 1, a: 1}
 --- !u!1 &6744772514828819670
 GameObject:
   m_ObjectHideFlags: 0
