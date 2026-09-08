@@ -20,6 +20,13 @@ MonoBehaviour:
   bioEn: She deserted a minor war before it could kill her; now she sells her sword
     to the highest bidder.
   bioJa: "\u5C0F\u3055\u306A\u6226\u4E89\u3067\u547D\u3092\u843D\u3068\u3059\u524D\u306B\u8131\u8D70\u3057\u305F\u3002\u4ECA\u306F\u6700\u3082\u9AD8\u304F\u6255\u3046\u8005\u306B\u5263\u3092\u58F2\u308B\u3002"
+  memories:
+  - starRank: 2
+    unlock: 0
+    amount: 0
+    text: "Un compañero le gritó que corriera. Ella corrió. Fue lo único que hizo bien esa guerra."
+    textEn: "A comrade screamed at her to run. She ran. It was the only thing she did right in that war."
+    textJa: "仲間が逃げろと叫んだ。彼女は逃げた。あの戦争でうまくやれたのはそれだけだった。"
   bodySprite: {fileID: -61658325613052343, guid: 983ab518f95274945a61e206260c5319, type: 3}
   walkFrames:
   - {fileID: 7058896693074660722, guid: 983ab518f95274945a61e206260c5319, type: 3}

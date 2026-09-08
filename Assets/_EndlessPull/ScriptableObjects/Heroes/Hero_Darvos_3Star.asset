@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "Darvos ha sostenido la línea en la Guarnición de Piedra Alta durante ocho asedios, y en ninguno retrocedió un paso. Su escudo lleva más abolladuras que su propia piel."
   bioEn: "Darvos has held the line at High Stone Garrison through eight sieges, and never gave a single step in any of them. His shield carries more dents than his own skin."
   bioJa: "ダーヴォスは高石の駐屯地で八度の包囲戦を耐え抜き、一度も一歩も退かなかった。彼の盾には、自分の肌よりも多くの傷が刻まれている。"
+  memories:
+  - starRank: 0
+    unlock: 1
+    amount: 20
+    text: "Recuerda contar las abolladuras de su escudo por las noches, como quien cuenta ovejas."
+    textEn: "Recalls counting the dents in his shield at night, the way others count sheep."
+    textJa: "夜になると盾のへこみを数える癖を覚えている。羊を数えるように。"
+  - starRank: 0
+    unlock: 3
+    amount: 260
+    text: "Recuerda el octavo asedio, el único en que su pie retrocedió medio paso antes de que lo obligara a volver, y que nadie más lo notó."
+    textEn: "Recalls the eighth siege, the only one where his foot slid half a step back before he forced it forward again — and that no one else noticed."
+    textJa: "第八の攻城戦、足が半歩だけ下がったあの唯一の瞬間を覚えている。すぐに踏みとどまったが、誰も気づかなかった。"
   bodySprite: {fileID: -4460470441279580186, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}
   walkFrames:
   - {fileID: 2197532373658707174, guid: a8e9c54f700b75d36424cf5bcc26fc76, type: 3}

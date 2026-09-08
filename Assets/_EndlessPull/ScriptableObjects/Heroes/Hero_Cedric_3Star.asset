@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "Cedric ha sobrevivido a tres escaramuzas fronterizas de las que dan nombre a las tabernas, y lleva las cicatrices como quien lleva medallas. Ya no necesita demostrar nada, solo seguir en pie."
   bioEn: "Cedric has survived three border skirmishes the kind taverns still name, and wears his scars like medals. He no longer needs to prove anything, only to keep standing."
   bioJa: "酒場で語り草になるほどの国境戦を三度生き延びたセドリックは、傷を勲章のように身にまとう。もう証明する必要はない、ただ立ち続けるだけだ。"
+  memories:
+  - starRank: 0
+    unlock: 3
+    amount: 110
+    text: "Recuerda el nombre de las tres tabernas que llevan el nombre de sus escaramuzas, y que en ninguna paga por beber."
+    textEn: "Recalls the names of the three taverns named after his skirmishes, and that he never pays to drink in any of them."
+    textJa: "自分の戦いにちなんで名付けられた三軒の酒場を覚えている。どこでも酒代を払ったことがない。"
+  - starRank: 0
+    unlock: 1
+    amount: 38
+    text: "Recuerda las cicatrices una por una, pero ya no recuerda el nombre del hombre que le enseñó a sobrevivir a la primera, y eso pesa más que cualquier herida."
+    textEn: "Recalls each scar one by one, but has forgotten the name of the man who taught him to survive the first skirmish — and that weighs more than any wound."
+    textJa: "傷跡は一つひとつ覚えているのに、最初の戦いを生き延びる術を教えてくれた男の名前はもう思い出せない。どの傷よりもそれが重い。"
   bodySprite: {fileID: 4239610823210194468, guid: b365e2b55be3d2b479af04e203b92f41, type: 3}
   walkFrames:
   - {fileID: -5140935178603436132, guid: b365e2b55be3d2b479af04e203b92f41, type: 3}

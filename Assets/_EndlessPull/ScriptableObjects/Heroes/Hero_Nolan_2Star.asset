@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Nolan perdió a su caballero en una emboscada y desde entonces recorre los caminos ofreciendo su espada a quien lo necesite. No ha encontrado todavía a alguien digno de reemplazarlo."
   bioEn: "Nolan lost his knight in an ambush and has since wandered the roads offering his sword to whoever needs it. He hasn't yet found anyone worth replacing him."
   bioJa: "ノーランは伏兵に主の騎士を失って以来、街道を渡り歩き、必要とする者に剣を貸している。まだ彼に代わる主君にはめぐり会えていない。"
+  memories:
+  - starRank: 3
+    unlock: 0
+    amount: 1
+    text: "Recuerda el nombre de su caballero, y cómo cada vez cuesta más pronunciarlo entero."
+    textEn: "Recalls his knight's name, and how it grows harder to say whole with every passing year."
+    textJa: "仕えた騎士の名前を覚えている。年を追うごとに、その名を最後まで口にするのが難しくなる。"
   bodySprite: {fileID: -9048625242302002058, guid: 58ad1a5ae24a52008b3aafa5ebf62c33, type: 3}
   walkFrames:
   - {fileID: -1337558581127350480, guid: 58ad1a5ae24a52008b3aafa5ebf62c33, type: 3}

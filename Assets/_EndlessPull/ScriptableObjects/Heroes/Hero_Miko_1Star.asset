@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Miko heredó el taller de curtidor de su padre y con él una mano firme para el cuchillo. Corta con la misma precisión con la que antes trabajaba el cuero."
   bioEn: "Miko inherited her father's tannery and, with it, a steady hand for the knife. She cuts with the same precision she once used on leather."
   bioJa: "父の革なめし工房を継いだミコは、そのまま刃物を扱う確かな手も受け継いだ。かつて革を仕立てたのと同じ正確さで斬りつける。"
+  memories:
+  - starRank: 0
+    unlock: 4
+    amount: 1
+    text: "Su padre le guió la mano en el primer corte de cuero: firme, sin dudar. Nunca cambió el gesto."
+    textEn: "Her father guided her hand through the first leather cut: steady, no hesitation. The motion never changed."
+    textJa: "父が最初の革の一裁ちで手を導いてくれた。迷いのない、確かな一振り。その動きは今も変わらない。"
   bodySprite: {fileID: 3784304678136605315, guid: 7f0a9beded1079d42babd0b380a13382, type: 3}
   walkFrames:
   - {fileID: -5258788679262437922, guid: 7f0a9beded1079d42babd0b380a13382, type: 3}

@@ -48,6 +48,23 @@ public class HeroAgent : Agent
     private HeroController hero;
     private EnemyController enemy;
 
+    // Qué canales del consejo neuronal se obedecen en la Torre. Medido en el piso 30: con Full la
+    // red nunca aconseja la habilidad y el piso se alarga un 13 %, así que arranca en Off.
+    public enum AdviceMode { Off, MovementOnly, Full }
+
+    public static AdviceMode Advice = AdviceMode.Off;
+
+    // Sin arena el agente no manda: solo mira y deja su consejo para que lo lea la FSM.
+    private bool advisor;
+
+    // Paso aconsejado (0 quieto, 1 acercarse, 2 retroceder) y golpe aconsejado (0 nada, 1 basico,
+    // 2 habilidad). Solo valen si HasAdvice.
+    public int AdvisedMove { get; private set; }
+    public int AdvisedCombat { get; private set; }
+
+    // Falso hasta que llega la primera decision: antes de eso no hay nada que aconsejar.
+    public bool HasAdvice { get; private set; }
+
     // El esquivar solo se premia una vez por cada aviso de golpe.
     private bool dodgeRewarded;
 
@@ -57,23 +74,32 @@ public class HeroAgent : Agent
     public override void Initialize()
     {
         hero = GetComponent<HeroController>();
-        if (gym == null) gym = UnityEngine.Object.FindFirstObjectByType<GymManager>();
+
+        // Por el padre, no el primero de la escena: con varias arenas a la vez, coger cualquiera
+        // dejaba al agente reapareciendo en la arena del vecino.
+        if (gym == null) gym = GetComponentInParent<GymManager>();
+
+        // Sin gimnasio (la Torre) el agente pasa a consejero: la FSM sigue decidiendo objetivo,
+        // formación, decretos, retirada y soporte, y aquí solo se recogen observaciones.
+        advisor = gym == null;
 
         // El agente manda: la máquina de estados del héroe se aparta y morir no lo destruye.
-        if (hero != null) hero.ExternalControl = true;
+        if (hero != null && !advisor) hero.ExternalControl = true;
     }
 
     public override void OnEpisodeBegin()
     {
+        if (advisor) return;
+
         dodgeRewarded = false;
         insideZone = false;
         if (gym != null) enemy = gym.ResetArena(hero);
     }
 
-    // 8 observaciones de situación + 3 de mecánica de jefe + 2 de arma + 3 canales del vector de
-    // rasgos. Si se añade una, hay que subir también Behavior Parameters > Vector Observation >
-    // Space Size en el prefab del agente Y volver a entrenar: cambia el tamaño de entrada.
-    public const int ObservationSize = 16;
+    // 8 de situación + 3 de mecánica de jefe + 2 de arma + 1 de enfriamiento + 1 de rival a
+    // distancia + 2 de rol + 3 del vector de rasgos. Si se añade una, hay que subir también
+    // Behavior Parameters > Space Size en la escena Y volver a entrenar: cambia la entrada.
+    public const int ObservationSize = 20;
 
     public override void CollectObservations(VectorSensor sensor)
     {
@@ -82,6 +108,9 @@ public class HeroAgent : Agent
             sensor.AddObservation(new float[ObservationSize]);
             return;
         }
+
+        // De consejero el rival lo elige la FSM; en el gimnasio lo reparte la arena.
+        if (advisor) enemy = hero.CurrentTarget;
 
         sensor.AddObservation(hero.MaxHealth > 0 ? (float)hero.CurrentHealth / hero.MaxHealth : 0f);
         sensor.AddObservation(hero.MaxMP > 0 ? (float)hero.CurrentMP / hero.MaxMP : 0f);
@@ -109,6 +138,17 @@ public class HeroAgent : Agent
         sensor.AddObservation(hero.IsRanged ? 1f : 0f);
         sensor.AddObservation(Mathf.Clamp01(hero.AttackReach / observableDistance));
 
+        // Su propio enfriamiento: sin esto se le pedía temporizar los golpes a ciegas y la orden
+        // de atacar caía en un ataque que aún no estaba listo la mayor parte del tiempo.
+        sensor.AddObservation(hero.AttackReady ? 1f : 0f);
+
+        // Si el rival también pega de lejos, retroceder no salva de nada.
+        sensor.AddObservation(vivo && enemy.IsRanged ? 1f : 0f);
+
+        // Rol: el clérigo cura en vez de pegar y el tanque aguanta el golpe en área a propósito.
+        sensor.AddObservation(hero.IsSupport ? 1f : 0f);
+        sensor.AddObservation(hero.IsTank ? 1f : 0f);
+
         // Vector de rasgos: la red no solo ve la situación, también a quién la está viviendo.
         var rasgos = hero.TraitVector;
         sensor.AddObservation(rasgos.Bravery);
@@ -120,10 +160,19 @@ public class HeroAgent : Agent
     {
         if (hero == null) return;
 
-        AddReward(-stepPenalty);
-
         int movimiento = actions.DiscreteActions[0];
         int combate = actions.DiscreteActions[1];
+
+        // De consejero no se premia ni se mueve nada: la decisión se guarda y la aplica la FSM.
+        if (advisor)
+        {
+            AdvisedMove = movimiento;
+            AdvisedCombat = combate;
+            HasAdvice = true;
+            return;
+        }
+
+        AddReward(-stepPenalty);
 
         ApplyMovement(movimiento);
         ApplyCombat(combate);
@@ -150,10 +199,19 @@ public class HeroAgent : Agent
             return;
         }
 
-        // Mismo criterio que HeroController.TickCombatAttack: esquiva solo si es más prudente que agresivo.
-        bool peligro = enemy != null && enemy.IsWindingUp && distancia < enemy.SlamRadius
-                       && hero.SafeDistance > hero.Aggression;
+        // Mismo criterio que HeroController.TickCombatAttack: el tanque aguanta y el resto esquiva
+        // solo si es más prudente que agresivo.
+        bool peligro = enemy != null && !hero.IsTank && enemy.IsWindingUp
+                       && distancia < enemy.SlamRadius && hero.SafeDistance > hero.Aggression;
         acciones[0] = peligro ? 2 : (distancia > hero.AttackReach ? 1 : 0);
+
+        // El clérigo se cura cuando le hace falta y pega el resto del tiempo.
+        if (hero.IsSupport && hero.CanCastSkill && hero.MaxHealth > 0
+            && (float)hero.CurrentHealth / hero.MaxHealth < 0.85f)
+        {
+            acciones[1] = 2;
+            return;
+        }
 
         if (distancia > hero.AttackReach) acciones[1] = 0;
         else if (hero.CanCastSkill && !EnemyIsAlmostDead()) acciones[1] = 2;
@@ -172,8 +230,9 @@ public class HeroAgent : Agent
 
         transform.position = gym != null ? gym.Clamp(destino) : destino;
 
-        // Salir del radio mientras el jefe carga es justo lo que se quiere enseñar.
-        if (movimiento == 2 && !dodgeRewarded && enemy.IsWindingUp
+        // Salir del radio mientras el jefe carga es justo lo que se quiere enseñar; al tanque no,
+        // que en la Torre aguanta la línea a propósito (TickCombatAttack filtra por IsTank).
+        if (movimiento == 2 && !dodgeRewarded && !hero.IsTank && enemy.IsWindingUp
             && DistanceToEnemy() > enemy.SlamRadius)
         {
             dodgeRewarded = true;
@@ -191,6 +250,17 @@ public class HeroAgent : Agent
 
             AddReward(hitReward * aggressionWeight);
             CobrarDesobediencia();
+            return;
+        }
+
+        // El clérigo no lanza la habilidad contra nadie: cura, y en el gimnasio la escuadra es él
+        // solo. Curar a pleno es tirar el maná igual que rematar con la habilidad a un moribundo.
+        if (hero.IsSupport)
+        {
+            bool sano = hero.MaxHealth > 0 && (float)hero.CurrentHealth / hero.MaxHealth >= 0.85f;
+            if (!hero.CastSupportSkill(hero)) return;
+
+            AddReward(sano ? -wastedSkillPenalty * aggressionWeight : hitReward * aggressionWeight);
             return;
         }
 

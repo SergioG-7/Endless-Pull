@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Jorunn caza lobos en el Bosque Helado desde los doce años, cuando una manada mató a la mitad del rebaño de su familia. Ya no le teme a nada que tenga cuatro patas."
   bioEn: "Jorunn has hunted wolves in the Frostwood since she was twelve, after a pack killed half her family's flock. She no longer fears anything with four legs."
   bioJa: "ヨルンは十二歳のとき、群れに家畜の半分を殺されて以来、氷結の森で狼を狩り続けている。四本足のものはもう何も恐れない。"
+  memories:
+  - starRank: 0
+    unlock: 1
+    amount: 22
+    text: "Recuerda contar las ovejas esa mañana y no llegar al número de siempre. Después ya no contó ovejas."
+    textEn: "Recalls counting the sheep that morning and coming up short. She never counted sheep again after that."
+    textJa: "その朝、羊を数えていつもの数に足りなかったことを覚えている。以来、羊は数えなくなった。"
   bodySprite: {fileID: 4810892719382425314, guid: 9b35570a686b0bc7608bda57cbfc34ef, type: 3}
   walkFrames:
   - {fileID: -8265891322072297103, guid: 9b35570a686b0bc7608bda57cbfc34ef, type: 3}

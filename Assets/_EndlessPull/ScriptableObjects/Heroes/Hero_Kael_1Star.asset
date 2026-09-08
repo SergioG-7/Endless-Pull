@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Kael dejó el campo de trigo tras una mala cosecha, buscando un sueldo que no dependiera de la lluvia. Golpea con la misma paciencia con la que antes esperaba la siega."
   bioEn: "Kael left the wheat fields after a bad harvest, chasing a wage that didn't depend on the rain. He strikes with the same patience he once saved for the harvest."
   bioJa: "不作の年に麦畑を離れたケールは、雨に左右されない稼ぎを求めてきた。かつて収穫を待った忍耐強さのまま、機を見て打ち込む。"
+  memories:
+  - starRank: 0
+    unlock: 1
+    amount: 16
+    text: "Recuerda el sonido del trigo seco quebrándose bajo la bota, no bajo la hoz. Ese año no hubo cosecha que segar."
+    textEn: "He remembers the sound of dry wheat snapping under his boot, not the sickle. That year there was no harvest to cut."
+    textJa: "その年、刈るべき麦はなかった。鎌ではなく、ブーツの下で乾いた麦が折れる音だけを覚えている。"
   bodySprite: {fileID: -2407326887507690720, guid: 581ab4b0213f7c845b00bd3c954d3ceb, type: 3}
   walkFrames:
   - {fileID: 6058451269891298689, guid: 581ab4b0213f7c845b00bd3c954d3ceb, type: 3}

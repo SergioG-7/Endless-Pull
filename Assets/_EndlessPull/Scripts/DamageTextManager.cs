@@ -48,6 +48,9 @@ public class DamageTextManager : MonoBehaviour
     public static void ShowDodge(Vector3 worldPosition)
         => Show(worldPosition, LocalizationManager.Get("FX_DODGE"), new Color(0.6f, 0.85f, 1f));
 
+    // Por encima de héroes y enemigos, que se ordenan por Y con valores de unos pocos miles.
+    private const int OverlayOrder = 20000;
+
     private void Spawn(Vector3 worldPosition, string text, Color color)
     {
         var floater = GetFromPool();
@@ -61,7 +64,11 @@ public class DamageTextManager : MonoBehaviour
         tmp.fontSize = fontSize;
         tmp.color = color;
         tmp.alignment = TextAlignmentOptions.Center;
-        tmp.sortingOrder = 100;
+
+        // La capa manda sobre el orden: en "Default" el texto caía por DEBAJO de los fondos, que
+        // van en "Environment", y no se veía ni el daño ni el nombre de la habilidad.
+        tmp.sortingLayerID = SortingLayer.NameToID("Characters");
+        tmp.sortingOrder = OverlayOrder;
 
         floater.Initialize(lifetime, riseDistance);
     }

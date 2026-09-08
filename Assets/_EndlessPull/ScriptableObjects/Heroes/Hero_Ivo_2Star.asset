@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Ivo pasa más horas afilando espadas ajenas que empuñando la suya propia, pero conoce el filo y el peso de cada arma del gremio mejor que quien la forjó. Algún día dejará de ser el que las prepara."
   bioEn: "Ivo spends more hours sharpening other people's swords than swinging his own, but he knows the edge and balance of every weapon in the guild better than the smiths who forged them. One day he'll stop being the one who prepares them."
   bioJa: "イーヴォは自分の剣を振るうより、他人の剣を研ぐ時間の方が長い。それでも組合のどの武器の刃と重さも、鍛えた鍛冶屋本人より詳しく知っている。いつか道具を用意する側から抜け出すつもりだ。"
+  memories:
+  - starRank: 3
+    unlock: 0
+    amount: 1
+    text: "Recuerda el filo exacto de cada espada del gremio, aunque nunca aprendió a decir cuál era la suya."
+    textEn: "Recalls the exact edge of every sword in the guild, though he never learned to name which one was his."
+    textJa: "組合のすべての剣の刃の具合を覚えている。だが、どれが自分の剣かは最後まで分からなかった。"
   bodySprite: {fileID: -887102185461072969, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}
   walkFrames:
   - {fileID: 1680123149735308248, guid: 3b5eb6dff6569fc87625fa3a65679db2, type: 3}

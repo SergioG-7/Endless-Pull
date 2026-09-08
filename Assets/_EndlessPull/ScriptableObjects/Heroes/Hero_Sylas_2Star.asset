@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Sylas se curtió escoltando caravanas de mercaderes por caminos que ya no eran seguros. Cobra por proteger, y protege con la seriedad de quien ya ha perdido una carga."
   bioEn: "Sylas cut his teeth escorting merchant caravans down roads that had stopped being safe. He's paid to protect, and protects with the seriousness of someone who's already lost a shipment."
   bioJa: "商隊の護衛として、もはや安全とは言えない道を渡り歩いてきたシラス。金で守りを請け負う身だが、一度荷を失った者らしい真剣さで守る。"
+  memories:
+  - starRank: 0
+    unlock: 3
+    amount: 100
+    text: "Recuerda la carreta vacía que llegó sin nadie dentro, y desde entonces cuenta las cabezas antes de partir."
+    textEn: "Recalls the cart that rolled in empty, no one inside, and counts heads before every departure since."
+    textJa: "誰も乗っていない空の荷車が戻ってきたことを覚えている。それ以来、出発前には必ず人数を数える。"
   bodySprite: {fileID: -7322985971413935403, guid: eb65e0ab20ebbe6489f868bacfe6fcf8, type: 3}
   walkFrames:
   - {fileID: -4821397991083008215, guid: eb65e0ab20ebbe6489f868bacfe6fcf8, type: 3}

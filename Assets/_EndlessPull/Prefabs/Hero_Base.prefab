@@ -419,6 +419,9 @@ GameObject:
   - component: {fileID: 2284392694718890242}
   - component: {fileID: 2284392694718890999}
   - component: {fileID: 5114842718702894932}
+  - component: {fileID: 2466509445765513080}
+  - component: {fileID: 1204863871985610451}
+  - component: {fileID: 2324915135903149808}
   m_Layer: 0
   m_Name: Hero_Base
   m_TagString: Untagged
@@ -608,8 +611,6 @@ MonoBehaviour:
   attackRange: 1.2
   attackCooldown: 1
   scanInterval: 0.25
-  mpRegenOutOfCombat: 2
-  mpRegenInCombat: 1
   skill:
     skillName: Golpe Potente
     ability: 0
@@ -645,10 +646,18 @@ MonoBehaviour:
   evasionChance: 0.15
   maxCritBonusFromRefinement: 0.1
   maxSkillCooldownReductionFromRefinement: 0.2
+  skillCooldownReductionCap: 0.6
   baseCritChance: 0.12
   burstWindow: 2.5
   burstPressureFraction: 0.25
   maxComposurePenalty: 0.25
+  zoneReactionDelay: 0.8
+  zoneEscapeMargin: 0.6
+  projectileWarning: 0.35
+  sidestepDistance: 0.6
+  sidestepInterval: 1.2
+  personalSpace: 0.85
+  separationSpeed: 2.5
   baseCritMultiplier: 1.5
   painToleranceFactor: 0.5
   eagleEyeBonusRange: 3
@@ -661,6 +670,8 @@ MonoBehaviour:
   tankHealthThreshold: 260
   defensiveStanceBonus: 5
   maxKiteRadius: 3.5
+  formationTolerance: 0.4
+  flankOvershoot: 2.5
   hitFlashThreshold: 0.12
   hitFlashDuration: 0.08
   affinityAtkThreshold: 50
@@ -677,6 +688,8 @@ MonoBehaviour:
   executeThreshold: 0.35
   clusterRadius: 2.5
   restShiftSeconds: 60
+  restNeedThreshold: 0.05
+  restStopTimeout: 120
   barkInterval: 6
 --- !u!114 &8534592815500860111
 MonoBehaviour:
@@ -712,6 +725,7 @@ MonoBehaviour:
   expGrowthPerLevel: 1.1
   healthGrowthPerLevel: 0.06
   attackGrowthPerLevel: 0.05
+  manaGrowthPerLevel: 0.06
   levelCapByStar: 0a00000014000000280000003c00000050000000630000006e000000
   levelsPerStar: 10
   refinementCapByStar:
@@ -740,6 +754,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d2eea68e81a29e343a36a3a2b498c623, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpeechBubble
+  backdropAlpha: 0.55
   intervalRange: {x: 8, y: 20}
   showSeconds: 3
   height: 1.5
@@ -825,6 +840,85 @@ MonoBehaviour:
   minStarRank: 7
   interval: 20
   fatigueThreshold: 70
+  materialThreshold: 200
+  foodThreshold: 250
+  expeditionCooldown: 180
+  expeditionParty: 3
+--- !u!114 &2466509445765513080
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6736230919267043135}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d1c4e0b1822b495aa52bc52839ecb30, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.ML-Agents::Unity.MLAgents.Policies.BehaviorParameters
+  m_BrainParameters:
+    VectorObservationSize: 20
+    NumStackedVectorObservations: 1
+    m_ActionSpec:
+      m_NumContinuousActions: 0
+      BranchSizes: 0300000003000000
+    VectorActionSize: 0300000003000000
+    VectorActionDescriptions: []
+    VectorActionSpaceType: 0
+    hasUpgradedBrainParametersWithActionSpec: 1
+  m_Model: {fileID: 5022602860645237092, guid: a535ee74eec39654498aeab0d2661f35, type: 3}
+  m_InferenceDevice: 0
+  m_BehaviorType: 2
+  m_BehaviorName: EndlessPullCombat
+  TeamId: 0
+  m_UseChildSensors: 1
+  m_UseChildActuators: 1
+  m_DeterministicInference: 0
+  m_ObservableAttributeHandling: 0
+--- !u!114 &1204863871985610451
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6736230919267043135}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 291d1db5056588a4c988663d6f426af1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: EndlessPull.Runtime::HeroAgent
+  agentParameters:
+    maxStep: 0
+  hasUpgradedFromAgentParameters: 1
+  MaxStep: 0
+  gym: {fileID: 0}
+  observableDistance: 20
+  hitReward: 0.1
+  dodgeReward: 0.4
+  wastedSkillPenalty: 0.2
+  residualHealthRatio: 0.1
+  stepPenalty: 0.001
+  logEpisodes: 1
+  aggressionWeight: 1
+  safeDistanceWeight: 1
+  decreeDisobeyPenalty: 0.05
+  groundZonePenalty: 0.02
+  groundZoneEscapeReward: 0.3
+--- !u!114 &2324915135903149808
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6736230919267043135}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a5c9d521e5ef4759a8246a07d52221e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.ML-Agents::Unity.MLAgents.DecisionRequester
+  DecisionPeriod: 5
+  DecisionStep: 0
+  TakeActionsBetweenDecisions: 1
 --- !u!1 &6744772514828819670
 GameObject:
   m_ObjectHideFlags: 0

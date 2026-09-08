@@ -4,17 +4,13 @@ using UnityEngine;
 // y design/audio/audio-torre-dinamica.md, gap 6). Antes solo vivían en el documento de diseño.
 public static class TowerBiome
 {
-    // Último piso de cada franja (Goblin, Minas, Cripta); Templo es todo lo que quede por encima, sin techo.
-    private static readonly int[] FloorCap = { 5, 10, 15 };
+    // Pisos que dura cada bioma antes de pasar al siguiente.
+    public const int FloorsPerBiome = 15;
 
-    // 0 = Goblin, 1 = Minas, 2 = Cripta, 3 = Templo (16+, se repite sin variar de índice).
+    // 0 = Goblin, 1 = Minas, 2 = Cripta, 3 = Templo, y vuelta a empezar. Con solo cuatro fondos,
+    // franjas de 5 pisos dejaban el Templo fijo de por vida a partir del 16.
     public static int IndexForFloor(int floor)
-    {
-        for (int i = 0; i < FloorCap.Length; i++)
-            if (floor <= FloorCap[i]) return i;
-
-        return FloorCap.Length;
-    }
+        => ((Mathf.Max(1, floor) - 1) / FloorsPerBiome) % Tint.Length;
 
     // Placeholder visual sin arte final: tinte de fondo de cámara por bioma, mismo índice que IndexForFloor.
     public static readonly Color[] Tint =

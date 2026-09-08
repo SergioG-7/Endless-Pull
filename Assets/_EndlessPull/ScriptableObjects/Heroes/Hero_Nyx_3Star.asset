@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "Nyx ha cartografiado más frontera a pie que los propios cartógrafos del Maestro desde sus mesas. Sabe leer el terreno como otros leen un libro."
   bioEn: "Nyx has mapped more of the frontier on foot than the Master's own cartographers ever have from their desks. She reads terrain the way others read a book."
   bioJa: "机の上でしか働かないマスター専属の測量士より、ニクスは自分の足で国境をずっと多く歩いてきた。地形を読む力は、まるで本を読むかのようだ。"
+  memories:
+  - starRank: 0
+    unlock: 2
+    amount: 25
+    text: "Recuerda marcar un cruce de caminos con una piedra blanca, y que ese mapa todavía guía a alguien que no conoce."
+    textEn: "Recalls marking a crossroads with a white stone, and that the map still guides someone she'll never meet."
+    textJa: "白い石で十字路に印をつけたことを覚えている。その地図は今も、会ったこともない誰かの道しるべになっている。"
+  - starRank: 5
+    unlock: 0
+    amount: 1
+    text: "Recuerda un mapa suyo que estaba equivocado en un solo trazo, y a la partida que lo siguió sin volver, y que desde entonces revisa cada línea tres veces."
+    textEn: "Recalls one of her maps that was wrong by a single line, and the party that followed it and never returned — and that since then she checks every mark three times."
+    textJa: "たった一本の線が間違っていた自分の地図と、それを頼りに出て二度と戻らなかった一団のことを覚えている。それ以来、どの線も三度確かめる。"
   bodySprite: {fileID: -3135972766220646385, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}
   walkFrames:
   - {fileID: 8142597483174917156, guid: 62d8f6348cf048e4f88d36f4a7c2d380, type: 3}

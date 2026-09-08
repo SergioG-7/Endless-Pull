@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Rask le plantó cara a un jabalí herido en las trampas de la frontera y todavía presume de la cicatriz. Pelea con la misma testarudez que le costó esa marca."
   bioEn: "Rask once stood his ground against a wounded boar in the frontier trapping grounds, and still shows off the scar. He fights with the same stubbornness that earned him that mark."
   bioJa: "国境の罠場で手負いの猪と対峙したラスクは、今もその傷を自慢げに見せびらかす。その傷を負わせた頑固さのまま戦う。"
+  memories:
+  - starRank: 0
+    unlock: 2
+    amount: 28
+    text: "Recuerda el gruñido del jabalí más claro que el propio grito, y toca la cicatriz cuando algo lo pone nervioso."
+    textEn: "Recalls the boar's snarl more clearly than his own scream, and touches the scar whenever something rattles him."
+    textJa: "自分の悲鳴より、猪の唸り声のほうがはっきり記憶に残っている。緊張すると、その傷跡に触れる。"
   bodySprite: {fileID: 8184598351940752428, guid: b7a6700dee995c44b92aff933a84ee4a, type: 3}
   walkFrames:
   - {fileID: 6104764443293610261, guid: b7a6700dee995c44b92aff933a84ee4a, type: 3}

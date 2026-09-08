@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "Garrick carga con más batallas de las que se pueden contar con los dedos de una mano. Se planta en primera línea y absorbe los golpes que el resto no podría soportar."
   bioEn: "Garrick carries more battles than can be counted on one hand. Never gives an inch: the wall that shields the whole squad."
   bioJa: "Garrickは数えきれないほどの戦いを重ねてきた古参兵だ。前線に立ち、他の誰も耐えられない攻撃を一身に受け止める。"
+  memories:
+  - starRank: 0
+    unlock: 3
+    amount: 130
+    text: "Recuerda el ruido sordo de un cuerpo cayendo sobre su escudo en vez del suelo, y que eso, al menos, lo hizo bien."
+    textEn: "Recalls the dull sound of a body falling onto his shield instead of the ground, and that at least he did that much right."
+    textJa: "地面ではなく自分の盾の上に倒れてきた体の鈍い音を覚えている。少なくともそれだけは、うまくやれた。"
+  - starRank: 0
+    unlock: 4
+    amount: 3
+    text: "Recuerda que en la Ciudad Baja pagaban mejor por aguantar golpes que por casi cualquier otro trabajo, y que empezó por eso, no por valentía."
+    textEn: "Recalls that in the Low City, taking hits paid better than almost any other work he could find — and that's why he started, not courage."
+    textJa: "下層都市では、殴られることが他のどんな仕事より稼げたことを覚えている。始めた理由は勇気ではなく、それだった。"
   bodySprite: {fileID: 6653841963207370318, guid: 707a2fbc04094d5468eabac524b0afbf, type: 3}
   walkFrames:
   - {fileID: -6787367573396235645, guid: 707a2fbc04094d5468eabac524b0afbf, type: 3}

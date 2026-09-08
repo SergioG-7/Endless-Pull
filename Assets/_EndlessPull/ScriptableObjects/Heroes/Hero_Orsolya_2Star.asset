@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Orsolya conoce a cada comerciante de la Plaza del Grano por su nombre, y a cada carterista por su cara. Nadie roba dos veces bajo su turno sin arrepentirse."
   bioEn: "Orsolya knows every merchant in Grain Square by name, and every pickpocket by face. No one steals twice on her watch without regretting it."
   bioJa: "オルソーリャは穀物広場の商人を一人残らず名前で覚え、すりの顔も一人残らず記憶している。彼女の見張りの下で二度盗みを働いた者は、必ず後悔する。"
+  memories:
+  - starRank: 0
+    unlock: 1
+    amount: 24
+    text: "Recuerda la cara del primer carterista que atrapó, y cómo nunca volvió a robar en la plaza."
+    textEn: "Recalls the face of the first pickpocket she caught, and how he never stole in the square again."
+    textJa: "最初に捕まえたスリの顔を覚えている。あの男は二度と広場で盗みを働かなかった。"
   bodySprite: {fileID: 6446046538456104812, guid: 4de327218051798c5a377eeb339991ef, type: 3}
   walkFrames:
   - {fileID: -7350951059765251645, guid: 4de327218051798c5a377eeb339991ef, type: 3}

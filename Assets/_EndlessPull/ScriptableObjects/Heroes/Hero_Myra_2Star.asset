@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Myra defendió la bodega familiar de unos saqueadores con lo primero que encontró a mano: los aros de un barril. Sigue prefiriendo lo improvisado a lo elegante."
   bioEn: "Myra defended the family cellar from looters with the first thing she could grab: a barrel's iron hoops. She still prefers improvised over elegant."
   bioJa: "略奪者から家の貯蔵庫を守ったマイラは、手近にあった樽の鉄輪を武器にした。今でも洗練よりも即興を好む。"
+  memories:
+  - starRank: 0
+    unlock: 3
+    amount: 140
+    text: "Recuerda el aro de barril frío en las manos, y cómo dejó de temblar antes del segundo golpe."
+    textEn: "Recalls the cold barrel hoop in her hands, and how her shaking stopped before the second swing."
+    textJa: "冷たい樽の輪を手にした感触を覚えている。二撃目を打つ前には、もう震えは止まっていた。"
   bodySprite: {fileID: -532101233180905481, guid: db469286ceb595c4cb8940bc5bdbd5df, type: 3}
   walkFrames:
   - {fileID: -145011434034316316, guid: db469286ceb595c4cb8940bc5bdbd5df, type: 3}

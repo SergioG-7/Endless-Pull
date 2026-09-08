@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: Excava pozos para aldeas sin agua; terco como la roca que rompe.
   bioEn: He digs wells for villages without water; stubborn as the rock he breaks.
   bioJa: "\u6C34\u306E\u306A\u3044\u6751\u306E\u305F\u3081\u306B\u4E95\u6238\u3092\u6398\u308B\u3002\u7815\u304F\u5CA9\u3068\u540C\u3058\u304F\u3089\u3044\u9811\u56FA\u3060\u3002"
+  memories:
+  - starRank: 0
+    unlock: 4
+    amount: 1
+    text: "Recuerda el sonido del agua golpeando el fondo de un pozo seco. Nadie más lo oyó, pero él sí."
+    textEn: "He remembers the sound of water finally striking the bottom of a dry well. No one else heard it, but he did."
+    textJa: "涸れた井戸の底に水が届いた音を覚えている。誰も気づかなかったが、彼だけは聞いた。"
   bodySprite: {fileID: -3842410386321376848, guid: 94cb86a35691e7248a4160df862b520f, type: 3}
   walkFrames:
   - {fileID: -5295072444465940225, guid: 94cb86a35691e7248a4160df862b520f, type: 3}

@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Dietlinde dejó el molino de su familia para alistarse en la milicia el mismo día que los bandidos quemaron el granero del vecino. Carga el hacha de leñador de su padre como si fuera un arma de guerra."
   bioEn: "Dietlinde left her family's mill to join the militia the same day bandits burned the neighbor's barn. She carries her father's woodcutting axe like it was forged for war."
   bioJa: "ディートリンデは隣人の納屋が盗賊に焼かれたその日、家業の水車小屋を離れて民兵に加わった。父の木こり斧を、まるで戦のために鍛えられた武器のように携えている。"
+  memories:
+  - starRank: 0
+    unlock: 4
+    amount: 1
+    text: "Recuerda el olor a humo del granero del vecino, y cómo decidió esa misma noche qué mano empuñaría el hacha."
+    textEn: "Recalls the smoke from the neighbor's burning barn, and deciding that same night which hand would hold the axe."
+    textJa: "隣の納屋が燃えた煙の匂いを覚えている。その夜のうちに、斧を握る手を決めた。"
   bodySprite: {fileID: -4072329463152777348, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}
   walkFrames:
   - {fileID: -3584330500966727569, guid: ada2b8c6b5de6fc8b578186a3d7506fe, type: 3}

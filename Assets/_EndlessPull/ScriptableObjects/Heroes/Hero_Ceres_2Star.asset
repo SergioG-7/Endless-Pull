@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Ceres ha superado ya varios combates y empieza a ganarse un nombre en la torre. Prefiere el choque frontal: acercarse, golpear y no dejar que el rival respire."
   bioEn: "Ceres has already come through several fights and is starting to make a name in the tower. Closes into direct combat, blow after blow, until one side falls."
   bioJa: "Ceresはすでにいくつもの戦いをくぐり抜け、塔の中で名を上げ始めている。正面からの激突を好み、近づいて叩き、敵に息をつかせない。"
+  memories:
+  - starRank: 0
+    unlock: 2
+    amount: 22
+    text: "Recuerda el sabor de la sal en el aire de la abadía antes de cada guardia, y cómo dejó de darle miedo."
+    textEn: "Recalls the taste of salt in the abbey air before every watch, and the day it stopped scaring her."
+    textJa: "見張りの前にいつも感じた修道院の塩気の味を覚えている。それが怖くなくなった日のことも。"
   bodySprite: {fileID: -23705988903414339, guid: 7fd4ff17e89acfb41bcef767b848eeb8, type: 3}
   walkFrames:
   - {fileID: 2375594699956174231, guid: 7fd4ff17e89acfb41bcef767b848eeb8, type: 3}

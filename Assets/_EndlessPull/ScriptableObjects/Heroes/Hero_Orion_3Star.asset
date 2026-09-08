@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "Orion tomó la lanza de su padre, capitán de un fuerte fronterizo caído, y juró que no volvería a caer en su guardia. Pelea con la disciplina de quien no se permite fallar dos veces."
   bioEn: "Orion took up the spear of his father, a border captain who fell defending his post, and swore it would never fall again on his watch. He fights with the discipline of someone who won't allow himself to fail twice."
   bioJa: "陥落した国境砦の隊長だった父の槍を受け継いだオリオンは、二度と同じ轍を踏まないと誓った。二度の失敗を自分に許さない者の規律で戦う。"
+  memories:
+  - starRank: 3
+    unlock: 0
+    amount: 1
+    text: "Recuerda el peso de la lanza de su padre en manos que todavía eran demasiado jóvenes para ella."
+    textEn: "Recalls the weight of his father's spear in hands still too young for it."
+    textJa: "父の槍を手にした時の重みを覚えている。その手はまだ幼すぎた。"
+  - starRank: 0
+    unlock: 1
+    amount: 40
+    text: "Recuerda que no estaba en el fuerte el día que cayó, y que ha pasado cada guardia desde entonces fingiendo que sí."
+    textEn: "Recalls that he wasn't at the fort the day it fell, and that every watch since, he's pretended he was."
+    textJa: "砦が落ちたあの日、自分はそこにいなかったことを覚えている。それ以来ずっと、いたかのように振る舞ってきた。"
   bodySprite: {fileID: 661127049300003630, guid: 1296ce6dafbf81a4a9bdc1f213e3963f, type: 3}
   walkFrames:
   - {fileID: -7281105593194768842, guid: 1296ce6dafbf81a4a9bdc1f213e3963f, type: 3}

@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "Ozren Falk lleva veinte años cazando bestias que otros cazadores del gremio ni siquiera se atreven a rastrear. Sus flechas llevan marcas propias, una por cada bestia que no volvió a levantarse."
   bioEn: "Ozren Falk has spent twenty years hunting beasts other guild hunters won't even track. His arrows carry his own marks, one for every beast that never got back up."
   bioJa: "オズレン・フォークは、他の狩人組合の者たちが追跡すら恐れる獣を二十年狩り続けてきた。彼の矢には印が刻まれている――二度と起き上がらなかった獣の数だけ。"
+  memories:
+  - starRank: 0
+    unlock: 3
+    amount: 160
+    text: "Recuerda tallar la primera marca en una flecha ya usada, porque no tenía una nueva a mano."
+    textEn: "Recalls carving the first mark into an arrow he'd already used, because he had no new one on hand."
+    textJa: "使い古した矢に初めて印を刻んだことを覚えている。新しい矢が手元になかったからだ。"
+  - starRank: 0
+    unlock: 2
+    amount: 48
+    text: "Recuerda que dejó de tallar marcas nuevas hace años. Sigue contando, solo que ya no necesita mirar la flecha para saber el número."
+    textEn: "Recalls he stopped carving new marks years ago. He still keeps count -- he just no longer needs to look at the arrow to know the number."
+    textJa: "何年も前に新しい印を刻むのをやめたことを覚えている。数えるのはやめていない。ただ、矢を見なくてもその数がわかるだけだ。"
   bodySprite: {fileID: -2147945609373274288, guid: 45f19fa6ae056803aba90b2eea3f9ddb, type: 3}
   walkFrames:
   - {fileID: 2106019452961185752, guid: 45f19fa6ae056803aba90b2eea3f9ddb, type: 3}

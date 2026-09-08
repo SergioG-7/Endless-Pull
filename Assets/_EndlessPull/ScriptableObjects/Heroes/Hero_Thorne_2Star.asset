@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Thorne montaba guardia en un fuerte fronterizo la noche en que un asalto de verdad puso a prueba sus muros. El fuerte aguantó, y él con él."
   bioEn: "Thorne was on watch at a border keep the night a real raid tested its walls. The keep held, and so did he."
   bioJa: "国境の砦で見張りをしていたソーンは、本物の襲撃が城壁を試したあの夜を経験した。砦は持ちこたえ、彼も同じく崩れなかった。"
+  memories:
+  - starRank: 0
+    unlock: 4
+    amount: 1
+    text: "Recuerda el muro temblando bajo el impacto del ariete, y cómo no se movió ni un paso."
+    textEn: "Recalls the wall shuddering under the ram's impact, and how he didn't move a single step."
+    textJa: "破城槌の衝撃で壁が震えたことを覚えている。それでも、一歩も動かなかった。"
   bodySprite: {fileID: -962366301516999236, guid: 91dc51a73f82d28488bc24b872dd67ba, type: 3}
   walkFrames:
   - {fileID: 2579939159561201561, guid: 91dc51a73f82d28488bc24b872dd67ba, type: 3}

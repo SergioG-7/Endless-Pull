@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Nix creció en la guarnición fronteriza y ha visto más escaramuzas que soldados el doble de mayores que ella. Se mueve entre el caos como quien nunca ha conocido otra cosa."
   bioEn: "Nix grew up in the frontier garrison and has seen more skirmishes than soldiers twice her age. She moves through chaos like she's never known anything else."
   bioJa: "国境の駐屯地で育ったニクスは、倍の年齢の兵士より多くの小競り合いを見てきた。混乱の中を、まるでそれしか知らないかのように進む。"
+  memories:
+  - starRank: 0
+    unlock: 4
+    amount: 2
+    text: "Recuerda dormir con las botas puestas mucho antes de que se lo enseñaran; en la guarnición, nadie más lo hacía distinto."
+    textEn: "Recalls sleeping with her boots on long before anyone taught her to; in the garrison, no one did it any other way."
+    textJa: "誰にも教わる前から、ブーツを履いたまま眠っていたことを覚えている。駐屯地では誰もがそうしていた。"
   bodySprite: {fileID: 7263084624513942294, guid: 9e9b1dce767a92d4487643fa4b609d00, type: 3}
   walkFrames:
   - {fileID: -1849560826736374102, guid: 9e9b1dce767a92d4487643fa4b609d00, type: 3}

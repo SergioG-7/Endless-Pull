@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: Aprende el oficio de su padre a golpes de martillo y paciencia.
   bioEn: He is learning his father's trade through hammer blows and patience.
   bioJa: "\u7236\u306E\u4ED5\u4E8B\u3092\u30CF\u30F3\u30DE\u30FC\u3068\u5FCD\u8010\u3067\u5B66\u3093\u3067\u3044\u308B\u3002"
+  memories:
+  - starRank: 3
+    unlock: 0
+    amount: 0
+    text: "La primera quemadura del yunque se la enseñó su padre a apretar los dientes, no a soltar el martillo."
+    textEn: "His first burn from the anvil, his father taught him to grit his teeth, not to drop the hammer."
+    textJa: "金床で初めてやけどをした時、父に教わったのは槌を放すことではなく歯を食いしばることだった。"
   bodySprite: {fileID: -1859442613585981288, guid: 3c09584e5e086734e9b82294023065e6, type: 3}
   walkFrames:
   - {fileID: 4658106483489125463, guid: 3c09584e5e086734e9b82294023065e6, type: 3}

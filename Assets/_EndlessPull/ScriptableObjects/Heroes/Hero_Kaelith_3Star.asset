@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "Kaelith cuenta que rompió el cerco de un fuerte fronterizo él solo; nadie lo ha desmentido, y menos aún quien estaba allí. La historia crece cada vez que la cuenta, pero el filo no ha perdido nada."
   bioEn: "Kaelith claims he broke a border fort's siege single-handed; no one's disputed it, least of all those who were there. The story grows every time he tells it, but the blade's lost none of its edge."
   bioJa: "国境の砦の包囲を単身で破ったと語るケイリス。実際にその場にいた者ですら否定しない。語るたびに話は大きくなるが、剣の切れ味は少しも衰えていない。"
+  memories:
+  - starRank: 0
+    unlock: 1
+    amount: 16
+    text: "Recuerda contar la historia del cerco por primera vez, cuando todavía cabía en dos frases."
+    textEn: "Recalls telling the story of the siege for the first time, back when it still fit in two sentences."
+    textJa: "包囲を破った話をまだ二言で済ませられた、あの最初の語りを覚えている。"
+  - starRank: 0
+    unlock: 3
+    amount: 210
+    text: "Recuerda que no lo rompió solo, que hubo otros tres cuyos nombres se le han caído de la historia con cada versión, y que ya no está seguro de cuál era la verdad."
+    textEn: "Recalls that he didn't break it alone — that three others' names have fallen out of the story with each retelling — and he's no longer sure which version was true."
+    textJa: "本当は一人で破ったわけではなく、語るたびに名前が消えていった三人の仲間がいたことを覚えている。もうどれが真実だったのか、自分でも分からない。"
   bodySprite: {fileID: -3429057358050773073, guid: 3821e60ae24d7da4db624f9d3ffd6058, type: 3}
   walkFrames:
   - {fileID: -4899965220573197181, guid: 3821e60ae24d7da4db624f9d3ffd6058, type: 3}

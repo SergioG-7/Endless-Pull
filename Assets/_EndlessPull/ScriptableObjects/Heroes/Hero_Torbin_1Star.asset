@@ -19,6 +19,13 @@ MonoBehaviour:
   bioEn: He tans leather for saddles and breastplates; he always smells of smoke
     and tallow.
   bioJa: "\u978D\u3084\u80F8\u5F53\u3066\u306E\u305F\u3081\u306B\u9769\u3092\u306A\u3081\u3059\u3002\u3044\u3064\u3082\u7159\u3068\u7363\u8102\u306E\u5302\u3044\u304C\u3059\u308B\u3002"
+  memories:
+  - starRank: 0
+    unlock: 4
+    amount: 1
+    text: "El olor a sebo se le metió tan hondo en la ropa que ya ni el humo de la Torre lo tapa."
+    textEn: "The smell of tallow soaked so deep into his clothes that not even the Tower's smoke can cover it."
+    textJa: "獣脂の匂いは服に染み込みすぎて、塔の煙でさえ消すことができない。"
   bodySprite: {fileID: -381671214235277250, guid: 851fa1030ae07224886aad24f5add43a, type: 3}
   walkFrames:
   - {fileID: 8355703027496203093, guid: 851fa1030ae07224886aad24f5add43a, type: 3}

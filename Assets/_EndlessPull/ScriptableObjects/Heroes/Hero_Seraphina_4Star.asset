@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "Seraphina limpió sola una guarida de salteadores que llevaba una década aterrorizando los caminos fronterizos. Desde entonces, esos caminos llevan su nombre en al menos tres tabernas."
   bioEn: "Seraphina single-handedly cleared out a highwaymen's den that had terrorized the frontier roads for a decade. Since then, those roads carry her name in at least three taverns."
   bioJa: "十年にわたり国境の街道を恐怖に陥れていた山賊の巣を、セラフィナはただ一人で一掃した。それ以来、少なくとも三軒の酒場でその名が語られている。"
+  memories:
+  - starRank: 0
+    unlock: 1
+    amount: 22
+    text: "Recuerda el silencio raro de la guarida después, más fuerte que cualquier grito que hubiera dentro antes."
+    textEn: "Recalls the strange silence of the den afterward, louder than any scream that had come from inside before."
+    textJa: "その後の巣穴の奇妙な静けさを覚えている。以前そこから聞こえたどんな叫びよりも重かった。"
+  - starRank: 6
+    unlock: 0
+    amount: 0
+    text: "Recuerda una voz pidiendo que parara, ya tarde, y que no era la que ella esperaba oír."
+    textEn: "Recalls a voice asking her to stop, too late, and that it wasn't the one she expected to hear."
+    textJa: "もう遅い段階で「やめて」と言う声を覚えている。それは彼女が予想していた声ではなかった。"
   bodySprite: {fileID: -1105421486738788266, guid: b02a707218237a0438fb4cfb20563fcc, type: 3}
   walkFrames:
   - {fileID: -6432311967426725011, guid: b02a707218237a0438fb4cfb20563fcc, type: 3}

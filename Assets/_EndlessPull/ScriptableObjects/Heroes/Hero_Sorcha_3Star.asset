@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "Sorcha aprendió a tirar con arco antes de aprender a hablar con extraños, criada por cazadores que confiaban más en el silencio que en las palabras. Rara vez falla, y rara vez habla."
   bioEn: "Sorcha learned to draw a bow before she learned to speak to strangers, raised by hunters who trusted silence more than words. She rarely misses, and rarely talks."
   bioJa: "ソーシャは見知らぬ者と話す前に弓の引き方を覚えた。言葉より沈黙を信じる狩人たちに育てられたからだ。矢を外すことは滅多になく、口を開くことも滅多にない。"
+  memories:
+  - starRank: 0
+    unlock: 4
+    amount: 1
+    text: "Recuerda su primera flecha antes que su primera palabra, y que nadie en el bosque pareció extrañar la falta de la segunda."
+    textEn: "Recalls her first arrow before her first word, and that no one in the forest seemed to miss the lack of the second."
+    textJa: "最初の言葉より先に、最初の矢を覚えている。森の誰も、言葉が遅れたことを気にしなかった。"
+  - starRank: 0
+    unlock: 3
+    amount: 300
+    text: "Recuerda la única vez que gritó una advertencia en lugar de disparar, y que todavía no sabe si eso salvó a alguien o solo delató su posición."
+    textEn: "Recalls the one time she shouted a warning instead of shooting, and still doesn't know if it saved someone or just gave away her position."
+    textJa: "矢を放つ代わりに叫んで警告した、あの一度だけのことを覚えている。それが誰かを救ったのか、ただ自分の居場所を教えただけなのか、今も分からない。"
   bodySprite: {fileID: 431464604352687866, guid: 1a545275d817bcc0715a72192332c5e9, type: 3}
   walkFrames:
   - {fileID: -2967333959744158796, guid: 1a545275d817bcc0715a72192332c5e9, type: 3}

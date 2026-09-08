@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "Bastian defiende el único vado seguro del río desde que su padre murió intentándolo. Nadie cruza sin su permiso, y su lanza alcanza más lejos de lo que cualquiera espera."
   bioEn: "Bastian has defended the river's only safe ford since his father died trying to. No one crosses without his say-so, and his spear reaches farther than anyone expects."
   bioJa: "バスティアンは、父がそれを守ろうとして命を落として以来、川で唯一安全な渡し場を守っている。彼の許可なく渡る者はなく、その槍は誰もが思うより遠くまで届く。"
+  memories:
+  - starRank: 0
+    unlock: 1
+    amount: 18
+    text: "Recuerda el sonido del agua contra las piedras del vado, y la costumbre de contar cuántos cruzaban cada día."
+    textEn: "Recalls the sound of water against the ford's stones, and the habit of counting how many crossed each day."
+    textJa: "浅瀬の石を打つ水音と、毎日渡る人数を数える癖を覚えている。"
+  - starRank: 6
+    unlock: 0
+    amount: 1
+    text: "Recuerda que su padre resbaló en la misma piedra que él pisa cada guardia, y que nunca ha decidido si eso es una señal o una costumbre."
+    textEn: "Recalls that his father slipped on the same stone he stands on every watch, and has never decided if that's an omen or just habit."
+    textJa: "父が滑ったのは、自分が見張りのたびに立つあの石だったと覚えている。それが予兆なのか、ただの習わしなのか、いまだに決めかねている。"
   bodySprite: {fileID: 5721499092933798771, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}
   walkFrames:
   - {fileID: 6914504356050934652, guid: 43c9ff136d2be4a6bc84af46bb0b05b8, type: 3}

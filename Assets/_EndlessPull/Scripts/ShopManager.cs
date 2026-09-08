@@ -53,6 +53,12 @@ public class ShopManager : MonoBehaviour
         if (gacha != null && gacha.StarterWeapon != null && gacha.StarterWeapon.name == assetName)
             return gacha.StarterWeapon;
 
+        // El gacha reparte del array, no de la suelta: mirando solo StarterWeapon, todo héroe con
+        // arco corto, lanza de práctica o báculo de aprendiz perdía el arma al cargar la partida.
+        if (gacha != null && gacha.StarterWeapons != null)
+            foreach (var arma in gacha.StarterWeapons)
+                if (arma != null && arma.name == assetName) return arma;
+
         return null;
     }
 

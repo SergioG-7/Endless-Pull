@@ -19,6 +19,13 @@ MonoBehaviour:
     su peso."
   bioEn: The youngest of a family of woodcutters; he carries logs twice his own weight.
   bioJa: "\u6728\u3053\u308A\u4E00\u5BB6\u306E\u672B\u3063\u5B50\u3002\u81EA\u5206\u306E\u500D\u306E\u91CD\u3055\u306E\u4E38\u592A\u3092\u904B\u3076\u3002"
+  memories:
+  - starRank: 0
+    unlock: 2
+    amount: 13
+    text: "Sus hermanos apostaban cuánto aguantaría con el tronco al hombro. Siempre perdían la apuesta."
+    textEn: "His brothers used to bet how long he'd last with the log on his shoulder. They always lost the bet."
+    textJa: "兄たちは彼が丸太を肩に担いでどれだけもつか賭けていた。いつも賭けに負けたのは兄たちだった。"
   bodySprite: {fileID: 2277986073847076109, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}
   walkFrames:
   - {fileID: -2724271621799942037, guid: 6318c0d9a86dd6f4283409014d3abb6b, type: 3}

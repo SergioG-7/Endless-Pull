@@ -46,6 +46,10 @@ public class GachaManager : MonoBehaviour
     public int PullCost => pullCost;
     public EquipmentData StarterWeapon => starterWeapon;
 
+    // Todas las de inicio, no solo la suelta: el SaveManager las necesita para reencontrar el
+    // arma de un héroe al cargar. Sin esto, quien llevara una del array la perdía en silencio.
+    public EquipmentData[] StarterWeapons => starterWeapons;
+
     // Todo héroe empieza empuñando algo: sin arma no entrena maestría ni elige subclase.
     public bool GrantStarterWeapon(HeroController hero)
     {

@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "Velvet era la campeona invicta de los torneos de duelo fronterizos hasta que la Torre le ofreció un adversario que de verdad valiera la pena. Sigue sin perder, solo que ahora nadie lleva la cuenta."
   bioEn: "Velvet was the undefeated champion of the frontier dueling circuit until the Tower offered her an opponent actually worth her time. She's still unbeaten, only now nobody's keeping score."
   bioJa: "国境の決闘大会で無敗を誇っていたヴェルヴェットだったが、塔はようやく歯ごたえのある相手を用意した。今も無敗のままだが、もう誰も勝敗を数えていない。"
+  memories:
+  - starRank: 2
+    unlock: 0
+    amount: 1
+    text: "Recuerda el rugido de la grada antes de cada duelo, siempre igual, siempre suyo."
+    textEn: "Recalls the roar of the crowd before every duel — always the same, always hers."
+    textJa: "決闘の前に響く観客の歓声を覚えている。いつも同じ、いつも自分のためのものだった。"
+  - starRank: 0
+    unlock: 1
+    amount: 45
+    text: "Recuerda que dejó de contar las victorias mucho antes de dejar los torneos, porque ganar sin miedo a perder había empezado a parecerse a no jugar."
+    textEn: "Recalls that she stopped counting her wins long before she left the tournaments, because winning without any fear of losing had started to feel like not playing at all."
+    textJa: "闘技場を去るずっと前から、勝利の数を数えるのをやめていたことを覚えている。負ける恐れのない勝利は、もはや戦いですらないように感じ始めていた。"
   bodySprite: {fileID: -5377984356645680581, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}
   walkFrames:
   - {fileID: -5847817129920232263, guid: b76e5f1e49a932f4a915ba3fe2d1e0c7, type: 3}

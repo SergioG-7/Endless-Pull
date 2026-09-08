@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "Ainsley ganaba su pan en las ferias de otoño apostando a que nadie superaría su puntería, y nunca perdió. La guerra le pareció, al principio, solo otra feria con premios más altos."
   bioEn: "Ainsley earned her bread at the autumn fairs betting no one could beat her aim, and never lost. War felt, at first, like just another fair with higher stakes."
   bioJa: "エインズリーは秋の市で「誰も自分の腕前には勝てない」と賭けをして日銭を稼いでいたが、一度も負けたことがなかった。戦は最初、賞金の高い別の市のように思えた。"
+  memories:
+  - starRank: 2
+    unlock: 0
+    amount: 1
+    text: "Recuerda el crujido de la paja al clavar la flecha y el griterío que venía después, siempre el mismo griterío."
+    textEn: "Recalls the crack of straw when the arrow lands, and the roar that always followed — always the same roar."
+    textJa: "藁に矢が刺さる音と、その後に沸き起こる歓声を覚えている。いつも同じ歓声だった。"
+  - starRank: 0
+    unlock: 3
+    amount: 240
+    text: "Recuerda apostar su propia cena cuando no le quedaba nada más que apostar, y acertar cada vez porque no podía permitirse fallar."
+    textEn: "Recalls betting her own dinner when there was nothing else left to wager, and hitting every time because missing was never an option."
+    textJa: "他に賭けるものがない夜、自分の夕食を賭けたことを覚えている。外すことは許されなかったから、毎回当てた。"
   bodySprite: {fileID: -5871078248672506618, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}
   walkFrames:
   - {fileID: 1050227109268998429, guid: 42c5e8439bf695228cf4fbdc59ee042a, type: 3}

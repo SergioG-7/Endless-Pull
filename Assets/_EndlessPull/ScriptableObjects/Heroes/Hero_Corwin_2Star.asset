@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Corwin lleva tres años puliendo la armadura de un caballero que nunca lo deja empuñar una espada de verdad. Se entrena a escondidas por las noches, convencido de que su turno llegará pronto."
   bioEn: "Corwin has spent three years polishing the armor of a knight who never lets him hold a real sword. He trains in secret at night, certain his turn is coming soon."
   bioJa: "コーウィンは三年間、本物の剣を握らせてもらえない騎士の鎧を磨き続けてきた。夜にこっそり鍛錬を積み、自分の番はもうすぐ来ると信じている。"
+  memories:
+  - starRank: 0
+    unlock: 3
+    amount: 110
+    text: "Recuerda el peso del peto ajeno en sus brazos, más pesado de noche que de día, cuando nadie miraba."
+    textEn: "Recalls the weight of someone else's breastplate in his arms — heavier at night, when no one watched."
+    textJa: "誰のものでもない胸当ての重さを覚えている。誰も見ていない夜のほうが、なぜか重かった。"
   bodySprite: {fileID: 4191932319953788827, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}
   walkFrames:
   - {fileID: 2176534377393092775, guid: 281932ec2f7fafacdef856054925b9c5, type: 3}

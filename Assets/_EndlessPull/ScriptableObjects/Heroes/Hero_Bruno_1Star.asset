@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Bruno cerró la fragua del pueblo cuando la clientela se mudó a la sombra de la Torre, y trajo el martillo con él. Golpea fuerte y sin prisa, como quien forja en lugar de pelear."
   bioEn: "Bruno shut down the village forge when his customers moved into the Tower's shadow, and brought his hammer along. He hits hard and unhurried, like a man forging rather than fighting."
   bioJa: "村の鍛冶場を畳んだブルーノは、客が塔の麓へ移ったのを機にハンマーを担いで来た。急がず、まるで鍛えるように重い一撃を放つ。"
+  memories:
+  - starRank: 0
+    unlock: 3
+    amount: 45
+    text: "Cerró la fragua con el último cliente y se llevó el martillo, no el yunque. El martillo pesaba menos."
+    textEn: "He shut the forge after the last customer and took the hammer, not the anvil. The hammer weighed less."
+    textJa: "最後の客が去った後、鍛冶場を閉めた。持って出たのは金床ではなく槌だった。そのほうが軽かったから。"
   bodySprite: {fileID: -3909910242700766556, guid: b924408405d786d47b782c45617bdfdd, type: 3}
   walkFrames:
   - {fileID: -3346887454132151732, guid: b924408405d786d47b782c45617bdfdd, type: 3}

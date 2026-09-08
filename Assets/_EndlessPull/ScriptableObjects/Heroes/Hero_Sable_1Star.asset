@@ -20,6 +20,13 @@ MonoBehaviour:
   bioEn: She used to raid caravans before the Tower gave her another way out; her
     knife hasn't forgotten the trade.
   bioJa: "\u5854\u304C\u5225\u306E\u9053\u3092\u4E0E\u3048\u308B\u524D\u306F\u968A\u5546\u3092\u8972\u3063\u3066\u3044\u305F\u3002\u5F7C\u5973\u306E\u30CA\u30A4\u30D5\u306F\u305D\u306E\u6280\u3092\u307E\u3060\u5FD8\u308C\u3066\u3044\u306A\u3044\u3002"
+  memories:
+  - starRank: 0
+    unlock: 2
+    amount: 12
+    text: "Recuerda el traqueteo de la última caravana que asaltó, más que las caras de quienes iban dentro."
+    textEn: "He remembers the rattle of the last caravan he raided better than the faces of those inside it."
+    textJa: "襲った最後の隊商の車輪の音は覚えていても、乗っていた者たちの顔は思い出せない。"
   bodySprite: {fileID: 2727103778397727314, guid: efbcbb01f84fc434aa4858f7e74f8a86, type: 3}
   walkFrames:
   - {fileID: 6358272802120590632, guid: efbcbb01f84fc434aa4858f7e74f8a86, type: 3}

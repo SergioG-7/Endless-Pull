@@ -20,6 +20,13 @@ MonoBehaviour:
   bioEn: She tends sheep on the frozen slopes; her staff has scared off more than
     one wolf.
   bioJa: "\u51CD\u3066\u3064\u304F\u659C\u9762\u3067\u7F8A\u306E\u4E16\u8A71\u3092\u3059\u308B\u3002\u5F7C\u5973\u306E\u6756\u306F\u5E7E\u5EA6\u3082\u72FC\u3092\u8FFD\u3044\u6255\u3063\u3066\u304D\u305F\u3002"
+  memories:
+  - starRank: 0
+    unlock: 1
+    amount: 11
+    text: "Un lobo se acercó una sola vez. El cayado se acuerda mejor que ella de cómo terminó eso."
+    textEn: "A wolf came close only once. Her staff remembers how that ended better than she does."
+    textJa: "狼が近づいたのは一度きりだ。その顛末は彼女よりも杖の方がよく覚えている。"
   bodySprite: {fileID: 5950203836372766319, guid: 36b03b5fc1b5c2b4a968dedbbab9c9e6, type: 3}
   walkFrames:
   - {fileID: 7122156305826576504, guid: 36b03b5fc1b5c2b4a968dedbbab9c9e6, type: 3}

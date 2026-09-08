@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "Malakor rompió una formación enemiga a mano limpia durante las escaramuzas fronterizas, y la historia ha crecido cada año desde entonces. Pega como si todavía tuviera algo que demostrar, aunque ya no lo tenga."
   bioEn: "Malakor broke an enemy formation with his bare hands during the border skirmishes, and the story's grown every year since. He hits like he's still got something to prove, though he doesn't anymore."
   bioJa: "国境の戦いで敵陣を素手で突き崩したマラコアの話は、年を追うごとに大きくなっている。もう証明する必要などないのに、今も何かを証明するように殴りかかる。"
+  memories:
+  - starRank: 0
+    unlock: 2
+    amount: 30
+    text: "Recuerda el crujido del primer escudo al partirse contra su puño, más que el que vino después."
+    textEn: "Recalls the crack of the first shield splitting against his fist, more clearly than any that followed."
+    textJa: "最初に拳で割った盾のひび割れる音を覚えている。その後に割った盾より、はっきりと。"
+  - starRank: 0
+    unlock: 3
+    amount: 300
+    text: "Recuerda que la formación que rompió tenía seis hombres, no veinte. Nunca ha corregido a nadie que dijera lo contrario."
+    textEn: "Recalls that the formation he broke had six men in it, not twenty. He has never corrected anyone who said otherwise."
+    textJa: "彼が崩した隊列は二十人ではなく六人だったと覚えている。それを誰かに訂正したことは一度もない。"
   bodySprite: {fileID: -672808676215049941, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}
   walkFrames:
   - {fileID: 4790201261077115631, guid: 19d68d5d270bfd74dbd24e9190b57962, type: 3}

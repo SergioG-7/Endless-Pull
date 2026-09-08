@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: Ara tierra reseca por la guerra, terco en sacarle grano igual.
   bioEn: He plows land scorched by war, stubbornly coaxing grain from it anyway.
   bioJa: "\u6226\u3067\u713C\u3051\u305F\u571F\u5730\u3092\u8015\u3057\u3001\u305D\u308C\u3067\u3082\u9811\u56FA\u306B\u7A40\u7269\u3092\u5B9F\u3089\u305B\u3088\u3046\u3068\u3059\u308B\u3002"
+  memories:
+  - starRank: 0
+    unlock: 2
+    amount: 10
+    text: "Sembró donde aún olía a ceniza. El grano salió igual, torcido pero salió."
+    textEn: "He sowed where the ground still smelled of ash. The grain came up anyway, crooked but alive."
+    textJa: "まだ灰の匂いが残る土に種をまいた。曲がってはいたが、麦は育った。"
   bodySprite: {fileID: 4017920647285543016, guid: f180af16ff2653844b791a2ec8791982, type: 3}
   walkFrames:
   - {fileID: 437436248272874274, guid: f180af16ff2653844b791a2ec8791982, type: 3}

@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "El nombre de Ulric circula entre las tropas como sinónimo de victoria. Se planta en primera línea y absorbe los golpes que el resto no podría soportar."
   bioEn: "Ulric's name circulates among the troops as a byword for victory. Holds the battle line while allies strike from behind."
   bioJa: "Ulricの名は勝利の代名詞として兵士たちの間で語られている。前線に立ち、他の誰も耐えられない攻撃を一身に受け止める。"
+  memories:
+  - starRank: 0
+    unlock: 2
+    amount: 28
+    text: "Recuerda el frío de los Fiordos calando el metal antes que la piel, y cómo aprendió a no distinguir entre los dos."
+    textEn: "Recalls the cold of the Fjords soaking through the metal before the skin, and how he learned not to tell the two apart."
+    textJa: "フィヨルドの寒さが肌より先に鎧を刺したことを覚えている。そしてその二つを区別しないことを覚えたことも。"
+  - starRank: 0
+    unlock: 4
+    amount: 3
+    text: "Recuerda a quien estaba detrás de él la primera vez que decidió no moverse. Ya no recuerda su cara, solo que valía la pena quedarse quieto."
+    textEn: "Recalls whoever stood behind him the first time he decided not to move. He no longer remembers their face -- only that staying still was worth it."
+    textJa: "初めて『動かない』と決めたとき、自分の背後に誰がいたかを覚えている。顔はもう思い出せない。ただ、立ち止まる価値があったことだけは覚えている。"
   bodySprite: {fileID: -476264227650138789, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}
   walkFrames:
   - {fileID: -5706094381064792113, guid: eff2b097b89701c4dae6c4e868c96490, type: 3}

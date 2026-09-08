@@ -19,6 +19,13 @@ MonoBehaviour:
   bioEn: He has been chopping wood for the tower since he was a boy; his axe weighs
     more than his fear.
   bioJa: "\u5B50\u4F9B\u306E\u9803\u304B\u3089\u5854\u306E\u305F\u3081\u306B\u85AA\u3092\u5272\u3063\u3066\u304D\u305F\u3002\u5F7C\u306E\u65A7\u306F\u6050\u6016\u3088\u308A\u3082\u91CD\u3044\u3002"
+  memories:
+  - starRank: 0
+    unlock: 1
+    amount: 18
+    text: "El primer árbol que taló era más alto que su miedo. Cayó de todos modos."
+    textEn: "The first tree he felled was taller than his fear. It fell all the same."
+    textJa: "最初に切り倒した木は、彼の恐怖よりも高かった。それでも木は倒れた。"
   bodySprite: {fileID: 8952759626276518981, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}
   walkFrames:
   - {fileID: -4717246899268923253, guid: 12aebc7bd3292204c919e7a7b01b1ec2, type: 3}

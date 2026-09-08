@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "Brannagh Vale asumió el mando de Fuerte Cenizo cuando su capitán cayó en el tercer asedio, y nunca lo devolvió porque nadie lo pidió de vuelta. La guarnición entera confía en ella más que en cualquier título."
   bioEn: "Brannagh Vale took command of Ashen Fort when her captain fell in the third siege, and never handed it back because no one asked her to. The whole garrison trusts her more than any title."
   bioJa: "ブラナー・ヴェイルは三度目の包囲戦で隊長が倒れた際に灰燼要塞の指揮を引き継ぎ、誰も返せと言わなかったのでそのまま指揮を執り続けている。駐屯兵全員が、いかなる肩書きよりも彼女を信頼している。"
+  memories:
+  - starRank: 2
+    unlock: 0
+    amount: 0
+    text: "Recuerda el peso del peto de su capitán en los brazos, y la orden que dio en su nombre antes de saber si aún respiraba."
+    textEn: "Recalls the weight of her captain's breastplate in her arms, and the order she gave in his name before knowing if he still breathed."
+    textJa: "隊長の胸当ての重みを腕に感じたことを覚えている。彼がまだ息をしているか確かめる前に、彼の名で下した命令のことも。"
+  - starRank: 0
+    unlock: 1
+    amount: 45
+    text: "Recuerda escribir tres cartas pidiendo que la relevaran. Ninguna llegó a salir del fuerte."
+    textEn: "Recalls writing three letters asking to be relieved of command. None of them ever left the fort."
+    textJa: "指揮を解いてほしいと三通の手紙を書いたことを覚えている。どれも砦の外へは出なかった。"
   bodySprite: {fileID: -8001967034296307867, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}
   walkFrames:
   - {fileID: 7583431658889958589, guid: 26507f56aa4e09b49ec1cfa2f963a672, type: 3}

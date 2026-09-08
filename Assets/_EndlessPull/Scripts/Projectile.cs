@@ -34,6 +34,11 @@ public class Projectile : MonoBehaviour
     public static int DodgeableHits;
     public static int DodgeableMisses;
 
+    // Solo los que dispara un héroe. Los totales de arriba mezclan sus tiros con los de los
+    // tiradores enemigos, y el factor de daño a distancia se calibra con los del héroe.
+    public static int HeroDodgeableHits;
+    public static int HeroDodgeableMisses;
+
     // Reserva de proyectiles; crece bajo demanda y nunca se destruye (evita GC churn).
     private static readonly List<Projectile> pool = new List<Projectile>();
     private static int nextPoolIndex;
@@ -53,6 +58,8 @@ public class Projectile : MonoBehaviour
         sharedSprite = null;
         DodgeableHits = 0;
         DodgeableMisses = 0;
+        HeroDodgeableHits = 0;
+        HeroDodgeableMisses = 0;
     }
 
     private static Transform PoolRoot()
@@ -173,6 +180,7 @@ void Update()
         if (damage > 0)
         {
             DodgeableMisses++;
+            if (shooter != null) HeroDodgeableMisses++;
             DamageTextManager.Show(transform.position, LocalizationManager.Get("FX_DODGE"),
                                    new Color(0.75f, 0.78f, 0.85f));
         }
@@ -182,7 +190,11 @@ void Update()
 
     private void Impact()
     {
-        if (dodgeable && damage > 0) DodgeableHits++;
+        if (dodgeable && damage > 0)
+        {
+            DodgeableHits++;
+            if (shooter != null) HeroDodgeableHits++;
+        }
 
         // Con daño 0 el proyectil es puro adorno: lo usan las habilidades de área.
         if (damage > 0)
@@ -231,7 +243,11 @@ void Update()
         var sr = p.GetComponent<SpriteRenderer>();
         sr.sprite = Dart();
         sr.color = color;
-        sr.sortingOrder = 30;
+
+        // Sin capa explícita el proyectil se quedaba en Default, que va por DEBAJO del fondo
+        // pintado: la flecha volaba invisible. Va sobre las unidades y bajo el texto de daño.
+        sr.sortingLayerID = SortingLayer.NameToID(YSorter.CombatLayer);
+        sr.sortingOrder = YSorter.AboveUnitsOrder;
 
         p.gameObject.SetActive(true);
         return p;

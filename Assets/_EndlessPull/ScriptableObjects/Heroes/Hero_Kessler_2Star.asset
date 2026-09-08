@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Kessler cobra el peaje del Puente de los Tres Arcos de día, y lo defiende de noche cuando alguien intenta cruzarlo sin pagar. Ha perdido la cuenta de cuántas veces le han ofrecido sobornos."
   bioEn: "Kessler collects the toll at the Three Arches Bridge by day, and defends it by night when someone tries to cross without paying. He's lost count of how many bribes he's been offered."
   bioJa: "ケスラーは昼間は三連橋の通行料を徴収し、夜には料金を払わず渡ろうとする者から橋を守る。これまでに何度賄賂を持ちかけられたか、もう数えていない。"
+  memories:
+  - starRank: 0
+    unlock: 4
+    amount: 1
+    text: "Recuerda la primera moneda de soborno que le ofrecieron, y cómo la devolvió sin contarla."
+    textEn: "Recalls the first bribe he was ever offered, and how he handed it back without counting it."
+    textJa: "初めて差し出された賄賂の硬貨を覚えている。数えもせずに突き返した。"
   bodySprite: {fileID: -4179958208451908572, guid: d47a75845ac874125cf5c03ab8905543, type: 3}
   walkFrames:
   - {fileID: -8593596885720243306, guid: d47a75845ac874125cf5c03ab8905543, type: 3}

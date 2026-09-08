@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Lyra rastreó ella sola a la partida de asaltantes que había atacado su granja, y los encontró antes que la guardia. La Torre decidió que era mejor tenerla de su lado."
   bioEn: "Lyra tracked down the raiding party that hit her farm all on her own, and found them before the guard did. The Tower decided it was better to have her on its side."
   bioJa: "農場を襲った賊の一団を単身で追ったリラは、衛兵より先に彼らを見つけ出した。塔は、味方につけておくほうが得策だと判断した。"
+  memories:
+  - starRank: 0
+    unlock: 1
+    amount: 20
+    text: "Recuerda las huellas de los asaltantes más nítidas que su propia cara en el espejo esa semana."
+    textEn: "Recalls the raiders' tracks clearer, that week, than her own face in a mirror."
+    textJa: "あの週、鏡に映る自分の顔より、襲撃者たちの足跡のほうが鮮明だったことを覚えている。"
   bodySprite: {fileID: -7347157047065141778, guid: cba4253e59d70e043b1e9775a246ddab, type: 3}
   walkFrames:
   - {fileID: -5621590288284169058, guid: cba4253e59d70e043b1e9775a246ddab, type: 3}

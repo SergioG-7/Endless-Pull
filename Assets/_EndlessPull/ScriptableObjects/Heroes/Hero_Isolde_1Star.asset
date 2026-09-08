@@ -20,6 +20,13 @@ MonoBehaviour:
   bioEn: She earns her meals with her fists in low taverns; she has never lost a
     fight worth having.
   bioJa: "\u5B89\u9152\u5834\u3067\u62F3\u3092\u4F7F\u3063\u3066\u98DF\u4E8B\u3092\u7A3C\u3050\u3002\u4FA1\u5024\u306E\u3042\u308B\u55A7\u5629\u306B\u8CA0\u3051\u305F\u3053\u3068\u306F\u306A\u3044\u3002"
+  memories:
+  - starRank: 0
+    unlock: 3
+    amount: 65
+    text: "Recuerda el sabor de la sangre en el labio partido más que el de la comida que ganó con él."
+    textEn: "She remembers the taste of blood on her split lip better than the taste of the meal she won with it."
+    textJa: "その拳で稼いだ食事の味より、切れた唇に滲んだ血の味の方をよく覚えている。"
   bodySprite: {fileID: -7240157277377243952, guid: fb1367417c37b1b428d0042859376cc0, type: 3}
   walkFrames:
   - {fileID: 989108514300241940, guid: fb1367417c37b1b428d0042859376cc0, type: 3}

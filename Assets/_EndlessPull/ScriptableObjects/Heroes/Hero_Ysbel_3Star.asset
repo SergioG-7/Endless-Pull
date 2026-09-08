@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "Ysbel entrena a los reclutas del Cuartel de Muro Bajo con la misma dureza con la que la entrenaron a ella, y ninguno se ha quejado dos veces. Pelea en primera línea porque no confía en pedirle a otro que lo haga."
   bioEn: "Ysbel drills the recruits at Low Wall Barracks as hard as she was drilled herself, and none of them have complained twice. She fights on the front line because she doesn't trust asking anyone else to."
   bioJa: "イズベルは自分が受けたのと同じ厳しさで低壁兵舎の新兵を鍛え、二度文句を言った者はいない。誰かに前線を任せることを信用できないから、自ら先頭に立って戦う。"
+  memories:
+  - starRank: 0
+    unlock: 1
+    amount: 25
+    text: "Recuerda el golpe seco de la vara contra el escudo de un recluta, contando en voz alta hasta que la postura se sostuviera sola."
+    textEn: "Recalls the sharp crack of the rod against a recruit's shield, counting aloud until the stance finally held on its own."
+    textJa: "新兵の盾を杖で打つ乾いた音を覚えている。構えが自然に保てるようになるまで、声に出して数え続けた。"
+  - starRank: 0
+    unlock: 4
+    amount: 3
+    text: "Recuerda sus propios moretones bajo la misma vara antes de que fuera ella quien la sostuviera, y que todavía no ha decidido si lo que hace ahora es crueldad o el único cariño que conoce."
+    textEn: "Recalls her own bruises under that same rod before she was the one holding it, and that she still hasn't decided if what she does now is cruelty or the only kindness she knows."
+    textJa: "自分がそれを握る側になる前、同じ杖で作った痣を覚えている。今していることが残酷さなのか、自分が知る唯一の優しさなのか、いまだに決めかねている。"
   bodySprite: {fileID: -5643376410981543170, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}
   walkFrames:
   - {fileID: -4277843473488502824, guid: 48beeb5e406ddd91a241c0e5c9444f6d, type: 3}

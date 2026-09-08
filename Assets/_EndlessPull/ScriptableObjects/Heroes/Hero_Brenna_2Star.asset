@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Brenna aprendió a rastrear antes que a caminar bien, siguiendo a su madre entre las Lomas Grises en busca de ciervos y lobos solitarios. Ahora rastrea algo más peligroso, y no falla un solo tiro."
   bioEn: "Brenna learned to track before she could walk properly, following her mother through the Grey Downs after deer and lone wolves. Now she tracks something far more dangerous, and she doesn't miss a shot."
   bioJa: "ブレンナは歩き方を覚えるより先に、母について灰色の丘陵で鹿や一匹狼を追う術を学んだ。今ではもっと危険なものを追っているが、矢を外したことはない。"
+  memories:
+  - starRank: 0
+    unlock: 1
+    amount: 18
+    text: "Recuerda la voz de su madre corrigiéndole el paso, no las palabras: solo el tono, seco y exacto."
+    textEn: "Remembers her mother correcting her stride, not the words — just the tone, dry and exact."
+    textJa: "母が歩き方を正す声を覚えている。言葉ではなく、その乾いた正確な調子だけを。"
   bodySprite: {fileID: 8663988539916645547, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}
   walkFrames:
   - {fileID: 2377704781195048180, guid: 35750e9f4df10648eaf188169b1eb483, type: 3}

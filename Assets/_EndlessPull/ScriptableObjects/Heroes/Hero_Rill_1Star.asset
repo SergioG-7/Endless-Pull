@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Rill se pasó media vida arponeando peces en el río fronterizo antes de cambiar la caña por algo más letal. Apenas falla un tiro, en el agua o fuera de ella."
   bioEn: "Rill spent half his life spearfishing the frontier river before trading his rod for something deadlier. He rarely misses a shot, in the water or out of it."
   bioJa: "人生の半分を国境の川で銛漁に費やしたリルは、竿をもっと物騒な得物に持ち替えた。水の中でも外でも、狙いを外すことはめったにない。"
+  memories:
+  - starRank: 0
+    unlock: 1
+    amount: 10
+    text: "Aprendió a leer el reflejo del agua antes que el pez. El arpón rara vez llegaba tarde."
+    textEn: "She learned to read the water's glare before the fish itself. The spear rarely arrived late."
+    textJa: "魚より先に、水面の光の揺れを読むことを覚えた。銛が遅れることは滅多になかった。"
   bodySprite: {fileID: -2636015974470744541, guid: 3154a616b1ab7e64db017a39791f9aa0, type: 3}
   walkFrames:
   - {fileID: -7773754502311432807, guid: 3154a616b1ab7e64db017a39791f9aa0, type: 3}

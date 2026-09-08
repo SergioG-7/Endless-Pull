@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Eamon ha escoltado más caravanas de sal de las que puede contar, y ninguna ha perdido un solo saco bajo su vigilancia. Prefiere hablar antes que pelear, pero no duda cuando hace falta."
   bioEn: "Eamon has escorted more salt caravans than he can count, and not one has lost a single sack under his watch. He'd rather talk his way out of trouble, but doesn't hesitate when it's needed."
   bioJa: "エーモンはもう数え切れないほどの塩の隊商を護衛してきたが、彼の見張りの下で荷袋を失ったことは一度もない。できれば話で片付けたいが、必要とあれば躊躇しない。"
+  memories:
+  - starRank: 4
+    unlock: 0
+    amount: 1
+    text: "Recuerda contar los sacos de sal tres veces antes de firmar la entrega, nunca dos."
+    textEn: "Recalls counting the salt sacks three times before signing off — never twice."
+    textJa: "塩の袋を数えるのはいつも三回。二回で済ませたことは一度もない。"
   bodySprite: {fileID: -932408843353979851, guid: 86b65653d819709a232caf1142523605, type: 3}
   walkFrames:
   - {fileID: -4078107325770602627, guid: 86b65653d819709a232caf1142523605, type: 3}

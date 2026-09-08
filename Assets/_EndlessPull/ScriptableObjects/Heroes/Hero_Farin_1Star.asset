@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: Muele grano desde antes del amanecer, fuerte de espalda y de palabra corta.
   bioEn: He grinds grain before dawn, strong of back and short of words.
   bioJa: "\u591C\u660E\u3051\u524D\u304B\u3089\u7A40\u7269\u3092\u633D\u304F\u3002\u80CC\u306F\u5F37\u304F\u3001\u53E3\u6570\u306F\u5C11\u306A\u3044\u3002"
+  memories:
+  - starRank: 0
+    unlock: 3
+    amount: 55
+    text: "El chirrido de la piedra de molino antes del alba todavía le suena más familiar que su propio nombre."
+    textEn: "The grinding creak of the millstone before dawn still sounds more familiar to him than his own name."
+    textJa: "夜明け前に響く石臼のきしみは、今も自分の名前より馴染み深い。"
   bodySprite: {fileID: 3215003506607705051, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}
   walkFrames:
   - {fileID: -2327296265587317975, guid: 189c1d04fde2dd54cb69a98ae9215a68, type: 3}

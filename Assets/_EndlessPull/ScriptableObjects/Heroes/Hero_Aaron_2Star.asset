@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Aaron hacía guardia en la muralla de su aldea cuando los primeros asaltantes de verdad pusieron a prueba lo que había aprendido. Ya no duda al primer golpe, y eso lo distingue de los reclutas nuevos."
   bioEn: "Aaron stood watch on his village wall when the first real raiders put what he'd learned to the test. He no longer hesitates on the first strike, and that sets him apart from the newer recruits."
   bioJa: "村の城壁で見張りに立っていたアーロンは、本物の襲撃者を相手に学んだことを試された。もう最初の一撃で迷わない――それが新兵との違いだ。"
+  memories:
+  - starRank: 3
+    unlock: 0
+    amount: 1
+    text: "Recuerda el crujido de la escalera de asalto contra la muralla, no los gritos que vinieron después."
+    textEn: "Remembers the creak of the siege ladder against the wall, not the screams that came after."
+    textJa: "壁に立てかけられた梯子のきしむ音は覚えている。その後の叫び声は覚えていない。"
   bodySprite: {fileID: 5455465019858200972, guid: 9f24767f02f016b418ab5f58d4209338, type: 3}
   walkFrames:
   - {fileID: 4737852236037946580, guid: 9f24767f02f016b418ab5f58d4209338, type: 3}

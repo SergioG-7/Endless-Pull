@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: Moldea vasijas para toda la aldea; dicen que sus manos calman a los asustados.
   bioEn: She shapes pottery for the whole village; they say her hands calm the frightened.
   bioJa: "\u6751\u4E2D\u306E\u9676\u5668\u3092\u4F5C\u308B\u3002\u305D\u306E\u624B\u306F\u6050\u308C\u308B\u8005\u3092\u843D\u3061\u7740\u304B\u305B\u308B\u3068\u8A00\u308F\u308C\u3066\u3044\u308B\u3002"
+  memories:
+  - starRank: 0
+    unlock: 2
+    amount: 15
+    text: "Puso barro fresco en las manos de un niño asustado una vez, solo para que tuviera algo que apretar. Funcionó."
+    textEn: "She once put fresh clay in a frightened child's hands, just to give him something to grip. It worked."
+    textJa: "怯える子供の手に、握れるものをと生の粘土を渡したことがある。それでうまくいった。"
   bodySprite: {fileID: -2411272614709255442, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}
   walkFrames:
   - {fileID: -484094655651941106, guid: f6a58f71403f83846a0fd9f89f6698fc, type: 3}

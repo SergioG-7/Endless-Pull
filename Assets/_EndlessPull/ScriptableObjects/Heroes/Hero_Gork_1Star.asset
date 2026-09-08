@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Gork picaba mineral en las minas fronterizas hasta que el filón se secó y la Torre empezó a pagar mejor. Carga como si aún llevara el pico: sin técnica, pero sin cansancio."
   bioEn: "Gork used to swing a pick in the frontier mines until the vein ran dry and the Tower started paying better. He charges like he's still holding that pick: no technique, but no fatigue either."
   bioJa: "辺境の鉱山でつるはしを振っていたゴークは、鉱脈が尽きると同時に塔の高給に飛びついた。今もつるはしを握っているかのように突っ込む。技はないが、疲れも知らない。"
+  memories:
+  - starRank: 0
+    unlock: 1
+    amount: 14
+    text: "El día que el filón se secó, el pico sonó igual contra la roca. Solo que ya no salía nada."
+    textEn: "The day the vein ran dry, the pick still rang the same against the rock. Nothing came out of it anymore."
+    textJa: "鉱脈が尽きた日も、つるはしは同じ音で岩を打った。ただ、もう何も出てこなかった。"
   bodySprite: {fileID: 347763781467424086, guid: 9d9f775849c58144db3c2c162aad2a81, type: 3}
   walkFrames:
   - {fileID: 4281889531816272552, guid: 9d9f775849c58144db3c2c162aad2a81, type: 3}

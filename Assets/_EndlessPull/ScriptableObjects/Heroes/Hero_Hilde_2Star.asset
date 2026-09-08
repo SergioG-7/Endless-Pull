@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Hilde hace la guardia que nadie quiere, la de medianoche a amanecer, y ha aprendido a distinguir cada sonido normal del puerto de los que no lo son. Duerme de día y confía en muy pocos."
   bioEn: "Hilde takes the watch no one wants, midnight to dawn, and has learned to tell every ordinary harbor sound from the ones that aren't. She sleeps by day and trusts very few."
   bioJa: "ヒルデは誰もやりたがらない真夜中から夜明けまでの見張りを務め、港の普通の物音とそうでない物音を聞き分けられるようになった。昼は眠り、信じる者はごくわずかだ。"
+  memories:
+  - starRank: 0
+    unlock: 4
+    amount: 2
+    text: "Recuerda distinguir el paso de un borracho del de un ladrón por el ritmo, no por el ruido."
+    textEn: "Recalls telling a drunk's footsteps from a thief's by rhythm alone, never by the sound."
+    textJa: "酔っ払いと泥棒の足音を、音の大きさではなく、その調子だけで聞き分けていたことを覚えている。"
   bodySprite: {fileID: -391576131562977190, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}
   walkFrames:
   - {fileID: 1258515057388795597, guid: cc2663c652824ce39dbdfad6464f3779, type: 3}

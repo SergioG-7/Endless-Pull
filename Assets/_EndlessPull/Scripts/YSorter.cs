@@ -4,6 +4,17 @@ using UnityEngine;
 // Sin esto un héroe que pasa por delante de un edificio queda tapado por su tarjeta.
 public class YSorter : MonoBehaviour
 {
+    // Capa de todo lo que se dibuja sobre el combate. Default va por DEBAJO de Environment, así
+    // que un sprite creado por código sin capa acaba detrás del fondo pintado y no se ve.
+    public const string CombatLayer = "Characters";
+
+    // Marcas de suelo (aviso de golpe en área, Suelo Marcado): bajo las unidades, cuyo orden sale
+    // de Sort() y ronda el ±1500 en la arena.
+    public const int GroundMarkOrder = -10000;
+
+    // Proyectiles y rótulos de estado: sobre las unidades y bajo el texto de daño (20000).
+    public const int AboveUnitsOrder = 10000;
+
     [Tooltip("Renderers a ordenar; vacío coge todos los del objeto y sus hijos.")]
     // Renderer y no SpriteRenderer: los rótulos de TextMeshPro tienen MeshRenderer, y si se
     // quedan fuera el cuerpo del edificio acaba tapando su propio nombre.

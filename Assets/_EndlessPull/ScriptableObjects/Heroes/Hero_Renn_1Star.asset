@@ -19,6 +19,13 @@ MonoBehaviour:
     rota.
   bioEn: He repairs supply wagons for the Tower; he can fix almost anything broken.
   bioJa: "\u5854\u306E\u305F\u3081\u306E\u88DC\u7D66\u99AC\u8ECA\u3092\u4FEE\u7406\u3059\u308B\u3002\u58CA\u308C\u305F\u3082\u306E\u306A\u3089\u307B\u3068\u3093\u3069\u4F55\u3067\u3082\u76F4\u305B\u308B\u3002"
+  memories:
+  - starRank: 3
+    unlock: 0
+    amount: 0
+    text: "Hay una rueda torcida que nunca logró enderezar del todo. La lleva grabada en la memoria más que en el eje."
+    textEn: "There's one crooked wheel he never quite managed to straighten. It's stuck in his memory more than the axle ever was."
+    textJa: "どうしても真っ直ぐに直せなかった歪んだ車輪が一つある。それは車軸よりも記憶に刻まれている。"
   bodySprite: {fileID: 3358959269352358210, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}
   walkFrames:
   - {fileID: -7555661329225150147, guid: 892eb6fdcc3d26f49b5ba853ee8a491d, type: 3}

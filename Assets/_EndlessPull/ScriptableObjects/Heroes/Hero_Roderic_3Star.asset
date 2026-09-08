@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "Roderic sirvió a una orden de caballería que la corona disolvió por deudas que no eran suyas. Sigue jurando el mismo código, aunque ya nadie se lo exija."
   bioEn: "Roderic served a knightly order the crown dissolved over debts that weren't his to pay. He still holds to the same code, even though no one requires it of him anymore."
   bioJa: "ロデリックは、自分のせいではない借金を理由に王家が解散させた騎士団に仕えていた。誰にも求められなくなった今も、同じ掟を守り続けている。"
+  memories:
+  - starRank: 0
+    unlock: 3
+    amount: 100
+    text: "Recuerda las palabras exactas del juramento, en un idioma que ya casi nadie usa para hablar de honor."
+    textEn: "Recalls the exact words of the oath, spoken in a tongue almost no one still uses to talk about honor."
+    textJa: "誓いの言葉を一字一句覚えている。もう名誉を語るのに誰も使わない言葉で。"
+  - starRank: 0
+    unlock: 2
+    amount: 42
+    text: "Recuerda que fue el único de la orden que siguió jurando después de que la disolvieran, y algunas noches no sabe si eso lo hace leal o solo terco."
+    textEn: "Recalls being the only one of the order who kept swearing the oath after it was dissolved — and some nights he doesn't know if that makes him loyal or just stubborn."
+    textJa: "騎士団が解散された後も誓いを守り続けたのは自分だけだったと覚えている。それが忠義なのか、ただの頑固さなのか、分からなくなる夜もある。"
   bodySprite: {fileID: -3167989615220841939, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}
   walkFrames:
   - {fileID: 8042377996617923445, guid: 251b3e7dfa32cf5478fc5667335fa762, type: 3}

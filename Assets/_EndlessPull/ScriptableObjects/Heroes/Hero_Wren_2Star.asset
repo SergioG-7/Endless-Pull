@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Wren ha superado ya varios combates y empieza a ganarse un nombre en la torre. Prefiere herir desde lejos, eligiendo el momento exacto para atacar."
   bioEn: "Wren has already come through several fights and is starting to make a name in the tower. Keeps their distance and fires with precision while others hold the line."
   bioJa: "Wrenはすでにいくつもの戦いをくぐり抜け、塔の中で名を上げ始めている。距離を保ちながら、味方が前線を支える間に正確に狙い撃つ。"
+  memories:
+  - starRank: 0
+    unlock: 2
+    amount: 24
+    text: "Recuerda contar la respiración de la presa antes de soltar la flecha, y nunca contar la propia."
+    textEn: "Recalls counting the prey's breaths before loosing an arrow, and never counting her own."
+    textJa: "矢を放つ前に獲物の呼吸を数えていたことを覚えている。自分の呼吸は、一度も数えなかった。"
   bodySprite: {fileID: 6921948901457489533, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}
   walkFrames:
   - {fileID: 6676618650926496462, guid: 28e81a1451688cf49b9e5b56ca67e14e, type: 3}

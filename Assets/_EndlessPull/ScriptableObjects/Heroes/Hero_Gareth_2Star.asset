@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Gareth vigila la entrada de la Mina Honda desde que un derrumbe se llevó a dos de sus compañeros. Conoce cada túnel de memoria y no deja pasar a nadie que no reconozca."
   bioEn: "Gareth has guarded the entrance to the Deep Mine ever since a collapse took two of his fellow workers. He knows every tunnel by heart and lets no one through he doesn't recognize."
   bioJa: "ガレスは崩落で二人の仲間を失って以来、深坑の入り口を見張っている。すべての坑道を暗記しており、見覚えのない者は誰も通さない。"
+  memories:
+  - starRank: 0
+    unlock: 3
+    amount: 130
+    text: "Recuerda los nombres de los dos compañeros enterrados, y los repite en voz baja al empezar cada turno."
+    textEn: "Recalls the names of the two comrades buried in the collapse, and whispers them at the start of every shift."
+    textJa: "崩落で埋まった二人の仲間の名前を覚えている。当番の始まりに、いつも小さく呟く。"
   bodySprite: {fileID: 3846942753007579624, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}
   walkFrames:
   - {fileID: -6338525654983569025, guid: bab7361b0894d9f2b6e85907e419f4d4, type: 3}

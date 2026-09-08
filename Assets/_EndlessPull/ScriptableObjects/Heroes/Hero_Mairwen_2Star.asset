@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Mairwen creció subiendo y bajando las escaleras del faro de Punta Gris, y fue la primera en avistar los barcos que trajeron la guerra. Ahora vigila con una lanza tanto como con un catalejo."
   bioEn: "Mairwen grew up climbing the stairs of the Grey Point lighthouse, and was the first to spot the ships that brought the war. Now she keeps watch with a spear as much as a spyglass."
   bioJa: "メアウェンは灰色岬の灯台の階段を上り下りしながら育ち、戦をもたらした船団を最初に発見した者だった。今では遠眼鏡と同じくらい、槍を手にして見張りに立つ。"
+  memories:
+  - starRank: 0
+    unlock: 2
+    amount: 18
+    text: "Recuerda contar los mástiles del primer barco tres veces, esperando equivocarse."
+    textEn: "Recalls counting the masts of the first ship three times, hoping to be wrong."
+    textJa: "最初の船のマストを三回数え直したことを覚えている。数え間違いであってほしかった。"
   bodySprite: {fileID: -3777757179398816195, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}
   walkFrames:
   - {fileID: -5976587182287969173, guid: c84b90f955e7cb83958031d0d87a7838, type: 3}

@@ -19,6 +19,13 @@ MonoBehaviour:
   bioEn: She picks pockets in the Lowtown; no one sees her coming until she's already
     gone.
   bioJa: "\u4E0B\u753A\u3067\u3059\u308A\u3092\u50CD\u304F\u3002\u8AB0\u3082\u5F7C\u5973\u304C\u6765\u305F\u3053\u3068\u306B\u6C17\u3065\u304B\u306A\u3044\u3001\u53BB\u3063\u305F\u5F8C\u3067\u3055\u3048\u3082\u3002"
+  memories:
+  - starRank: 0
+    unlock: 2
+    amount: 20
+    text: "Recuerda el peso exacto de una bolsa llena contra dos dedos. Ese peso no se olvida nunca."
+    textEn: "She remembers the exact weight of a full purse against two fingers. That weight is never forgotten."
+    textJa: "二本の指に伝わる、満杯の巾着の重み。あの感覚だけは決して忘れない。"
   bodySprite: {fileID: 8973959850526008504, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}
   walkFrames:
   - {fileID: 4263578404366221310, guid: 4cfbf8153e45261489f5dfc819c2fb73, type: 3}

@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "Xander lleva escoltando caravanas fronterizas más tiempo del que ha durado ninguno de sus tres últimos patronos. Sobrevive donde otros solo contratan."
   bioEn: "Xander has been escorting frontier caravans longer than any of his last three employers lasted. He survives where others just hire."
   bioJa: "国境の商隊護衛を続けてきたザンダーは、この三人の雇い主の誰よりも長く生き残っている。他人が雇うだけの場所で、彼は生き延びる。"
+  memories:
+  - starRank: 0
+    unlock: 3
+    amount: 95
+    text: "Recuerda el chirrido de las ruedas de carreta al cruzar terreno malo, y que ya sabe distinguir un chirrido peligroso de uno solo molesto."
+    textEn: "Recalls the creak of cart wheels crossing bad ground, and that he can now tell a dangerous creak from a merely annoying one."
+    textJa: "悪路を渡る荷車の車輪の軋みを覚えている。危険な軋みとただ煩わしいだけの軋みの違いも、今では分かる。"
+  - starRank: 0
+    unlock: 2
+    amount: 35
+    text: "Recuerda que de sus tres últimos patronos, dos ya no están para contratar a nadie más, y que él sigue sin saber si eso lo convierte en un mal augurio o en el único que hizo bien su trabajo."
+    textEn: "Recalls that of his last three patrons, two are no longer around to hire anyone else — and he still doesn't know if that makes him a bad omen or the only one who did his job right."
+    textJa: "最近の三人の雇い主のうち二人が、もう誰も雇えない身になったことを覚えている。それが自分を不吉な存在にするのか、それとも唯一仕事をやり遂げた証なのか、今も分からない。"
   bodySprite: {fileID: -3148421101356277040, guid: acf0fa9072c765c46a6b534d85d36556, type: 3}
   walkFrames:
   - {fileID: -5562162028762126420, guid: acf0fa9072c765c46a6b534d85d36556, type: 3}

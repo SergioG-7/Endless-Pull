@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Jinx está convencida de que trae mala suerte, y hasta ahora solo se la ha traído a sus enemigos. Lleva un amuleto roto que jura que es lo único que la mantiene viva."
   bioEn: "Jinx is convinced she's bad luck, and so far she's only brought it to her enemies. She carries a broken charm she swears is the only thing keeping her alive."
   bioJa: "自分は不運を運ぶと信じているジンクスだが、今のところそれを浴びているのは敵ばかりだ。壊れたお守りを肌身離さず、これのおかげで生きていると言い張る。"
+  memories:
+  - starRank: 3
+    unlock: 0
+    amount: 0
+    text: "El amuleto se partió el mismo día que sobrevivió a algo que no debería haber sobrevivido. No lo suelta desde entonces."
+    textEn: "The amulet cracked the same day she survived something she shouldn't have. She hasn't let go of it since."
+    textJa: "生き延びるはずのなかった日に、その護符は割れた。それ以来、手放したことはない。"
   bodySprite: {fileID: -5047079090910889395, guid: 4445c73d3914cd647b2d5f4e89da0724, type: 3}
   walkFrames:
   - {fileID: 5302614008490479814, guid: 4445c73d3914cd647b2d5f4e89da0724, type: 3}

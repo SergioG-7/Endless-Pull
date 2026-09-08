@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "El nombre de Nerezza circula entre las tropas como sinónimo de victoria. Mantiene las distancias y dispara con precisión mientras otros cubren el frente."
   bioEn: "Nerezza's name circulates among the troops as a byword for victory. Strikes from a distance, punishing the enemy before they can close in."
   bioJa: "Nerezzaの名は勝利の代名詞として兵士たちの間で語られている。遠距離から攻撃し、敵が近づく前に打ち倒す。"
+  memories:
+  - starRank: 0
+    unlock: 4
+    amount: 1
+    text: "Recuerda contar las cenizas que caían sobre la cuerda del arco, y decidir que dispararía de todos modos."
+    textEn: "Recalls counting the ash falling on her bowstring, and deciding to shoot anyway."
+    textJa: "弓の弦に降り積もる灰を数えたことを覚えている。それでも構わず矢を放とうと決めたことも。"
+  - starRank: 0
+    unlock: 1
+    amount: 50
+    text: "Recuerda por qué mantiene la distancia: no es puntería, es que ya vio de cerca lo que queda cuando algo se acerca demasiado a la Marca Quemada."
+    textEn: "Recalls why she keeps her distance: it isn't accuracy -- it's that she has already seen up close what's left when something gets too near the Burnt March."
+    textJa: "なぜ距離を取るのか覚えている。命中率のためではない。焼け跡の行軍に近づきすぎた者の成れの果てを、もう間近で見てしまったからだ。"
   bodySprite: {fileID: -6159139413331256516, guid: fd7d77f6f38b4004da582c7a194e0410, type: 3}
   walkFrames:
   - {fileID: 2251706833468408020, guid: fd7d77f6f38b4004da582c7a194e0410, type: 3}

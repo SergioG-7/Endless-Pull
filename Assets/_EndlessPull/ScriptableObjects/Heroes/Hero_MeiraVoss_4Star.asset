@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "Meira Voss pasó veinte años memorizando cada texto prohibido del Concilio Gris antes de que la expulsaran por usarlos. No se arrepiente: el conocimiento que le costó su lugar es el mismo que la mantiene con vida."
   bioEn: "Meira Voss spent twenty years memorizing every forbidden text in the Grey Council before they expelled her for using them. She has no regrets: the knowledge that cost her a seat is the same knowledge keeping her alive."
   bioJa: "メイラ・ヴォスは灰色評議会の禁書をすべて暗記するのに二十年を費やしたが、それを使ったことで追放された。後悔はない――彼女の席を奪った知識こそが、今も彼女の命を守っている。"
+  memories:
+  - starRank: 3
+    unlock: 0
+    amount: 0
+    text: "Recuerda la primera página prohibida que copió a escondidas, y cómo le tembló la mano al cerrar el libro."
+    textEn: "Recalls the first forbidden page she copied in secret, and how her hand shook when she closed the book."
+    textJa: "こっそり書き写した最初の禁書のページを覚えている。本を閉じたとき、手が震えていたことも。"
+  - starRank: 0
+    unlock: 4
+    amount: 2
+    text: "Recuerda al Concilio mirándola con más miedo que ira cuando la expulsaron. Todavía no sabe si tenían razón en tenerlo."
+    textEn: "Recalls the Council looking at her with more fear than anger when they expelled her. She still doesn't know if they were right to be afraid."
+    textJa: "追放されたとき、評議会が怒りより恐れの目で自分を見ていたことを覚えている。その恐れが正しかったのか、今もわからない。"
   bodySprite: {fileID: -1425693958480772295, guid: 4b7e06445b2e1970b19c709a511c5bda, type: 3}
   walkFrames:
   - {fileID: 9160160480899003041, guid: 4b7e06445b2e1970b19c709a511c5bda, type: 3}

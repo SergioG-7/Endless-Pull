@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "Eol pasó años rastreando bandas de asaltantes por la frontera antes de que alguien pensara en pagarle por ello. Conoce sus tácticas mejor que las suyas propias."
   bioEn: "Eol spent years tracking raider bands across the frontier before anyone thought to pay him for it. He knows their tactics better than he knows his own."
   bioJa: "誰かに報酬をもらう発想が浮かぶ前から、何年も国境の賊の集団を追い続けてきたエオル。自分の戦術よりも敵の戦術に詳しいほどだ。"
+  memories:
+  - starRank: 0
+    unlock: 2
+    amount: 22
+    text: "Recuerda leer una huella a medio hundir en el barro y saber, antes de verlos, cuántos eran y hacia dónde iban."
+    textEn: "Recalls reading a half-sunk footprint in the mud and knowing, before he saw them, how many there were and where they were headed."
+    textJa: "泥に半分沈んだ足跡を読み取り、姿を見る前に人数と行き先を知ったことを覚えている。"
+  - starRank: 0
+    unlock: 1
+    amount: 32
+    text: "Recuerda haber compartido fuego con una de esas bandas antes de que le dieran motivos para dejar de hacerlo, y que rastrearlos ahora se parece demasiado a recordar el camino a casa."
+    textEn: "Recalls sharing a campfire with one of those bands before they gave him reason to stop — and that tracking them now feels too much like remembering the way home."
+    textJa: "あの盗賊団の一つと焚き火を囲んだことがある。二度とそうしない理由ができるまでは。今、彼らを追うことは、帰り道を思い出すことに似すぎている。"
   bodySprite: {fileID: -207816850111704284, guid: 63c41bfaea45d724d87a8ed0937711c8, type: 3}
   walkFrames:
   - {fileID: -8772815690323321541, guid: 63c41bfaea45d724d87a8ed0937711c8, type: 3}

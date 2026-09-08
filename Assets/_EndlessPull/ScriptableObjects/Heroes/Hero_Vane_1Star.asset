@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Vane cambia de arma y de táctica en mitad de la pelea tan a menudo que sus propios compañeros no saben qué esperar de él. Ni él mismo sabe qué va a hacer hasta que lo hace."
   bioEn: "Vane switches weapons and tactics mid-fight so often that even his own squadmates don't know what to expect. He doesn't know what he's about to do either, until he does it."
   bioJa: "戦いの最中に武器も戦法もころころ変えるヴェインには、仲間ですら何をするか読めない。本人でさえ、実際にやるまで分からないのだから。"
+  memories:
+  - starRank: 2
+    unlock: 0
+    amount: 0
+    text: "Cambió de arma a mitad de una pelea sin saber por qué. Sigue sin saberlo, pero sigue vivo."
+    textEn: "He switched weapons mid-fight without knowing why. He still doesn't know, but he's still alive."
+    textJa: "なぜかも分からぬまま、戦いの最中に武器を替えた。理由は今も分からないが、生きている。"
   bodySprite: {fileID: -2693818098107673473, guid: 143ca3fcd14e88842809292bd5db108d, type: 3}
   walkFrames:
   - {fileID: -6017575933627125971, guid: 143ca3fcd14e88842809292bd5db108d, type: 3}

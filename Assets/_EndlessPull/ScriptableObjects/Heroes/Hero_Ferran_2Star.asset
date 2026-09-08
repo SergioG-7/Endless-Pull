@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Ferran monta guardia en el portón de su aldea desde que cumplió dieciséis años, armado con lanza prestada y voluntad propia. No ha tenido que usarla en serio todavía, pero se prepara cada noche como si mañana fuera el día."
   bioEn: "Ferran has stood watch at his village gate since he turned sixteen, armed with a borrowed spear and his own resolve. He hasn't had to use it in earnest yet, but he trains every night as if tomorrow were the day."
   bioJa: "フェランは十六歳になってから借り物の槍を手に、村の門番を務めている。まだ本気で使ったことはないが、明日がその日であるかのように毎晩鍛錬を欠かさない。"
+  memories:
+  - starRank: 0
+    unlock: 2
+    amount: 20
+    text: "Recuerda que la lanza prestada nunca terminó de sentirse suya, ni siquiera la última noche de guardia."
+    textEn: "Remembers the borrowed spear never quite felt like his own, not even on his last night of watch."
+    textJa: "借り物の槍は最後の夜になっても、自分のものだとは思えなかった。"
   bodySprite: {fileID: -6325463113623209349, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}
   walkFrames:
   - {fileID: 8071633537473388946, guid: 79e3f98d6a68f9f3b78a6d26adeb170e, type: 3}

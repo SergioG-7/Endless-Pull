@@ -115,7 +115,8 @@ public class StatusVisuals : MonoBehaviour
         stunLabel.fontSize = 3.4f;
         stunLabel.alignment = TextAlignmentOptions.Center;
         stunLabel.color = new Color(1f, 0.85f, 0.30f);
-        stunLabel.sortingOrder = 40;
+        stunLabel.sortingLayerID = SortingLayer.NameToID(YSorter.CombatLayer);
+        stunLabel.sortingOrder = YSorter.AboveUnitsOrder + 1000;
         stunLabel.rectTransform.sizeDelta = new Vector2(6f, 1.2f);
     }
 
@@ -129,8 +130,9 @@ public class StatusVisuals : MonoBehaviour
         aura.sprite = Ring();
         aura.color = shieldTint;
 
-        // Por detrás de la unidad: rodea sin taparla.
-        aura.sortingOrder = -10;
+        // Por detrás de las unidades pero sobre las marcas de suelo; en Default se la comía el fondo.
+        aura.sortingLayerID = SortingLayer.NameToID(YSorter.CombatLayer);
+        aura.sortingOrder = YSorter.GroundMarkOrder + 1000;
     }
 
     // Anillo generado una vez y compartido; el proyecto no trae sprite circular.

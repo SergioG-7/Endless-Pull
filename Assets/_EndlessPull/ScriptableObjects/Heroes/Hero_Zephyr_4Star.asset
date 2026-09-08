@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "Zephyr dejó atrás a una partida de asaltantes el doble de numerosa antes de que la mayoría hubiera desenvainado, y volvió a por el resto. En la frontera ya nadie duda de su velocidad."
   bioEn: "Zephyr outran a raiding party twice his number before most of them had even drawn steel, then came back for the rest. Nobody on the frontier doubts his speed anymore."
   bioJa: "自分の倍の人数の襲撃者を、大半が剣を抜く前に振り切ったゼファーは、そのまま残りを迎え撃ちに戻った。国境ではもう誰もその速さを疑わない。"
+  memories:
+  - starRank: 0
+    unlock: 3
+    amount: 130
+    text: "Recuerda el viento cambiando de sonido cuando dejó atrás al primer jinete, como si el aire también se sorprendiera."
+    textEn: "Recalls the wind changing pitch as she left the first rider behind, as if the air itself were startled too."
+    textJa: "最初の騎手を置き去りにした瞬間、風の音が変わったことを覚えている。まるで空気自身も驚いたかのように。"
+  - starRank: 0
+    unlock: 1
+    amount: 42
+    text: "Recuerda que no volvió por valentía. Volvió porque correr sola le pareció, de repente, peor que lo que dejaba atrás."
+    textEn: "Recalls that she didn't go back out of courage. She went back because running alone suddenly felt worse than what she was leaving behind."
+    textJa: "勇気があったから戻ったのではないと覚えている。ひとりで走り続けることが、置き去りにしたものより急に恐ろしく思えたから戻ったのだ。"
   bodySprite: {fileID: 7797416449044405194, guid: 5ac84c3d3d7a5d04dbd4487c084b8274, type: 3}
   walkFrames:
   - {fileID: 2199607713635570114, guid: 5ac84c3d3d7a5d04dbd4487c084b8274, type: 3}

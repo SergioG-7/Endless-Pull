@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Zapp corre hacia la pelea antes de que nadie más haya terminado de desenvainar, y luego se pregunta por qué siempre llega solo. Su velocidad compensa lo que le falta de paciencia."
   bioEn: "Zapp sprints into a fight before anyone else has finished drawing their weapon, then wonders why he always arrives alone. His speed makes up for what he lacks in patience."
   bioJa: "ザップは誰も剣を抜き終わらないうちに突っ込んでいき、なぜいつも一人で戦っているのか首をかしげる。忍耐の足りなさは、その速さで補っている。"
+  memories:
+  - starRank: 0
+    unlock: 3
+    amount: 90
+    text: "Corrió hacia la primera pelea sin esperar a nadie. Todavía no ha aprendido a esperar."
+    textEn: "He ran into the first fight without waiting for anyone. He still hasn't learned to wait."
+    textJa: "最初の戦いに、誰も待たずに駆け出した。今もまだ、待つことを覚えていない。"
   bodySprite: {fileID: -7022705497193458277, guid: 348c0668a0a0a7343be290f7d5be02ed, type: 3}
   walkFrames:
   - {fileID: 2944258182246854386, guid: 348c0668a0a0a7343be290f7d5be02ed, type: 3}

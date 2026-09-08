@@ -21,6 +21,12 @@ public class EnemyController : MonoBehaviour, IHealthOwner
     [Tooltip("Alcance de reserva si el EnemyData no trae uno propio.")]
     [SerializeField] private float attackRange = 1.1f;
 
+    [Tooltip("Hasta dónde cierra de más al llegar, en tanto por uno del alcance; deja margen.")]
+    [SerializeField] private float approachOvershoot = 0.85f;
+
+    [Tooltip("Cuánto tiene que alejarse el héroe, en tanto por uno del alcance, para dejar de pegar.")]
+    [SerializeField] private float attackExitFactor = 1.20f;
+
     [Tooltip("Alcance a partir del cual el enemigo dispara en vez de golpear de cerca.")]
     [SerializeField] private float rangedThreshold = 3f;
 
@@ -395,8 +401,10 @@ public class EnemyController : MonoBehaviour, IHealthOwner
             telegraph.sprite = CircleSprite();
             telegraph.color = new Color(1f, 1f, 1f, 0.9f);
 
-            // Se dibuja por debajo de todo el mundo, como una marca en el suelo.
-            telegraph.sortingOrder = -50;
+            // Marca de suelo: en Characters (la capa Default queda DEBAJO del fondo pintado y no
+            // se veía), con orden muy negativo para quedar bajo las unidades.
+            telegraph.sortingLayerID = SortingLayer.NameToID(YSorter.CombatLayer);
+            telegraph.sortingOrder = YSorter.GroundMarkOrder;
         }
 
         // El jefe va escalado, así que el círculo compensa para medir unidades reales.
@@ -537,7 +545,8 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         var marca = go.GetComponent<SpriteRenderer>();
         marca.sprite = CircleSprite();
         marca.color = new Color(0.85f, 0.35f, 1f, 0.55f);
-        marca.sortingOrder = -50;
+        marca.sortingLayerID = SortingLayer.NameToID(YSorter.CombatLayer);
+        marca.sortingOrder = YSorter.GroundMarkOrder;
 
         // Registrada ya durante el aviso: los héroes tienen que poder salir antes de que queme.
         var zona = go.GetComponent<BossGroundZone>();
@@ -642,6 +651,10 @@ public class EnemyController : MonoBehaviour, IHealthOwner
             return;
         }
 
+        // El retardo del primer golpe se cobra al FIJAR objetivo, no al entrar en rango: si no,
+        // cada vez que el héroe se apartaba un pelo el enfriamiento volvía a empezar de cero.
+        if (target != nearest) attackTimer = AttackCooldown;
+
         target = nearest;
         if (state == EnemyState.Idle) state = EnemyState.Approach;
     }
@@ -706,17 +719,19 @@ public class EnemyController : MonoBehaviour, IHealthOwner
         float distance = Vector2.Distance(transform.position, target.transform.position);
         float range = AttackRange;
 
-        // Ya está en rango: no avanza ni un pixel, así se evita el temblor.
+        // Ya está en rango: no avanza ni un pixel, así se evita el temblor. El enfriamiento NO se
+        // reinicia aquí; se cobró al fijar objetivo.
         if (distance <= range)
         {
             state = EnemyState.Attack;
-            attackTimer = AttackCooldown;   // no golpea nada más llegar
             return;
         }
 
-        // Se para justo en el borde del rango en vez de meterse encima del héroe.
+        // Cierra un poco por dentro del borde en vez de quedarse clavado justo encima de él:
+        // parándose en el borde exacto, cualquier paso del héroe lo sacaba del rango.
+        float parada = range * Mathf.Clamp(approachOvershoot, 0.1f, 1f);
         float velocidad = data.moveSpeed * Status.SpeedMultiplier;
-        float step = Mathf.Min(velocidad * Time.deltaTime, distance - range);
+        float step = Mathf.Min(velocidad * Time.deltaTime, distance - parada);
         transform.position = Vector2.MoveTowards(
             transform.position,
             target.transform.position,
@@ -729,8 +744,11 @@ public class EnemyController : MonoBehaviour, IHealthOwner
 
         float distance = Vector2.Distance(transform.position, target.transform.position);
 
-        // Si el héroe se aleja, vuelve a perseguirlo.
-        if (distance > AttackRange)
+        // Si el héroe se aleja, vuelve a perseguirlo — pero con holgura. Sin ella, el empujón de
+        // TickPersonalSpace y las recolocaciones del coreógrafo lo sacaban del rango un frame de
+        // cada dos, y así el enfriamiento no llegaba a cumplirse nunca: enemigos encima del héroe
+        // que no le pegaban en todo el piso.
+        if (distance > AttackRange * Mathf.Max(1f, attackExitFactor))
         {
             state = EnemyState.Approach;
             return;

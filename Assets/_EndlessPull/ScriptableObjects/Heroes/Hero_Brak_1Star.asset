@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Brak cazaba furtivamente en los bosques de la frontera antes de que la Torre le ofreciera un sueldo por lo mismo, con menos riesgo de guardabosques. Se mueve en silencio y golpea antes de que lo vean."
   bioEn: "Brak used to poach the frontier woods before the Tower offered him a wage for the same skills, minus the risk of gamekeepers. He moves in silence and strikes before he's seen."
   bioJa: "国境の森で密猟をしていたブラクは、同じ腕前で塔から給金をもらえると知り鞍替えした。森番に見つかる心配もない。音もなく動き、姿を見せる前に叩く。"
+  memories:
+  - starRank: 0
+    unlock: 1
+    amount: 8
+    text: "El crujido de una rama bajo un pie ajeno lo delataba todo. Nunca falló en oírlo."
+    textEn: "A twig snapping under someone else's foot always gave it away. He never failed to hear it."
+    textJa: "他人の足の下で枝が折れる音。それだけで全てがわかった。聞き逃したことは一度もない。"
   bodySprite: {fileID: 5780111403560609220, guid: d7cdd62bdf393664c8d8183dd8b6de8e, type: 3}
   walkFrames:
   - {fileID: -2515531150123982369, guid: d7cdd62bdf393664c8d8183dd8b6de8e, type: 3}

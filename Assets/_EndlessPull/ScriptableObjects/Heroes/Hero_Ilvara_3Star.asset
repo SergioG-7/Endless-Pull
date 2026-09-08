@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "Ilvara aprendió a moverse sin ser vista antes que a leer, robando lo justo para no morir de hambre en el Mercado Bajo. Ahora vende esa misma discreción a quien pueda pagarla, daga siempre a mano."
   bioEn: "Ilvara learned to move unseen before she learned to read, stealing just enough to survive in the Low Market. Now she sells that same discretion to whoever can pay for it, dagger always within reach."
   bioJa: "イルヴァラは字を覚えるより先に、人目を忍ぶ術を身につけた。下町市場で飢えぬ分だけを盗んで生きてきた。今ではその隠密の腕を金で売る者となったが、短剣はいつも手の届く場所にある。"
+  memories:
+  - starRank: 2
+    unlock: 0
+    amount: 1
+    text: "Recuerda el peso exacto de una hogaza de pan robada, y que nunca robó una segunda si con una bastaba."
+    textEn: "Recalls the exact weight of a stolen loaf of bread, and that she never took a second if one was enough."
+    textJa: "盗んだパン一斤の重さを正確に覚えている。それで足りるなら、二つ目には手を出さなかった。"
+  - starRank: 0
+    unlock: 2
+    amount: 38
+    text: "Recuerda que la única vez que la atraparon, otro niño dijo que había sido él, y que nunca supo qué le pasó después por su culpa."
+    textEn: "Recalls the one time she got caught, another child claimed it was him instead — and she never learned what happened to him because of it."
+    textJa: "一度だけ捕まった時、別の子供が自分がやったと言って庇ってくれたことを覚えている。そのせいで彼がどうなったのか、今も知らない。"
   bodySprite: {fileID: 5722643723047274288, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}
   walkFrames:
   - {fileID: 8511536189219897936, guid: d6eaa5813b81c2a14b01a977be7fa5f8, type: 3}

@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "Solveig carga con más batallas de las que se pueden contar con los dedos de una mano. Golpea desde la distancia, castigando al enemigo antes de que pueda acercarse."
   bioEn: "Solveig carries more battles than can be counted on one hand. Strikes from a distance, punishing the enemy before they can close in."
   bioJa: "Solveigは数えきれないほどの戦いを重ねてきた古参兵だ。距離を保ちながら、味方が前線を支える間に正確に狙い撃つ。"
+  memories:
+  - starRank: 0
+    unlock: 1
+    amount: 22
+    text: "Recuerda leer la escarcha de la mañana y saber, antes que nadie, qué clase de día se avecinaba."
+    textEn: "Recalls reading the morning frost and knowing, before anyone else, what kind of day was coming."
+    textJa: "朝霜を読み、誰よりも先にその日がどんな一日になるか知っていたことを覚えている。"
+  - starRank: 0
+    unlock: 4
+    amount: 2
+    text: "Recuerda la única vez que dudó de su propia lectura y actuó al revés, y el precio que pagó otro por esa duda."
+    textEn: "Recalls the one time she doubted her own reading and acted against it — and the price someone else paid for that doubt."
+    textJa: "一度だけ自分の読みを疑い、逆の行動を取ったことを覚えている。その疑いの代償を払ったのは、自分ではなく他の誰かだった。"
   bodySprite: {fileID: 6198918007889144012, guid: b446321685ef3cd4dba7f8cee298db4a, type: 3}
   walkFrames:
   - {fileID: 4881179919355823047, guid: b446321685ef3cd4dba7f8cee298db4a, type: 3}

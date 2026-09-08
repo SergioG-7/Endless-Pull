@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "Elara fue la única superviviente de una emboscada que se llevó al resto de su patrulla. Cada golpe que da es, en parte, por ellos."
   bioEn: "Elara was the sole survivor of an ambush that took the rest of her patrol. Every strike she lands is, in part, for them."
   bioJa: "分隊の仲間を全員失った待ち伏せ攻撃で、唯一生き残ったのがエララだった。放つ一撃一撃には、失った仲間への想いが込められている。"
+  memories:
+  - starRank: 0
+    unlock: 4
+    amount: 1
+    text: "Recuerda el silencio después de la emboscada, más fuerte que cualquier grito que hubiera escuchado antes."
+    textEn: "Recalls the silence after the ambush — louder than any scream she'd ever heard before."
+    textJa: "待ち伏せの後の静寂を覚えている。それまで聞いたどんな叫びよりも大きかった。"
+  - starRank: 5
+    unlock: 0
+    amount: 1
+    text: "Recuerda que ya no puede reconstruir las caras de su patrulla, solo sus voces, y que eso la asusta más que la emboscada misma."
+    textEn: "Recalls that she can no longer picture her patrol's faces, only their voices — and that frightens her more than the ambush itself."
+    textJa: "もう部隊の仲間たちの顔を思い出せず、声しか残っていないことを覚えている。それが待ち伏せそのものより恐ろしい。"
   bodySprite: {fileID: 4346744599194961606, guid: da5cf68128ee0954ea00ecd1fe871b27, type: 3}
   walkFrames:
   - {fileID: 3225643570380084551, guid: da5cf68128ee0954ea00ecd1fe871b27, type: 3}

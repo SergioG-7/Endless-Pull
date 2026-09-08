@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Liesel entró en la milicia porque era la única forma de seguir practicando tiro con arco sin que su familia se lo prohibiera. Todavía no ha admitido que ya dispara mejor que su instructor."
   bioEn: "Liesel joined the militia because it was the only way to keep practicing archery without her family forbidding it. She still hasn't admitted she now shoots better than her instructor."
   bioJa: "リーゼルが民兵に入ったのは、家族に禁じられずに弓の練習を続けられる唯一の方法だったからだ。もう教官より上手く射られることを、まだ本人は認めていない。"
+  memories:
+  - starRank: 4
+    unlock: 0
+    amount: 1
+    text: "Recuerda apuntar más bajo de lo necesario en los entrenamientos, solo para que el instructor no se diera cuenta."
+    textEn: "Recalls aiming lower than she needed to in practice, just so the instructor wouldn't notice."
+    textJa: "訓練でわざと的を外して狙っていたことを覚えている。教官に気づかれないように。"
   bodySprite: {fileID: -6797161314159442767, guid: 94c7a327504410c4559e263aec990a46, type: 3}
   walkFrames:
   - {fileID: 9059192533671113531, guid: 94c7a327504410c4559e263aec990a46, type: 3}

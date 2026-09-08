@@ -5,6 +5,13 @@ using UnityEngine;
 // Bocadillo flotante de los héroes en la base; lo que dicen depende de cómo estén.
 public class SpeechBubble : MonoBehaviour
 {
+    // Por encima de heroes y enemigos, que se ordenan por Y con valores de unos pocos miles.
+    // En la capa "Default" la burbuja caia por DEBAJO de los fondos, que van en "Environment".
+    private const int OverlayOrder = 20000;
+
+    [Tooltip("Opacidad del fondo de la burbuja; baja para no tapar el combate.")]
+    [SerializeField, Range(0.1f, 1f)] private float backdropAlpha = 0.55f;
+
     [Tooltip("Segundos mínimos y máximos entre comentarios.")]
     [SerializeField] private Vector2 intervalRange = new Vector2(8f, 20f);
 
@@ -210,8 +217,9 @@ public class SpeechBubble : MonoBehaviour
         backdrop.sprite = Resources.Load<Sprite>("UI/UI_Rounded");
         backdrop.drawMode = SpriteDrawMode.Sliced;
         backdrop.size = new Vector2(bubbleSize.x, bubbleSize.y);
-        backdrop.color = UITheme.Hex("141A26", 0.92f);
-        backdrop.sortingOrder = 19;
+        backdrop.color = UITheme.Hex("141A26", backdropAlpha);
+        backdrop.sortingLayerID = SortingLayer.NameToID("Characters");
+        backdrop.sortingOrder = OverlayOrder;
 
         var marcoGo = new GameObject("Border", typeof(SpriteRenderer));
         marcoGo.transform.SetParent(go.transform, false);
@@ -222,13 +230,15 @@ public class SpeechBubble : MonoBehaviour
         marco.drawMode = SpriteDrawMode.Sliced;
         marco.size = new Vector2(bubbleSize.x, bubbleSize.y);
         marco.color = UITheme.Border;
-        marco.sortingOrder = 20;
+        marco.sortingLayerID = SortingLayer.NameToID("Characters");
+        marco.sortingOrder = OverlayOrder + 1;
 
         label = go.GetComponent<TextMeshPro>();
         label.fontSize = fontSize;
         label.alignment = TextAlignmentOptions.Center;
         label.color = UITheme.Text;
-        label.sortingOrder = 21;
+        label.sortingLayerID = SortingLayer.NameToID("Characters");
+        label.sortingOrder = OverlayOrder + 2;
 
         // Sin ancho fijo el texto largo se sale del sprite del héroe.
         label.rectTransform.sizeDelta = new Vector2(bubbleSize.x - 0.3f, bubbleSize.y);

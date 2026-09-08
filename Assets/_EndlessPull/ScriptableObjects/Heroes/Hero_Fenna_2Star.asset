@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Fenna se presentó voluntaria a la milicia antes de cumplir la edad mínima, y el sargento no tuvo corazón para rechazarla dos veces. Compensa la falta de tamaño con una terquedad que agota a sus instructores."
   bioEn: "Fenna volunteered for the militia before she was old enough, and the sergeant didn't have the heart to turn her away twice. She makes up for her size with a stubbornness that wears out her instructors."
   bioJa: "フェンナは規定の年齢に達する前から民兵に志願し、軍曹も二度目は断る気になれなかった。体格の小ささを、教官たちを疲れさせるほどの頑固さで補っている。"
+  memories:
+  - starRank: 0
+    unlock: 1
+    amount: 16
+    text: "Recuerda plantarse frente al sargento la segunda vez sin parpadear, hasta que él apartó la mirada primero."
+    textEn: "Recalls standing before the sergeant a second time without blinking, until he looked away first."
+    textJa: "二度目に軍曹の前に立ったとき、瞬きひとつしなかった。先に目をそらしたのは軍曹のほうだった。"
   bodySprite: {fileID: -1742129160219957808, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}
   walkFrames:
   - {fileID: 4845785493151005257, guid: b20eed96b5b9319decf6a7e78e21943d, type: 3}

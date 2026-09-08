@@ -250,6 +250,9 @@ public class SaveManager : MonoBehaviour
     [Tooltip("Carga sola al arrancar; se apaga cuando el menú principal decide qué partida abrir.")]
     [SerializeField] private bool loadOnStart = true;
 
+    [Tooltip("Segundos que espera RequestSave antes de escribir, para agrupar clics seguidos.")]
+    [SerializeField] private float saveDebounceSeconds = 2f;
+
     private static SaveManager instance;
 
     // La pone en true/false quien muestre un menú previo a elegir partida (p.ej. MainMenuUI):
@@ -265,6 +268,11 @@ public class SaveManager : MonoBehaviour
 
     // Espejo en memoria del flag del save: se pone a true en cuanto la migración de armas corre.
     private bool weaponRerollApplied;
+
+    // Escritura pendiente y momento de la última: escribir el JSON entero cuesta ~78 ms con el
+    // roster lleno, y asignar trabajadores o mejorar edificios lo pedía en cada clic.
+    private bool savePending;
+    private float lastSaveTime = float.NegativeInfinity;
     public string TempSavePath => SavePath + ".tmp";
     public string BackupSavePath => SavePath + ".bak";
     public bool HasSave => File.Exists(SavePath);
@@ -305,10 +313,26 @@ public class SaveManager : MonoBehaviour
         Save();
     }
 
-    // Punto de entrada para los sistemas que no tienen referencia al manager.
+    // Mandar la app al fondo en móvil puede acabar en muerte del proceso sin OnApplicationQuit.
+    void OnApplicationPause(bool paused)
+    {
+        if (paused && savePending) Save();
+    }
+
+    // Sin escalar por timeScale: los menús lo dejan en 0 y la escritura no llegaría nunca.
+    void Update()
+    {
+        if (!savePending || Time.unscaledTime - lastSaveTime < saveDebounceSeconds) return;
+
+        Save();
+    }
+
+    // Punto de entrada para los sistemas que no tienen referencia al manager. No escribe: deja la
+    // petición marcada y Update la agrupa, que si no un clic seguido de otro pagaba el JSON entero
+    // dos veces.
     public static void RequestSave()
     {
-        if (instance != null) instance.Save();
+        if (instance != null) instance.savePending = true;
     }
 
     private void OnExpeditionChanged(ExpeditionState state, string message)
@@ -318,6 +342,9 @@ public class SaveManager : MonoBehaviour
 
     public void Save()
     {
+        savePending = false;
+        lastSaveTime = Time.unscaledTime;
+
         // Con el menu principal delante aun no se ha elegido partida: guardar borraria la de disco.
         if (!SavingAllowed)
         {

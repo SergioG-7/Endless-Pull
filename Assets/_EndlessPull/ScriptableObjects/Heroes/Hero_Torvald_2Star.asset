@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Torvald ha superado ya varios combates y empieza a ganarse un nombre en la torre. Se planta en primera línea y absorbe los golpes que el resto no podría soportar."
   bioEn: "Torvald has already come through several fights and is starting to make a name in the tower. Never gives an inch: the wall that shields the whole squad."
   bioJa: "Torvaldはすでにいくつもの戦いをくぐり抜け、塔の中で名を上げ始めている。前線を支え、仲間が背後から攻撃できるようにする。"
+  memories:
+  - starRank: 4
+    unlock: 0
+    amount: 1
+    text: "Recuerda el frío del fiordo calándole los huesos antes de cualquier batalla, y cómo aprendió a no sentirlo."
+    textEn: "Recalls the fjord's cold sinking into his bones before any battle, and learning not to feel it anymore."
+    textJa: "戦いの前にいつも骨まで染みたフィヨルドの寒さを覚えている。それを感じなくなる術も覚えた。"
   bodySprite: {fileID: 2672728995424534982, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}
   walkFrames:
   - {fileID: 8824692790474697442, guid: 6f8175495345d2047a75dfaa4a8de3ec, type: 3}

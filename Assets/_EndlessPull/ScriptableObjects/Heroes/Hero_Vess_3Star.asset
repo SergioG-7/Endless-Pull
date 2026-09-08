@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "Vess trabajó para tres bandas distintas del Callejón Norte antes de decidir que prefería trabajar para sí mismo. Nadie lo ha visto llegar antes de sentir el filo."
   bioEn: "Vess worked for three different gangs in the North Alley before deciding he'd rather work for himself. No one has ever seen him arrive before feeling the blade."
   bioJa: "ヴェスは自分のために働く方がいいと決める前に、北裏路地の三つの一味で働いていた。彼の刃を感じる前にその姿を見た者はいない。"
+  memories:
+  - starRank: 0
+    unlock: 2
+    amount: 18
+    text: "Recuerda la marca que cada banda tallaba en su puerta, y cuál de las tres imitaba peor las otras dos."
+    textEn: "Recalls the mark each gang carved into its door, and which of the three copied the other two worst."
+    textJa: "三つの組がそれぞれ扉に刻んだ印を覚えている。どれが一番下手な真似だったかも。"
+  - starRank: 6
+    unlock: 0
+    amount: 1
+    text: "Recuerda a quién delató para salir de la segunda banda, y que no ha vuelto a confiar del todo en trabajar con nadie desde entonces."
+    textEn: "Recalls who he gave up to get out of the second gang, and that he hasn't fully trusted working with anyone since."
+    textJa: "二番目の組から抜け出すために誰を売ったか覚えている。それ以来、誰かと組んで仕事をすることを心から信じられなくなった。"
   bodySprite: {fileID: -7569561301812737605, guid: 4db4124d776bb05c00e7318da164d281, type: 3}
   walkFrames:
   - {fileID: 8287330783043932871, guid: 4db4124d776bb05c00e7318da164d281, type: 3}

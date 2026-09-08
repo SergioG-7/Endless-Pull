@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "Cadoc siempre pide ir en primera fila de la formación de lanceros, convencido de que ese es el lugar donde más se puede proteger a los demás. Sus compañeros ya no discuten con él por eso."
   bioEn: "Cadoc always asks to stand at the front of the spear formation, convinced that's the place where he can protect the others best. His comrades no longer argue with him about it."
   bioJa: "カドックはいつも槍隊の最前列に立たせてほしいと願い出る。そこが最も仲間を守れる場所だと信じているからだ。仲間たちはもうそのことで彼と争わない。"
+  memories:
+  - starRank: 0
+    unlock: 2
+    amount: 20
+    text: "Recuerda el peso del primer escudo ajeno que cubrió con el suyo, y lo bien que le sentó."
+    textEn: "Recalls the weight of the first stranger's shield he covered with his own, and how right it felt."
+    textJa: "初めて他人の盾を自分の盾でかばった重みを覚えている。妙にしっくりきた。"
+  - starRank: 0
+    unlock: 4
+    amount: 2
+    text: "Recuerda a un compañero que cayó dos pasos a su derecha antes de que llegara a cubrirlo, y que desde entonces nunca vuelve a llegar tarde."
+    textEn: "Recalls a comrade who fell two steps to his right before he could reach him, and that he has never arrived late since."
+    textJa: "自分が届く前に、右二歩先で倒れた仲間を覚えている。それ以来、二度と遅れたことはない。"
   bodySprite: {fileID: -4687967217407699374, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}
   walkFrames:
   - {fileID: 4343170947998009130, guid: b5eb8018b8e4b83dc33b5bfc22373e9b, type: 3}

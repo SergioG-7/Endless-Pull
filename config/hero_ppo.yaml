@@ -1,8 +1,12 @@
 # Entrenamiento del micro-combate (Fase 56). El nombre tiene que coincidir con el Behavior Name
 # del prefab del agente en Gym_Combat.unity: EndlessPullCombat.
 #
-# Entradas: 14 observaciones (8 de situación + 3 de mecánica de jefe + 3 del vector de rasgos).
+# Entradas: 20 observaciones (8 de situación + 3 de mecánica de jefe + 2 de arma + 1 de
+# enfriamiento + 1 de rival a distancia + 2 de rol + 3 del vector de rasgos).
 # Salidas: 2 ramas discretas de 3 (moverse: quieto/acercarse/retroceder; combate: nada/básico/habilidad).
+#
+# La escena trae 8 arenas en paralelo con el mismo Behavior Name; el caudal de muestras sale de
+# ahí y no de subir el timeScale, que a partir de x4 se salta proyectiles y avisos de jefe.
 #
 # Uso:
 #   .venv-mlagents/Scripts/mlagents-learn.exe config/hero_ppo.yaml --run-id=<nombre>
@@ -12,9 +16,10 @@ behaviors:
     trainer_type: ppo
 
     hyperparameters:
-      # Lotes pequeños: una sola arena produce pocas decisiones por segundo.
-      batch_size: 256
-      buffer_size: 4096
+      # Con 8 arenas entran ~8 veces más decisiones por segundo: cabe un lote mayor, que además
+      # estabiliza el gradiente ahora que cada episodio sortea arma, rol, rasgos y rival.
+      batch_size: 512
+      buffer_size: 8192
       learning_rate: 3.0e-4
       beta: 5.0e-3
       epsilon: 0.2
@@ -34,9 +39,12 @@ behaviors:
         gamma: 0.99
         strength: 1.0
 
-    max_steps: 300000
+    # 300 000 se quedaban cortos para 20 entradas, 6 armas, 3 roles y 11 rivales distintos.
+    # `--resume` SI recupera el contador de pasos desde checkpoint.pt aunque avise de que falta
+    # el fichero de estado: es un tope absoluto, no un presupuesto por tanda.
+    max_steps: 1000000
     time_horizon: 64
-    summary_freq: 5000
+    summary_freq: 10000
 
     # Exporta un .onnx cada tanto en vez de solo al terminar: con el valor por defecto (500 000)
     # una tanda cortada a medias no dejaba modelo aprovechable.

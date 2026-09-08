@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Fenn creció entre ovejas y perros pastores, y todavía silba órdenes por costumbre en mitad del combate. Cubre a sus compañeros como si fueran el rebaño que nunca perdió."
   bioEn: "Fenn grew up among sheep and herding dogs, and still whistles commands out of habit mid-fight. He watches over his allies like the flock he never lost."
   bioJa: "羊と牧羊犬に囲まれて育ったフェンは、戦いの最中でも癖で指笛を吹いてしまう。決して逃がさなかった群れを守るように、仲間をかばう。"
+  memories:
+  - starRank: 0
+    unlock: 4
+    amount: 1
+    text: "Silba las mismas tres notas con las que llamaba al rebaño de vuelta antes de la tormenta."
+    textEn: "He whistles the same three notes he used to call the flock home before a storm."
+    textJa: "嵐の前に群れを呼び戻した時と同じ、あの三つの音を今も口笛で吹く。"
   bodySprite: {fileID: 3683762034286491040, guid: a5987cf371792c54092be48547f15109, type: 3}
   walkFrames:
   - {fileID: -536284557478516784, guid: a5987cf371792c54092be48547f15109, type: 3}

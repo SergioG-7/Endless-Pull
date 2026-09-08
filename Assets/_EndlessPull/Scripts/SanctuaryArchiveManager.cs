@@ -20,7 +20,16 @@ public class SanctuaryArchiveManager : MonoBehaviour
         new LoreEntry { titleKey = "ARCHIVE_LORE_TOWER", summaryKey = "ARCHIVE_LORE_TOWER_BODY", requiredFloor = 1 },
         new LoreEntry { titleKey = "ARCHIVE_LORE_DECREES", summaryKey = "ARCHIVE_LORE_DECREES_BODY", requiredFloor = 5 },
         new LoreEntry { titleKey = "ARCHIVE_LORE_HIERARCHY", summaryKey = "ARCHIVE_LORE_HIERARCHY_BODY", requiredFloor = 10 },
-        new LoreEntry { titleKey = "ARCHIVE_LORE_FACTIONS", summaryKey = "ARCHIVE_LORE_FACTIONS_BODY", requiredFloor = 15 },
+        new LoreEntry { titleKey = "ARCHIVE_LORE_FACTIONS_1", summaryKey = "ARCHIVE_LORE_FACTIONS_1_BODY", requiredFloor = 15 },
+        new LoreEntry { titleKey = "ARCHIVE_LORE_TOWER_HISTORY", summaryKey = "ARCHIVE_LORE_TOWER_HISTORY_BODY", requiredFloor = 18 },
+        new LoreEntry { titleKey = "ARCHIVE_LORE_FACTIONS_2", summaryKey = "ARCHIVE_LORE_FACTIONS_2_BODY", requiredFloor = 21 },
+        new LoreEntry { titleKey = "ARCHIVE_LORE_DECREES_HISTORY", summaryKey = "ARCHIVE_LORE_DECREES_HISTORY_BODY", requiredFloor = 24 },
+        new LoreEntry { titleKey = "ARCHIVE_LORE_FACTIONS_3", summaryKey = "ARCHIVE_LORE_FACTIONS_3_BODY", requiredFloor = 27 },
+        new LoreEntry { titleKey = "ARCHIVE_LORE_HIERARCHY_HISTORY", summaryKey = "ARCHIVE_LORE_HIERARCHY_HISTORY_BODY", requiredFloor = 30 },
+        new LoreEntry { titleKey = "ARCHIVE_LORE_FACTIONS_4", summaryKey = "ARCHIVE_LORE_FACTIONS_4_BODY", requiredFloor = 33 },
+        new LoreEntry { titleKey = "ARCHIVE_LORE_FACTIONS_5", summaryKey = "ARCHIVE_LORE_FACTIONS_5_BODY", requiredFloor = 39 },
+        new LoreEntry { titleKey = "ARCHIVE_LORE_FACTIONS_6", summaryKey = "ARCHIVE_LORE_FACTIONS_6_BODY", requiredFloor = 45 },
+        new LoreEntry { titleKey = "ARCHIVE_LORE_FACTIONS_7", summaryKey = "ARCHIVE_LORE_FACTIONS_7_BODY", requiredFloor = 51 },
     };
 
     // Hito estructurado: se renderiza con la plantilla localizada en el momento de mostrarlo,

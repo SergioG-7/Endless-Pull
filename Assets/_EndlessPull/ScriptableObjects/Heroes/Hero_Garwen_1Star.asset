@@ -19,6 +19,13 @@ MonoBehaviour:
   bioEn: He has worked the cold waters since childhood; his net has pulled up more
     than fish.
   bioJa: "\u5E7C\u3044\u9803\u304B\u3089\u51B7\u305F\u3044\u6C34\u3067\u6F01\u3092\u3057\u3066\u304D\u305F\u3002\u5F7C\u306E\u7DB2\u306F\u9B5A\u4EE5\u4E0A\u306E\u3082\u306E\u3092\u5F15\u304D\u4E0A\u3052\u3066\u304D\u305F\u3002"
+  memories:
+  - starRank: 2
+    unlock: 0
+    amount: 0
+    text: "Una vez la red sacó algo que no era pez ni tronco. Nunca contó qué, y nunca volvió a esa orilla."
+    textEn: "Once the net pulled up something that was neither fish nor driftwood. He never said what, and never fished that shore again."
+    textJa: "一度、網が魚でも流木でもない何かを引き上げた。何だったかは語らず、二度とその岸には行かなかった。"
   bodySprite: {fileID: -6831270365225810533, guid: 492b8bebdf52e374eab7077e65c35252, type: 3}
   walkFrames:
   - {fileID: -1208819212243042820, guid: 492b8bebdf52e374eab7077e65c35252, type: 3}

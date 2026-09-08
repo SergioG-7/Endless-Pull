@@ -749,7 +749,16 @@ public static class LocalizationManager
         { "ARCHIVE_LORE_TOWER",     new[] { "La Torre", "The Tower", "塔" } },
         { "ARCHIVE_LORE_DECREES",   new[] { "Decretos del Maestro", "Decrees of the Master", "師の勅令" } },
         { "ARCHIVE_LORE_HIERARCHY", new[] { "La Ley del Rango", "The Law of Rank", "序列の掟" } },
-        { "ARCHIVE_LORE_FACTIONS",  new[] { "Facciones y Orígenes", "Factions and Origins", "派閥と出自" } },
+        { "ARCHIVE_LORE_FACTIONS_1", new[] { "Reino Fronterizo", "Borderland Kingdom", "辺境王国" } },
+        { "ARCHIVE_LORE_FACTIONS_2", new[] { "Torre de Marfil", "The Ivory Tower", "象牙の塔" } },
+        { "ARCHIVE_LORE_FACTIONS_3", new[] { "Abadía de Sal", "The Salt Abbey", "塩の修道院" } },
+        { "ARCHIVE_LORE_FACTIONS_4", new[] { "Ciudad Baja", "The Lower City", "下町" } },
+        { "ARCHIVE_LORE_FACTIONS_5", new[] { "Marca Quemada", "The Burnt March", "焦土領" } },
+        { "ARCHIVE_LORE_FACTIONS_6", new[] { "Fiordos del Norte", "The Northern Fjords", "北の峡湾" } },
+        { "ARCHIVE_LORE_FACTIONS_7", new[] { "Bosque de Alder", "Alder Wood", "アルダーの森" } },
+        { "ARCHIVE_LORE_TOWER_HISTORY",     new[] { "Orígenes de la Torre", "Origins of the Tower", "塔の起源" } },
+        { "ARCHIVE_LORE_DECREES_HISTORY",   new[] { "Origen de los Decretos", "Origin of the Decrees", "勅令の起源" } },
+        { "ARCHIVE_LORE_HIERARCHY_HISTORY", new[] { "Origen de la Ley del Rango", "Origin of the Law of Rank", "序列の掟の起源" } },
         { "ARCHIVE_LORE_TOWER_BODY", new[] {
             "La Torre es una institución de expedición reconocida en el mundo: el Maestro dirige escuadras piso a piso desde el Portal, sin entrar nunca en persona.",
             "The Tower is an expedition institution recognised across the world: the Master directs squads floor by floor from the Portal, never setting foot inside in person.",
@@ -765,10 +774,46 @@ public static class LocalizationManager
         { "ARCHIVE_MILESTONE", new[] { "{0} asciende a {1}★ (Piso {2}).",
                                         "{0} ascends to {1}★ (Floor {2}).",
                                         "{0}が{1}★に覚醒（{2}階）。" } },
-        { "ARCHIVE_LORE_FACTIONS_BODY", new[] {
-            "Cada origen de héroe representa una facción real del mundo, con su propia razón para luchar mejor codo a codo con los suyos.",
-            "Every hero origin represents a real faction of the world, each with its own reason to fight better shoulder to shoulder with its own.",
-            "英雄の出自はそれぞれ世界の実在する派閥を表し、同郷の者と肩を並べてこそ真価を発揮する理由を持つ。" } },
+        { "ARCHIVE_LORE_FACTIONS_1_BODY", new[] {
+            "El Reino Fronterizo no tiene fundación que contar: es, sencillamente, el reino más cercano a la Torre, y por eso su cantera de reclutas es la mayor de todas.",
+            "The Borderland Kingdom has no founding to tell: it's simply the realm closest to the Tower, which makes it the largest single pool of recruits.",
+            "辺境王国には語るべき建国譚はない。ただ塔に最も近い王国であり、それゆえ最大の徴募源となっている。" } },
+        { "ARCHIVE_LORE_FACTIONS_2_BODY", new[] {
+            "La Torre de Marfil es la orden de eruditos que primero catalogó los pisos y los Decretos; su disciplina de observación, no la fuerza bruta, sostiene hoy la doctrina de mando del Maestro.",
+            "The Ivory Tower is the order of scholars who first catalogued the floors and the Decrees; their discipline of observation, not brute force, sustains the Master's doctrine of command today.",
+            "象牙の塔は、階層と勅令を最初に記録した学者の結社である。武力ではなく観察の規律こそが、今日の師の指揮教義を支えている。" } },
+        { "ARCHIVE_LORE_FACTIONS_3_BODY", new[] {
+            "La Abadía de Sal empezó como guardianes de salinas fronterizas; se volvió una orden militante el día en que tuvo que custodiar activamente lo que los pisos bajos de la Torre expulsan.",
+            "The Salt Abbey began as guardians of border salt flats; it became a militant order the day it had to actively guard what the Tower's lower floors cast out.",
+            "塩の修道院は元は辺境の塩田の番人だった。塔の下層階が吐き出すものを積極的に見張る必要に迫られた日から、武闘派の教団となった。" } },
+        { "ARCHIVE_LORE_FACTIONS_4_BODY", new[] {
+            "La Ciudad Baja no tiene fundación propia que contar: es el estrato pobre de una urbe mayor, y manda gente a la Torre porque es una de las pocas vías reales de ascenso social.",
+            "The Lower City has no founding of its own to tell: it's the poorest stratum of a larger city, and it sends people to the Tower because it's one of the few real paths to social ascent.",
+            "下町には語るべき独自の建国譚はない。より大きな都市の最下層であり、社会的上昇への数少ない現実的な道であるがゆえに人を塔へ送り出す。" } },
+        { "ARCHIVE_LORE_FACTIONS_5_BODY", new[] {
+            "La Marca Quemada es tierra fronteriza disputada y quemada una y otra vez; sus habitantes son duros por necesidad, no por elección, y el conflicto que la define se deja sin nombrar a propósito.",
+            "The Burnt March is disputed borderland, burned again and again; its people are hard out of necessity, not choice, and the conflict that defines it is deliberately left unnamed.",
+            "焦土領は争われ、幾度も焼かれてきた辺境の地である。住人が過酷なのは選択ではなく必要による。その地を規定する紛争は、あえて名を伏せられている。" } },
+        { "ARCHIVE_LORE_FACTIONS_6_BODY", new[] {
+            "Los Fiordos del Norte son clanes guerreros aislados por el clima; enviar a sus jóvenes a la Torre es, para ellos, un rito de paso y una fuente de prestigio para el clan entero.",
+            "The Northern Fjords are warrior clans isolated by climate; sending their young to the Tower is, for them, a rite of passage and a source of prestige for the whole clan.",
+            "北の峡湾は気候によって隔絶された戦士の氏族である。若者を塔へ送ることは、彼らにとって通過儀礼であり、氏族全体の誉れとなる。" } },
+        { "ARCHIVE_LORE_FACTIONS_7_BODY", new[] {
+            "El Bosque de Alder es una comunidad de rastreadores que vive en equilibrio con un bosque que no siempre es benigno; envía batidores a la Torre porque su ojo para el peligro vale para cualquier expedición.",
+            "Alder Wood is a community of trackers living in balance with a forest that isn't always kind; it sends scouts to the Tower because their eye for danger is worth having on any expedition.",
+            "アルダーの森は、必ずしも穏やかとは限らない森と共生する追跡者の共同体である。危険を見抜く目はどんな遠征にも値するとして、斥候を塔へ送り出す。" } },
+        { "ARCHIVE_LORE_TOWER_HISTORY_BODY", new[] {
+            "Ningún registro documenta la fundación de la Torre: los archivos más antiguos ya la describen en marcha, con Maestros al frente de escuadras y el mismo propósito de hoy. Simplemente 'ya estaba' cuando alguien empezó a llevar registro.",
+            "No record documents the Tower's founding: the oldest archives already describe it running, with Masters leading squads toward the same purpose it serves today. It simply 'already was' by the time anyone started keeping records.",
+            "塔の建設を記した記録は存在しない。最古の文書はすでに、師が部隊を率いて今と同じ目的に向かう姿を記している。誰かが記録を取り始めた頃には、塔は「すでにそこにあった」。" } },
+        { "ARCHIVE_LORE_DECREES_HISTORY_BODY", new[] {
+            "En los primeros tiempos los Maestros solo gritaban órdenes generales desde fuera del piso, con resultados desiguales. Los eruditos de la Torre de Marfil estudiaron por qué unas calaban mejor que otras y codificaron el protocolo que hoy usa cualquier Maestro, novato o veterano.",
+            "In the earliest days Masters only shouted general orders from outside the floor, with uneven results. Scholars of the Ivory Tower studied why some orders landed better than others and codified the protocol every Master, novice or veteran, uses today.",
+            "草創期の師たちは、階の外から大まかな命令を叫ぶだけで、成果はまちまちだった。象牙の塔の学者たちがなぜ一部の命令だけがうまく機能するのかを研究し、新米にも古参にも今日使われる手順を体系化した。" } },
+        { "ARCHIVE_LORE_HIERARCHY_HISTORY_BODY", new[] {
+            "La Ley del Rango nace de un problema práctico: ninguna base podría sostener indefinidamente a todo aspirante que pasa por la Torre. La institución decidió priorizar a quien más demuestra en la escalada activa, y dejarlo por escrito en vez de arbitrarlo caso por caso.",
+            "The Law of Rank was born from a practical problem: no base could indefinitely support every aspirant passing through the Tower. The institution chose to prioritize whoever proves the most in active climbing, and wrote it down instead of ruling case by case.",
+            "序列の掟は現実的な問題から生まれた。塔を通過するすべての志願者を、拠点が際限なく支え続けることはできない。組織は現に登攀で最も功績を示す者を優先すると定め、その都度裁定するのではなく、明文の規則として残すことにした。" } },
 
         // Decretos del Maestro y avisos de combate.
         { "DEC_HEAL",        new[] { "Curar Escuadra", "Heal Party", "部隊回復" } },

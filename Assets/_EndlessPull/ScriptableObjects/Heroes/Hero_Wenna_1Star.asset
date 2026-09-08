@@ -19,6 +19,13 @@ MonoBehaviour:
   bioEn: She weaves thick cloaks against the cold; her loom never falls silent in
     the village.
   bioJa: "\u5BD2\u3055\u3092\u3057\u306E\u3050\u539A\u3044\u5916\u5957\u3092\u7E54\u308B\u3002\u6751\u3067\u306F\u5F7C\u5973\u306E\u6A5F\u7E54\u308A\u304C\u9014\u5207\u308C\u308B\u3053\u3068\u306F\u306A\u3044\u3002"
+  memories:
+  - starRank: 0
+    unlock: 1
+    amount: 13
+    text: "El telar sonaba toda la noche en la aldea. Ahora el silencio de la Torre le resulta más frío que el invierno."
+    textEn: "The loom clacked all night in the village. Now the Tower's silence feels colder than winter ever did."
+    textJa: "村では夜通し機織り機が鳴っていた。今では塔の静寂の方が冬より冷たく感じる。"
   bodySprite: {fileID: 5451647607067539516, guid: dec32131c97b8084088d8ccde6ab332f, type: 3}
   walkFrames:
   - {fileID: 4277641094765527200, guid: dec32131c97b8084088d8ccde6ab332f, type: 3}

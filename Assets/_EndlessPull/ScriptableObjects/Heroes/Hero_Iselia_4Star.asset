@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "Iselia dirigió la defensa de un pueblo fronterizo contra un asalto que nadie esperaba que sobreviviera, y lo consiguió sin perder una sola casa. En los cuarteles todavía brindan por ella."
   bioEn: "Iselia led the defense of a border town against a raid nobody expected it to survive, and pulled it off without losing a single house. Soldiers still raise a toast to her in the barracks."
   bioJa: "誰も生き残れないと思われた襲撃から国境の町を守り抜いたイセリアは、家一軒も失わなかった。兵舎では今でも彼女に乾杯する。"
+  memories:
+  - starRank: 0
+    unlock: 1
+    amount: 25
+    text: "Recuerda contar las casas al amanecer, una por una, hasta convencerse de que seguían todas en pie."
+    textEn: "Recalls counting the houses at dawn, one by one, until she believed they were all still standing."
+    textJa: "夜明けに家を一軒ずつ数えたことを覚えている。すべてが無事だと自分に言い聞かせるまで。"
+  - starRank: 0
+    unlock: 2
+    amount: 45
+    text: "Recuerda que 'ninguna casa perdida' no es lo mismo que 'nadie perdido', y que ella fue la única que llevó bien esa cuenta."
+    textEn: "Recalls that 'no house lost' is not the same as 'no one lost' -- and that she was the only one keeping that count straight."
+    textJa: "『家は一軒も失わなかった』ことと『誰も失わなかった』ことは違うと知っている。その区別をつけていたのは彼女だけだった。"
   bodySprite: {fileID: 5841573359959852688, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}
   walkFrames:
   - {fileID: 3386263520470008282, guid: 2da3e08d5e2cba74783d1b41948a5ecc, type: 3}

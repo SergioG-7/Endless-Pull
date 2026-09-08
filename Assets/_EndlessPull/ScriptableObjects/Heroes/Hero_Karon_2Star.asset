@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Karon llevaba la barca del vado familiar hasta que unos bandidos decidieron que el peaje eran ellos mismos. Desde entonces cruza cualquier frontera con el mismo remo convertido en arma."
   bioEn: "Karon used to run the family ferry across the ford until bandits decided the toll was themselves. He's crossed every line since with that same oar turned weapon."
   bioJa: "渡し場の舟を操っていたカロンだったが、山賊たちが自分たちこそ通行料だと言い出した。それ以来、あの舵を武器に変えてどんな境界も渡り歩いている。"
+  memories:
+  - starRank: 0
+    unlock: 3
+    amount: 95
+    text: "Recuerda el peso del remo familiar cambiando de sentido en sus manos aquella tarde en el vado."
+    textEn: "Recalls the family oar shifting weight in his hands that afternoon at the ford, from tool to weapon."
+    textJa: "あの午後、渡し場で家族の櫂が手の中で重さを変えたことを覚えている。道具から武器へと。"
   bodySprite: {fileID: -2627375359352995852, guid: 7f1a9a54f954c974c8e6b3563dc24010, type: 3}
   walkFrames:
   - {fileID: -8394334911490046115, guid: 7f1a9a54f954c974c8e6b3563dc24010, type: 3}

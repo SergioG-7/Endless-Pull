@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: Extrae sal de las marismas; sus manos curtidas no tiemblan ante nada.
   bioEn: She extracts salt from the marshes; her weathered hands never tremble.
   bioJa: "\u6E7F\u5730\u304B\u3089\u5869\u3092\u63A1\u308B\u3002\u305D\u306E\u8352\u308C\u305F\u624B\u306F\u4F55\u306B\u3082\u9707\u3048\u306A\u3044\u3002"
+  memories:
+  - starRank: 2
+    unlock: 0
+    amount: 0
+    text: "La sal se le metía en cada corte de las manos. Aprendió a no hacer gestos de dolor delante de nadie."
+    textEn: "Salt worked its way into every cut on her hands. She learned never to flinch in front of anyone."
+    textJa: "手のあらゆる傷口に塩がしみ込んだ。誰の前でも顔をしかめないことを覚えた。"
   bodySprite: {fileID: 1853379861728590398, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}
   walkFrames:
   - {fileID: -7843117782625082824, guid: 2168829465ffbe943883555fa07ba0a1, type: 3}

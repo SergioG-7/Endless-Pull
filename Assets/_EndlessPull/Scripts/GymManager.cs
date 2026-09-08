@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -25,6 +26,19 @@ public class GymManager : MonoBehaviour
     [Tooltip("Sortea también el arma del héroe en cada episodio; sin esto solo aprende de melé.")]
     [SerializeField] private bool randomizeHeroWeapon = true;
 
+    [Tooltip("Sortea el perfil táctico, las pasivas y el ánimo del héroe en cada episodio.")]
+    [SerializeField] private bool randomizeHeroTraits = true;
+
+    [Tooltip("Pasivas de las que se le reparten 0-2 por episodio; son las que mueven el vector.")]
+    [SerializeField] private PassiveSkill[] traitPassivePool =
+    {
+        PassiveSkill.Bloodlust, PassiveSkill.Bulwark, PassiveSkill.Tactician, PassiveSkill.Scout,
+        PassiveSkill.Duelist, PassiveSkill.Ambusher, PassiveSkill.MentalFortitude,
+        PassiveSkill.Leadership, PassiveSkill.Executioner, PassiveSkill.Indomitable,
+        PassiveSkill.Strategist, PassiveSkill.Vanguard, PassiveSkill.Bannerman,
+        PassiveSkill.Lonewolf, PassiveSkill.Adaptability
+    };
+
     [Tooltip("Separación mínima y máxima entre héroe y enemigo al empezar el episodio.")]
     [SerializeField] private Vector2 startingGap = new Vector2(3f, 11f);
 
@@ -37,14 +51,17 @@ public class GymManager : MonoBehaviour
     [Tooltip("Escala visual del jefe de entrenamiento.")]
     [SerializeField] private float bossScale = 1.6f;
 
-    [Tooltip("Punto donde arranca el héroe en cada episodio.")]
+    [Tooltip("Puesto de salida del héroe, relativo al centro de la arena.")]
     [SerializeField] private Vector2 heroSpawn = new Vector2(-4f, 0f);
 
-    [Tooltip("Punto donde arranca el enemigo en cada episodio.")]
+    [Tooltip("Puesto de salida del enemigo, relativo al centro de la arena.")]
     [SerializeField] private Vector2 enemySpawn = new Vector2(4f, 0f);
 
     [Tooltip("Media anchura y altura de la arena; el agente no puede salir de ahí.")]
     [SerializeField] private Vector2 arenaHalfSize = new Vector2(9f, 4.5f);
+
+    [Tooltip("Holgura alrededor de la arena para dar por suya una marca de suelo del jefe.")]
+    [SerializeField] private float zoneMargin = 6f;
 
     [Tooltip("Velocidad de simulación en modo rápido.")]
     [SerializeField] private float fastTimeScale = 10f;
@@ -68,8 +85,12 @@ public class GymManager : MonoBehaviour
     private bool fast;
     private int episodes;
 
-    public Vector2 HeroSpawn => heroSpawn;
-    public Vector2 EnemySpawn => enemySpawn;
+    // La arena se sitúa en el transform del GymManager, no en el origen del mundo: así se
+    // duplica el objeto entero para entrenar en varias a la vez sin que se pisen las posiciones.
+    public Vector2 Origin => transform.position;
+
+    public Vector2 HeroSpawn => Origin + heroSpawn;
+    public Vector2 EnemySpawn => Origin + enemySpawn;
     public Vector2 ArenaHalfSize => arenaHalfSize;
     public EnemyController Enemy => enemy;
     public int Episodes => episodes;
@@ -105,12 +126,13 @@ public class GymManager : MonoBehaviour
 
     public void ToggleFastMode() => SetFast(!fast);
 
-    // fixedDeltaTime acompaña a timeScale, o la física y las decisiones se desincronizan al acelerar.
+    // timeScale sube el ritmo SIN tocar fixedDeltaTime. Escalarlo también dejaba pasos de física
+    // de 0,4 s: los proyectiles saltaban 4,6 unidades por frame y el aviso del jefe se perdía
+    // entero. El caudal de muestras se saca duplicando arenas, no subiendo más el timeScale.
     public void SetFast(bool value)
     {
         fast = value;
         Time.timeScale = fast ? Mathf.Max(1f, fastTimeScale) : 1f;
-        Time.fixedDeltaTime = 0.02f * Time.timeScale;
 
         Debug.Log($"[Gym] Simulación x{Time.timeScale:0.#}", this);
     }
@@ -127,22 +149,29 @@ public class GymManager : MonoBehaviour
         }
 
         // La marca del suelo sobrevive al jefe que la puso: el episodio nuevo empieza limpio.
+        // Solo las de esta arena, o borraría las de las vecinas a media rotación.
         foreach (var zona in UnityEngine.Object.FindObjectsByType<BossGroundZone>(FindObjectsSortMode.None))
         {
+            if (!Contains(zona.transform.position)) continue;
             zona.gameObject.SetActive(false);
             Destroy(zona.gameObject);
         }
 
         if (hero != null)
         {
-            hero.transform.position = heroSpawn;
+            hero.transform.position = Origin + heroSpawn;
 
+            // Antes del reset: las pasivas cambian la vida máxima y el reset la deja a tope.
             if (randomizeHeroWeapon) SortearArma(hero);
+            if (randomizeHeroTraits) SortearRasgos(hero);
 
             // Sin desplegar, el jefe no lo ve: tanto su objetivo como la marca del suelo y el
             // golpe circular solo miran a héroes que estén en la arena.
             hero.SetDeployed(true);
             hero.ResetForEpisode();
+
+            // Después del reset, que ahí la fatiga vuelve a 0 y la moral a la inicial.
+            if (randomizeHeroTraits) SortearAnimo(hero);
         }
 
         currentHero = hero;
@@ -166,7 +195,7 @@ public class GymManager : MonoBehaviour
         // La distancia de salida cambia en cada episodio: así aprende a cerrar hueco y a
         // mantenerlo, en vez de memorizar una sola apertura.
         float hueco = UnityEngine.Random.Range(startingGap.x, startingGap.y);
-        Vector2 puesto = new Vector2(heroSpawn.x + hueco, enemySpawn.y);
+        Vector2 puesto = Origin + new Vector2(heroSpawn.x + hueco, enemySpawn.y);
 
         var go = Instantiate(enemyPrefab, Clamp(puesto), Quaternion.identity);
         go.name = esJefe ? "Gym_Boss" : "Gym_Enemy";
@@ -205,6 +234,43 @@ public class GymManager : MonoBehaviour
         hero.SetSubclass(HeroSubclasses.RandomFor(arquetipo, HeroSubclasses.MinStarRank));
     }
 
+    // El vector de rasgos que ve la red sale de la personalidad, las pasivas, la moral, la fatiga
+    // y las horas de muñeco. Sin sortearlo, sus tres canales valían 0,5 en TODOS los episodios: la
+    // red aprendía a ignorarlos y en la Torre le llegarían valores que no ha visto nunca.
+    private void SortearRasgos(HeroController hero)
+    {
+        // LoadTactics y no SetTactics: el segundo pide guardar partida, y aquí eso son miles de
+        // escrituras del savegame real por tanda.
+        var progress = hero.GetComponent<HeroProgress>();
+        if (progress != null)
+        {
+            progress.LoadTactics(UnityEngine.Random.value, UnityEngine.Random.value,
+                                 UnityEngine.Random.Range(0.05f, 0.45f));
+            progress.LoadSkillRefinement(UnityEngine.Random.Range(0f, progress.RefinementCap));
+        }
+
+        var sorteadas = new List<PassiveSkill>();
+        if (traitPassivePool != null && traitPassivePool.Length > 0)
+        {
+            int cuantas = UnityEngine.Random.Range(0, 3);
+            for (int i = 0; i < cuantas; i++)
+            {
+                var candidata = traitPassivePool[UnityEngine.Random.Range(0, traitPassivePool.Length)];
+                if (!sorteadas.Contains(candidata)) sorteadas.Add(candidata);
+            }
+        }
+
+        hero.SetPassives(sorteadas);
+    }
+
+    // Fatiga y moral son las que hunden templanza y cooperación; sin variarlas esos dos canales
+    // no bajan nunca de 0,5 por mucho que se sortee lo demás.
+    private static void SortearAnimo(HeroController hero)
+    {
+        hero.AddFatigue(UnityEngine.Random.Range(0f, 60f));
+        hero.LoseMorale(UnityEngine.Random.Range(0f, 45f));
+    }
+
     private static EnemyData Sortear(EnemyData[] pool)
     {
         if (pool == null || pool.Length == 0) return null;
@@ -221,13 +287,25 @@ public class GymManager : MonoBehaviour
 
     // Mantiene al agente dentro de la arena; devuelve la posición ya recortada.
     public Vector2 Clamp(Vector2 position)
-        => new Vector2(
-            Mathf.Clamp(position.x, -arenaHalfSize.x, arenaHalfSize.x),
-            Mathf.Clamp(position.y, -arenaHalfSize.y, arenaHalfSize.y));
+    {
+        Vector2 local = position - Origin;
+        return Origin + new Vector2(
+            Mathf.Clamp(local.x, -arenaHalfSize.x, arenaHalfSize.x),
+            Mathf.Clamp(local.y, -arenaHalfSize.y, arenaHalfSize.y));
+    }
+
+    // Si un punto es de esta arena, con holgura para la marca del suelo del jefe.
+    public bool Contains(Vector2 position)
+    {
+        Vector2 local = position - Origin;
+        return Mathf.Abs(local.x) <= arenaHalfSize.x + zoneMargin
+            && Mathf.Abs(local.y) <= arenaHalfSize.y + zoneMargin;
+    }
 
     void OnDrawGizmos()
     {
         Gizmos.color = Color.cyan;
-        Gizmos.DrawWireCube(Vector3.zero, new Vector3(arenaHalfSize.x * 2f, arenaHalfSize.y * 2f, 0f));
+        Gizmos.DrawWireCube(transform.position,
+                            new Vector3(arenaHalfSize.x * 2f, arenaHalfSize.y * 2f, 0f));
     }
 }

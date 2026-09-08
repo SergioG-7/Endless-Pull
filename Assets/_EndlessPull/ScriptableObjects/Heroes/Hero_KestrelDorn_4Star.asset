@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "Kestrel Dorn nunca ha perdido un duelo formal, y las cortes bajas ya no se atreven a organizarle ninguno. Vive de retos improvisados en callejones, donde nadie pregunta las reglas."
   bioEn: "Kestrel Dorn has never lost a formal duel, and the lower courts no longer dare arrange one for them. They live off impromptu alley challenges now, where no one asks about rules."
   bioJa: "ケストレル・ドーンは正式な決闘で一度も負けたことがなく、下級法廷はもう誰も決闘を仕組もうとしない。今は誰も規則など問わない路地裏の即興の勝負で生計を立てている。"
+  memories:
+  - starRank: 0
+    unlock: 3
+    amount: 150
+    text: "Recuerda el instante exacto en que un rival baja el florete, no la punta, los ojos, antes incluso de que ella ataque."
+    textEn: "Recalls the exact moment a rival lowers their guard -- not the blade, the eyes -- before she even attacks."
+    textJa: "相手が構えを崩す瞬間を正確に覚えている。剣先ではなく、目が――彼女がまだ攻撃してもいないのに。"
+  - starRank: 6
+    unlock: 0
+    amount: 0
+    text: "Recuerda haber dejado ganar a alguien, una sola vez, y no recordar por qué le pareció necesario."
+    textEn: "Recalls letting someone win, just once, and not remembering why it seemed necessary."
+    textJa: "一度だけ、誰かをわざと勝たせたことを覚えている。なぜそうする必要があると思ったのかは、もう思い出せない。"
   bodySprite: {fileID: -5626035826302461172, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}
   walkFrames:
   - {fileID: 6740528700743056336, guid: 5d21de4f7bd1bb5dbdf6800f52dcb442, type: 3}

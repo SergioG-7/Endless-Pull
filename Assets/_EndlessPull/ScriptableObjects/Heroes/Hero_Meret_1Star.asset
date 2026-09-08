@@ -19,6 +19,13 @@ MonoBehaviour:
     si ella cocina."
   bioEn: She feeds those climbing the Tower; no one goes up hungry if she is cooking.
   bioJa: "\u5854\u306B\u767B\u308B\u8005\u305F\u3061\u306B\u98DF\u4E8B\u3092\u4E0E\u3048\u308B\u3002\u5F7C\u5973\u304C\u6599\u7406\u3092\u3059\u308C\u3070\u3001\u8AB0\u3082\u7A7A\u8179\u306E\u307E\u307E\u767B\u3089\u306A\u3044\u3002"
+  memories:
+  - starRank: 0
+    unlock: 3
+    amount: 75
+    text: "Recuerda al soldado que le pidió repetir el guiso y nunca bajó a devolver el cuenco."
+    textEn: "She remembers the soldier who asked for seconds and never came back down to return the bowl."
+    textJa: "おかわりを求めた兵士のことを覚えている。その器を返しに戻ってくることはなかった。"
   bodySprite: {fileID: -3243865903021334361, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}
   walkFrames:
   - {fileID: -2639573199146413249, guid: e6f97492985f49743869383d2ce5d2d6, type: 3}

@@ -18,6 +18,19 @@ MonoBehaviour:
   bio: "Darian dirigió la milicia de su aldea antes de que la Torre reclamara sus servicios a tiempo completo. Todavía manda como si tuviera un pueblo entero a su espalda."
   bioEn: "Darian led his village militia before the Tower claimed his services full-time. He still commands like he's got an entire village at his back."
   bioJa: "塔に本採用される前は村の民兵を率いていたダリアン。今でも村ひとつを背負っているかのように指揮を執る。"
+  memories:
+  - starRank: 3
+    unlock: 0
+    amount: 1
+    text: "Recuerda dar la primera orden a hombres con horcas en vez de espadas, y que le obedecieron de todos modos."
+    textEn: "Recalls giving his first order to men holding pitchforks instead of swords, and that they obeyed him anyway."
+    textJa: "剣ではなく熊手を持った男たちに初めて命令を下したこと、それでも彼らが従ったことを覚えている。"
+  - starRank: 0
+    unlock: 2
+    amount: 40
+    text: "Recuerda la única vez que su aldea no le hizo caso, y el nombre de quien murió por eso, aunque nunca lo dice en voz alta."
+    textEn: "Recalls the one time his village didn't listen to him, and the name of who died for it — though he never says it out loud."
+    textJa: "村人が一度だけ自分の言うことを聞かなかった時のこと、そのせいで死んだ者の名前を覚えている。だが決して口には出さない。"
   bodySprite: {fileID: -8449178597520688327, guid: 39f80dde0e17d6940b5499c6f2828288, type: 3}
   walkFrames:
   - {fileID: 3962814023620503394, guid: 39f80dde0e17d6940b5499c6f2828288, type: 3}

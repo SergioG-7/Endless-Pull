@@ -20,6 +20,13 @@ MonoBehaviour:
   bioEn: She kneads bread for the garrison at dawn; she wields the rolling pin like
     a mace.
   bioJa: "\u591C\u660E\u3051\u306B\u5B88\u5099\u968A\u306E\u305F\u3081\u306E\u30D1\u30F3\u3092\u3053\u306D\u308B\u3002\u9EBA\u68D2\u3092\u307E\u308B\u3067\u68CD\u68D2\u306E\u3088\u3046\u306B\u632F\u308B\u3046\u3002"
+  memories:
+  - starRank: 0
+    unlock: 3
+    amount: 85
+    text: "El rodillo le paró más de una pelea de taberna antes de servir para el pan. Todavía pega igual de fuerte."
+    textEn: "The rolling pin stopped more than one tavern brawl before it ever kneaded bread. It still hits just as hard."
+    textJa: "麺棒はパンをこねる前に、酒場の喧嘩を何度も止めていた。今でも同じ強さで叩く。"
   bodySprite: {fileID: -3369646502352545738, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}
   walkFrames:
   - {fileID: -1904041854563576701, guid: d362d1e47869fc145adcf768f6a30be4, type: 3}

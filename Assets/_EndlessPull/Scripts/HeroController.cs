@@ -267,6 +267,9 @@ public class HeroController : MonoBehaviour, IHealthOwner
     private EnemyController target;
     private HeroProgress progress;
 
+    // Consejero neuronal opcional: solo existe si el prefab lleva el componente.
+    private HeroAgent agent;
+
     // Maná, fatiga y moral van en float para que los cambios por segundo no se pierdan entre frames.
     private float currentMP;
     private float fatigue;
@@ -449,6 +452,9 @@ public class HeroController : MonoBehaviour, IHealthOwner
     public bool HasGuaranteedDodge => Time.time < guaranteedDodgeUntil;
     public bool IsDead => currentHealth <= 0;
     public bool AttackReady => attackTimer <= 0f;
+
+    // Objetivo actual de la FSM; lo lee el consejero neuronal para observar al rival correcto.
+    public EnemyController CurrentTarget => target;
     // Mira todo el repertorio, no solo la última aprendida, y de paso deja elegida la que toca.
     public bool CanCastSkill => skills.Count > 0
         ? SelectBestSkill()
@@ -1117,6 +1123,7 @@ public class HeroController : MonoBehaviour, IHealthOwner
         animator = GetComponent<LPCAnimator>();
         body = GetComponent<SpriteRenderer>();
         progress = GetComponent<HeroProgress>();
+        agent = GetComponent<HeroAgent>();
         morale = startingMorale;
 
         if (data != null)
@@ -2414,6 +2421,15 @@ public void DeployViaGateway(Vector2 destination)
     private bool TickGroundZoneEscape()
     {
         var zona = BossGroundZone.ThreatAt(transform.position);
+
+        // Seguir huyendo de la que ya estaba esquivando hasta despejar tambien el margen: mirando
+        // solo ThreatAt, en cuanto cruza el radio la FSM lo manda de vuelta al jefe y vuelve a
+        // entrar, y se queda oscilando en el borde mientras la marca quema.
+        if (zona == null && zoneReactingTo != null
+            && Vector2.Distance(transform.position, zoneReactingTo.Center)
+               < zoneReactingTo.Radius + zoneEscapeMargin)
+            zona = zoneReactingTo;
+
         if (zona == null)
         {
             zoneReactingTo = null;
@@ -2513,8 +2529,18 @@ public void DeployViaGateway(Vector2 destination)
             MoveAwayFrom(target.transform.position);
         }
 
+        // Paso aconsejado por la red. Las reglas de arriba mandan sobre él: son las que la red no
+        // ve, porque se entrenó uno contra uno.
+        int paso = NeuralAdvice(0);
+        if (paso == 1) MoveTowards(target.transform.position);
+        else if (paso == 2) MoveAwayFrom(target.transform.position);
+
         attackTimer -= Time.deltaTime;
         if (attackTimer > 0f) return;
+
+        // Golpe aconsejado. Esperar no consume el enfriamiento: vuelve a preguntar al frame siguiente.
+        int golpe = NeuralAdvice(1);
+        if (golpe == 0) return;
 
         attackTimer = EffectiveAttackCooldown;
 
@@ -2524,7 +2550,13 @@ public void DeployViaGateway(Vector2 destination)
         // que guardarse la habilidad "para no tirarla" solo alarga el piso a base de golpes flojos.
         bool targetAlmostDead = target.MaxHealth > 0 && !target.HasBarrier
             && (float)target.CurrentHealth / target.MaxHealth < SkillThreshold;
-        if (!IsSupport && !targetAlmostDead && CanCastSkill)
+        bool usarHabilidad = !IsSupport && !targetAlmostDead && CanCastSkill;
+
+        // La red aprendió con su propio castigo por rematar con la habilidad: si aconseja, decide ella.
+        if (golpe == 1) usarHabilidad = false;
+        else if (golpe == 2) usarHabilidad = !IsSupport && CanCastSkill;
+
+        if (usarHabilidad)
         {
             CastCombatSkill(target);
             return;
@@ -2532,6 +2564,16 @@ public void DeployViaGateway(Vector2 destination)
 
         // De lejos el golpe viaja: se ve salir la flecha o el proyectil mágico.
         PerformBasicAttack(target);
+    }
+
+    // Consejo de la red para este frame: canal 0 el paso, canal 1 el golpe. Devuelve -1 (sin
+    // consejo) si no hay agente, aún no ha decidido nada o el interruptor global está apagado.
+    private int NeuralAdvice(int channel)
+    {
+        if (HeroAgent.Advice == HeroAgent.AdviceMode.Off || agent == null || !agent.HasAdvice) return -1;
+        if (channel == 1 && HeroAgent.Advice == HeroAgent.AdviceMode.MovementOnly) return -1;
+
+        return channel == 0 ? agent.AdvisedMove : agent.AdvisedCombat;
     }
 
     // Flecha clara para el arco, violeta para la magia.
@@ -2819,12 +2861,18 @@ public void DeployViaGateway(Vector2 destination)
     {
         if (!CanCastSkill) return;
 
-        var herido = MostWoundedAlly();
-        if (herido == null) return;
+        CastSupportSkill(MostWoundedAlly());
+    }
+
+    // El cuerpo de la curación con el aliado ya elegido; devuelve true solo si llegó a lanzarse.
+    // Separado de TickSupport para que el agente lo pida con el mismo efecto y el mismo coste.
+    public bool CastSupportSkill(HeroController herido)
+    {
+        if (herido == null || skill == null) return false;
 
         // Curar a alguien intacto es tirar el maná; los bufos sí salen sin esperar.
         bool urgente = herido.MaxHealth > 0 && (float)herido.CurrentHealth / herido.MaxHealth < 0.85f;
-        if (skill.ability == ActiveSkill.GreaterBlessing && !urgente) return;
+        if (skill.ability == ActiveSkill.GreaterBlessing && !urgente) return false;
 
         currentMP -= SkillManaCost;
         skill.PutOnCooldown(SkillCooldownReduction);
@@ -2866,6 +2914,8 @@ public void DeployViaGateway(Vector2 destination)
                 Debug.Log($"[Soporte] {data.heroName} cura a los de alrededor y recupera aliento.", this);
                 break;
         }
+
+        return true;
     }
 
     // El aliado desplegado con menos porcentaje de vida; se incluye a sí mismo.
@@ -3274,18 +3324,20 @@ public void DeployViaGateway(Vector2 destination)
         AddMasteryPoints(masteryPerHit);
     }
 
-    // Habilidad activa a un enemigo concreto; cobra el maná y arranca el enfriamiento.
+    // Habilidad activa a un enemigo concreto. Pasa por CastCombatSkill, el mismo camino que la
+    // FSM: el golpe plano de antes no tiraba crítico ni aplicaba veneno, área ni aturdimiento.
     public bool TrySkillAttack(EnemyController enemy)
     {
         if (enemy == null || !AttackReady || !CanCastSkill) return false;
+
+        // El clérigo nunca lanza su habilidad contra un enemigo; la suya es CastSupportSkill.
+        if (IsSupport) return false;
         if (Vector2.Distance(transform.position, enemy.transform.position) > EffectiveAttackRange) return false;
 
         attackTimer = EffectiveAttackCooldown;
-        currentMP -= SkillManaCost;
-        skill.PutOnCooldown(SkillCooldownReduction);
 
-        StrikeEnemy(enemy, skill.DamageFrom(Attack));
-        AddMasteryPoints(masteryPerHit);
+        // CastCombatSkill ya suma la maestría; sumarla aquí también la contaba dos veces.
+        CastCombatSkill(enemy);
         return true;
     }
 

@@ -18,6 +18,13 @@ MonoBehaviour:
   bio: "Jenna se alistó para pagar las deudas de la posada de su madre, y todavía manda parte de la paga a casa cada mes. Pelea con la cabeza fría de quien sabe exactamente por qué está ahí."
   bioEn: "Jenna signed up to pay off her mother's inn debts, and still sends part of her wages home every month. She fights with the cool head of someone who knows exactly why she's there."
   bioJa: "ジェナは母の宿の借金を返すために志願し、今も毎月給金の一部を実家へ送っている。自分がここにいる理由を知る者らしく、頭を冷やして戦う。"
+  memories:
+  - starRank: 0
+    unlock: 4
+    amount: 1
+    text: "Cuenta las monedas dos veces antes de enviarlas, como si contarlas de más las hiciera durar."
+    textEn: "She counts the coins twice before sending them, as if counting them again made them last longer."
+    textJa: "送る前に必ずコインを二度数える。まるでそうすれば少しでも長持ちするかのように。"
   bodySprite: {fileID: 1348145604099744802, guid: cd86ec4d446584b4e8811ba4c427ebe9, type: 3}
   walkFrames:
   - {fileID: -768354131081340927, guid: cd86ec4d446584b4e8811ba4c427ebe9, type: 3}

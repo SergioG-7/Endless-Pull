@@ -20,6 +20,13 @@ MonoBehaviour:
   bioEn: He burns wood in pits to supply the forge with charcoal; always sooty, always
     steady.
   bioJa: "\u7089\u306B\u70AD\u3092\u4F9B\u7D66\u3059\u308B\u305F\u3081\u7A74\u3067\u6728\u3092\u71C3\u3084\u3059\u3002\u3044\u3064\u3082\u7164\u3060\u3089\u3051\u3067\u3001\u3044\u3064\u3082\u63FA\u308B\u304C\u306A\u3044\u3002"
+  memories:
+  - starRank: 0
+    unlock: 2
+    amount: 16
+    text: "El humo de las fosas de carbón se le quedó pegado tanto tiempo que ya no sabe si el olor es suyo."
+    textEn: "The smoke from the charcoal pits clung to him so long he no longer knows if the smell is the wood's or his own."
+    textJa: "炭焼き穴の煙が長年染みついて、もうその匂いが木のものか自分のものか分からない。"
   bodySprite: {fileID: 6965806137848367348, guid: b080530b0a2fb984f8f74e3e1fe41b3b, type: 3}
   walkFrames:
   - {fileID: 4040657740928301974, guid: b080530b0a2fb984f8f74e3e1fe41b3b, type: 3}
