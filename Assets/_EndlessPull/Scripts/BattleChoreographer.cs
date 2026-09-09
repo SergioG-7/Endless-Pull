@@ -327,22 +327,17 @@ public class BattleChoreographer : MonoBehaviour
             else cuerpoACuerpo.Add(hero);
         }
 
-        // Sin ningún tanque, el más duro de los de cuerpo a cuerpo hace de frente.
-        if (tanques.Count == 0 && cuerpoACuerpo.Count > 0)
-        {
-            HeroController masDuro = cuerpoACuerpo[0];
-            foreach (var hero in cuerpoACuerpo)
-                if (hero.MaxHealth > masDuro.MaxHealth) masDuro = hero;
-
-            cuerpoACuerpo.Remove(masDuro);
-            tanques.Add(masDuro);
-        }
+        // Quien pega de cerca pega en el frente, lleve escudo o no: antes los de espada sin
+        // escudo se quedaban una fila por detrás mirando cómo peleaba el único tanque.
+        // Atrás solo van los que necesitan distancia para hacer su trabajo.
+        var linea = new List<HeroController>(tanques);
+        linea.AddRange(cuerpoACuerpo);
 
         frontliners.Clear();
-        foreach (var hero in tanques) frontliners.Add(hero);
+        foreach (var hero in linea) frontliners.Add(hero);
 
-        ColocarFila(tanques, frente, lateral, haciaElEnemigo, 0);
-        ColocarFila(cuerpoACuerpo, frente - haciaElEnemigo * meleeGap, lateral, haciaElEnemigo, 1);
+        // Dentro de la línea, Escalon adelanta a los que más aguantan; el hueco es entre líneas.
+        ColocarFila(linea, frente, lateral, haciaElEnemigo, 0);
         ColocarFila(distancia, frente - haciaElEnemigo * rangedGap, lateral, haciaElEnemigo, 2);
         ColocarFila(soporte, frente - haciaElEnemigo * supportGap, lateral, haciaElEnemigo, 3);
     }

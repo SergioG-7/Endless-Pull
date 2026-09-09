@@ -45,7 +45,15 @@ public static class LocalizationManager
         { "UI_UI_VOLUME",    new[] { "Interfaz", "UI", "UI音" } },
         { "UI_COMBAT_VOLUME",new[] { "Combate", "Combat", "戦闘音" } },
         { "UI_QUIT_TO_MENU", new[] { "Guardar y salir", "Save and Quit", "セーブして終了" } },
+        { "UI_RESCUE_SUMMON", new[] { "Sin nadie en pie: la Torre te concede una invocación.",
+                                      "No one left standing: the Tower grants you one summon.",
+                                      "誰も残っていない：塔が召喚を一度だけ許す。" } },
         { "UI_CLOSE",        new[] { "Cerrar", "Close", "閉じる" } },
+        { "UI_ENDING_TITLE",  new[] { "La Torre se abre", "The Tower opens", "塔が開く" } },
+        { "UI_ENDING_BODY",   new[] {
+            "Has despejado el piso 100. La Torre se acaba aqui.\n\n[Texto provisional: aqui va el desenlace, la historia verdadera y la salida de la Torre.]",
+            "You have cleared floor 100. The Tower ends here.\n\n[Placeholder: the true story and the way out of the Tower go here.]",
+            "100階を突破した。塔はここで終わる。\n\n[仮テキスト：真の物語と塔からの出口はここに入る。]" } },
         { "UI_NO_SAVE",      new[] { "Sin partida guardada", "No saved game", "セーブデータなし" } },
 
         { "UI_VIEW_HEROES",  new[] { "Ver Héroes", "View Heroes", "英雄一覧" } },
@@ -748,6 +756,19 @@ public static class LocalizationManager
                                               "{1}秒ごとに拠点へ士気+{0}（上限{2}）" } },
         { "UI_ARCHIVE_NO_MILESTONES", new[] { "Aún no hay ascensiones registradas",
                                               "No ascensions recorded yet", "まだ昇格の記録はありません" } },
+
+        { "FX_POTION_HEAL",       new[] { "¡Poción!", "Potion!", "ポーション！" } },
+        { "FX_POTION_MANA",       new[] { "¡Poción de maná!", "Mana potion!", "マナポーション！" } },
+
+        { "UI_ONBOARD_TITLE",      new[] { "Primeros pasos", "First steps", "はじめの一歩" } },
+        { "UI_ONBOARD_BODY",       new[] {
+            "Eres el Maestro de esta base. La Torre no se sube sola.\n\n1. Ponte a tu héroe en la escuadra desde el <b>Roster</b>.\n2. Entra en la Torre por el <b>Portal</b> y despeja el piso 1.\n3. Con las gemas que ganes, invoca más héroes en el <b>Altar</b>.\n\nLos edificios se desbloquean según subes pisos, y el <b>Tablón de Contratos</b> te dice siempre qué hacer a continuación.",
+            "You are the Master of this base. The Tower will not climb itself.\n\n1. Add your hero to the squad from the <b>Roster</b>.\n2. Enter the Tower through the <b>Portal</b> and clear floor 1.\n3. Spend the gems you earn summoning more heroes at the <b>Altar</b>.\n\nBuildings unlock as you climb, and the <b>Contract Board</b> always tells you what to do next.",
+            "あなたはこの拠点の主です。塔は勝手には登れません。\n\n1. <b>名簿</b>から英雄を部隊に加える。\n2. <b>門</b>から塔に入り、1階を突破する。\n3. 得た宝石で<b>祭壇</b>から英雄を増やす。\n\n階層を登ると建物が解放され、<b>依頼の掲示板</b>が次にすべきことを示します。" } },
+        { "UI_ONBOARD_OK",         new[] { "Entendido", "Got it", "了解" } },
+        { "UI_ONBOARD_STEP_SUMMON", new[] { "Invoca héroes aquí", "Summon heroes here",
+                                            "ここで英雄を召喚" } },
+        { "UI_ONBOARD_STEP_PORTAL", new[] { "Entra en la Torre", "Enter the Tower", "塔へ入る" } },
 
         { "ARCHIVE_LORE_TOWER",     new[] { "La Torre", "The Tower", "塔" } },
         { "ARCHIVE_LORE_DECREES",   new[] { "Decretos del Maestro", "Decrees of the Master", "師の勅令" } },

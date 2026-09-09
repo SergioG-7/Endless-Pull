@@ -187,6 +187,10 @@ public class GameSaveData
     // Piezas que no lleva nadie puesto, cada una con lo suyo.
     public List<EquipmentInstanceSaveData> inventoryItems = new List<EquipmentInstanceSaveData>();
 
+    // Cartel de arranque ya visto. Los saves anteriores llegan en false y los marca el propio
+    // Load si la partida ya tiene héroes o pisos despejados.
+    public bool onboardingSeen;
+
     // Formato antiguo del almacén (solo nombres de asset); se migra al cargar y ya no se escribe.
     public List<string> inventory = new List<string>();
 
@@ -356,7 +360,8 @@ public class SaveManager : MonoBehaviour
         {
             saveVersion = CurrentSaveVersion,
             lastSaveUtc = System.DateTime.UtcNow.ToString("o", System.Globalization.CultureInfo.InvariantCulture),
-            weaponsRerolled = weaponRerollApplied
+            weaponsRerolled = weaponRerollApplied,
+            onboardingSeen = OnboardingGuide.Seen
         };
 
         if (economy != null)
@@ -539,6 +544,12 @@ public class SaveManager : MonoBehaviour
             return;
         }
 
+        // Los saves anteriores al cartel no traen el flag: una partida con héroes o con pisos
+        // despejados ya está empezada y no debe verlo.
+        OnboardingGuide.Seen = save.onboardingSeen
+                               || save.heroes.Count > 0
+                               || save.highestClearedFloor > 0;
+
         // LoadState dispara los eventos, así que la UI se pone al día sin depender del orden de Start.
         if (economy != null) economy.LoadState(save.gems, save.wood, save.iron, save.food);
         // Las partidas anteriores al selector de torre no traen el piso maximo: se deduce del suyo.
@@ -616,6 +627,10 @@ public class SaveManager : MonoBehaviour
         if (!HasSave) return;
 
         File.Delete(SavePath);
+
+        // Partida de cero: el cartel de arranque tiene que volver a salir.
+        OnboardingGuide.Seen = false;
+
         Debug.Log($"[Guardado] Partida borrada: {SavePath}", this);
     }
 

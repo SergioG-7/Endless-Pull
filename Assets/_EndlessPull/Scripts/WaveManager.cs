@@ -307,7 +307,7 @@ public class WaveManager : MonoBehaviour
     [SerializeField] private int currentFloor = 1;
 
     [Tooltip("Enemigos del piso 1; cada piso suma uno más.")]
-    [SerializeField] private int baseEnemyCount = 2;
+    [SerializeField] private int baseEnemyCount = 4;
 
     [Tooltip("Enemigos vivos como mucho a la vez; el resto de la oleada entra como refuerzo.")]
     [Min(1)]
@@ -335,6 +335,17 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Crecimiento compuesto de vida y ataque por cada piso; el poder del héroe también es multiplicativo.")]
     [Range(0f, 0.5f)]
     [SerializeField] private float statCompoundGrowth = 0.08f;
+
+    [Tooltip("Piso a partir del cual la subida por piso se aplana; antes de él manda la de arriba.")]
+    [Min(1)]
+    [SerializeField] private int growthSoftenFloor = 40;
+
+    [Tooltip("Subida compuesta por piso pasado el aplanado.")]
+    [SerializeField] private float lateCompoundGrowth = 0.025f;
+
+    [Tooltip("Último piso de la Torre; llegar ahí es la meta del juego.")]
+    [Min(1)]
+    [SerializeField] private int finalFloor = 100;
 
     [Tooltip("Gemas que da superar un piso.")]
     [SerializeField] private int floorReward = 100;
@@ -465,8 +476,18 @@ public class WaveManager : MonoBehaviour
             case 25: return FloorMissionType.Escort;
         }
 
-        // Fuera del rediseño 1-20 (+ las dos escoltas sueltas), el jefe recurrente de siempre.
-        if (floor > 25 && IsBossFloor) return FloorMissionType.BossHunt;
+        if (floor <= 25) return FloorMissionType.Subjugation;
+
+        // Pasado el tramo guionizado los tipos rotan en ciclos de diez pisos. Sin esto, de cada
+        // cinco pisos cuatro eran "mata a todos" idénticos, y Supervivencia y Escolta no volvían
+        // a salir nunca: se quedaban en los pisos 5 y 10/15/25 y sus retos ocultos con ellas.
+        // El último piso es el jefe final aunque la cadencia de jefes cambie.
+        if (floor >= finalFloor || IsBossFloorFor(floor)) return FloorMissionType.BossHunt;
+
+        int enLaDecena = floor % 10;
+        if (enLaDecena == 3) return FloorMissionType.Survival;
+        if (enLaDecena == 8) return FloorMissionType.Escort;
+
         return FloorMissionType.Subjugation;
     }
 
@@ -480,14 +501,34 @@ public class WaveManager : MonoBehaviour
 
     public int CurrentFloor => currentFloor;
     public int HighestClearedFloor => highestClearedFloor;
-    public int HighestSelectableFloor => highestClearedFloor + 1;
+    public int HighestSelectableFloor => Mathf.Min(highestClearedFloor + 1, finalFloor);
     public bool IsCountingDown => countdownTimer > 0f;
     public ExpeditionState State => state;
     public int EnemyCountForFloor => baseEnemyCount + (currentFloor - 1);
-    public bool IsBossFloor => bossEveryFloors > 0 && currentFloor % bossEveryFloors == 0;
+    public bool IsBossFloor => IsBossFloorFor(currentFloor);
+
+    // Con el piso por parametro: MissionTypeFor tambien responde por pisos que aun no se juegan,
+    // que es lo que consulta el selector de la Torre para avisar de lo que viene.
+    private bool IsBossFloorFor(int floor) => bossEveryFloors > 0 && floor % bossEveryFloors == 0;
     // Base compuesta: en linea recta la Torre se aplanaba frente al equipo, la maestria y los
     // niveles del heroe, que si multiplican entre si.
-    private float CompoundFor(int floor) => Mathf.Pow(1f + statCompoundGrowth, Mathf.Max(0, floor - 1));
+    // Dos tramos: al 8 % por piso el enemigo del 100 salía a x2000 y el héroe al máximo llega a
+    // x90, así que el final era inalcanzable por aritmética. El tramo 1-40 se deja como estaba
+    // y solo se aplana el de arriba, que es el que no se había jugado.
+    private float CompoundFor(int floor)
+    {
+        int tope = Mathf.Max(1, floor);
+        int tramoBase = Mathf.Min(tope, growthSoftenFloor) - 1;
+        float valor = Mathf.Pow(1f + statCompoundGrowth, Mathf.Max(0, tramoBase));
+
+        if (tope > growthSoftenFloor)
+            valor *= Mathf.Pow(1f + lateCompoundGrowth, tope - growthSoftenFloor);
+
+        return valor;
+    }
+
+    public int FinalFloor => finalFloor;
+    public bool IsFinalFloor => currentFloor >= finalFloor;
 
     public float StatMultiplierForFloor(int floor) => CompoundFor(floor)
                                             + hardHealthGrowth * HardFloorsFor(floor);
@@ -708,9 +749,10 @@ void Awake()
         survivalRespawnTimer = survivalRespawnInterval;
         escortDamageAccumulator = 0f;
 
-        // Con huecos reales entre oleadas, dejar que la IA idle avance a ciegas la saca de la
-        // línea; en Supervivencia se aguanta el sitio hasta que aparezca el próximo objetivo.
-        bool hold = currentMissionType == FloorMissionType.Survival;
+        // El puesto se aguanta solo mientras el campo esté vacío; en cuanto asome un enemigo lo
+        // suelta UpdateRegroup. Antes Supervivencia lo mantenía el piso entero y la escuadra
+        // veía pasar a los enemigos que tenía al lado sin pegarles.
+        bool hold = false;
         regrouping = false;
         fallenThisFloor.Clear();
         foreach (var hero in deployed)
@@ -929,10 +971,11 @@ void Awake()
     // queda despejado, no solo entre tandas de refuerzo: el sitio de la guardia es con Friacis.
     private void UpdateRegroup()
     {
-        if (currentMissionType == FloorMissionType.Survival) return;
-
+        // En Supervivencia los enemigos llegan por tandas con huecos de por medio: el hueco es
+        // el único momento en que tiene sentido rehacer la línea.
         bool esperando = AliveEnemies == 0
-                         && (pendingReinforcements.Count > 0 || currentEscort != null);
+                         && (pendingReinforcements.Count > 0 || currentEscort != null
+                             || currentMissionType == FloorMissionType.Survival);
 
         if (esperando != regrouping)
         {

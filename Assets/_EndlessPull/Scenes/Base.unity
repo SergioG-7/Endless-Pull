@@ -16250,7 +16250,7 @@ Transform:
   m_GameObject: {fileID: 1226874409}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -3, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 13.081395, y: 13.0859375, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -25550,6 +25550,8 @@ GameObject:
   - component: {fileID: 1930413769}
   - component: {fileID: 1930413771}
   - component: {fileID: 1930413770}
+  - component: {fileID: 1930413991}
+  - component: {fileID: 1930413992}
   m_Layer: 0
   m_Name: Master
   m_TagString: Untagged
@@ -25847,7 +25849,7 @@ MonoBehaviour:
   - {x: 0, y: 3.5}
   arenaWallHalfExtents: {x: 15, y: 7}
   currentFloor: 1
-  baseEnemyCount: 2
+  baseEnemyCount: 4
   maxConcurrentEnemies: 12
   reinforcementInterval: 3.5
   reinforcementIntervalPerFloor: 0.02
@@ -26700,6 +26702,8 @@ MonoBehaviour:
   canvas: {fileID: 0}
   fastTimeScale: 2
   autoRetreatThreshold: 0.2
+  autoRetreatSquadThreshold: 0.4
+  autoRetreatOnHeroDown: 1
   panelSize: {x: 260, y: 64}
   panelPosition: {x: -150, y: -24}
   buttonBackground: {r: 0.071, g: 0.094, b: 0.141, a: 0.94}
@@ -27020,6 +27024,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: EndlessPull.Runtime::VfxManager
   maxOverlapPerType: 3
+--- !u!114 &1930413991
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1930413711}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32e5c08a039a41afafbdd1f5d3743ae9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: EndlessPull.Runtime::OnboardingGuide
+  canvas: {fileID: 0}
+  size: {x: 880, y: 420}
+  mainMenu: {fileID: 0}
+  arrowHeight: 3.2
+  arrowBob: 0.35
+  refreshSeconds: 0.5
 --- !u!114 &1931634824 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4500871307087141693, guid: fae72fb0a0f0cdd42b73fbc15119ffcb, type: 3}
@@ -29633,3 +29655,18 @@ SceneRoots:
   - {fileID: 1905023050}
   - {fileID: 1610968097}
   - {fileID: 1952478020}
+--- !u!114 &1930413992
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1930413711}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 805f7cdee8fa4ace866749f3a00581c1, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: EndlessPull.Runtime::TowerEndingUI
+  canvas: {fileID: 0}
+  waves: {fileID: 0}
+  size: {x: 960, y: 520}

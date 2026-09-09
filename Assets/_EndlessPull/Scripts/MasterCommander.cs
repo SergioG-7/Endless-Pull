@@ -280,7 +280,7 @@ public class MasterCommander : MonoBehaviour
         foreach (var hero in heroes)
         {
             if (hero == null || hero.CurrentHealth >= hero.MaxHealth) continue;
-            if (!crafting.TryUseHealingPotion(hero, false)) break;
+            if (!crafting.TryUseHealingPotion(hero, false, true)) break;
 
             VfxManager.Play(VfxId.Heal, hero.transform.position);
             curados++;

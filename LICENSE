@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2026 Sergio García
+Copyright (c) 2026 Sergio Garcia
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +19,32 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+===============================================================================
+NOT COVERED BY THE MIT LICENSE ABOVE
+===============================================================================
+
+The MIT license covers the SOURCE CODE of this project only. Several art and
+font assets shipped in this repository come from third parties and keep their
+own licenses, which are copyleft in some cases. See CREDITS.md for the full
+attribution and LICENSES/ for the license texts.
+
+  Assets/_EndlessPull/Sprites/Heroes/
+  Assets/_EndlessPull/Sprites/Enemies/
+  Assets/_EndlessPull/Sprites/NPCs/
+      Character sprites generated with the Universal LPC Spritesheet Character
+      Generator, derived from Liberated Pixel Cup and OpenGameArt artwork.
+      Licensed under CC-BY-SA 3.0, GPL 3.0 and OGA-BY 3.0 (and variants).
+      These are copyleft licenses: derivative sprites stay under them.
+      Authors: LICENSES/LPC-AUTHORS.txt
+      GPL 3.0 text: LICENSES/LICENSE-GPL-3.0.txt
+      CC-BY-SA 3.0: https://creativecommons.org/licenses/by-sa/3.0/
+      OGA-BY 3.0:   https://static.opengameart.org/OGA-BY-3.0.txt
+
+  Assets/_EndlessPull/Fonts/MainFont.ttf
+      Noto Sans JP, (c) Google, SIL Open Font License 1.1
+      https://scripts.sil.org/OFL
+
+  Assets/_EndlessPull/Audio/
+      Sounds and music from Freesound (https://freesound.org), under their
+      respective Creative Commons licenses. See CREDITS.md.

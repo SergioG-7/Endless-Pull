@@ -119,6 +119,7 @@ public class QuestManager : MonoBehaviour
         new Quest { kind = QuestKind.ReachFloor,    target = 5,  rewardGems = 300,  milestone = true },
         new Quest { kind = QuestKind.ReachFloor,    target = 20, rewardGems = 700,  rewardIron = 150, milestone = true },
         new Quest { kind = QuestKind.ReachFloor,    target = 40, rewardGems = 1500, rewardIron = 300, milestone = true },
+        new Quest { kind = QuestKind.ReachFloor,    target = 100, rewardGems = 5000, rewardIron = 1000, milestone = true },
         new Quest { kind = QuestKind.HeroLevel,     target = 10, rewardGems = 200,  rewardWood = 80,  milestone = true },
         new Quest { kind = QuestKind.HeroLevel,     target = 30, rewardGems = 600,  rewardWood = 250, milestone = true },
         new Quest { kind = QuestKind.AscendHero,    target = 3,  rewardGems = 400,  rewardIron = 60,  milestone = true },

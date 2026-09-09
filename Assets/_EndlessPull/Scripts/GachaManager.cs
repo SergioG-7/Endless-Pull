@@ -283,6 +283,30 @@ public class GachaManager : MonoBehaviour
     public bool HasAvailableHeroes(HashSet<string> extraOwned = null)
         => AvailableHeroes(extraOwned).Count > 0;
 
+    // Héroes en pie ahora mismo. Los del Memorial no cuentan: están muertos.
+    public static int LivingHeroCount()
+    {
+        int vivos = 0;
+
+        foreach (var hero in UnityEngine.Object.FindObjectsByType<HeroController>(
+            FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (hero != null && !hero.Discarded) vivos++;
+
+        return vivos;
+    }
+
+    // Sin héroes y sin gemas para invocar la partida se quedaba muerta: no hay forma de ganar
+    // gemas sin héroes, y los contratos del tablón solo rotan al cobrar uno. El Maestro siempre
+    // puede llamar a alguien, así que se le da el 1★ más humilde que quede libre.
+    public HeroData PerformRescuePull()
+    {
+        var available = AvailableHeroes();
+        if (available.Count == 0) return null;
+
+        var pick = PickFromRank(available, 1);
+        return pick != null ? pick : available[UnityEngine.Random.Range(0, available.Count)];
+    }
+
     // Tirada ponderada sobre lo que queda por conseguir: primero la rareza, luego el héroe.
     public HeroData PerformPull(HashSet<string> extraOwned = null)
     {

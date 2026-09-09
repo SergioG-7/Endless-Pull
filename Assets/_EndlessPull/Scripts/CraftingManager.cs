@@ -615,11 +615,16 @@ public class CraftingManager : MonoBehaviour
     // Cura con la mejor poción disponible; la usan tanto la ficha manual del héroe en base
     // como la auto-curación
     // en combate.
-    public bool TryUseHealingPotion(HeroController target) => TryUseHealingPotion(target, true);
+    public bool TryUseHealingPotion(HeroController target) => TryUseHealingPotion(target, true, false);
+
+    public bool TryUseHealingPotion(HeroController target, bool respectCooldown)
+        => TryUseHealingPotion(target, respectCooldown, false);
 
     // El decreto Curar Escuadra pasa respectCooldown en false: ya tiene su propio enfriamiento y
     // si no, un solo héroe recién curado cortaba la cura de toda la escuadra.
-    public bool TryUseHealingPotion(HeroController target, bool respectCooldown)
+    // instant: la cura del decreto no pasa por el trago del héroe. La poción la reparte el
+    // Maestro desde fuera, así que no hay nadie que dé pasos atrás ni destape un frasco.
+    public bool TryUseHealingPotion(HeroController target, bool respectCooldown, bool instant)
     {
         if (target == null) return false;
         if (respectCooldown && !PotionReady(target)) return false;
@@ -630,7 +635,9 @@ public class CraftingManager : MonoBehaviour
         {
             if (healingPotionCounts[i] <= 0) continue;
 
-            target.Heal(Mathf.RoundToInt(target.MaxHealth * potionHealFractionByTier[i]));
+            int cantidad = Mathf.RoundToInt(target.MaxHealth * potionHealFractionByTier[i]);
+            if (instant) target.Heal(cantidad);
+            else target.BeginDrink(cantidad, false);
 
             healingPotionCounts[i]--;
             ArmPotionCooldown(target);
@@ -691,7 +698,7 @@ public class CraftingManager : MonoBehaviour
         {
             if (manaPotionCounts[i] <= 0) continue;
 
-            target.RestoreMP(Mathf.RoundToInt(target.MaxMP * manaPotionRestoreFractionByTier[i]));
+            target.BeginDrink(Mathf.RoundToInt(target.MaxMP * manaPotionRestoreFractionByTier[i]), true);
 
             manaPotionCounts[i]--;
             ArmPotionCooldown(target);

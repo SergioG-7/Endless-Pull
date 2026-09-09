@@ -138,13 +138,22 @@ public class SummonAltarUI : MonoBehaviour
             return;
         }
 
-        if (!economy.CanAfford(coste))
-        {
-            aviso.text = LocalizationManager.Get("UI_NO_GEMS");
-            return;
-        }
+        // Rescate: sin un solo héroe en pie y sin gemas para pagar, la tirada suelta va gratis.
+        // Es la única salida de una partida que si no se queda muerta para siempre.
+        bool rescate = cantidad == 1
+                       && GachaManager.LivingHeroCount() == 0
+                       && !economy.CanAfford(coste);
 
-        if (!economy.TrySpend(coste)) return;
+        if (!rescate)
+        {
+            if (!economy.CanAfford(coste))
+            {
+                aviso.text = LocalizationManager.Get("UI_NO_GEMS");
+                return;
+            }
+
+            if (!economy.TrySpend(coste)) return;
+        }
 
         // Los sacados en esta misma tanda no pueden repetirse aunque aún no estén en la base.
         var sacados = new HashSet<string>();
@@ -159,7 +168,7 @@ public class SummonAltarUI : MonoBehaviour
                 break;
             }
 
-            var datos = gacha.PerformPull(sacados);
+            var datos = rescate ? gacha.PerformRescuePull() : gacha.PerformPull(sacados);
             if (datos == null) break;
 
             sacados.Add(datos.heroName);
@@ -168,7 +177,7 @@ public class SummonAltarUI : MonoBehaviour
 
         if (devolver > 0) economy.Add(devolver);
 
-        aviso.text = string.Empty;
+        aviso.text = rescate ? LocalizationManager.Get("UI_RESCUE_SUMMON") : string.Empty;
         RefreshTexts();
 
         Debug.Log($"[Altar] {cartas.Count} carta(s) en la mesa por {coste - devolver} gemas.", this);

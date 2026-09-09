@@ -115,14 +115,10 @@ void Update()
             return;
         }
 
-        // Zona bloqueada: feedback informativo, sin abrir ningún panel.
-        var quadrant = QuadrantAt(punto);
-        if (quadrant != null)
-        {
-            string texto = string.Format(LocalizationManager.Get("UI_QUADRANT_LOCKED_TAP"), quadrant.RequiredFloor);
-            DamageTextManager.Show(punto, texto, UITheme.TextSoft);
-            AudioManager.Play(SfxId.Error);
-        }
+        // El aviso de zona bloqueada se quitó: su área era el veil del cuadrante, invisible
+        // desde que cada edificio enseña su propio candado, pero seguía cogiendo el toque. Sus
+        // bounds son franjas largas que pasan entre edificios ya visibles, así que tocando
+        // césped vacío salía "se desbloquea en el piso N" de un cuadrante que no está ahí.
     }
 
     // Un solo punto para ratón y dedo; el proyecto usa solo el Input System nuevo.
@@ -167,38 +163,30 @@ void Update()
         return mejor;
     }
 
-    private BaseBuilding BuildingAt(Vector2 point)
+    private BaseBuilding BuildingAt(Vector2 point) => NearestAt(point, true);
+
+    private BaseBuilding LockedBuildingAt(Vector2 point) => NearestAt(point, false);
+
+    // Las huellas salen del tamano del PNG, aire incluido, asi que se solapan entre vecinos.
+    // Quedarse con el primero de la lista devolvia el edificio equivocado: gana el mas cercano.
+    private BaseBuilding NearestAt(Vector2 point, bool unlocked)
     {
+        BaseBuilding mejor = null;
+        float mejorDist = float.MaxValue;
+
         foreach (var building in BaseBuilding.All)
         {
-            if (building == null || !building.IsUnlocked) continue;
-            if (building.IsInside(point)) return building;
+            if (building == null || building.IsUnlocked != unlocked) continue;
+            if (!building.IsInside(point)) continue;
+
+            float d = Vector2.Distance(building.transform.position, point);
+            if (d >= mejorDist) continue;
+
+            mejorDist = d;
+            mejor = building;
         }
 
-        return null;
+        return mejor;
     }
 
-
-    private BaseBuilding LockedBuildingAt(Vector2 point)
-    {
-        foreach (var building in BaseBuilding.All)
-        {
-            if (building == null || building.IsUnlocked) continue;
-            if (building.IsInside(point)) return building;
-        }
-
-        return null;
-    }
-
-
-    private QuadrantController QuadrantAt(Vector2 point)
-    {
-        foreach (var quadrant in QuadrantController.All)
-        {
-            if (quadrant == null) continue;
-            if (quadrant.ContainsPoint(point)) return quadrant;
-        }
-
-        return null;
-    }
 }

@@ -19,10 +19,25 @@ public class StatusVisuals : MonoBehaviour
     [Tooltip("Velocidad del balanceo de aturdimiento.")]
     [SerializeField] private float stunSwaySpeed = 9f;
 
+    [Tooltip("Tinte de un heroe desmoralizado: apagado y frio.")]
+    [SerializeField] private Color moraleLowTint = new Color(0.55f, 0.62f, 0.88f);
+
+    [Tooltip("Tinte de un heroe inspirado: calido y algo mas vivo.")]
+    [SerializeField] private Color moraleHighTint = new Color(1f, 0.90f, 0.62f);
+
+    [Tooltip("Cuanto oscurece la fatiga alta.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float fatigueDarkening = 0.40f;
+
+    [Tooltip("Fatiga a partir de la cual empieza a notarse, antes del agotamiento.")]
+    [Range(0f, 100f)]
+    [SerializeField] private float fatigueWarning = 60f;
+
     [Tooltip("Color del aura del escudo.")]
     [SerializeField] private Color shieldTint = new Color(0f, 0.824f, 1f, 0.40f);
 
     private StatusEffectManager status;
+    private HeroController hero;
     private SpriteRenderer body;
     private Color baseTint = Color.white;
 
@@ -33,6 +48,7 @@ public class StatusVisuals : MonoBehaviour
     void Awake()
     {
         status = GetComponent<StatusEffectManager>();
+        hero = GetComponent<HeroController>();
         body = GetComponent<SpriteRenderer>();
         if (body != null) baseTint = body.color;
     }
@@ -56,12 +72,34 @@ public class StatusVisuals : MonoBehaviour
 
         if (!veneno && !sangre)
         {
-            body.color = baseTint;
+            body.color = MoodTint();
             return;
         }
 
         float pulso = (Mathf.Sin(Time.time * blinkSpeed * Mathf.PI) + 1f) * 0.5f;
         body.color = Color.Lerp(baseTint, veneno ? poisonTint : bleedTint, pulso * 0.75f);
+    }
+
+    // Moral y fatiga se leen en el propio cuerpo: apagado si desmoralizado, calido si inspirado
+    // y mas oscuro cuanta mas fatiga. Sin heroe (enemigos) devuelve el color de siempre.
+    private Color MoodTint()
+    {
+        if (hero == null || hero.GlobalState != HeroGlobalState.InBase) return baseTint;
+
+        Color color = baseTint;
+
+        if (hero.IsDemoralized) color *= moraleLowTint;
+        else if (hero.IsInspired) color *= moraleHighTint;
+
+        if (hero.Fatigue >= fatigueWarning)
+        {
+            // Entre el aviso y el 100 % de fatiga oscurece de forma progresiva, sin escalon.
+            float t = Mathf.InverseLerp(fatigueWarning, 100f, hero.Fatigue);
+            color *= 1f - fatigueDarkening * t;
+        }
+
+        color.a = baseTint.a;
+        return color;
     }
 
     private void TickStun()

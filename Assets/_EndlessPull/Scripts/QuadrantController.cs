@@ -78,8 +78,9 @@ public class QuadrantController : MonoBehaviour
 
 void Start()
     {
-        // El veil/lockIcon ya no se pintan (Fase 39: cada edificio muestra su propio candado);
-        // se dejan invisibles pero activos para que ContainsPoint siga detectando el toque.
+        // El veil/lockIcon ya no se pintan (cada edificio muestra su propio candado); se dejan
+        // invisibles pero activos porque de sus bounds salen la zona que los héroes no pisan y
+        // el encuadre de cámara. Para los toques del jugador NO se usan: son franjas largas.
         if (veil != null) veil.enabled = false;
         if (lockIcon != null) lockIcon.enabled = false;
 

@@ -238,6 +238,12 @@ public class HeroController : MonoBehaviour, IHealthOwner
     [Tooltip("Ataque extra de Berserker mientras está por debajo del umbral.")]
     [SerializeField] private float berserkAttackBonus = 0.40f;
 
+    [Tooltip("Lo que tarda en beberse una poción; mientras, retrocede y no pega.")]
+    [SerializeField] private float drinkDuration = 0.5f;
+
+    [Tooltip("Distancia que retrocede apartándose del enemigo mientras bebe.")]
+    [SerializeField] private float drinkStepBack = 1.2f;
+
     [Tooltip("Altura a la que sale el rótulo con el nombre de la habilidad lanzada.")]
     [SerializeField] private float skillLabelHeight = 0.9f;
 
@@ -1541,7 +1547,9 @@ public void DeployViaGateway(Vector2 destination)
         if (data == null || !data.isProtagonist) return;
         if (passives.Contains(PassiveSkill.Underdog)) return;
 
+        int maxAntes = MaxHealth;
         passives.Insert(0, PassiveSkill.Underdog);
+        AbsorbMaxHealthGain(maxAntes);
     }
 
     // Compartir origen con al menos un compañero de escuadra da un bonus pasivo en combate.
@@ -1620,19 +1628,35 @@ public void DeployViaGateway(Vector2 destination)
     // Las asigna el gacha al invocar y el SaveManager al cargar; no cambian en toda la vida del héroe.
     public void SetPassives(IList<PassiveSkill> newPassives)
     {
+        int maxAntes = MaxHealth;
+
         passives.Clear();
 
         // El protagonista lleva su pasiva única siempre: no se sortea, no se despierta y ningún
         // guardado antiguo puede dejarle sin ella.
         if (data != null && data.isProtagonist) passives.Add(PassiveSkill.Underdog);
 
-        if (newPassives == null) return;
-
-        foreach (var p in newPassives)
+        if (newPassives != null)
         {
-            if (PassiveSkills.IsUnique(p) && (data == null || !data.isProtagonist)) continue;
-            if (!passives.Contains(p)) passives.Add(p);
+            foreach (var p in newPassives)
+            {
+                if (PassiveSkills.IsUnique(p) && (data == null || !data.isProtagonist)) continue;
+                if (!passives.Contains(p)) passives.Add(p);
+            }
         }
+
+        AbsorbMaxHealthGain(maxAntes);
+    }
+
+    // Una pasiva que sube la vida máxima regalaba el hueco pero no la vida, así que el héroe
+    // se quedaba con 100/115 y parecía herido nada más despertarla o al invocarlo.
+    private void AbsorbMaxHealthGain(int maxAntes)
+    {
+        int ganancia = MaxHealth - maxAntes;
+        if (ganancia <= 0 || currentHealth <= 0) return;
+
+        currentHealth = Mathf.Min(currentHealth + ganancia, MaxHealth);
+        HealthChanged?.Invoke(currentHealth, MaxHealth);
     }
 
     // La marca el SaveManager en los héroes que va a destruir al recargar la partida. Destroy
@@ -1843,6 +1867,13 @@ public void DeployViaGateway(Vector2 destination)
         if (Status.IsStunned)
         {
             if (IsInCombat()) combatState = CombatState.Stunned;
+            return;
+        }
+
+        // Beber ocupa las manos: ni pega ni persigue hasta acabar el trago.
+        if (TickDrink())
+        {
+            if (IsInCombat()) combatState = CombatState.Kiting;
             return;
         }
 
@@ -2863,6 +2894,65 @@ public void DeployViaGateway(Vector2 destination)
         Debug.Log($"[Habilidad] {data.heroName} ({SubclassName}) lanza {skill.GetDisplayName()}: " +
                   $"{damage} base, {skill.GetDescription()} " +
                   $"(-{skill.mpCost} MP, quedan {CurrentMP}/{MaxMP}).", this);
+    }
+
+    private float drinkTimer;
+    private int drinkAmount;
+    private bool drinkIsMana;
+
+    public bool IsDrinking => drinkTimer > 0f;
+
+    // La poción ya no es un chasquido: se saca, se dan unos pasos atrás y se bebe. La cantidad
+    // llega hecha desde CraftingManager, que es quien sabe qué frasco se ha gastado.
+    public void BeginDrink(int amount, bool mana)
+    {
+        // Un héroe inactivo (expedición o torre) no corre Update, así que el trago no acabaría
+        // nunca y la poción se perdería. Sin nadie mirando, tampoco hay animación que enseñar.
+        if (!gameObject.activeInHierarchy)
+        {
+            if (mana) RestoreMP(amount);
+            else Heal(amount);
+            return;
+        }
+
+        // Encadenar dos tragos perdería el primero: se cobra lo pendiente antes de empezar.
+        if (drinkTimer > 0f)
+        {
+            if (drinkIsMana) RestoreMP(drinkAmount);
+            else Heal(drinkAmount);
+        }
+
+        drinkTimer = drinkDuration;
+        drinkAmount = amount;
+        drinkIsMana = mana;
+
+        DamageTextManager.Show(transform.position + Vector3.up * skillLabelHeight,
+            LocalizationManager.Get(mana ? "FX_POTION_MANA" : "FX_POTION_HEAL"),
+            mana ? UITheme.BarMP : UITheme.BarHP);
+    }
+
+    // Devuelve true mientras esté bebiendo: el que llama corta ahí su turno de FSM.
+    private bool TickDrink()
+    {
+        if (drinkTimer <= 0f) return false;
+
+        drinkTimer -= Time.deltaTime;
+
+        // Se aparta de quien tiene delante; sin objetivo se queda donde está.
+        if (target != null && drinkDuration > 0f)
+        {
+            Vector2 atras = (Vector2)transform.position - (Vector2)target.transform.position;
+            if (atras.sqrMagnitude > 0.0001f)
+                transform.position = (Vector2)transform.position
+                    + atras.normalized * (drinkStepBack / drinkDuration) * Time.deltaTime;
+        }
+
+        if (drinkTimer > 0f) return true;
+
+        if (drinkIsMana) RestoreMP(drinkAmount);
+        else Heal(drinkAmount);
+
+        return false;
     }
 
     // Rótulo flotante con el nombre de la habilidad. Sin esto las 30 habilidades se notaban

@@ -139,3 +139,44 @@ save.json
 # ---------------------------------------------------------------
 /.venv-mlagents/
 /results/
+
+# ---------------------------------------------------------------
+# Originales del arte tal cual salen de Gemini (40 MB de .jfif). Unity ignora
+# la carpeta por la virgulilla final, pero git no: hay que decirselo aparte.
+# ---------------------------------------------------------------
+/[Aa]ssets/_EndlessPull/Sprites/Base/Originales~/
+
+# ---------------------------------------------------------------
+# Restos de la plantilla URP de Unity: no son del juego
+# ---------------------------------------------------------------
+/[Aa]ssets/TutorialInfo/
+/[Aa]ssets/TutorialInfo.meta
+/[Aa]ssets/Readme.asset
+/[Aa]ssets/Readme.asset.meta
+/[Aa]ssets/Scenes/
+/[Aa]ssets/Scenes.meta
+/[Aa]ssets/Settings/SampleSceneProfile.asset
+/[Aa]ssets/Settings/SampleSceneProfile.asset.meta
+
+# ---------------------------------------------------------------
+# Volcados de perfilado que deja ML-Agents dentro de Assets
+# ---------------------------------------------------------------
+/[Aa]ssets/ML-Agents/Timers/
+/[Aa]ssets/ML-Agents/Timers.meta
+
+# ---------------------------------------------------------------
+# Entornos de Python y cachés fuera de tools/
+# ---------------------------------------------------------------
+.venv/
+venv/
+__pycache__/
+
+# ---------------------------------------------------------------
+# Salidas de compilacion de plataforma (Android/WebGL): CMake, ninja y Burst
+# ---------------------------------------------------------------
+/.utmp/
+/Data/Plugins/
+/[Ee]xport/
+
+# Volcado de trabajo vacio de una sesion vieja
+/heroes_missing.json
