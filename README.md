@@ -10,8 +10,8 @@
 
 ### 🎮 Jugar la Demo
 * Jugar en Itch.io (PC Windows / WebGL) - <https://sergiog-7.itch.io/endless-pull> (contraseña: level5)
-* Ver gameplay en YouTube - <https://youtu.be/placeholder-gameplay>
-* Ver combate y ML-Agents Gym en YouTube - <https://youtu.be/placeholder-gym>
+* Ver gameplay en YouTube - <https://youtu.be/7wKWSwu5xfM>
+* Ver combate y ML-Agents Gym en YouTube - <https://youtu.be/dEryhSAdeII>
 
 ### 🛠️ Tecnologías y Herramientas
 * **Motor:** Unity (C#), uGUI, TextMeshPro
@@ -32,8 +32,8 @@
 
 ### 🎮 Play the Demo
 * Play on Itch.io (PC Windows / WebGL) - <https://sergiog-7.itch.io/endless-pull> (password: level5)
-* Watch gameplay on YouTube - <https://youtu.be/placeholder-gameplay>
-* Watch combat & ML-Agents Gym on YouTube - <https://youtu.be/placeholder-gym>
+* Watch gameplay on YouTube - <https://youtu.be/7wKWSwu5xfM>
+* Watch combat & ML-Agents Gym on YouTube - <https://youtu.be/dEryhSAdeII>
 
 ### 🛠️ Technologies & Tools
 * **Engine:** Unity (C#), uGUI, TextMeshPro
@@ -54,8 +54,8 @@
 
 ### 🎮 デモをプレイする
 * Itch.ioでプレイ (PC Windows / WebGL) - <https://sergiog-7.itch.io/endless-pull> (パスワード：level5)
-* YouTubeでゲームプレイを見る - <https://youtu.be/placeholder-gameplay>
-* YouTubeで戦闘＆ML-Agentsジムを見る - <https://youtu.be/placeholder-gym>
+* YouTubeでゲームプレイを見る - <https://youtu.be/7wKWSwu5xfM>
+* YouTubeで戦闘＆ML-Agentsジムを見る - <https://youtu.be/dEryhSAdeII>
 
 ### 🛠️ 使用技術とツール
 * **エンジン:** Unity (C#), uGUI, TextMeshPro
